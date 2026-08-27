@@ -5,6 +5,7 @@ import { components } from './_generated/api'
 
 const http = httpRouter()
 
+// Exact app, webhook, auth, and share routes must be registered before this catch-all.
 registerStaticRoutes(http, components.staticHosting)
 
 export default http

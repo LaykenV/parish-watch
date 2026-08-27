@@ -872,9 +872,12 @@ The proposed app-owned root router needs:
 - health or provider verification endpoints where required;
 - static-hosting fallback last.
 
-Exact provider paths are selected from the installed component documentation.
-Do not invent or hard-code them from this plan. Test route precedence after
-`@convex-dev/static-hosting` is registered.
+Keep `@convex-dev/static-hosting` unmounted (`app.use(staticHosting)` with no
+`httpPrefix`) and register exact app routes in `convex/http.ts` before
+`registerStaticRoutes`. Do not copy the package default that moves app HTTP
+under `/api` and gives the component `/`. Exact provider paths come from the
+installed component documentation. Do not invent or hard-code them from this
+plan. Test route precedence after the component is registered.
 
 ## Reliability and Operations
 
