@@ -1,0 +1,20 @@
+node_modules/
+.DS_Store
+.env
+.env.*
+!.env.example
+dist/
+.output/
+.vinxi/
+.tanstack/
+coverage/
+*.log
+.idea/
+
+# Generated local agent guidance; recreate with `npx convex ai-files install`.
+.agents/
+.claude/
+skills-lock.json
+
+# Convex local state and generated deployment artifacts
+.convex/
