@@ -37,7 +37,7 @@ Status: complete August 27, 2026.
 - [x] Confirm the existing team warning and disable thresholds of $20 and $40
       per month.
 - [x] Create the public `LaykenV/parish-watch` GitHub repository and add the
-      `origin` remote. The repository remains empty until an authorized first push.
+      `origin` remote. The authorized initial source commit is public on `main`.
 - [x] Add the MIT license before the first public push.
 - [x] Scaffold TanStack Start in SPA/static-prerender mode and Convex in this
       existing repository.

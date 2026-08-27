@@ -12,11 +12,11 @@
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-27T17:08:52Z
+- **Last updated:** 2026-08-27T17:09:31Z
 
 ## Log
 
-### 2026-08-27 - working tree
+### 2026-08-27 - 96938c4
 
 Initialized a fresh repository and completed the product grilling. Documented
 the agreed scope, resident experience, evidence policy, source plan,
@@ -66,3 +66,6 @@ strip. It will link to the Louisiana Secretary of State and show a date verified
 against the official calendar. Candidate coverage, ballot matching, crawling,
 and model-generated election content remain out of scope (`PLAN.md`,
 `docs/product-spec.md`, `docs/build-plan.md`).
+
+Published the initial Phase 0 source commit to the public `main` branch. The app
+itself remains undeployed.

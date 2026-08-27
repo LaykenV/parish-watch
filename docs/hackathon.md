@@ -81,7 +81,7 @@ Phase 0 was completed on August 27:
 - the existing team spending limits are a $20 warning threshold and $40 disable
   threshold per month;
 - the public `LaykenV/parish-watch` GitHub repository and `origin` remote exist,
-  with no push yet;
+  with the initial source commit published on `main`;
 - the MIT license is present;
 - `npm ci`, typechecking, three tests, the production build, lint, a cloud
   Convex push, and the local readiness query all pass.
@@ -340,7 +340,7 @@ other contested project.
 
 ### Public Artifacts
 
-- [x] Public GitHub repository created; first push remains pending
+- [x] Public GitHub repository contains the initial source commit
 - [x] Root `hackathon.md` exists
 - [x] Root `hackathon.md` current and free of secrets or personal data
 - [ ] Public `convex.site` app
@@ -362,7 +362,7 @@ other contested project.
 
 ### Submission
 
-- [ ] Public repo URL verified
+- [x] Public repo URL verified
 - [ ] Live app URL verified
 - [ ] Video URL verified
 - [ ] vibeapps.dev entry completed
