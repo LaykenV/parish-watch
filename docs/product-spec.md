@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; Phase 0 setup shell exists, resident interface not started
+Status: approved product plan; Phase 0 setup shell is public, resident interface not started
 
 ## Product Sentence
 

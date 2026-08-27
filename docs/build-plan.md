@@ -17,6 +17,9 @@ not spend it on decorative features.
 - Record vendor cost and quality from the first external call.
 - End each day with a deployed or locally reproducible proof, a test, or a
   documented blocker.
+- Run normal integration work in the personal development deployment. Promote a
+  completed slice to production only after automated checks and a hosted
+  development smoke pass.
 - Use real public records. Mark synthetic fixtures and deterministic replays
   clearly.
 - Feature-freeze on September 17.
@@ -54,9 +57,30 @@ Status: complete August 27, 2026.
       through `npx convex ai-files install` instead of vendoring both copies.
 - [x] Confirm `npm ci`, local web startup, a cloud Convex push, the live
       readiness query, typechecking, tests, production build, and lint.
+- [x] Upload the Phase 0 shell to the development `convex.site` host and smoke
+      the real static-hosting path.
+- [x] Deploy the verified shell to the production Convex deployment and public
+      `convex.site` host.
 
 Exit gate: one documented setup path works from a fresh install, and
 `hackathon.md` reflects only what the code proves.
+
+## Checkpoint posting cadence
+
+- Do not spend a post on the setup shell alone.
+- After Slice 1, publish the first X or LinkedIn technical checkpoint showing a
+  real Lafayette source, its immutable snapshot, and idempotent repeat retrieval.
+- After Slice 3 or 4, publish strict extraction, exact citation, independent
+  review, and source-change proof.
+- After Slice 5, publish the first TikTok or Facebook resident demonstration
+  linked to a real public issue page.
+- After the AgentMail outcome loop works, publish the live change and sourced
+  email proof.
+- Publish tester evidence near September 15 or 16 and the final launch and demo
+  after feature freeze.
+
+Reuse one recording for technical and resident edits. Keep content work near 90
+minutes per week and preserve the weekday Varholdt sales block.
 
 ## Week 1: Prove the Evidence Engine
 
@@ -172,8 +196,8 @@ Dates: September 3 through September 9
 
 ### Hosting
 
-- register Convex static hosting;
-- deploy an early public `convex.site` build;
+- keep the existing public `convex.site` environment current at completed slice
+  gates;
 - verify direct route refreshes;
 - prototype `/share/issues/:slug` Open Graph HTML from published issue data;
 - test root route precedence for auth and provider webhooks.

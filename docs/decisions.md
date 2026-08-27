@@ -2,6 +2,7 @@
 
 Product grilling completed: August 26, 2026
 Stack amendment completed: August 27, 2026
+Environment and checkpoint amendment completed: August 27, 2026
 Product name: Parish Watch
 
 This file records the settled product decisions from the planning grill. It
@@ -206,6 +207,14 @@ expand the promise.
 - Serve per-issue Open Graph HTML through a small Convex HTTP route backed only
   by published issue data.
 - Test direct issue links, share links, and route precedence on the real host.
+- Use the personal development deployment for normal integration work and its
+  `convex.site` host for pre-production smoke tests.
+- Keep a public production deployment from Phase 0 onward. Promote only a
+  completed slice whose automated checks and hosted development smoke pass.
+- Use preview deployments selectively for auth, webhook, routing, or schema
+  work that needs isolation.
+- Build the production frontend with the production Convex URL during the same
+  promotion; never publish a stale local `dist/` artifact.
 
 ## Trust and Privacy
 
@@ -225,6 +234,13 @@ expand the promise.
 - TikTok and Facebook carry the resident and community story.
 - Reuse recordings rather than operating four independent content channels.
 - Keep content production near 90 minutes per week.
+- Do not publish a checkpoint for the Phase 0 setup shell alone. Start with the
+  first real Lafayette source snapshot after Slice 1.
+- Publish extraction, citation, review, and change proof after Slice 3 or 4; the
+  first resident-facing TikTok or Facebook demonstration follows the real public
+  issue page in Slice 5.
+- Publish the AgentMail outcome loop when it works, tester evidence near
+  September 15 or 16, and the final launch after feature freeze.
 - Recruit real users in Lafayette and the Alexandria/Pineville area, then expand
   through supported Baton Rouge communities.
 - Do not count views or resident use as Varholdt buyer traction.

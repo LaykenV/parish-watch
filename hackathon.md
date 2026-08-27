@@ -3,18 +3,28 @@
 - **Project:** Parish Watch
 - **Event:** Convex All Gas Hackathon
 - **What it does:** Establishes a source-cited service for discovering, understanding, questioning, and following consequential Louisiana local-government decisions.
-- **Live app:** not deployed
+- **Live app:** https://befitting-flamingo-587.convex.site
 - **Repo:** https://github.com/LaykenV/parish-watch
-- **Frontend:** not deployed
-- **Convex deployment:** https://woozy-wren-227.convex.cloud
+- **Frontend:** Convex static hosting
+- **Convex deployment:** https://befitting-flamingo-587.convex.cloud
 - **Components:** `@convex-dev/static-hosting`
 - **Convex features:** queries, internal actions, HTTP actions, realtime queries
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-27T17:09:31Z
+- **Last updated:** 2026-08-27T17:54:34Z
 
 ## Log
+
+### 2026-08-27 - working tree
+
+Established separate hosted development and production environments. The Phase
+0 shell passed its hosted development smoke before the matching Convex backend
+and static frontend were promoted to production. Verified the public root,
+production-bound JavaScript asset, direct not-found route, desktop and mobile
+layouts, and live readiness query (`package.json`, `README.md`, `docs/`). No
+Firecrawl ingestion, OpenAI model call, AgentMail integration, authentication,
+or resident evidence experience exists yet.
 
 ### 2026-08-27 - 96938c4
 

@@ -12,10 +12,13 @@ revision principles, not code or a submission base.
 
 ## Current state
 
-Phase 0 setup is implemented. The repository has a TanStack Start SPA shell, a
-Convex cloud development deployment, one readiness query, Convex static hosting
-registration, tests, and a reproducible local setup path. The public app has not
-been deployed and the evidence pipeline has not started.
+Phase 0 setup is complete. The repository has a TanStack Start SPA shell,
+separate Convex development and production deployments, one realtime readiness
+query, Convex static hosting, tests, and a reproducible local setup path. The
+public setup shell is live; the evidence pipeline has not started.
+
+- Public production app: https://befitting-flamingo-587.convex.site
+- Hosted development smoke: https://woozy-wren-227.convex.site
 
 ## Local setup
 
@@ -48,11 +51,19 @@ npm run typecheck
 npm run test
 npm run build
 npm run lint
+npm run hosting:smoke:dev
 ```
 
-Production builds fail when `VITE_CONVEX_URL` is missing. `npm run deploy`
-rebuilds before publishing to avoid reusing an old `dist/` directory, but do not
-run it without explicit owner approval.
+`npm run hosting:smoke:dev` builds with the development deployment URL and
+uploads the result to that deployment's `convex.site` host. Production builds
+fail when `VITE_CONVEX_URL` is missing. `npm run deploy` lets the static-hosting
+CLI build with the production URL, deploy the Convex backend, and upload the
+matching frontend. Production promotion requires explicit owner approval.
+
+Development is the normal integration environment. Promote a completed slice
+to production only after its tests and hosted development smoke pass. Use a
+preview deployment for auth, webhook, routing, or schema work that needs an
+isolated hosted check.
 
 ## Canonical documents
 

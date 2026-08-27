@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: approved implementation plan; Phase 0 scaffold and cloud development deployment exist
+Status: approved implementation plan; Phase 0 development and production environments are live
 
 ## Architecture Goal
 
@@ -69,6 +69,34 @@ layer.
 Install current official package versions during scaffolding, except Convex Auth
 v2 alpha. Pin that alpha to the exact installed version because its APIs can
 change. The lockfile and code become the implementation evidence.
+
+## Environments and promotion
+
+Use the personal cloud development deployment for normal implementation and
+provider integration work. Before production promotion, build and upload the
+frontend to that deployment's `convex.site` host with
+`npm run hosting:smoke:dev`. This checks the real HTTP router, SPA fallback,
+caching, and build-time Convex URL without changing production.
+
+The shared production deployment owns the public `convex.site` app. Promote a
+slice manually with `npm run deploy` only after its automated checks and hosted
+development smoke pass. That command performs the production-aware frontend
+build, deploys the matching Convex backend, and uploads the static assets as one
+release. Do not upload a previously built `dist/` directory to production.
+
+Current Phase 0 hosts:
+
+- development: `https://woozy-wren-227.convex.site` backed by
+  `https://woozy-wren-227.convex.cloud`;
+- production: `https://befitting-flamingo-587.convex.site` backed by
+  `https://befitting-flamingo-587.convex.cloud`.
+
+Run each vendor integration through automated or bounded contract tests, then
+development, then one production smoke when the slice first ships. Keep
+exploratory crawls, prompt iteration, synthetic records, and destructive failure
+tests outside production. Use a preview deployment only when auth, webhook,
+routing, or schema work needs isolation beyond the personal development
+deployment.
 
 ## Frontend Shape
 

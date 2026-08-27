@@ -1,6 +1,6 @@
 # Parish Watch Plan
 
-Status: Phase 0 setup complete; evidence-engine implementation is next
+Status: Phase 0 and the public production shell are complete; evidence-engine implementation is next
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 

@@ -23,7 +23,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify": "npm run typecheck && npm run test && npm run build && npm run lint",
-    "deploy": "npm run build && npx @convex-dev/static-hosting deploy --dist dist/client"
+    "hosting:smoke:dev": "npx @convex-dev/static-hosting upload --build --dist dist/client",
+    "deploy": "npx @convex-dev/static-hosting deploy --dist dist/client"
   },
   "dependencies": {
     "@convex-dev/auth": "2.0.0-alpha.1",

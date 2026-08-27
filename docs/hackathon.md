@@ -68,6 +68,8 @@ Phase 0 was completed on August 27:
 - TanStack Start is configured in SPA/static-prerender mode;
 - a Convex cloud development deployment exists and the static-hosting component
   is registered;
+- the Phase 0 shell passed a hosted development smoke, then the matching backend
+  and frontend were promoted to `https://befitting-flamingo-587.convex.site`;
 - `npx convex ai-files install` completed and the generated guidelines were
   read;
 - Convex Auth v2 is pinned to `2.0.0-alpha.1` but not configured;
@@ -83,12 +85,15 @@ Phase 0 was completed on August 27:
 - the public `LaykenV/parish-watch` GitHub repository and `origin` remote exist,
   with the initial source commit published on `main`;
 - the MIT license is present;
-- `npm ci`, typechecking, three tests, the production build, lint, a cloud
-  Convex push, and the local readiness query all pass.
+- `npm ci`, typechecking, three tests, the production build, lint, cloud Convex
+  pushes, and local, hosted-development, and production readiness queries all
+  pass;
+- the public root, production-bound asset, direct not-found route, and desktop
+  and mobile layouts were tested signed out.
 
-The public app and vibeapps.dev submission remain pending. No Firecrawl source
-ingestion, OpenAI model call, AgentMail integration, or authentication flow
-exists yet.
+The public setup shell is live; the resident evidence experience and
+vibeapps.dev submission remain pending. No Firecrawl source ingestion, OpenAI
+model call, AgentMail integration, or authentication flow exists yet.
 
 ## Judging Map
 
@@ -278,6 +283,7 @@ Never expose private chat, email addresses, or resident identities in the demo.
 
 Post evidence of:
 
+- the first immutable Lafayette snapshot after Slice 1;
 - dynamic official-source discovery;
 - an immutable source revision;
 - strict extraction and independent review;
@@ -286,7 +292,7 @@ Post evidence of:
 - the final public app and demo.
 
 Tag all sponsors as required. Explain the resident outcome before technical
-detail.
+detail. Do not spend a checkpoint on the setup shell alone.
 
 ### TikTok and Facebook
 
@@ -297,6 +303,9 @@ Post:
 - how Parish Watch shows the deadline and receipts;
 - what changed after a meeting;
 - an invitation to test the free tool through the issue's share URL.
+
+Start resident-facing posts only after the thin resident proof exposes a real
+public issue page. Reuse the technical recording with a resident-first edit.
 
 Be transparent that the builder created it. Follow local group rules. Do not
 frame the product as supporting or opposing CCS, a data center, SpaceX, or any
@@ -325,7 +334,7 @@ other contested project.
 
 ### Product
 
-- [ ] Convex is the application backend
+- [x] Convex is the application backend
 - [ ] Firecrawl feeds real official data
 - [ ] Convex AI Gateway calls OpenAI from actions
 - [ ] `openai/gpt-5.6-terra` does meaningful structured extraction work
@@ -343,9 +352,9 @@ other contested project.
 - [x] Public GitHub repository contains the initial source commit
 - [x] Root `hackathon.md` exists
 - [x] Root `hackathon.md` current and free of secrets or personal data
-- [ ] Public `convex.site` app
-- [ ] App opens without invitation
-- [ ] Direct links and mobile path tested signed out
+- [x] Public `convex.site` app
+- [x] App opens without invitation
+- [x] Direct links and mobile path tested signed out
 - [x] Open-source license added
 
 ### Proof
