@@ -16,7 +16,7 @@
 
 ## Log
 
-### 2026-08-27 - 883f50c
+### 2026-08-27 - dd12d01
 
 Established separate hosted development and production environments. The Phase
 0 shell passed its hosted development smoke before the matching Convex backend
