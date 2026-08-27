@@ -1,6 +1,6 @@
-# Parish Watch
+# Public Parish
 
-Parish Watch is a free, open-source, nonpartisan application that will help
+Public Parish is a free, open-source, nonpartisan application that will help
 Louisiana residents see consequential local-government decisions, inspect the
 official evidence, ask questions, follow an issue, and learn what happened after
 the vote.
@@ -17,7 +17,9 @@ separate Convex development and production deployments, one realtime readiness
 query, Convex static hosting, tests, and a reproducible local setup path. The
 public setup shell is live; the evidence pipeline has not started.
 
-- Public production app: https://befitting-flamingo-587.convex.site
+- Public production app: https://publicparish.com (redirects to the canonical
+  Convex-served origin at https://www.publicparish.com)
+- Required hackathon host: https://befitting-flamingo-587.convex.site
 - Hosted development smoke: https://woozy-wren-227.convex.site
 
 ## Local setup
@@ -26,7 +28,7 @@ Requirements:
 
 - Node.js 22
 - npm 11
-- a Convex account with access to the `parish-watch` project
+- a Convex account with access to the `public-parish` project
 
 From a fresh clone:
 
@@ -59,6 +61,12 @@ uploads the result to that deployment's `convex.site` host. Production builds
 fail when `VITE_CONVEX_URL` is missing. `npm run deploy` lets the static-hosting
 CLI build with the production URL, deploy the Convex backend, and upload the
 matching frontend. Production promotion requires explicit owner approval.
+
+The bare-domain redirect is isolated in
+[`infra/apex-redirect`](infra/apex-redirect/README.md). It preserves paths and
+query strings but never hosts the application frontend. The hackathon submission
+URL remains the public `convex.site` host; the custom domain is an additional
+resident-facing entry point.
 
 Development is the normal integration environment. Promote a completed slice
 to production only after its tests and hosted development smoke pass. Use a

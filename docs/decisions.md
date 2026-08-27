@@ -3,7 +3,8 @@
 Product grilling completed: August 26, 2026
 Stack amendment completed: August 27, 2026
 Environment and checkpoint amendment completed: August 27, 2026
-Product name: Parish Watch
+Brand and domain amendment completed: August 27, 2026
+Product name: Public Parish
 
 This file records the settled product decisions from the planning grill. It
 exists so later implementation work does not reopen resolved branches or quietly
@@ -19,14 +20,20 @@ expand the promise.
   artifact, content engine, and credibility asset.
 - Do not treat prize money as contracted revenue or inbound business leads as an
   assumed result.
-- Keep Parish Watch separate from Varholdt's commercial positioning while using
+- Keep Public Parish separate from Varholdt's commercial positioning while using
   it as an honest case study.
 - Preserve the weekday 90-minute Varholdt sales block and existing first-dollar
   plan.
 
 ## Product and Audience
 
-- The name is Parish Watch.
+- The name is Public Parish.
+- The public entry point is `https://publicparish.com`, which permanently
+  redirects to the canonical Convex-served origin at
+  `https://www.publicparish.com`. Keep the production `convex.site` origin
+  working for hackathon access and operational fallback.
+- The GitHub repository and Convex project use the `public-parish` slug. The
+  owner authorized both external renames on August 27.
 - It is a free, open-source, nonpartisan resident product.
 - The main promise is broader than council meetings: tell residents what local
   government is about to change that may affect them.
@@ -110,7 +117,7 @@ expand the promise.
 
 - Allow anonymous, multi-turn chat. Do not impose a visible one-question limit.
 - Preserve anonymous same-device continuity for 24 hours.
-- Let chat answer about the current issue or the full validated Parish Watch
+- Let chat answer about the current issue or the full validated Public Parish
   corpus.
 - Use invisible rate limits first, then CAPTCHA or cooldown when abuse appears.
 - Chat never requires sign-in.
@@ -267,14 +274,14 @@ expand the promise.
 These do not reopen the product plan:
 
 - GitHub owner: `LaykenV`; public remote:
-  `https://github.com/LaykenV/parish-watch`;
+  `https://github.com/LaykenV/public-parish`;
 - license: MIT;
 - exact scaffold versions are pinned in `package.json` and recorded in
   `package-lock.json`; Convex is 1.45.0, static hosting is 0.2.1, and Convex
   Auth v2 is pinned to 2.0.0-alpha.1;
 - both role model IDs resolved through the AI Gateway on August 27, 2026;
-- the existing Convex team spending thresholds are $20 warning and $40 disable
-  per month;
+- the Convex team spending thresholds are $20 warning and $60 disable per
+  month;
 - the `CONVEXALLGAS` Firecrawl grant added 20,000 participant credits on
   August 27, 2026;
 - benchmark the strong and fast stage assignment against a labeled source set;

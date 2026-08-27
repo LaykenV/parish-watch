@@ -5,12 +5,12 @@ Last researched: August 26, 2026
 
 This document supplies starting points, not a claim of complete coverage. Every
 URL must be checked during the Firecrawl source spike, and every public body must
-pass the same gold-set and freshness gate before Parish Watch marks it
+pass the same gold-set and freshness gate before Public Parish marks it
 supported.
 
 ## Source Policy
 
-Parish Watch publishes from primary government records:
+Public Parish publishes from primary government records:
 
 - agendas and meeting packets;
 - minutes;
@@ -205,4 +205,4 @@ from inferred ones.
 9. Baton Rouge Planning Commission
 
 This order establishes the local demo first, then tests different portal shapes
-before Parish Watch claims geographic breadth.
+before Public Parish claims geographic breadth.

@@ -3,7 +3,7 @@
 Official event:
 [Convex All Gas Hackathon](https://www.convex.dev/hackathons/all-gas)
 
-This document translates the event rules and judging criteria into Parish Watch
+This document translates the event rules and judging criteria into Public Parish
 acceptance criteria. Re-check the official page before submission in case the
 organizers change a detail.
 
@@ -31,6 +31,25 @@ The event page lists $10,000, $5,000, and $1,500 cash prizes, with additional
 provider benefits. Contest results are uncertain. The build is justified by the
 combined value of a useful public product, skill, distribution, credibility, and
 prize probability.
+
+## Custom domain and qualifying URL
+
+The official event page was re-checked on August 27. It requires a public
+`convex.site` or `chatgpt.site` URL that judges or an agent can open without an
+invitation, and its submission checklist asks for a live URL on one of those
+hosts. It does not state that an app cannot also use a custom domain.
+
+Public Parish does not depend on that omission. Submit
+`https://befitting-flamingo-587.convex.site` as the live app URL and keep it
+functional through judging. It is the qualifying host and serves the production
+application through Convex static hosting.
+
+`https://publicparish.com` is a resident-facing entry point. Vercel handles only
+its permanent redirect to `https://www.publicparish.com`; it does not host the
+application frontend. Convex serves both the `www` custom domain and the
+required `convex.site` origin from the same production HTTP router and static
+release. The custom domain therefore supplements the required host instead of
+replacing it.
 
 ## Setup and registration status
 
@@ -70,6 +89,10 @@ Phase 0 was completed on August 27:
   is registered;
 - the Phase 0 shell passed a hosted development smoke, then the matching backend
   and frontend were promoted to `https://befitting-flamingo-587.convex.site`;
+- the product was renamed to Public Parish; `https://www.publicparish.com` was
+  attached directly to the production HTTP router, and the bare domain was
+  configured as a path-preserving redirect; the required `convex.site` URL
+  remains public and functional;
 - `npx convex ai-files install` completed and the generated guidelines were
   read;
 - Convex Auth v2 is pinned to `2.0.0-alpha.1` but not configured;
@@ -80,10 +103,10 @@ Phase 0 was completed on August 27:
   the public repository;
 - the live AI Gateway model list contains `openai/gpt-5.6-terra` and
   `openai/gpt-5.6-luna`;
-- the existing team spending limits are a $20 warning threshold and $40 disable
-  threshold per month;
-- the public `LaykenV/parish-watch` GitHub repository and `origin` remote exist,
-  with the initial source commit published on `main`;
+- the team spending limits are a $20 warning threshold and $60 disable threshold
+  per month;
+- the public `LaykenV/public-parish` GitHub repository and matching `origin`
+  remote exist, with the initial source commit published on `main`;
 - the MIT license is present;
 - `npm ci`, typechecking, three tests, the production build, lint, cloud Convex
   pushes, and local, hosted-development, and production readiness queries all
@@ -101,7 +124,7 @@ model call, AgentMail integration, or authentication flow exists yet.
 
 Judge question: can a normal person use this this week?
 
-Parish Watch proof:
+Public Parish proof:
 
 - no account needed to browse or ask questions;
 - choose a parish or municipality, not a technical data source;
@@ -116,7 +139,7 @@ Failure mode: a developer-facing crawler dashboard or a generic AI digest.
 
 Judge question: is this a real product, and does it solve a recognizable problem?
 
-Parish Watch proof:
+Public Parish proof:
 
 - connects fragmented official sources into issue timelines;
 - makes public deadlines and later outcomes visible;
@@ -130,7 +153,7 @@ Failure mode: summarizing a PDF without a continuing resident workflow.
 
 Judge question: does Convex do meaningful application work?
 
-Parish Watch proof:
+Public Parish proof:
 
 - normalized schema and indexes;
 - queries, mutations, internal functions, and actions;
@@ -150,7 +173,7 @@ demo.
 
 Judge question: do OpenAI, Firecrawl, and AgentMail do necessary work?
 
-Parish Watch proof:
+Public Parish proof:
 
 - Firecrawl discovers, retrieves, parses, and versions difficult official
   sources;
@@ -168,7 +191,7 @@ resident outcome.
 
 Judge question: can judges and agents open and use it?
 
-Parish Watch proof:
+Public Parish proof:
 
 - public `convex.site` URL;
 - no invitation;
@@ -180,7 +203,7 @@ Parish Watch proof:
 
 Judge question: did anyone care enough to use or engage with it?
 
-Parish Watch proof:
+Public Parish proof:
 
 - real resident sessions;
 - follows and substantive questions;
@@ -194,7 +217,7 @@ Do not substitute impressions for completed product actions.
 
 Judge question: does the video prove the product quickly?
 
-Parish Watch proof:
+Public Parish proof:
 
 - under three minutes;
 - little narration;
@@ -210,7 +233,7 @@ Target length: 2 minutes 45 seconds
 
 ### 0:00 to 0:15: The Resident Problem
 
-Open Parish Watch signed out. Select Lafayette and a topic. State one sentence:
+Open Public Parish signed out. Select Lafayette and a topic. State one sentence:
 local decisions are public, but spread across packets, portals, and updates.
 
 ### 0:15 to 0:45: Find What Matters
@@ -300,7 +323,7 @@ Post:
 
 - why residents miss local decisions;
 - one real source-backed issue;
-- how Parish Watch shows the deadline and receipts;
+- how Public Parish shows the deadline and receipts;
 - what changed after a meeting;
 - an invitation to test the free tool through the issue's share URL.
 
@@ -395,6 +418,6 @@ other contested project.
 
 ## Final Standard
 
-No plan can promise a win. Parish Watch earns a credible first-place attempt by
+No plan can promise a win. Public Parish earns a credible first-place attempt by
 being more than large: it must be coherent, live, trusted, useful this week, and
 easy to prove in under three minutes.

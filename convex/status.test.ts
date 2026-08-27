@@ -12,7 +12,7 @@ test('reports that the Convex backend is ready', async () => {
   const t = convexTest(schema, modules)
 
   await expect(t.query(api.system.status.readiness, {})).resolves.toEqual({
-    application: 'Parish Watch',
+    application: 'Public Parish',
     backend: 'convex',
     state: 'ready',
   })

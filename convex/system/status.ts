@@ -5,12 +5,12 @@ import { query } from '../_generated/server'
 export const readiness = query({
   args: {},
   returns: v.object({
-    application: v.literal('Parish Watch'),
+    application: v.literal('Public Parish'),
     backend: v.literal('convex'),
     state: v.literal('ready'),
   }),
   handler: () => ({
-    application: 'Parish Watch' as const,
+    application: 'Public Parish' as const,
     backend: 'convex' as const,
     state: 'ready' as const,
   }),

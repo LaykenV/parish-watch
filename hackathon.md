@@ -1,10 +1,10 @@
 # Hackathon log
 
-- **Project:** Parish Watch
+- **Project:** Public Parish
 - **Event:** Convex All Gas Hackathon
 - **What it does:** Establishes a source-cited service for discovering, understanding, questioning, and following consequential Louisiana local-government decisions.
 - **Live app:** https://befitting-flamingo-587.convex.site
-- **Repo:** https://github.com/LaykenV/parish-watch
+- **Repo:** https://github.com/LaykenV/public-parish
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
 - **Components:** `@convex-dev/static-hosting`
@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-27T17:54:34Z
+- **Last updated:** 2026-08-27T23:09:21Z
 
 ## Log
 
@@ -20,11 +20,33 @@
 
 Established separate hosted development and production environments. The Phase
 0 shell passed its hosted development smoke before the matching Convex backend
-and static frontend were promoted to production. Verified the public root,
-production-bound JavaScript asset, direct not-found route, desktop and mobile
-layouts, and live readiness query (`package.json`, `README.md`, `docs/`). No
-Firecrawl ingestion, OpenAI model call, AgentMail integration, authentication,
-or resident evidence experience exists yet.
+and static frontend were promoted to production. Renamed the product, GitHub
+repository, local remote, and Convex project to Public Parish and
+`public-parish`. GitHub redirects the former repository URL; the Convex
+deployment names and public URLs remain unchanged.
+
+Attached `https://www.publicparish.com` directly to the production Convex HTTP
+router and set it as the production `CONVEX_SITE_URL`. Added a redirect-only
+Vercel project for the bare domain so paths and query strings on
+`https://publicparish.com` permanently redirect to `www`; Vercel does not host
+the application frontend. Checked the isolated redirect configuration into
+`infra/apex-redirect`. Kept the required
+`https://befitting-flamingo-587.convex.site` origin public and functional.
+Documented why the redirect is needed and why it does not replace the
+hackathon's qualifying URL. The submission will use the public `convex.site`
+host; the custom domain remains an additional resident-facing entry point.
+
+Kept the team warning threshold at $20 per month and raised the hard disable
+threshold from $40 to $60 per month before real AI Gateway calls begin. The
+limit remains team-wide; model calls will also have application-level token,
+retry, batch, and chat budgets.
+
+Verified the custom-domain DNS and TLS certificate, the public root and direct
+SPA routes on both served production origins, the production-bound JavaScript
+asset, desktop and mobile layouts, and the live readiness query
+(`package.json`, `README.md`, `docs/`). Convex Auth v2 and Google OAuth remain
+planned but unconfigured. No Firecrawl ingestion, OpenAI model call, AgentMail
+integration, authentication, or resident evidence experience exists yet.
 
 ### 2026-08-27 - 96938c4
 

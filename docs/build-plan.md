@@ -37,10 +37,10 @@ Status: complete August 27, 2026.
 - [x] Confirm registration and redeem the 20,000 Firecrawl participant credits.
 - [x] Confirm Convex AI Gateway access on the Professional team.
 - [x] Confirm both role model IDs through the gateway's live `GET /v1/models`.
-- [x] Confirm the existing team warning and disable thresholds of $20 and $40
-      per month.
-- [x] Create the public `LaykenV/parish-watch` GitHub repository and add the
-      `origin` remote. The authorized initial source commit is public on `main`.
+- [x] Set the team warning and disable thresholds to $20 and $60 per month.
+- [x] Create the public repository, rename it to `LaykenV/public-parish`, and
+      update the `origin` remote. The authorized initial source commit is public
+      on `main`.
 - [x] Add the MIT license before the first public push.
 - [x] Scaffold TanStack Start in SPA/static-prerender mode and Convex in this
       existing repository.
@@ -349,7 +349,7 @@ government event.
 Suggested sequence:
 
 1. protected Varholdt sales block;
-2. one backend or resident outcome for Parish Watch;
+2. one backend or resident outcome for Public Parish;
 3. tests and a real source check;
 4. update `hackathon.md`;
 5. capture a short proof clip or screenshot only when something changed;

@@ -17,7 +17,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Parish Watch',
+        title: 'Public Parish',
       },
       {
         name: 'description',
@@ -42,7 +42,7 @@ function NotFound() {
       <p className="eyebrow">Not found</p>
       <h1>This page does not exist.</h1>
       <p>
-        Return to <a href="/">Parish Watch</a>.
+        Return to <a href="/">Public Parish</a>.
       </p>
     </main>
   )

@@ -1,4 +1,4 @@
-# Parish Watch Agent Instructions
+# Public Parish Agent Instructions
 
 Read `PLAN.md`, `docs/decisions.md`, `docs/product-spec.md`,
 `docs/architecture.md`, `docs/sources.md`, `docs/build-plan.md`, and
@@ -6,7 +6,7 @@ Read `PLAN.md`, `docs/decisions.md`, `docs/product-spec.md`,
 
 ## Product Contract
 
-- Parish Watch is a free, open-source, nonpartisan Louisiana civic application.
+- Public Parish is a free, open-source, nonpartisan Louisiana civic application.
 - It helps residents discover consequential local-government decisions, inspect
   the official evidence, ask source-grounded questions, follow an issue, and
   learn what happened.
@@ -44,7 +44,7 @@ Read `PLAN.md`, `docs/decisions.md`, `docs/product-spec.md`,
 - Keep direct OpenAI access behind the same provider interface as a documented
   fallback if AI Gateway is unavailable. The submitted app should use AI
   Gateway when the paid Convex team supports it.
-- Chat can only answer from published, validated Parish Watch evidence.
+- Chat can only answer from published, validated Public Parish evidence.
 - Use the pinned Convex Auth v2 alpha for Google account sign-in. Do not add
   Convex Auth v1 or custom email authentication.
 - Accounts are optional for reading and chat. Google sign-in exists for saved

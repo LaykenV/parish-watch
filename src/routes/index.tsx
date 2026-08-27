@@ -13,7 +13,7 @@ function Home() {
     <main className="setup-shell">
       <section className="setup-card" aria-labelledby="page-title">
         <p className="eyebrow">Phase 0 setup proof</p>
-        <h1 id="page-title">Parish Watch</h1>
+        <h1 id="page-title">Public Parish</h1>
         <p className="lede">
           Louisiana local-government decisions, tied to the official record.
         </p>

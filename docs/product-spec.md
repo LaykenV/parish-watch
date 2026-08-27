@@ -4,7 +4,7 @@ Status: approved product plan; Phase 0 setup shell is public, resident interface
 
 ## Product Sentence
 
-Parish Watch tells Louisiana residents what supported local governments are
+Public Parish tells Louisiana residents what supported local governments are
 about to decide, shows the official evidence, answers source-grounded questions,
 and alerts followers when the issue changes or reaches an outcome.
 
@@ -80,7 +80,7 @@ decisions and sources inspectable.
 
 The home page asks:
 
-> What should Parish Watch keep an eye on for you?
+> What should Public Parish keep an eye on for you?
 
 Inputs:
 
@@ -152,7 +152,7 @@ contains:
 - the next statewide election date;
 - a link to the Louisiana Secretary of State's voter portal for registration
   status and a resident's sample ballot;
-- one line stating that Parish Watch does not run elections and does not cover
+- one line stating that Public Parish does not run elections and does not cover
   candidates.
 
 ### Rules
@@ -300,7 +300,7 @@ Show:
 
 Do not position the meeting page as the main way residents discover information.
 
-## Ask Parish Watch
+## Ask Public Parish
 
 ### Modes
 
@@ -330,7 +330,7 @@ Do not position the meeting page as the main way residents discover information.
 
 Use:
 
-> Parish Watch did not find that answer in the official sources it has validated
+> Public Parish did not find that answer in the official sources it has validated
 > for this issue.
 
 Then show the closest official source and contact path. Do not say “I think,”
@@ -375,7 +375,7 @@ preferences outside that link.
 
 Subject pattern:
 
-> Parish Watch update: [factual issue title]
+> Public Parish update: [factual issue title]
 
 Body:
 
@@ -383,14 +383,14 @@ Body:
 2. current stage or next date;
 3. why it may matter;
 4. official source receipts;
-5. open in Parish Watch;
+5. open in Public Parish;
 6. invitation to reply with a question;
 7. delivery preference link.
 
 The message must be useful without clicking, but concise enough to scan.
 
 Before the first alert, AgentMail sends a short-lived verification code or
-confirmation request. Parish Watch stores only the hashed challenge, expiry,
+confirmation request. Public Parish stores only the hashed challenge, expiry,
 attempt count, and verified delivery reference. It does not treat that flow as
 account authentication.
 

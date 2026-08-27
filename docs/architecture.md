@@ -25,7 +25,7 @@ under-three-minute demo.
 
 ## System Boundaries
 
-Parish Watch owns:
+Public Parish owns:
 
 - the official-source registry;
 - immutable source versions;
@@ -38,7 +38,7 @@ Parish Watch owns:
 - subscriptions, alerts, publication revisions, and source-problem intake;
 - coverage health.
 
-Parish Watch does not own or replace:
+Public Parish does not own or replace:
 
 - the official government record;
 - a municipality's agenda or records system;
@@ -46,7 +46,7 @@ Parish Watch does not own or replace:
 - public-comment submission;
 - a government employee's official answer.
 
-The official record always wins. Parish Watch is a connective and explanatory
+The official record always wins. Public Parish is a connective and explanatory
 layer.
 
 ## Planned Stack
@@ -88,8 +88,35 @@ Current Phase 0 hosts:
 
 - development: `https://woozy-wren-227.convex.site` backed by
   `https://woozy-wren-227.convex.cloud`;
-- production: `https://befitting-flamingo-587.convex.site` backed by
+- public entry point: `https://publicparish.com`, a Vercel redirect-only host;
+- primary production origin: `https://www.publicparish.com`, served directly by
+  Convex;
+- required hackathon and fallback production origin:
+  `https://befitting-flamingo-587.convex.site` backed by
   `https://befitting-flamingo-587.convex.cloud`.
+
+The `www` custom domain and `convex.site` origin serve the same production HTTP
+router and static release. The bare domain preserves paths and query strings in
+a permanent redirect to `www`; its complete configuration lives in
+`infra/apex-redirect`. Keep `CONVEX_CLOUD_URL` on the production
+`convex.cloud` endpoint for queries, mutations, actions, and realtime. The
+production `CONVEX_SITE_URL` override is `https://www.publicparish.com`, so
+Convex Auth will use the canonical public origin for its issuer and provider
+callback. Configure Convex Auth v2's `allowedRedirectOrigins` with both
+`https://www.publicparish.com` and the production `convex.site` origin. Register
+the exact callback URLs required by the installed Google provider when auth is
+implemented, then test a complete sign-in started from each served origin.
+
+The redirect project exists because Vercel DNS rejects a literal apex CNAME and
+Convex did not verify Vercel's flattened ALIAS record. DNS cannot send an HTTP
+redirect, so the bare domain needs a small HTTP endpoint. That Vercel project
+only returns the redirect. It does not build or serve the application.
+
+For the hackathon, the qualifying and submission URL remains
+`https://befitting-flamingo-587.convex.site`. It stays public, requires no
+invitation, and serves the same production release as the custom domain. The
+custom domain improves the resident-facing URL without replacing the required
+Convex host.
 
 Run each vendor integration through automated or bounded contract tests, then
 development, then one production smoke when the slice first ships. Keep
@@ -192,7 +219,7 @@ Rules:
 
 ## Source Registry
 
-A registry record describes what Parish Watch believes it should monitor:
+A registry record describes what Public Parish believes it should monitor:
 
 ```ts
 type SourceRegistry = {
@@ -810,7 +837,7 @@ successful roundup. It sends one sourced message only when at least one change
 exists. The subscriber and roundup window form the dedupe key.
 
 The message includes the change, why it matters, official source links, and a
-path back to Parish Watch. A reply stays in the same thread and runs through the
+path back to Public Parish. A reply stays in the same thread and runs through the
 same grounded answer path. If evidence does not answer it, the email says so and
 provides the official contact. It never forwards automatically to an agency.
 

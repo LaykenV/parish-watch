@@ -1,4 +1,4 @@
-# Parish Watch Plan
+# Public Parish Plan
 
 Status: Phase 0 and the public production shell are complete; evidence-engine implementation is next
 Event: Convex All Gas Hackathon
@@ -6,7 +6,7 @@ Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
 ## Executive Decision
 
-Enter the hackathon with Parish Watch, a fresh application built around one
+Enter the hackathon with Public Parish, a fresh application built around one
 complete resident outcome:
 
 > See what local government is about to change, understand the official evidence,
@@ -62,7 +62,7 @@ The missing layer connects:
 
 ## Product Promise
 
-Parish Watch is free, open source, nonpartisan, source-cited, and correctable.
+Public Parish is free, open source, nonpartisan, source-cited, and correctable.
 It tells residents what a supported local body is considering, why a decision
 may matter, when action is expected, how to inspect the original record, and
 what happened next.
@@ -132,13 +132,13 @@ It shows:
 
 Atomic decisions remain available. Uncertain relationships remain separate.
 
-### 4. Ask Parish Watch
+### 4. Ask Public Parish
 
 Anonymous visitors can hold a multi-turn chat about the current issue or any
-published Parish Watch evidence. The same device keeps continuity for 24 hours.
+published Public Parish evidence. The same device keeps continuity for 24 hours.
 Chat never requires sign-in and never searches the open web for civic facts.
 
-When the validated corpus does not answer a question, Parish Watch says that the
+When the validated corpus does not answer a question, Public Parish says that the
 answer was not found and links the relevant official contact or source. It does
 not improvise.
 
@@ -171,7 +171,7 @@ ballot.
 
 The strip is static hand-authored content. It runs no crawl, no extraction, and
 no model call. It names no candidate, party, office, or position, and it ranks
-nothing. Parish Watch points at the official voter portal instead of restating
+nothing. Public Parish points at the official voter portal instead of restating
 what that portal already publishes, so the strip sits outside the publication
 contract without weakening it.
 
@@ -291,7 +291,7 @@ leads.
 - X and LinkedIn: technical build progress, sponsor integration, reliability,
   and hackathon story
 - TikTok and Facebook: resident problem, official evidence, current local issue,
-  and how to use Parish Watch
+  and how to use Public Parish
 
 One recording can produce separate edits. Content work is capped near 90 minutes
 per week. Posts in local Facebook groups must follow group rules and identify the
@@ -339,5 +339,5 @@ is true:
   the service;
 - a qualified commercial opportunity emerges.
 
-Otherwise, preserve Parish Watch as a useful open-source civic service and a
+Otherwise, preserve Public Parish as a useful open-source civic service and a
 strong technical case study, then return product time to the core business.
