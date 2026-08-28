@@ -1,3 +1,8 @@
+AGENTS.md at the repo root is standing law in every session, not optional
+guidance. Read and follow it before any work.
+
+@AGENTS.md
+
 <!-- convex-ai-start -->
 
 This project uses [Convex](https://convex.dev) as its backend.
