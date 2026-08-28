@@ -4,7 +4,16 @@ import { internalMutation } from '../_generated/server'
 
 const LAFAYETTE_COUNCIL_HUB_URL =
   'https://www.lafayettela.gov/your-government/city-and-parish-councils/'
+const LAFAYETTE_COUNCIL_DOCUMENT_SEARCH_URL =
+  'https://apps.lafayettela.gov/obcouncil/index.html'
+const LAFAYETTE_COUNCIL_SCHEDULE_RESEARCH_URL =
+  'https://www.lafayettela.gov/your-government/city-and-parish-councils/schedule-research-ord-reso/'
 const LAFAYETTE_OFFICIAL_DOMAINS = ['lafayettela.gov', 'apps.lafayettela.gov']
+const LAFAYETTE_COUNCIL_SEED_URLS = [
+  LAFAYETTE_COUNCIL_HUB_URL,
+  LAFAYETTE_COUNCIL_DOCUMENT_SEARCH_URL,
+  LAFAYETTE_COUNCIL_SCHEDULE_RESEARCH_URL,
+]
 
 export const seedLaunchCoverage = internalMutation({
   args: {},
@@ -47,12 +56,24 @@ export const seedLaunchCoverage = internalMutation({
       .query('sourceRegistries')
       .withIndex('by_body_and_status', (q) => q.eq('governmentBodyId', bodyId))
       .first()
-    const registryId =
-      existingRegistry?._id ??
-      (await ctx.db.insert('sourceRegistries', {
+    let registryId
+    if (existingRegistry) {
+      registryId = existingRegistry._id
+      await ctx.db.patch(registryId, {
+        officialDomains: LAFAYETTE_OFFICIAL_DOMAINS,
+        seedUrls: LAFAYETTE_COUNCIL_SEED_URLS,
+        sourceKinds: ['agenda', 'minutes', 'ordinance', 'resolution'],
+        expectedCadence: {
+          kind: 'meeting_cycle',
+          expectedWeekdays: [2],
+        },
+        discoveryMode: 'dynamic',
+      })
+    } else {
+      registryId = await ctx.db.insert('sourceRegistries', {
         governmentBodyId: bodyId,
         officialDomains: LAFAYETTE_OFFICIAL_DOMAINS,
-        seedUrls: [LAFAYETTE_COUNCIL_HUB_URL],
+        seedUrls: LAFAYETTE_COUNCIL_SEED_URLS,
         sourceKinds: ['agenda', 'minutes', 'ordinance', 'resolution'],
         expectedCadence: {
           kind: 'meeting_cycle',
@@ -60,7 +81,8 @@ export const seedLaunchCoverage = internalMutation({
         },
         discoveryMode: 'dynamic',
         status: 'validating',
-      }))
+      })
+    }
 
     return { jurisdictionId, bodyId, registryId }
   },

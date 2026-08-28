@@ -13,6 +13,7 @@ const modules = import.meta.glob('./**/*.ts')
 const HUB_URL =
   'https://www.lafayettela.gov/your-government/city-and-parish-councils/'
 const ALT_URL = 'https://apps.lafayettela.gov/obcouncil/index.html'
+const PDF_URL = 'https://apps.lafayettela.gov/obcouncil/api/Document/2553291/'
 
 const MD_1 =
   '# Lafayette City and Parish Councils\n\nRegular meetings occur on the first and third Tuesday of each month.'
@@ -526,6 +527,70 @@ test('missing raw html fails instead of mislabeling markdown as the raw artifact
   expect(snapshots).toHaveLength(0)
 })
 
+test('a PDF stores the official source bytes alongside Firecrawl markdown', async () => {
+  const t = initTest()
+  const pdfBytes = new TextEncoder().encode('%PDF-1.7 official agenda bytes')
+  const fetchMock = vi.fn(async (input: string | URL | Request) => {
+    const requestUrl =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url
+    if (requestUrl === PDF_URL) {
+      const response = new Response(pdfBytes, {
+        status: 200,
+        headers: { 'content-type': 'application/pdf' },
+      })
+      Object.defineProperty(response, 'url', { value: PDF_URL })
+      return response
+    }
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          markdown: '# Regular meeting agenda',
+          rawHtml: '<html><body>Firecrawl PDF rendering</body></html>',
+          metadata: {
+            sourceURL: PDF_URL,
+            url: PDF_URL,
+            statusCode: 200,
+            contentType: 'application/pdf',
+            creditsUsed: 2,
+          },
+        },
+      }),
+      { status: 200 },
+    )
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+
+  const result = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId, urlOverride: PDF_URL },
+  )
+
+  expect(result).toMatchObject({ outcome: 'created', version: 1 })
+  const snapshot = await t.query(
+    internal.sources.snapshots.getLatestForSource,
+    { registryId, canonicalUrl: PDF_URL },
+  )
+  expect(snapshot).toMatchObject({
+    contentType: 'application/pdf',
+    rawContentType: 'application/pdf',
+    rawByteLength: pdfBytes.byteLength,
+    normalizedContentType: 'text/markdown',
+  })
+  expect(snapshot?.contentHash).toBe(
+    await sha256HexOfText('%PDF-1.7 official agenda bytes'),
+  )
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+})
+
 test('a firecrawl failure marks the run failed without creating a snapshot', async () => {
   const t = initTest()
   vi.stubGlobal(
@@ -571,4 +636,13 @@ test('seeding is idempotent by slug', async () => {
   )
 
   expect(second).toEqual(first)
+
+  const registry = await t.query(internal.sources.registries.get, {
+    registryId: first.registryId,
+  })
+  expect(registry?.seedUrls).toEqual([
+    HUB_URL,
+    ALT_URL,
+    'https://www.lafayettela.gov/your-government/city-and-parish-councils/schedule-research-ord-reso/',
+  ])
 })

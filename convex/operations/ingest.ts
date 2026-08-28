@@ -12,6 +12,7 @@ import {
 } from '../sources/domains'
 import { sha256HexOfBytes, sha256HexOfText } from '../sources/hashing'
 import { normalizeFirecrawlMetadata } from '../sources/metadata'
+import { downloadOfficialPdf } from '../sources/rawArtifact'
 import { cleanupStoredArtifacts } from '../sources/storageCleanup'
 import { retrievalContentKey } from '../pipeline/keys'
 
@@ -240,21 +241,44 @@ async function ingestSeedUrl(
       )
     }
 
-    const rawHtml = typeof document.rawHtml === 'string' ? document.rawHtml : ''
-    if (!rawHtml.trim()) {
-      return await failOutcome(
-        'missing_raw_artifact',
-        `Firecrawl returned no raw HTML for ${url}`,
-        true,
-      )
-    }
-
     const warning =
       typeof document.warning === 'string' ? document.warning : undefined
 
     const retrievalTime = Date.now()
     const markdownBytes = new TextEncoder().encode(markdown)
-    const rawBytes = new TextEncoder().encode(rawHtml)
+    const sourceContentType =
+      typeof metadata.contentType === 'string'
+        ? metadata.contentType
+        : 'unknown'
+    let rawBytes: Uint8Array<ArrayBuffer>
+    let rawContentType: string
+    if (sourceContentType.toLowerCase().startsWith('application/pdf')) {
+      const rawArtifact = await downloadOfficialPdf(
+        retrievedUrl,
+        officialDomains,
+      )
+      if (!rawArtifact.ok) {
+        return await failOutcome(
+          rawArtifact.errorClass,
+          rawArtifact.errorDetail,
+          rawArtifact.retryable,
+        )
+      }
+      rawBytes = rawArtifact.bytes
+      rawContentType = rawArtifact.contentType
+    } else {
+      const rawHtml =
+        typeof document.rawHtml === 'string' ? document.rawHtml : ''
+      if (!rawHtml.trim()) {
+        return await failOutcome(
+          'missing_raw_artifact',
+          `Firecrawl returned no raw HTML for ${url}`,
+          true,
+        )
+      }
+      rawBytes = new TextEncoder().encode(rawHtml)
+      rawContentType = 'text/html'
+    }
     const contentHash = await sha256HexOfBytes(rawBytes)
     const normalizedContentHash = await sha256HexOfText(markdown)
     const idempotencyKey = await retrievalContentKey(
@@ -266,7 +290,7 @@ async function ingestSeedUrl(
       new Blob([markdownBytes], { type: 'text/markdown' }),
     )
     rawStorageId = await ctx.storage.store(
-      new Blob([rawBytes], { type: 'text/html' }),
+      new Blob([rawBytes], { type: rawContentType }),
     )
 
     const committed = await ctx.runMutation(
@@ -280,10 +304,7 @@ async function ingestSeedUrl(
         contentHash,
         normalizedContentHash,
         idempotencyKey,
-        contentType:
-          typeof metadata.contentType === 'string'
-            ? metadata.contentType
-            : 'unknown',
+        contentType: sourceContentType,
         targetStatusCode,
         retrievalTime,
         normalized: {
@@ -292,7 +313,7 @@ async function ingestSeedUrl(
         },
         raw: {
           storageId: rawStorageId,
-          contentType: 'text/html',
+          contentType: rawContentType,
           byteLength: rawBytes.byteLength,
         },
         truncation: { truncated: warning !== undefined, detail: warning },

@@ -95,6 +95,10 @@ not replace the first-dollar plan.
 - PR-Agent runs `/describe` and `/review` on PR open, and `/review` on push
   (see `pr-agent.md`). The `file-pr` and `babysit-pr` skills carry the full
   procedure; these rules apply even when the skills do not fire.
+- Merging to `main` deploys the production backend and frontend. The merge
+  question must say that plainly. After an authorized merge, babysit the exact
+  production workflow run and execute `npm run smoke:production` before calling
+  the release ready.
 
 ## Unslop (always apply)
 

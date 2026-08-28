@@ -72,17 +72,27 @@ change. The lockfile and code become the implementation evidence.
 
 ## Environments and promotion
 
-Use the personal cloud development deployment for normal implementation and
-provider integration work. Before production promotion, build and upload the
-frontend to that deployment's `convex.site` host with
-`npm run hosting:smoke:dev`. This checks the real HTTP router, SPA fallback,
-caching, and build-time Convex URL without changing production.
+The hackathon uses two Convex environments, personal development and
+production. There is no staging deployment.
 
-The shared production deployment owns the public `convex.site` app. Promote a
-slice manually with `npm run deploy` only after its automated checks and hosted
-development smoke pass. That command performs the production-aware frontend
-build, deploys the matching Convex backend, and uploads the static assets as one
-release. Do not upload a previously built `dist/` directory to production.
+`npm run dev` serves the frontend from the laptop and runs `convex dev` beside
+it. Convex pushes backend changes from the current branch to the personal cloud
+development deployment. The local UI connects to that remote backend, database,
+actions, components, and file storage. This is one personal deployment, not one
+deployment per branch. The last branch synced by `convex dev` determines the
+backend code running there. Run `npm run dev` after switching branches.
+
+Pull requests run `npm run verify`. A reviewed merge to `main` is the production
+approval and triggers `.github/workflows/deploy-production.yml`. The workflow
+verifies the merge commit, runs `npm run deploy`, applies the idempotent registry
+seed, and runs the production smoke. The static-hosting deploy builds with the
+production Convex URL, deploys the backend, and uploads the matching static
+assets. Never upload a previously built `dist/` directory to production.
+
+`npm run hosting:smoke:dev` remains available for a change that needs the real
+development HTTP router, caching, SPA fallback, or build-time URL. It is not a
+normal pre-merge gate. Use a preview deployment only when auth, webhook,
+routing, or schema work needs isolation from the personal development data.
 
 Current Phase 0 hosts:
 
@@ -119,7 +129,7 @@ custom domain improves the resident-facing URL without replacing the required
 Convex host.
 
 Run each vendor integration through automated or bounded contract tests, then
-development, then one production smoke when the slice first ships. Keep
+development, then the post-merge production smoke. Keep
 exploratory crawls, prompt iteration, synthetic records, and destructive failure
 tests outside production. Use a preview deployment only when auth, webhook,
 routing, or schema work needs isolation beyond the personal development
