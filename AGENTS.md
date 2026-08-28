@@ -92,7 +92,7 @@ not replace the first-dollar plan.
 - Review feedback never grows a PR past its original goal. Verify every bot
   finding against source before changing code; dismiss false positives with a
   written reason and resolve the thread.
-- PR-Agent runs `/describe` and `/review` on every PR open and push
+- PR-Agent runs `/describe` and `/review` on PR open, and `/review` on push
   (see `pr-agent.md`). The `file-pr` and `babysit-pr` skills carry the full
   procedure; these rules apply even when the skills do not fire.
 
