@@ -19,6 +19,7 @@ jobs:
       url: https://befitting-flamingo-587.convex.site
     env:
       CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PROD_DEPLOY_KEY }}
+      VITE_CONVEX_URL: https://befitting-flamingo-587.convex.cloud
     steps:
       - name: Check out the release commit
         uses: actions/checkout@v4

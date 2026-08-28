@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      VITE_CONVEX_URL: https://woozy-wren-227.convex.cloud
     steps:
       - name: Check out the pull request
         uses: actions/checkout@v4
