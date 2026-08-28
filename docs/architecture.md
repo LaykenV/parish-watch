@@ -323,7 +323,8 @@ Every retrieved artifact records:
 - official body and registry;
 - retrieval time;
 - MIME type;
-- content hash;
+- raw or original artifact hash used for immutable version identity;
+- normalized-content hash used by extraction and material-diff processing;
 - Firecrawl request metadata;
 - raw or original file in Convex storage when available;
 - normalized text used by the model;
@@ -336,9 +337,14 @@ Firecrawl component results that are truncated or too large for a normal
 document field must be persisted through file storage or retrieved in bounded
 parts. The pipeline cannot publish from an unknowingly truncated artifact.
 
-Snapshots are immutable. A new hash creates a new version and a material-diff
-check. Old citations keep resolving to the version on which the published claim
-was based.
+Snapshots are immutable. Version identity is scoped to the registry and the
+canonical source URL. A new raw or original artifact hash creates a new version
+in that source's chain and a material-diff check. A matching normalized-content
+hash can suppress downstream formatting noise, but it never replaces the raw
+artifact record. Old citations keep resolving to the version on which the
+published claim was based. Normal retrieval accepts a redirected result only
+when its final URL remains inside the registry's approved official domains and
+its target HTTP status is successful.
 
 ## Core Data Model
 
@@ -389,11 +395,13 @@ compiler work.
 
 #### `sourceSnapshots`
 
-Fields: registry, canonical URL, retrieved URL, hash, retrieval time, content
-type, storage IDs, normalized text metadata, page map, truncation flags,
-previous snapshot.
-Indexes: registry plus retrieval time; canonical URL plus retrieval time; hash.
-The retrieval mutation enforces deduplication for the same source and hash.
+Fields: registry, canonical URL, retrieved URL, raw artifact hash, normalized
+content hash, retrieval time, content type, storage IDs, normalized text
+metadata, page map, truncation flags, previous snapshot.
+Indexes: registry plus retrieval time; registry plus canonical URL plus
+retrieval time; registry plus canonical URL plus raw artifact hash. The
+retrieval mutation enforces deduplication for the same source and raw artifact
+hash.
 
 #### `pipelineRuns`
 

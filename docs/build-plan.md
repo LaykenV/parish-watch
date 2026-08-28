@@ -101,6 +101,9 @@ a new immutable snapshot.
 
 ### Slice 2: Cited Atomic Decision
 
+- Adopt `@convex-dev/workflow` to orchestrate the now multi-stage extraction
+  flow durably. Workflow steps execute and retry the work; the pipelineRuns and
+  pipelineStages tables remain the domain evidence ledger.
 - Version the strict extraction schema.
 - Build the Convex AI Gateway provider and verify its scoped service token.
 - Call `MODEL_STRONG` through Chat Completions with a strict JSON Schema

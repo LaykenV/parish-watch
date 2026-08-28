@@ -7,14 +7,38 @@
 - **Repo:** https://github.com/LaykenV/public-parish
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
-- **Components:** `@convex-dev/static-hosting`
-- **Convex features:** queries, internal actions, HTTP actions, realtime queries
+- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`
+- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-27T23:09:21Z
+- **Last updated:** 2026-08-28T01:38:34Z
 
 ## Log
+
+### 2026-08-28 - working tree
+
+Built the Slice 1 source ledger and Firecrawl retrieval path. The schema now
+holds jurisdictions, bodies, registries, per-source immutable snapshot chains,
+pipeline runs, and stage evidence. Retrieval processor v2 validates both the
+requested and final URL, rejects unsuccessful target statuses, hashes the raw
+artifact separately from normalized Markdown, reuses only the same source and
+raw hash, and cleans redundant or failed uploads (`convex/schema.ts`,
+`convex/operations/ingest.ts`, `convex/sources/`, `convex/pipeline/`).
+
+The earlier development run against the real Lafayette council hub created
+snapshot v1 with hash `53188bd7…`, 37 KB of Markdown, and 132 KB of raw HTML. A
+repeat run reused the same snapshot ID, and both run records succeeded. That
+live record used retrieval processor v1. The reviewed v2 hardening is currently
+working-tree code and has not been deployed.
+
+Local verification passes 21 tests plus typecheck, production build, and lint.
+The tests cover unchanged reuse, a changed raw artifact, independent chains for
+two URLs with identical content, requested-domain rejection, redirected-domain
+rejection, target 404 rejection, missing raw content, Firecrawl failure,
+metadata normalization, blob cleanup, hashing, and idempotent seeding. No AI
+model call, AgentMail integration, authentication, production promotion, or
+public pipeline surface exists yet.
 
 ### 2026-08-27 - dd12d01
 

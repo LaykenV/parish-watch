@@ -30,6 +30,7 @@
     "@convex-dev/auth": "2.0.0-alpha.1",
     "@convex-dev/react-query": "0.1.0",
     "@convex-dev/static-hosting": "0.2.1",
+    "@firecrawl/firecrawl-convex": "0.1.1",
     "@tailwindcss/vite": "4.3.3",
     "@tanstack/react-devtools": "0.10.12",
     "@tanstack/react-query": "5.102.7",
