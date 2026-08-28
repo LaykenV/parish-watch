@@ -219,6 +219,60 @@ test('changed content creates a new immutable version linked to the previous sna
   )
 })
 
+test('content reverting to an older hash creates a new head in the version chain', async () => {
+  const t = initTest()
+  stubScrape(MD_1, RAW_1)
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+  const first = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+
+  stubScrape(MD_2, RAW_2)
+  const second = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+
+  stubScrape(MD_1, RAW_1)
+  const reverted = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+
+  expect(reverted).toMatchObject({ outcome: 'created', version: 3 })
+  expect(snapshotIdOf(reverted)).not.toBe(snapshotIdOf(first))
+
+  const latest = await t.query(internal.sources.snapshots.getLatestForSource, {
+    registryId,
+    canonicalUrl: HUB_URL,
+  })
+  expect(latest).toMatchObject({
+    _id: snapshotIdOf(reverted),
+    previousSnapshotId: snapshotIdOf(second),
+    version: 3,
+  })
+
+  const repeated = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+  expect(repeated).toMatchObject({
+    outcome: 'reused',
+    snapshotId: snapshotIdOf(reverted),
+    version: 3,
+  })
+
+  const snapshots = await t.query(internal.sources.snapshots.listForSource, {
+    registryId,
+    canonicalUrl: HUB_URL,
+  })
+  expect(snapshots).toHaveLength(3)
+})
+
 test('a raw artifact change creates a new version even when normalized markdown is unchanged', async () => {
   const t = initTest()
   stubScrape(MD_1, RAW_1)

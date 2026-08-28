@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-28T01:38:34Z
+- **Last updated:** 2026-08-28T04:28:47Z
 
 ## Log
 
@@ -23,7 +23,7 @@ holds jurisdictions, bodies, registries, per-source immutable snapshot chains,
 pipeline runs, and stage evidence. Retrieval processor v2 validates both the
 requested and final URL, rejects unsuccessful target statuses, hashes the raw
 artifact separately from normalized Markdown, reuses only the same source and
-raw hash, and cleans redundant or failed uploads (`convex/schema.ts`,
+raw hash at the current chain head, and cleans redundant or failed uploads (`convex/schema.ts`,
 `convex/operations/ingest.ts`, `convex/sources/`, `convex/pipeline/`).
 
 The earlier development run against the real Lafayette council hub created
@@ -32,13 +32,14 @@ repeat run reused the same snapshot ID, and both run records succeeded. That
 live record used retrieval processor v1. The reviewed v2 hardening is currently
 working-tree code and has not been deployed.
 
-Local verification passes 21 tests plus typecheck, production build, and lint.
-The tests cover unchanged reuse, a changed raw artifact, independent chains for
-two URLs with identical content, requested-domain rejection, redirected-domain
-rejection, target 404 rejection, missing raw content, Firecrawl failure,
-metadata normalization, blob cleanup, hashing, and idempotent seeding. No AI
-model call, AgentMail integration, authentication, production promotion, or
-public pipeline surface exists yet.
+Local verification passes 22 tests plus typecheck, production build, and lint.
+The tests cover unchanged reuse, a changed raw artifact, an A to B to A source
+reversion recorded as version 3, independent chains for two URLs with identical
+content, requested-domain rejection, redirected-domain rejection, target 404
+rejection, missing raw content, Firecrawl failure, metadata normalization, blob
+cleanup, hashing, and idempotent seeding. No AI model call, AgentMail
+integration, authentication, production promotion, or public pipeline surface
+exists yet.
 
 ### 2026-08-27 - dd12d01
 

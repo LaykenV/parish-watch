@@ -96,8 +96,27 @@ export const commitRetrieval = internalMutation({
           .eq('canonicalUrl', args.canonicalUrl)
           .eq('contentHash', args.contentHash),
       )
-      .unique()
-    const existing = priorStageSnapshot ?? indexedSnapshot
+      .order('desc')
+      .first()
+
+    const previous = await ctx.db
+      .query('sourceSnapshots')
+      .withIndex('by_registry_and_canonical_url_and_retrieval_time', (q) =>
+        q
+          .eq('registryId', args.registryId)
+          .eq('canonicalUrl', args.canonicalUrl),
+      )
+      .order('desc')
+      .first()
+    const existing =
+      previous?.contentHash === args.contentHash ? previous : null
+
+    if (existing && indexedSnapshot?._id !== existing._id) {
+      throw new ConvexError({
+        code: 'snapshot_index_invariant',
+        message: 'Latest source snapshot disagrees with the content hash index',
+      })
+    }
 
     const now = Date.now()
 
@@ -132,15 +151,6 @@ export const commitRetrieval = internalMutation({
       }
     }
 
-    const previous = await ctx.db
-      .query('sourceSnapshots')
-      .withIndex('by_registry_and_canonical_url_and_retrieval_time', (q) =>
-        q
-          .eq('registryId', args.registryId)
-          .eq('canonicalUrl', args.canonicalUrl),
-      )
-      .order('desc')
-      .first()
     const version = (previous?.version ?? 0) + 1
 
     const snapshotId = await ctx.db.insert('sourceSnapshots', {
