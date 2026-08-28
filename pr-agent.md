@@ -116,8 +116,11 @@ the bot into Theo's T3-style PR flow. The human prompt collapses to
 - `babysit-pr` polls checks, review threads, and labels newer than the last
   push, verifies every bot finding against source, fixes real ones, dismisses
   false positives with a written reason and a resolved thread, and repeats
-  until the review is clean on the latest commit. Merging still needs explicit
-  authorization.
+  until the review is clean on the latest commit. It then asks "All passing.
+  Good to merge?" through the harness's interactive question tool (a plain
+  chat question where none exists) and, on a clear yes, squash-merges, deletes
+  the branch, and returns to main. Anything short of a clear yes merges
+  nothing.
 
 The PR-shape rules (one concern, no drafts, no scope growth) also live in
 `AGENTS.md` as standing law, which PR-Agent feeds to the reviewer on every
