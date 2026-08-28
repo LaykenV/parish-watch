@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-28T18:30:09Z
+- **Last updated:** 2026-08-28T18:48:23Z
 
 ## Log
 
@@ -54,11 +54,14 @@ and 4,274 bytes of Markdown. The corrected minutes snapshot
 The earlier version 1 PDF snapshots remain in development as transparent spike
 evidence and contain rendered HTML rather than the source PDFs.
 
-`npm run verify` passes typechecking, 26 tests, the production build, and lint.
+`npm run verify` passes typechecking, 27 tests, the production build, and lint.
 The Convex review found no public function, auth, query-scan, validator, or
 unbounded-result issue in this change. A hosted development build was uploaded
 to `https://woozy-wren-227.convex.site`; a direct GET and the live readiness
-query passed.
+query passed. PR review caught a PDF body-stream timeout that could escape the
+structured failure path after response headers arrived. The downloader now
+records that case as retryable, and a regression test fails the stream after
+its first chunk.
 
 Added the hackathon release path in the working tree. Pull requests run the full
 verification command. A reviewed merge to `main` will deploy the matching

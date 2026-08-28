@@ -88,20 +88,38 @@ export async function downloadOfficialPdf(
   const reader = response.body.getReader()
   const chunks: Uint8Array[] = []
   let byteLength = 0
-  let readResult = await reader.read()
-  while (!readResult.done) {
-    byteLength += readResult.value.byteLength
-    if (byteLength > MAX_RAW_ARTIFACT_BYTES) {
-      await reader.cancel()
-      return {
-        ok: false,
-        errorClass: 'raw_artifact_too_large',
-        errorDetail: `Official PDF exceeds the ${MAX_RAW_ARTIFACT_BYTES} byte limit: ${finalUrl}`,
-        retryable: false,
+  try {
+    let readResult = await reader.read()
+    while (!readResult.done) {
+      byteLength += readResult.value.byteLength
+      if (byteLength > MAX_RAW_ARTIFACT_BYTES) {
+        try {
+          await reader.cancel()
+        } catch {
+          // The size classification still applies if cancellation races an error.
+        }
+        return {
+          ok: false,
+          errorClass: 'raw_artifact_too_large',
+          errorDetail: `Official PDF exceeds the ${MAX_RAW_ARTIFACT_BYTES} byte limit: ${finalUrl}`,
+          retryable: false,
+        }
       }
+      chunks.push(readResult.value)
+      readResult = await reader.read()
     }
-    chunks.push(readResult.value)
-    readResult = await reader.read()
+  } catch (error) {
+    try {
+      await reader.cancel()
+    } catch {
+      // The stream may already be errored or aborted.
+    }
+    return {
+      ok: false,
+      errorClass: 'raw_artifact_request_failed',
+      errorDetail: error instanceof Error ? error.message : String(error),
+      retryable: true,
+    }
   }
 
   const bytes = new Uint8Array(byteLength)
