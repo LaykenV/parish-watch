@@ -53,14 +53,19 @@ export const runValidation = internalAction({
   },
   returns: validationOutcomeValidator,
   handler: async (ctx, args): Promise<ValidationOutcome> => {
-    await ctx.runMutation(internal.extraction.ledger.beginStageAttempt, {
-      stageId: args.validateStageId,
-    })
-
     const rows = await ctx.runQuery(
       internal.extraction.ledger.loadValidationRows,
-      { extractionId: args.extractionId },
+      {
+        runId: args.runId,
+        validateStageId: args.validateStageId,
+        extractionId: args.extractionId,
+      },
     )
+    await ctx.runMutation(internal.extraction.ledger.beginStageAttempt, {
+      runId: args.runId,
+      stageId: args.validateStageId,
+      expectedStage: 'validate',
+    })
     const extraction = rows.extraction
     if (!extraction) {
       return {
@@ -265,13 +270,21 @@ export const runValidation = internalAction({
         continue
       }
       if (fact.page !== undefined) {
-        const pageMap = snapshot.pageMap
-        const proved = (pageMap ?? []).some(
-          (entry) =>
-            entry.page === fact.page &&
-            excerptIndex >= entry.startOffset &&
-            excerptIndex < entry.endOffset,
-        )
+        const proved = (snapshot.pageMap ?? []).some((entry) => {
+          if (
+            entry.page !== fact.page ||
+            sourceText === null ||
+            entry.startOffset < 0 ||
+            entry.endOffset <= entry.startOffset ||
+            entry.endOffset > sourceText.length
+          ) {
+            return false
+          }
+          const normalizedPage = normalizeForMatch(
+            sourceText.slice(entry.startOffset, entry.endOffset),
+          )
+          return locateExcerpt(normalizedPage, fact.excerpt) !== -1
+        })
         if (!proved) {
           addFinding({
             code: 'citation_page_unverified',

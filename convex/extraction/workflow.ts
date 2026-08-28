@@ -5,6 +5,7 @@ import { internal } from '../_generated/api'
 import { internalMutation } from '../_generated/server'
 import { sourceKindUnion } from '../pipeline/state'
 import { extractionWorkflowManager } from '../pipeline/workflowManager'
+import { failExtractionRunTransaction } from './ledger'
 
 const workflowResultValidator = v.object({
   outcome: v.union(
@@ -171,7 +172,7 @@ export const extractSnapshotV1 = extractionWorkflowManager
 
     await step.runMutation(
       internal.extraction.ledger.completeExtractionRun,
-      { runId: args.runId },
+      { runId: args.runId, extractionId: extractionResult.extractionId },
       { name: 'complete-extraction-v1' },
     )
 
@@ -199,41 +200,24 @@ export const handleExtractionComplete = internalMutation({
     if (!run) {
       return null
     }
-    const now = Date.now()
-    if (
-      run.state !== 'succeeded' &&
-      run.state !== 'failed_terminal' &&
-      run.state !== 'superseded'
-    ) {
-      await ctx.db.patch(args.context.runId, {
-        state: 'failed_terminal',
-        completedAt: now,
-      })
-    }
-    const stages = await ctx.db
-      .query('pipelineStages')
-      .withIndex('by_run_and_stage', (q) => q.eq('runId', args.context.runId))
-      .take(8)
-    for (const stage of stages) {
-      if (
-        stage.state !== 'succeeded' &&
-        stage.state !== 'failed_terminal' &&
-        stage.state !== 'superseded'
-      ) {
-        await ctx.db.patch(stage._id, {
-          state: 'failed_terminal',
-          errorClass:
-            args.result.kind === 'canceled'
-              ? 'workflow_canceled'
-              : 'workflow_failed',
-          errorDetail: (args.result.kind === 'canceled'
-            ? 'canceled'
-            : args.result.error
-          ).slice(0, 500),
-          completedAt: now,
-        })
-      }
-    }
+    const errorClass =
+      args.result.kind === 'canceled' ? 'workflow_canceled' : 'workflow_failed'
+    const errorDetail =
+      args.result.kind === 'canceled' ? 'canceled' : args.result.error
+    await failExtractionRunTransaction(ctx, {
+      runId: args.context.runId,
+      errorClass,
+      errorDetail,
+      extractionSeed:
+        run.snapshotId && run.sourceKind && run.targetRecordId
+          ? {
+              registryId: run.registryId,
+              snapshotId: run.snapshotId,
+              sourceKind: run.sourceKind,
+              targetRecordId: run.targetRecordId,
+            }
+          : undefined,
+    })
     return null
   },
 })

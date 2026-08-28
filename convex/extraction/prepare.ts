@@ -86,6 +86,13 @@ export const prepareExtractionContext = internalQuery({
         errorDetail: `Registry ${args.registryId} does not exist`,
       }
     }
+    if (!registry.sourceKinds.includes(args.sourceKind)) {
+      return {
+        ok: false,
+        errorClass: 'source_kind_not_registered',
+        errorDetail: `Source kind ${args.sourceKind} is not registered for this body`,
+      }
+    }
     const body = await ctx.db.get(registry.governmentBodyId)
     if (!body) {
       return {

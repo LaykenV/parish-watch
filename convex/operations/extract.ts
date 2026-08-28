@@ -1,4 +1,4 @@
-import { v } from 'convex/values'
+import { ConvexError, v } from 'convex/values'
 
 import { internal } from '../_generated/api'
 import { internalMutation } from '../_generated/server'
@@ -12,6 +12,7 @@ import {
   EXTRACTION_PROMPT_VERSION,
   EXTRACTION_SCHEMA_VERSION,
 } from '../extraction/versions'
+import { MATERIAL_STRING_LIMITS } from '../extraction/contractV1'
 
 const startExtractionResultValidator = v.object({
   runId: v.id('pipelineRuns'),
@@ -32,6 +33,16 @@ export const startSnapshotExtraction = internalMutation({
   },
   returns: startExtractionResultValidator,
   handler: async (ctx, args): Promise<StartExtractionResult> => {
+    if (
+      args.targetRecordId.trim() === '' ||
+      args.targetRecordId.length > MATERIAL_STRING_LIMITS.sourceRecordId ||
+      /[\r\n]/.test(args.targetRecordId)
+    ) {
+      throw new ConvexError({
+        code: 'invalid_target_record_id',
+        message: `Target record ID must be one line with 1 to ${MATERIAL_STRING_LIMITS.sourceRecordId} characters`,
+      })
+    }
     const idempotencyKey = await extractionRunKey({
       registryId: args.registryId,
       snapshotId: args.snapshotId,

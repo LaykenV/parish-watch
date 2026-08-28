@@ -245,7 +245,18 @@ export async function fetchChatCompletion(
     throw new PermanentModelError('model_rejected', detail, response.status)
   }
 
-  const parsed: unknown = await response.json()
+  let parsed: unknown
+  try {
+    parsed = await response.json()
+  } catch (error) {
+    throw new PermanentModelError(
+      'invalid_response_shape',
+      `Response was not valid JSON: ${
+        error instanceof Error ? error.message : String(error)
+      }`.slice(0, 500),
+      response.status,
+    )
+  }
   if (typeof parsed !== 'object' || parsed === null) {
     throw new PermanentModelError(
       'invalid_response_shape',

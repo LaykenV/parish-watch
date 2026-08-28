@@ -64,14 +64,24 @@ export const runExtraction = internalAction({
     const context = args.context
     const existing = await ctx.runQuery(
       internal.extraction.ledger.loadExtractionResultForRun,
-      { runId: args.runId },
+      {
+        runId: args.runId,
+        registryId: args.context.registryId,
+        snapshotId: args.context.snapshotId,
+        sourceKind: args.context.sourceKind,
+        targetRecordId: args.context.targetRecordId,
+      },
     )
     if (existing) {
       return existing
     }
     const attemptNumber = await ctx.runMutation(
       internal.extraction.ledger.beginStageAttempt,
-      { stageId: args.extractStageId },
+      {
+        runId: args.runId,
+        stageId: args.extractStageId,
+        expectedStage: 'extract',
+      },
     )
 
     const blob = await ctx.storage.get(context.normalizedStorageId)
@@ -178,7 +188,50 @@ export const runExtraction = internalAction({
     const parsed = outcome.result.parsed as ExtractionResponseV1
     if (parsed.status === 'not_found') {
       const stored = await storeResponse(ctx, outcome.result.content)
-      const { extractionId } = await ctx.runMutation(
+      let extractionId: Id<'extractions'>
+      try {
+        const persisted = await ctx.runMutation(
+          internal.extraction.ledger.persistExtractionSuccess,
+          {
+            runId: args.runId,
+            stageId: args.extractStageId,
+            registryId: context.registryId,
+            snapshotId: context.snapshotId,
+            sourceKind: context.sourceKind,
+            targetRecordId: context.targetRecordId,
+            modelRole: EXTRACTION_MODEL_ROLE,
+            modelId: outcome.result.modelId,
+            route: outcome.result.route,
+            promptVersion: EXTRACTION_PROMPT_VERSION,
+            schemaVersion: EXTRACTION_SCHEMA_VERSION,
+            requestId: outcome.result.requestId ?? undefined,
+            rawResponseStorageId: stored.storageId,
+            responseHash: stored.hash,
+            responseByteLength: stored.byteLength,
+            status: 'not_found',
+            reason: parsed.reason ?? undefined,
+          },
+        )
+        extractionId = persisted.extractionId
+      } catch (error) {
+        await cleanupStoredResponse(ctx, stored.storageId)
+        throw error
+      }
+      return { kind: 'not_found', extractionId }
+    }
+
+    const decision = parsed.decision
+    if (!decision) {
+      return await failExtraction(ctx, args, {
+        errorClass: 'schema_invalid',
+        errorDetail: 'status "found" without a decision',
+      })
+    }
+
+    const stored = await storeResponse(ctx, outcome.result.content)
+    let persisted
+    try {
+      persisted = await ctx.runMutation(
         internal.extraction.ledger.persistExtractionSuccess,
         {
           runId: args.runId,
@@ -196,65 +249,35 @@ export const runExtraction = internalAction({
           rawResponseStorageId: stored.storageId,
           responseHash: stored.hash,
           responseByteLength: stored.byteLength,
-          status: 'not_found',
-          reason: parsed.reason ?? undefined,
+          status: 'found',
+          decision: {
+            sourceRecordId: decision.sourceRecordId,
+            recordType: decision.recordType,
+            title: decision.title,
+            bodyName: decision.bodyName,
+            meetingAt: decision.meetingAt,
+            lifecycleState: decision.lifecycleState,
+            plainLanguageSummary: decision.plainLanguageSummary,
+            affectedPlaces: decision.affectedPlaces,
+            amounts: decision.amounts,
+            publicActions: decision.publicActions,
+          },
+          facts: decision.facts.map((fact) => ({
+            fieldPath: fact.fieldPath,
+            value: fact.value,
+            citation: {
+              sourceSnapshotId: fact.citation.sourceSnapshotId,
+              excerpt: fact.citation.excerpt,
+              page: fact.citation.page,
+              section: fact.citation.section,
+            },
+          })),
         },
       )
-      return { kind: 'not_found', extractionId }
+    } catch (error) {
+      await cleanupStoredResponse(ctx, stored.storageId)
+      throw error
     }
-
-    const decision = parsed.decision
-    if (!decision) {
-      return await failExtraction(ctx, args, {
-        errorClass: 'schema_invalid',
-        errorDetail: 'status "found" without a decision',
-      })
-    }
-
-    const stored = await storeResponse(ctx, outcome.result.content)
-    const persisted = await ctx.runMutation(
-      internal.extraction.ledger.persistExtractionSuccess,
-      {
-        runId: args.runId,
-        stageId: args.extractStageId,
-        registryId: context.registryId,
-        snapshotId: context.snapshotId,
-        sourceKind: context.sourceKind,
-        targetRecordId: context.targetRecordId,
-        modelRole: EXTRACTION_MODEL_ROLE,
-        modelId: outcome.result.modelId,
-        route: outcome.result.route,
-        promptVersion: EXTRACTION_PROMPT_VERSION,
-        schemaVersion: EXTRACTION_SCHEMA_VERSION,
-        requestId: outcome.result.requestId ?? undefined,
-        rawResponseStorageId: stored.storageId,
-        responseHash: stored.hash,
-        responseByteLength: stored.byteLength,
-        status: 'found',
-        decision: {
-          sourceRecordId: decision.sourceRecordId,
-          recordType: decision.recordType,
-          title: decision.title,
-          bodyName: decision.bodyName,
-          meetingAt: decision.meetingAt,
-          lifecycleState: decision.lifecycleState,
-          plainLanguageSummary: decision.plainLanguageSummary,
-          affectedPlaces: decision.affectedPlaces,
-          amounts: decision.amounts,
-          publicActions: decision.publicActions,
-        },
-        facts: decision.facts.map((fact) => ({
-          fieldPath: fact.fieldPath,
-          value: fact.value,
-          citation: {
-            sourceSnapshotId: fact.citation.sourceSnapshotId,
-            excerpt: fact.citation.excerpt,
-            page: fact.citation.page,
-            section: fact.citation.section,
-          },
-        })),
-      },
-    )
     if (!persisted.candidateId) {
       throw new ConvexError({
         code: 'candidate_missing',
@@ -293,27 +316,33 @@ async function failExtraction(
     responseHash = stored.hash
     responseByteLength = stored.byteLength
   }
-  const extractionId = await ctx.runMutation(
-    internal.extraction.ledger.persistExtractionFailure,
-    {
-      runId: args.runId,
-      stageId: args.extractStageId,
-      registryId: args.context.registryId,
-      snapshotId: args.context.snapshotId,
-      sourceKind: args.context.sourceKind,
-      targetRecordId: args.context.targetRecordId,
-      modelRole: EXTRACTION_MODEL_ROLE,
-      modelId: failure.modelId,
-      route: failure.route,
-      promptVersion: EXTRACTION_PROMPT_VERSION,
-      schemaVersion: EXTRACTION_SCHEMA_VERSION,
-      errorClass: failure.errorClass,
-      errorDetail: failure.errorDetail,
-      rawResponseStorageId,
-      responseHash,
-      responseByteLength,
-    },
-  )
+  let extractionId: Id<'extractions'>
+  try {
+    extractionId = await ctx.runMutation(
+      internal.extraction.ledger.persistExtractionFailure,
+      {
+        runId: args.runId,
+        stageId: args.extractStageId,
+        registryId: args.context.registryId,
+        snapshotId: args.context.snapshotId,
+        sourceKind: args.context.sourceKind,
+        targetRecordId: args.context.targetRecordId,
+        modelRole: EXTRACTION_MODEL_ROLE,
+        modelId: failure.modelId,
+        route: failure.route,
+        promptVersion: EXTRACTION_PROMPT_VERSION,
+        schemaVersion: EXTRACTION_SCHEMA_VERSION,
+        errorClass: failure.errorClass,
+        errorDetail: failure.errorDetail,
+        rawResponseStorageId,
+        responseHash,
+        responseByteLength,
+      },
+    )
+  } catch (error) {
+    await cleanupStoredResponse(ctx, rawResponseStorageId)
+    throw error
+  }
   return {
     kind: 'failed',
     extractionId,
@@ -339,4 +368,18 @@ async function storeResponse(
     new Blob([bytes], { type: 'application/json' }),
   )
   return { storageId, hash, byteLength: bytes.byteLength }
+}
+
+async function cleanupStoredResponse(
+  ctx: ActionCtx,
+  storageId: Id<'_storage'> | undefined,
+): Promise<void> {
+  if (storageId === undefined) {
+    return
+  }
+  try {
+    await ctx.storage.delete(storageId)
+  } catch {
+    // Preserve the ledger error. Convex storage cleanup can be retried manually.
+  }
 }

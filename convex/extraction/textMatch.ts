@@ -53,7 +53,7 @@ export function locateExcerpt(
 }
 
 const ZONED_ISO_PATTERN =
-  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(Z|[+-]\d{2}:\d{2})$/
 
 function centralParts(date: Date): ZonedDateTime | null {
   const parts = new Map(
@@ -171,21 +171,35 @@ export function textSupportsDate(text: string, date: CalendarDate): boolean {
   )
 }
 
-function timesInText(text: string): Array<{ hour: number; minute: number }> {
+function timesInText(
+  text: string,
+): Array<{ hour: number; minute: number; second: number | null }> {
   const normalized = normalizeForMatch(text)
-  const times: Array<{ hour: number; minute: number }> = []
-  const twelveHourPattern = /\b(1[0-2]|0?[1-9]):([0-5]\d)\s*([AP])\.?M\.?\b/gi
+  const times: Array<{
+    hour: number
+    minute: number
+    second: number | null
+  }> = []
+  const twelveHourPattern =
+    /\b(1[0-2]|0?[1-9]):([0-5]\d)(?::([0-5]\d))?\s*([AP])\.?M\.?\b/gi
   for (const match of normalized.matchAll(twelveHourPattern)) {
     const baseHour = Number(match[1]) % 12
+    const second = match[3] as string | undefined
     times.push({
-      hour: baseHour + (match[3].toUpperCase() === 'P' ? 12 : 0),
+      hour: baseHour + (match[4].toUpperCase() === 'P' ? 12 : 0),
       minute: Number(match[2]),
+      second: second === undefined ? null : Number(second),
     })
   }
   const twentyFourHourPattern =
-    /\b([01]\d|2[0-3]):([0-5]\d)(?!\s*[AP]\.?M\.?)\b/gi
+    /\b([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?(?!\s*[AP]\.?M\.?)\b/gi
   for (const match of normalized.matchAll(twentyFourHourPattern)) {
-    times.push({ hour: Number(match[1]), minute: Number(match[2]) })
+    const second = match[3] as string | undefined
+    times.push({
+      hour: Number(match[1]),
+      minute: Number(match[2]),
+      second: second === undefined ? null : Number(second),
+    })
   }
   return times
 }
@@ -202,7 +216,12 @@ export function textSupportsZonedDateTime(
     return dateTime.hour === 0 && dateTime.minute === 0
   }
   return times.some(
-    (time) => time.hour === dateTime.hour && time.minute === dateTime.minute,
+    (time) =>
+      time.hour === dateTime.hour &&
+      time.minute === dateTime.minute &&
+      (time.second === null
+        ? dateTime.second === 0
+        : time.second === dateTime.second),
   )
 }
 
@@ -232,7 +251,7 @@ export function textSupportsAmount(text: string, value: number): boolean {
   }
   const normalized = normalizeForMatch(text)
   const moneyPattern =
-    /(?:\bUSD\s*|\$\s*)?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?(?:\s*(?:USD\b|dollars?\b))?/gi
+    /(?<![\dA-Za-z])(?:USD\s*|\$\s*)?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?(?:\s*(?:USD\b|dollars?\b))?(?![\dA-Za-z])/gi
   for (const match of normalized.matchAll(moneyPattern)) {
     const token = match[0]
     const fraction = match[2] as string | undefined

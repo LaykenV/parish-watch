@@ -53,6 +53,79 @@ async function linkAiCallsToExtraction(
   }
 }
 
+async function requireValidationTargets(
+  ctx: MutationCtx,
+  args: {
+    runId: Id<'pipelineRuns'>
+    validateStageId: Id<'pipelineStages'>
+    extractionId: Id<'extractions'>
+    candidateId?: Id<'decisionCandidates'>
+  },
+  expectedExtractionState: 'extracted' | 'not_found',
+): Promise<
+  'extracted' | 'deterministically_validated' | 'validation_failed' | null
+> {
+  const run = await ctx.db.get(args.runId)
+  const stage = await ctx.db.get(args.validateStageId)
+  const extraction = await ctx.db.get(args.extractionId)
+  requireRunStage(run, stage, args.validateStageId)
+  if (stage?.stage !== 'validate') {
+    throw new ConvexError({
+      code: 'stage_mismatch',
+      message: `Stage ${args.validateStageId} is not a validation stage`,
+    })
+  }
+  if (
+    !run ||
+    !extraction ||
+    extraction.runId !== run._id ||
+    extraction.registryId !== run.registryId ||
+    extraction.snapshotId !== run.snapshotId ||
+    extraction.sourceKind !== run.sourceKind ||
+    extraction.targetRecordId !== run.targetRecordId ||
+    extraction.state !== expectedExtractionState
+  ) {
+    throw new ConvexError({
+      code: 'validation_target_mismatch',
+      message: 'Validation run, stage, extraction, and target must agree',
+    })
+  }
+  if (expectedExtractionState === 'not_found') {
+    if (
+      args.candidateId !== undefined ||
+      extraction.candidateId !== undefined
+    ) {
+      throw new ConvexError({
+        code: 'validation_target_mismatch',
+        message: 'A not-found extraction must not have a candidate',
+      })
+    }
+    return null
+  }
+  if (!args.candidateId || extraction.candidateId !== args.candidateId) {
+    throw new ConvexError({
+      code: 'validation_target_mismatch',
+      message: 'The extraction does not own the validation candidate',
+    })
+  }
+  const candidate = await ctx.db.get(args.candidateId)
+  if (
+    !candidate ||
+    candidate.runId !== run._id ||
+    candidate.extractionId !== extraction._id ||
+    candidate.registryId !== extraction.registryId ||
+    candidate.snapshotId !== extraction.snapshotId ||
+    candidate.sourceKind !== extraction.sourceKind ||
+    candidate.targetRecordId !== extraction.targetRecordId
+  ) {
+    throw new ConvexError({
+      code: 'validation_target_mismatch',
+      message: 'The candidate does not match its extraction target',
+    })
+  }
+  return candidate.state
+}
+
 const storedExtractionResult = v.union(
   v.null(),
   v.object({
@@ -73,9 +146,29 @@ const storedExtractionResult = v.union(
 )
 
 export const loadExtractionResultForRun = internalQuery({
-  args: { runId: v.id('pipelineRuns') },
+  args: {
+    runId: v.id('pipelineRuns'),
+    registryId: v.id('sourceRegistries'),
+    snapshotId: v.id('sourceSnapshots'),
+    sourceKind: sourceKindUnion,
+    targetRecordId: v.string(),
+  },
   returns: storedExtractionResult,
   handler: async (ctx, args) => {
+    const run = await ctx.db.get(args.runId)
+    if (
+      !run ||
+      run.processorVersion !== EXTRACTION_PROCESSOR_VERSION ||
+      run.registryId !== args.registryId ||
+      run.snapshotId !== args.snapshotId ||
+      run.sourceKind !== args.sourceKind ||
+      run.targetRecordId !== args.targetRecordId
+    ) {
+      throw new ConvexError({
+        code: 'extraction_target_mismatch',
+        message: 'Extraction action input must match its pipeline run',
+      })
+    }
     const extractions = await ctx.db
       .query('extractions')
       .withIndex('by_run', (q) => q.eq('runId', args.runId))
@@ -90,6 +183,18 @@ export const loadExtractionResultForRun = internalQuery({
       return null
     }
     const extraction = extractions[0]
+    if (
+      extraction.registryId !== args.registryId ||
+      extraction.snapshotId !== args.snapshotId ||
+      extraction.sourceKind !== args.sourceKind ||
+      extraction.targetRecordId !== args.targetRecordId ||
+      extraction.processorVersion !== run.processorVersion
+    ) {
+      throw new ConvexError({
+        code: 'extraction_idempotency_collision',
+        message: `Run ${args.runId} has an extraction for another target or processor`,
+      })
+    }
     if (extraction.state === 'extracted') {
       if (!extraction.candidateId) {
         throw new ConvexError({
@@ -119,14 +224,20 @@ export const loadExtractionResultForRun = internalQuery({
 })
 
 export const beginStageAttempt = internalMutation({
-  args: { stageId: v.id('pipelineStages') },
+  args: {
+    runId: v.id('pipelineRuns'),
+    stageId: v.id('pipelineStages'),
+    expectedStage: v.union(v.literal('extract'), v.literal('validate')),
+  },
   returns: v.number(),
   handler: async (ctx, args) => {
+    const run = await ctx.db.get(args.runId)
     const stage = await ctx.db.get(args.stageId)
-    if (!stage) {
+    requireRunStage(run, stage, args.stageId)
+    if (stage?.stage !== args.expectedStage) {
       throw new ConvexError({
-        code: 'stage_missing',
-        message: `Stage ${args.stageId} does not exist`,
+        code: 'stage_mismatch',
+        message: `Stage ${args.stageId} is not ${args.expectedStage}`,
       })
     }
     const attempt = stage.attempt + 1
@@ -164,6 +275,22 @@ export const recordModelAttempt = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const run = await ctx.db.get(args.runId)
+    const stage = await ctx.db.get(args.stageId)
+    requireRunStage(run, stage, args.stageId)
+    if (
+      stage?.stage !== 'extract' ||
+      stage.state !== 'running' ||
+      stage.attempt !== args.attempt ||
+      args.modelRole !== 'MODEL_STRONG' ||
+      args.promptVersion !== EXTRACTION_PROMPT_VERSION ||
+      args.schemaVersion !== EXTRACTION_SCHEMA_VERSION
+    ) {
+      throw new ConvexError({
+        code: 'stage_mismatch',
+        message: `Stage ${args.stageId} is not the active extraction attempt`,
+      })
+    }
     await ctx.db.insert('aiCalls', {
       runId: args.runId,
       stageId: args.stageId,
@@ -229,6 +356,38 @@ export const persistExtractionSuccess = internalMutation({
     const run = await ctx.db.get(args.runId)
     const stage = await ctx.db.get(args.stageId)
     requireRunStage(run, stage, args.stageId)
+    if (
+      !run ||
+      stage?.stage !== 'extract' ||
+      run.processorVersion !== EXTRACTION_PROCESSOR_VERSION ||
+      args.modelRole !== 'MODEL_STRONG' ||
+      args.promptVersion !== EXTRACTION_PROMPT_VERSION ||
+      args.schemaVersion !== EXTRACTION_SCHEMA_VERSION ||
+      run.registryId !== args.registryId ||
+      run.snapshotId !== args.snapshotId ||
+      run.sourceKind !== args.sourceKind ||
+      run.targetRecordId !== args.targetRecordId
+    ) {
+      throw new ConvexError({
+        code: 'extraction_target_mismatch',
+        message: 'Extraction run, stage, snapshot, kind, and target must agree',
+      })
+    }
+    if (
+      (args.status === 'found' &&
+        (!args.decision ||
+          args.facts === undefined ||
+          args.reason !== undefined)) ||
+      (args.status === 'not_found' &&
+        (args.decision !== undefined ||
+          args.facts !== undefined ||
+          args.reason === undefined))
+    ) {
+      throw new ConvexError({
+        code: 'extraction_result_mismatch',
+        message: 'Extraction status, decision, facts, and reason must agree',
+      })
+    }
 
     const existing = await ctx.db
       .query('extractions')
@@ -251,7 +410,7 @@ export const persistExtractionSuccess = internalMutation({
       }
       await ctx.db.patch(args.stageId, {
         state: 'succeeded',
-        completedAt: stage?.completedAt ?? Date.now(),
+        completedAt: stage.completedAt ?? Date.now(),
         outputExtractionId: existing._id,
       })
       await linkAiCallsToExtraction(ctx, args.runId, args.stageId, existing._id)
@@ -269,7 +428,7 @@ export const persistExtractionSuccess = internalMutation({
       targetRecordId: args.targetRecordId,
       promptVersion: args.promptVersion,
       schemaVersion: args.schemaVersion,
-      processorVersion: EXTRACTION_PROCESSOR_VERSION,
+      processorVersion: run.processorVersion,
       modelRole: args.modelRole,
       modelId: args.modelId,
       route: args.route,
@@ -359,6 +518,23 @@ export const persistExtractionFailure = internalMutation({
     const run = await ctx.db.get(args.runId)
     const stage = await ctx.db.get(args.stageId)
     requireRunStage(run, stage, args.stageId)
+    if (
+      !run ||
+      stage?.stage !== 'extract' ||
+      run.processorVersion !== EXTRACTION_PROCESSOR_VERSION ||
+      args.modelRole !== 'MODEL_STRONG' ||
+      args.promptVersion !== EXTRACTION_PROMPT_VERSION ||
+      args.schemaVersion !== EXTRACTION_SCHEMA_VERSION ||
+      run.registryId !== args.registryId ||
+      run.snapshotId !== args.snapshotId ||
+      run.sourceKind !== args.sourceKind ||
+      run.targetRecordId !== args.targetRecordId
+    ) {
+      throw new ConvexError({
+        code: 'extraction_target_mismatch',
+        message: 'Extraction run, stage, snapshot, kind, and target must agree',
+      })
+    }
 
     const existing = await ctx.db
       .query('extractions')
@@ -379,7 +555,7 @@ export const persistExtractionFailure = internalMutation({
       }
       await ctx.db.patch(args.stageId, {
         state: 'failed_terminal',
-        completedAt: stage?.completedAt ?? Date.now(),
+        completedAt: stage.completedAt ?? Date.now(),
         errorClass: existing.errorClass ?? args.errorClass,
         errorDetail: existing.errorDetail ?? args.errorDetail.slice(0, 500),
       })
@@ -395,7 +571,7 @@ export const persistExtractionFailure = internalMutation({
       targetRecordId: args.targetRecordId,
       promptVersion: args.promptVersion,
       schemaVersion: args.schemaVersion,
-      processorVersion: EXTRACTION_PROCESSOR_VERSION,
+      processorVersion: run.processorVersion,
       modelRole: args.modelRole,
       modelId: args.modelId,
       route: args.route,
@@ -436,72 +612,127 @@ export const failExtractionRun = internalMutation({
     ),
   },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    const now = Date.now()
-    const run = await ctx.db.get(args.runId)
-    if (!run) {
-      throw new ConvexError({
-        code: 'run_missing',
-        message: `Pipeline run ${args.runId} does not exist`,
-      })
-    }
+  handler: async (ctx, args) => failExtractionRunTransaction(ctx, args),
+})
+
+type FailExtractionRunArgs = {
+  runId: Id<'pipelineRuns'>
+  errorClass: string
+  errorDetail: string
+  extractionSeed?: {
+    registryId: Id<'sourceRegistries'>
+    snapshotId: Id<'sourceSnapshots'>
+    sourceKind: typeof sourceKindUnion.type
+    targetRecordId: string
+  }
+}
+
+export async function failExtractionRunTransaction(
+  ctx: MutationCtx,
+  args: FailExtractionRunArgs,
+): Promise<null> {
+  const now = Date.now()
+  const run = await ctx.db.get(args.runId)
+  if (!run) {
+    throw new ConvexError({
+      code: 'run_missing',
+      message: `Pipeline run ${args.runId} does not exist`,
+    })
+  }
+  if (run.state === 'succeeded' || run.state === 'superseded') {
+    return null
+  }
+  if (
+    run.trigger === 'manual_extraction' &&
+    (!args.extractionSeed ||
+      run.registryId !== args.extractionSeed.registryId ||
+      run.snapshotId !== args.extractionSeed.snapshotId ||
+      run.sourceKind !== args.extractionSeed.sourceKind ||
+      run.targetRecordId !== args.extractionSeed.targetRecordId)
+  ) {
+    throw new ConvexError({
+      code: 'extraction_target_mismatch',
+      message: 'Failure evidence must match the extraction run target',
+    })
+  }
+  if (run.state !== 'failed_terminal') {
+    await ctx.db.patch(args.runId, {
+      state: 'failed_terminal',
+      completedAt: now,
+    })
+  }
+
+  const stages = await ctx.db
+    .query('pipelineStages')
+    .withIndex('by_run_and_stage', (q) => q.eq('runId', args.runId))
+    .take(8)
+  for (const stage of stages) {
     if (
-      run.state !== 'succeeded' &&
-      run.state !== 'failed_terminal' &&
-      run.state !== 'superseded'
+      stage.state !== 'succeeded' &&
+      stage.state !== 'failed_terminal' &&
+      stage.state !== 'superseded'
     ) {
-      await ctx.db.patch(args.runId, {
+      await ctx.db.patch(stage._id, {
         state: 'failed_terminal',
+        errorClass: args.errorClass,
+        errorDetail: args.errorDetail.slice(0, 500),
         completedAt: now,
       })
     }
+  }
 
-    const stages = await ctx.db
-      .query('pipelineStages')
-      .withIndex('by_run_and_stage', (q) => q.eq('runId', args.runId))
-      .take(8)
-    for (const stage of stages) {
-      if (
-        stage.state !== 'succeeded' &&
-        stage.state !== 'failed_terminal' &&
-        stage.state !== 'superseded'
-      ) {
-        await ctx.db.patch(stage._id, {
-          state: 'failed_terminal',
-          errorClass: args.errorClass,
-          errorDetail: args.errorDetail.slice(0, 500),
-          completedAt: now,
-        })
-      }
-    }
-
-    const existingExtraction = await ctx.db
-      .query('extractions')
-      .withIndex('by_run', (q) => q.eq('runId', args.runId))
-      .first()
-    if (!existingExtraction && args.extractionSeed) {
-      await ctx.db.insert('extractions', {
-        runId: args.runId,
-        registryId: args.extractionSeed.registryId,
-        snapshotId: args.extractionSeed.snapshotId,
-        sourceKind: args.extractionSeed.sourceKind,
-        targetRecordId: args.extractionSeed.targetRecordId,
-        promptVersion: EXTRACTION_PROMPT_VERSION,
-        schemaVersion: EXTRACTION_SCHEMA_VERSION,
-        processorVersion: EXTRACTION_PROCESSOR_VERSION,
-        modelRole: 'MODEL_STRONG',
-        state: 'failed',
-        errorClass: args.errorClass,
-        errorDetail: args.errorDetail.slice(0, 500),
-        createdAt: now,
-      })
-    }
-    return null
-  },
-})
+  let extraction = await ctx.db
+    .query('extractions')
+    .withIndex('by_run', (q) => q.eq('runId', args.runId))
+    .unique()
+  if (
+    extraction &&
+    args.extractionSeed &&
+    (extraction.registryId !== args.extractionSeed.registryId ||
+      extraction.snapshotId !== args.extractionSeed.snapshotId ||
+      extraction.sourceKind !== args.extractionSeed.sourceKind ||
+      extraction.targetRecordId !== args.extractionSeed.targetRecordId)
+  ) {
+    throw new ConvexError({
+      code: 'extraction_target_mismatch',
+      message: 'Existing extraction does not match the failed run target',
+    })
+  }
+  const extractStage = stages.find((stage) => stage.stage === 'extract')
+  if (!extraction && args.extractionSeed) {
+    const extractionId = await ctx.db.insert('extractions', {
+      runId: args.runId,
+      registryId: args.extractionSeed.registryId,
+      snapshotId: args.extractionSeed.snapshotId,
+      sourceKind: args.extractionSeed.sourceKind,
+      targetRecordId: args.extractionSeed.targetRecordId,
+      promptVersion: extractStage?.promptVersion ?? EXTRACTION_PROMPT_VERSION,
+      schemaVersion: extractStage?.schemaVersion ?? EXTRACTION_SCHEMA_VERSION,
+      processorVersion: run.processorVersion,
+      modelRole: 'MODEL_STRONG',
+      state: 'failed',
+      errorClass: args.errorClass,
+      errorDetail: args.errorDetail.slice(0, 500),
+      createdAt: now,
+    })
+    extraction = await ctx.db.get(extractionId)
+  }
+  if (extraction && extractStage) {
+    await linkAiCallsToExtraction(
+      ctx,
+      args.runId,
+      extractStage._id,
+      extraction._id,
+    )
+  }
+  return null
+}
 
 export const completeExtractionRun = internalMutation({
-  args: { runId: v.id('pipelineRuns') },
+  args: {
+    runId: v.id('pipelineRuns'),
+    extractionId: v.id('extractions'),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     const run = await ctx.db.get(args.runId)
@@ -511,11 +742,74 @@ export const completeExtractionRun = internalMutation({
         message: `Pipeline run ${args.runId} does not exist`,
       })
     }
+    if (run.state === 'failed_terminal' || run.state === 'superseded') {
+      throw new ConvexError({
+        code: 'run_state_collision',
+        message: `Run ${args.runId} cannot complete from ${run.state}`,
+      })
+    }
+    const stages = await ctx.db
+      .query('pipelineStages')
+      .withIndex('by_run_and_stage', (q) => q.eq('runId', args.runId))
+      .take(8)
+    const extractStage = stages.find((stage) => stage.stage === 'extract')
+    const validateStage = stages.find((stage) => stage.stage === 'validate')
+    const extraction = await ctx.db.get(args.extractionId)
     if (
-      run.state === 'succeeded' ||
-      run.state === 'failed_terminal' ||
-      run.state === 'superseded'
+      !extractStage ||
+      !validateStage ||
+      run.processorVersion !== EXTRACTION_PROCESSOR_VERSION ||
+      extractStage.state !== 'succeeded' ||
+      validateStage.state !== 'succeeded' ||
+      extractStage.outputExtractionId !== args.extractionId ||
+      validateStage.outputExtractionId !== args.extractionId ||
+      !extraction ||
+      extraction.runId !== run._id ||
+      extraction.registryId !== run.registryId ||
+      extraction.snapshotId !== run.snapshotId ||
+      extraction.sourceKind !== run.sourceKind ||
+      extraction.targetRecordId !== run.targetRecordId
     ) {
+      throw new ConvexError({
+        code: 'run_completion_invariant_failed',
+        message:
+          'Extraction and validation must both finish for the same target',
+      })
+    }
+    if (extraction.state === 'failed') {
+      throw new ConvexError({
+        code: 'run_completion_invariant_failed',
+        message: 'A failed extraction cannot complete successfully',
+      })
+    }
+    if (extraction.state === 'not_found') {
+      if (extraction.candidateId !== undefined) {
+        throw new ConvexError({
+          code: 'run_completion_invariant_failed',
+          message: 'A not-found extraction cannot own a candidate',
+        })
+      }
+    } else {
+      const candidate = extraction.candidateId
+        ? await ctx.db.get(extraction.candidateId)
+        : null
+      if (
+        !candidate ||
+        candidate.extractionId !== extraction._id ||
+        candidate.runId !== run._id ||
+        candidate.registryId !== extraction.registryId ||
+        candidate.snapshotId !== extraction.snapshotId ||
+        candidate.sourceKind !== extraction.sourceKind ||
+        candidate.targetRecordId !== extraction.targetRecordId ||
+        candidate.state !== 'deterministically_validated'
+      ) {
+        throw new ConvexError({
+          code: 'run_completion_invariant_failed',
+          message: 'A found extraction needs its validated candidate',
+        })
+      }
+    }
+    if (run.state === 'succeeded') {
       return null
     }
     await ctx.db.patch(args.runId, {
@@ -527,7 +821,11 @@ export const completeExtractionRun = internalMutation({
 })
 
 export const loadValidationRows = internalQuery({
-  args: { extractionId: v.id('extractions') },
+  args: {
+    runId: v.id('pipelineRuns'),
+    validateStageId: v.id('pipelineStages'),
+    extractionId: v.id('extractions'),
+  },
   returns: v.object({
     extraction: v.union(v.null(), schema.doc('extractions')),
     candidate: v.union(v.null(), schema.doc('decisionCandidates')),
@@ -537,6 +835,20 @@ export const loadValidationRows = internalQuery({
     registeredBodyName: v.union(v.null(), v.string()),
   }),
   handler: async (ctx, args) => {
+    const run = await ctx.db.get(args.runId)
+    const stage = await ctx.db.get(args.validateStageId)
+    requireRunStage(run, stage, args.validateStageId)
+    if (
+      !run ||
+      stage?.stage !== 'validate' ||
+      run.processorVersion !== EXTRACTION_PROCESSOR_VERSION
+    ) {
+      throw new ConvexError({
+        code: 'validation_target_mismatch',
+        message:
+          'Validation action input must match its pipeline run and stage',
+      })
+    }
     const extraction = await ctx.db.get(args.extractionId)
     if (!extraction) {
       return {
@@ -547,6 +859,19 @@ export const loadValidationRows = internalQuery({
         officialDomains: null,
         registeredBodyName: null,
       }
+    }
+    if (
+      extraction.runId !== run._id ||
+      extraction.registryId !== run.registryId ||
+      extraction.snapshotId !== run.snapshotId ||
+      extraction.sourceKind !== run.sourceKind ||
+      extraction.targetRecordId !== run.targetRecordId ||
+      extraction.processorVersion !== run.processorVersion
+    ) {
+      throw new ConvexError({
+        code: 'validation_target_mismatch',
+        message: 'Validation extraction must match its pipeline run target',
+      })
     }
     const candidate = extraction.candidateId
       ? await ctx.db.get(extraction.candidateId)
@@ -582,6 +907,17 @@ export const persistValidationSuccess = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const candidateState = await requireValidationTargets(
+      ctx,
+      args,
+      'extracted',
+    )
+    if (candidateState === 'validation_failed') {
+      throw new ConvexError({
+        code: 'validation_state_collision',
+        message: 'A failed candidate cannot later pass validation',
+      })
+    }
     const now = Date.now()
     await ctx.db.patch(args.candidateId, {
       state: 'deterministically_validated',
@@ -611,6 +947,17 @@ export const persistValidationFailure = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const candidateState = await requireValidationTargets(
+      ctx,
+      args,
+      'extracted',
+    )
+    if (candidateState === 'deterministically_validated') {
+      throw new ConvexError({
+        code: 'validation_state_collision',
+        message: 'A validated candidate cannot later fail validation',
+      })
+    }
     const now = Date.now()
     const existing = await ctx.db
       .query('validationFindings')
@@ -663,6 +1010,7 @@ export const closeNotFoundValidation = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await requireValidationTargets(ctx, args, 'not_found')
     await ctx.db.patch(args.validateStageId, {
       state: 'succeeded',
       completedAt: Date.now(),

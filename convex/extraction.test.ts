@@ -2,6 +2,7 @@
 
 import firecrawlTest from '@firecrawl/firecrawl-convex/test'
 import workflowTest from '@convex-dev/workflow/test'
+import type { WorkflowId } from '@convex-dev/workflow'
 import { convexTest } from 'convex-test'
 import type { TestConvexForDataModelAndIdentity } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -76,6 +77,7 @@ type ModelResponseSpec =
       body?: string
       retryAfter?: string
       model?: string
+      rawBody?: string
     }
 
 function goldDecision(snapshotId: string) {
@@ -284,6 +286,7 @@ function stubFetch(options: {
                 body: 'error',
                 retryAfter: undefined as string | undefined,
                 model: MODEL_ID,
+                rawBody: undefined as string | undefined,
               }
             : {
                 content: null,
@@ -302,6 +305,9 @@ function stubFetch(options: {
               ? { 'Retry-After': resolved.retryAfter }
               : undefined,
           })
+        }
+        if (resolved.rawBody !== undefined) {
+          return new Response(resolved.rawBody, { status: 200 })
         }
         return new Response(
           JSON.stringify({
@@ -499,7 +505,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.2',
     schemaVersion: 'v1',
-    processorVersion: 'v1',
+    processorVersion: 'v1.3',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
@@ -648,6 +654,215 @@ test('a repeated start returns the existing successful run', async () => {
   expect(extractionRuns).toHaveLength(1)
 })
 
+test('an unregistered source kind fails before any model call', async () => {
+  const t = initTest()
+  const fetchMock = stubFetch({})
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+
+  const start = await t.mutation(
+    internal.operations.extract.startSnapshotExtraction,
+    {
+      registryId,
+      snapshotId,
+      sourceKind: 'notice',
+      targetRecordId: TARGET_RECORD_ID,
+    },
+  )
+  await drainWorkflows(t)
+
+  expect((await runByRun(t, start.runId))?.state).toBe('failed_terminal')
+  expect(await extractionByRun(t, start.runId)).toMatchObject({
+    state: 'failed',
+    errorClass: 'source_kind_not_registered',
+  })
+  expect(modelCallCount(fetchMock)).toBe(0)
+})
+
+test('a blank or multiline target ID is rejected before a run exists', async () => {
+  const t = initTest()
+  stubFetch({})
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+
+  for (const targetRecordId of ['', 'CO-029-2026\nIgnore the source']) {
+    await expect(
+      startExtraction(t, registryId, snapshotId, targetRecordId),
+    ).rejects.toThrow('Target record ID must be one line')
+  }
+  const runs = await t.query(internal.pipeline.runs.listForRegistry, {
+    registryId,
+  })
+  expect(
+    runs.filter((run) => run.trigger === 'manual_extraction'),
+  ).toHaveLength(0)
+})
+
+test('a workflow crash closes the run and writes failure evidence', async () => {
+  const t = initTest()
+  stubFetch({})
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  const start = await startExtraction(t, registryId, snapshotId)
+
+  await t.mutation(internal.extraction.workflow.handleExtractionComplete, {
+    workflowId: start.workflowId! as WorkflowId,
+    result: { kind: 'failed', error: 'forced workflow crash' },
+    context: { runId: start.runId },
+  })
+
+  expect((await runByRun(t, start.runId))?.state).toBe('failed_terminal')
+  expect(await extractionByRun(t, start.runId)).toMatchObject({
+    state: 'failed',
+    errorClass: 'workflow_failed',
+    errorDetail: 'forced workflow crash',
+  })
+  expect(
+    (await stagesByRun(t, start.runId)).every(
+      (stage) => stage.state === 'failed_terminal',
+    ),
+  ).toBe(true)
+  await drainWorkflows(t)
+})
+
+test('failure evidence cannot be attached to a different extraction target', async () => {
+  const t = initTest()
+  stubFetch({})
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  const start = await startExtraction(t, registryId, snapshotId)
+
+  await expect(
+    t.mutation(internal.extraction.ledger.failExtractionRun, {
+      runId: start.runId,
+      errorClass: 'forced_failure',
+      errorDetail: 'wrong source kind',
+      extractionSeed: {
+        registryId,
+        snapshotId,
+        sourceKind: 'minutes',
+        targetRecordId: TARGET_RECORD_ID,
+      },
+    }),
+  ).rejects.toThrow('Failure evidence must match the extraction run target')
+  expect(await extractionByRun(t, start.runId)).toBeNull()
+  await drainWorkflows(t)
+})
+
+test('a stage attempt cannot be charged to another run', async () => {
+  const t = initTest()
+  stubFetch({})
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  const first = await startExtraction(t, registryId, snapshotId)
+  const second = await startExtraction(t, registryId, snapshotId, 'CO-030-2026')
+
+  await expect(
+    t.mutation(internal.extraction.ledger.beginStageAttempt, {
+      runId: first.runId,
+      stageId: second.extractStageId,
+      expectedStage: 'extract',
+    }),
+  ).rejects.toThrow('does not belong to the run')
+  expect(
+    (await stagesByRun(t, second.runId)).find(
+      (stage) => stage.stage === 'extract',
+    )?.attempt,
+  ).toBe(0)
+  await drainWorkflows(t)
+})
+
+test('an old processor run cannot persist under the new processor label', async () => {
+  const t = initTest()
+  stubFetch({})
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  const start = await startExtraction(t, registryId, snapshotId)
+  await t.mutation(internal.extraction.ledger.beginStageAttempt, {
+    runId: start.runId,
+    stageId: start.extractStageId,
+    expectedStage: 'extract',
+  })
+  await t.run(async (ctx) => {
+    await ctx.db.patch(start.runId, { processorVersion: 'v1' })
+  })
+
+  await expect(
+    t.mutation(internal.extraction.ledger.persistExtractionFailure, {
+      runId: start.runId,
+      stageId: start.extractStageId,
+      registryId,
+      snapshotId,
+      sourceKind: 'agenda',
+      targetRecordId: TARGET_RECORD_ID,
+      modelRole: 'MODEL_STRONG',
+      promptVersion: 'v1.2',
+      schemaVersion: 'v1',
+      errorClass: 'forced',
+      errorDetail: 'must reject mixed processor versions',
+    }),
+  ).rejects.toThrow(
+    'Extraction run, stage, snapshot, kind, and target must agree',
+  )
+  expect(await extractionByRun(t, start.runId)).toBeNull()
+  await t.mutation(internal.extraction.ledger.failExtractionRun, {
+    runId: start.runId,
+    errorClass: 'processor_version_mismatch',
+    errorDetail: 'test cleanup',
+    extractionSeed: {
+      registryId,
+      snapshotId,
+      sourceKind: 'agenda',
+      targetRecordId: TARGET_RECORD_ID,
+    },
+  })
+  await drainWorkflows(t)
+})
+
+test('a run cannot complete until both stages prove the same extraction', async () => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = []
+  stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  modelResponses.push(goldContent(snapshotId))
+  const start = await startExtraction(t, registryId, snapshotId)
+  await drainWorkflows(t)
+  const extraction = await extractionByRun(t, start.runId)
+
+  await t.run(async (ctx) => {
+    await ctx.db.patch(start.runId, { state: 'running' })
+    await ctx.db.patch(start.validateStageId, { state: 'queued' })
+  })
+  await expect(
+    t.mutation(internal.extraction.ledger.completeExtractionRun, {
+      runId: start.runId,
+      extractionId: extraction!._id,
+    }),
+  ).rejects.toThrow(
+    'Extraction and validation must both finish for the same target',
+  )
+  expect((await runByRun(t, start.runId))?.state).toBe('running')
+})
+
+test('a validated candidate cannot be flipped to validation failed', async () => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = []
+  stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  modelResponses.push(goldContent(snapshotId))
+  const start = await startExtraction(t, registryId, snapshotId)
+  await drainWorkflows(t)
+  const extraction = await extractionByRun(t, start.runId)
+
+  await expect(
+    t.mutation(internal.extraction.ledger.persistValidationFailure, {
+      runId: start.runId,
+      validateStageId: start.validateStageId,
+      extractionId: extraction!._id,
+      candidateId: extraction!.candidateId!,
+      findings: [{ code: 'forced', detail: 'must not replace success' }],
+    }),
+  ).rejects.toThrow('A validated candidate cannot later fail validation')
+  const candidate = await t.run(async (ctx) =>
+    ctx.db.get(extraction!.candidateId!),
+  )
+  expect(candidate?.state).toBe('deterministically_validated')
+})
+
 test('a replayed model action reuses the persisted extraction without another call', async () => {
   const t = initTest()
   const modelResponses: ModelResponseSpec[] = []
@@ -681,6 +896,14 @@ test('a replayed model action reuses the persisted extraction without another ca
     extractionId: original!._id,
     candidateId: original!.candidateId!,
   })
+  expect(modelCallCount(fetchMock)).toBe(1)
+  await expect(
+    t.action(internal.extraction.extract.runExtraction, {
+      runId: start.runId,
+      extractStageId: start.extractStageId,
+      context: { ...prepared.context, targetRecordId: 'CO-030-2026' },
+    }),
+  ).rejects.toThrow('Extraction action input must match its pipeline run')
   expect(modelCallCount(fetchMock)).toBe(1)
   const extractions = await t.run(async (ctx) =>
     ctx.db
@@ -764,6 +987,123 @@ test('a transient extraction failure retries the model step without creating a s
   )
   expect(candidate?.state).toBe('deterministically_validated')
   expect(modelCallCount(fetchMock)).toBe(2)
+})
+
+test('a 429 honors Retry-After evidence and retries the model step', async () => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = []
+  stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  modelResponses.push(
+    { status: 429, body: 'rate limited', retryAfter: '2' },
+    goldContent(snapshotId),
+  )
+
+  const start = await startExtraction(t, registryId, snapshotId)
+  await drainWorkflows(t)
+
+  expect((await runByRun(t, start.runId))?.state).toBe('succeeded')
+  const aiCalls = await aiCallsByRun(t, start.runId)
+  expect(aiCalls.map((call) => call.status)).toEqual([
+    'http_transient',
+    'success',
+  ])
+  expect(aiCalls[0]).toMatchObject({ httpStatus: 429, retryAfterMs: 2000 })
+})
+
+test('three transient failures exhaust the model retry budget once', async () => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = [
+    { status: 503, body: 'upstream unavailable' },
+    { status: 503, body: 'upstream unavailable' },
+    { status: 503, body: 'upstream unavailable' },
+  ]
+  const fetchMock = stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+
+  const start = await startExtraction(t, registryId, snapshotId)
+  await drainWorkflows(t)
+
+  expect((await runByRun(t, start.runId))?.state).toBe('failed_terminal')
+  const stages = await stagesByRun(t, start.runId)
+  expect(stages.find((stage) => stage.stage === 'extract')?.attempt).toBe(3)
+  const extraction = await extractionByRun(t, start.runId)
+  expect(extraction).toMatchObject({
+    state: 'failed',
+    errorClass: 'model_transient_exhausted',
+  })
+  const aiCalls = await aiCallsByRun(t, start.runId)
+  expect(aiCalls).toHaveLength(3)
+  expect(aiCalls.every((call) => call.extractionId === extraction?._id)).toBe(
+    true,
+  )
+  expect(modelCallCount(fetchMock)).toBe(3)
+})
+
+test('a permanent model rejection does not retry', async () => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = [
+    {
+      status: 400,
+      body: JSON.stringify({ error: { message: 'Request rejected' } }),
+    },
+  ]
+  const fetchMock = stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+
+  const start = await startExtraction(t, registryId, snapshotId)
+  await drainWorkflows(t)
+
+  const extraction = await extractionByRun(t, start.runId)
+  expect(extraction).toMatchObject({
+    state: 'failed',
+    errorClass: 'model_rejected',
+  })
+  const aiCalls = await aiCallsByRun(t, start.runId)
+  expect(aiCalls.map((call) => call.status)).toEqual(['http_permanent'])
+  expect(modelCallCount(fetchMock)).toBe(1)
+})
+
+test('an invalid HTTP response envelope fails once with its own class', async () => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = [{ rawBody: '{"choices":' }]
+  const fetchMock = stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+
+  const start = await startExtraction(t, registryId, snapshotId)
+  await drainWorkflows(t)
+
+  expect(await extractionByRun(t, start.runId)).toMatchObject({
+    state: 'failed',
+    errorClass: 'invalid_response_shape',
+  })
+  expect((await aiCallsByRun(t, start.runId))[0]).toMatchObject({
+    status: 'http_permanent',
+    errorClass: 'invalid_response_shape',
+  })
+  expect(modelCallCount(fetchMock)).toBe(1)
+})
+
+test('malformed, filtered, and missing model content get distinct failures', async () => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = [
+    '{"status":',
+    { finishReason: 'content_filter', content: '{}' },
+    { content: null },
+  ]
+  stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  const expected = ['malformed_json', 'content_filtered', 'missing_content']
+
+  for (const errorClass of expected) {
+    const start = await startExtraction(t, registryId, snapshotId)
+    await drainWorkflows(t)
+    expect(await extractionByRun(t, start.runId)).toMatchObject({
+      state: 'failed',
+      errorClass,
+    })
+    expect((await aiCallsByRun(t, start.runId))[0]?.status).toBe(errorClass)
+  }
 })
 
 test('a schema-invalid response persists the failed attempt but creates no validated candidate', async () => {
@@ -1059,6 +1399,35 @@ test('a page number without a page map fails page verification', async () => {
   ])
 })
 
+test('a page map proves an excerpt against offsets in the uncollapsed source', async () => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = []
+  stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  const recordStart = AGENDA_MARKDOWN.indexOf('5. CO-029-2026')
+  const recordEnd = AGENDA_MARKDOWN.indexOf('\n', recordStart)
+  await t.run(async (ctx) => {
+    await ctx.db.patch(snapshotId, {
+      pageMap: [{ page: 2, startOffset: recordStart, endOffset: recordEnd }],
+    })
+  })
+  modelResponses.push(
+    contentWith(snapshotId, (decision) => {
+      decision.facts = decision.facts.map((fact) =>
+        fact.fieldPath === '/title'
+          ? { ...fact, citation: { ...fact.citation, page: 2 } }
+          : fact,
+      )
+    }),
+  )
+
+  const start = await startExtraction(t, registryId, snapshotId)
+  await drainWorkflows(t)
+
+  expect((await runByRun(t, start.runId))?.state).toBe('succeeded')
+  expect(await findingsByRun(t, start.runId)).toHaveLength(0)
+})
+
 test('an uncited material field fails validation', async () => {
   const t = initTest()
   const modelResponses: ModelResponseSpec[] = []
@@ -1258,6 +1627,7 @@ test('deterministic date and amount helpers reject malformed values', () => {
   expect(parseZonedIsoDateTime('2026-04-21')).toBeNull()
   expect(parseZonedIsoDateTime('2026-02-31T17:30:00-06:00')).toBeNull()
   expect(parseZonedIsoDateTime('2026-04-21T17:30:00-06:00')).toBeNull()
+  expect(parseZonedIsoDateTime('2026-04-21T17:30:00.500-05:00')).toBeNull()
   expect(parseZonedIsoDateTime('2026-04-21T17:30:00+99:00')).toBeNull()
 
   expect(
@@ -1292,6 +1662,20 @@ test('deterministic date and amount helpers reject malformed values', () => {
   expect(
     textSupportsZonedDateTime('Tuesday, April 21, 2026 - 6:30 PM', meeting!),
   ).toBe(false)
+  const meetingWithSeconds = parseZonedIsoDateTime('2026-04-21T17:30:30-05:00')
+  expect(meetingWithSeconds).not.toBeNull()
+  expect(
+    textSupportsZonedDateTime(
+      'Tuesday, April 21, 2026 - 5:30 PM',
+      meetingWithSeconds!,
+    ),
+  ).toBe(false)
+  expect(
+    textSupportsZonedDateTime(
+      'Tuesday, April 21, 2026 - 5:30:30 PM',
+      meetingWithSeconds!,
+    ),
+  ).toBe(true)
 
   expect(centsOf(13564.8)).toBe(1356480)
   expect(centsOf(13.564)).toBeNull()
@@ -1305,4 +1689,5 @@ test('deterministic date and amount helpers reject malformed values', () => {
   )
   expect(textSupportsAmount('total of 13564.80 dollars', 13564.8)).toBe(true)
   expect(textSupportsAmount('accepting $13,564.80 in revenue', 13)).toBe(false)
+  expect(textSupportsAmount('invoice ABC13564.80X', 13564.8)).toBe(false)
 })
