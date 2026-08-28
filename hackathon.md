@@ -7,16 +7,77 @@
 - **Repo:** https://github.com/LaykenV/public-parish
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
-- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`
-- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage
+- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`
+- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, durable workflows
 - **Auth:** none
-- **AI models:** none
+- **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-28T19:56:20Z
+- **Last updated:** 2026-08-28T22:31:19Z
 
 ## Log
 
 ### 2026-08-28 - working tree
+
+Implemented Slice 2, the cited atomic decision. Registered `@convex-dev/workflow`
+0.4.6 and built `extractSnapshotV1`, a durable workflow that runs the pipeline
+steps prepare, extract, validate, and complete, with the model step on a bounded
+three-attempt retry and parallelism capped at two. The pipeline ledger gained
+`extract` and `validate` stages, a `manual_extraction` trigger, and a private
+evidence set of `aiCalls`, `extractions`, `decisionCandidates`,
+`candidateFacts`, and `validationFindings` tables. The internal starter is
+idempotent on a key that hashes prompt, schema, and processor versions plus
+registry, snapshot, and target record, and it records the workflow ID on the run.
+
+Built the strict extraction contract v1 (`convex/extraction/contractV1.ts`) with
+a JSON Schema `response_format` for OpenAI Structured Outputs, a matching Convex
+validator, constrained JSON Pointer fact paths, and bounded fields. Built the Convex AI
+Gateway provider boundary (`convex/ai/`) that mints the scoped token in the
+action, posts Chat Completions with `reasoning_effort: "high"` and `store:
+false`, classifies refusals, length cutoffs, malformed and schema-invalid
+responses, transient and permanent HTTP failures, and keeps a direct OpenAI
+adapter behind the same interface, disabled unless configuration explicitly
+enables it. Every vendor attempt is recorded with route, model role, usage,
+cached and reasoning tokens, and an estimated cost from the architecture price
+table.
+
+Validation is fail-closed: snapshot basis, normalization, truncation, stored
+hash and size, and official-domain checks run before any model call and again at
+validation. The validator re-verifies the stored text, requires every cited
+snapshot ID and excerpt to resolve inside normalized source text, gates page
+numbers behind a page map, checks section-before-excerpt ordering, parses
+Louisiana meeting dates and public-action deadlines as zoned ISO timestamps
+supported by the cited date and time, requires amounts to be finite nonnegative
+two-decimal values that appear as complete money tokens in the excerpt, blocks
+agenda evidence from producing decided outcomes or votes, and requires exactly
+one fact row for every non-null material leaf. Unknown paths, duplicate paths,
+blank excerpts, and fact values that do not equal the stored candidate fail
+validation. Passing validation moves the candidate to
+`deterministically_validated`, which means ready for independent review, not
+published. No public decision, citation, review, or publication table exists
+yet.
+
+Added 23 tests around a `CO-029-2026` fixture derived from the official agenda.
+The tests ingest stubbed PDF and Firecrawl responses through `convex-test`, then
+use stubbed Gateway responses to cover ordered stages, transient retry without
+a second run, replay after persistence, key composition, exact amount and time
+checks, public-action deadlines, fact binding, and fail-closed model and source
+errors. `npm run verify` passes typecheck, 53 tests, build, and lint.
+
+Proved the Slice 2 exit gate on the personal development deployment with the
+real processor v2 agenda snapshot `js7facykrk86ep9rgf98ttj52n8dadh2`. Three
+scoped Convex AI Gateway calls used `openai/gpt-5.6-terra`. The first response
+invented fact-path syntax and the second joined a heading to a later record
+line. Deterministic validation rejected both, and those failures led to prompt
+versions `v1.1` and `v1.2`. The `v1.2` call completed in one model attempt with
+2,418 prompt tokens, 1,609 completion tokens, 431 reasoning tokens, and an
+estimated cost of $0.024144. It produced a private `CO-029-2026` proposal with
+nine fact rows. Every excerpt resolved to the stored snapshot, every fact value
+matched its candidate field, both workflow stages succeeded, and the candidate
+reached `deterministically_validated`. Repeating the starter returned the same
+successful run with `reused: true` and made no new model call. Production is
+untouched.
+
+### 2026-08-28 - 70ee961
 
 Built and deployed the Slice 1 source ledger and retrieval processor v2 to the
 personal development deployment `woozy-wren-227`. Production remained
@@ -78,9 +139,10 @@ backend and frontend, apply the idempotent registry seed, and run a production
 smoke. The smoke script checks the direct `convex.site` origin, the canonical
 custom domain, the path-preserving apex redirect, a built JavaScript asset, and
 the live readiness query. Its read-only HTTP checks pass against the current
-production shell. The new workflow has not run yet because this working tree
-has not merged. No AI model call, AgentMail integration, authentication,
-production promotion of Slice 1, public evidence interface, or public pipeline
+production shell. The new release workflow has since run: this work merged through PR #5
+(`70ee961`), deployed the production backend and frontend, and the production
+smoke passed, so Slice 1 is live in production. No AI model call, AgentMail
+integration, authentication, public evidence interface, or public pipeline
 function exists yet.
 
 ### 2026-08-27 - dd12d01

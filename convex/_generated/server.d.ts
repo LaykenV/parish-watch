@@ -30,8 +30,12 @@ import type { DataModel } from "./dataModel.js";
 type Env = {
   readonly CONVEX_CLOUD_URL: string;
   readonly CONVEX_SITE_URL: string;
+  readonly DIRECT_OPENAI_FALLBACK_ENABLED: string | undefined;
   readonly FIRECRAWL_API_KEY: string;
   readonly FIRECRAWL_WEBHOOK_SECRET: string | undefined;
+  readonly MODEL_FAST_ID: string | undefined;
+  readonly MODEL_STRONG_ID: string | undefined;
+  readonly OPENAI_API_KEY: string | undefined;
 };
 
 /**
