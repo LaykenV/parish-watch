@@ -474,6 +474,34 @@ test('an unsuccessful target status is not recorded as a healthy snapshot', asyn
   expect(snapshots).toHaveLength(0)
 })
 
+test('a missing target status fails closed without creating a snapshot', async () => {
+  const t = initTest()
+  stubScrape(MD_1, RAW_1, { statusCode: undefined })
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+
+  const result = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+
+  expect(result).toMatchObject({
+    outcome: 'failed',
+    errorClass: 'missing_target_status',
+    retryable: true,
+  })
+  const runs = await t.query(internal.pipeline.runs.listForRegistry, {
+    registryId,
+  })
+  expect(runs[0].state).toBe('failed_retryable')
+  const snapshots = await t.query(internal.sources.snapshots.listForRegistry, {
+    registryId,
+  })
+  expect(snapshots).toHaveLength(0)
+})
+
 test('missing raw html fails instead of mislabeling markdown as the raw artifact', async () => {
   const t = initTest()
   stubScrape(MD_1, undefined)

@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-28T04:38:15Z
+- **Last updated:** 2026-08-28T12:56:41Z
 
 ## Log
 
@@ -21,7 +21,7 @@
 Built the Slice 1 source ledger and Firecrawl retrieval path. The schema now
 holds jurisdictions, bodies, registries, per-source immutable snapshot chains,
 pipeline runs, and stage evidence. Retrieval processor v2 validates both the
-requested and final URL, rejects unsuccessful target statuses, hashes the raw
+requested and final URL, requires a successful target status, hashes the raw
 artifact separately from normalized Markdown, reuses only the same source and
 raw hash at the current chain head, orders each source chain by its monotonic
 version, and cleans redundant or failed uploads (`convex/schema.ts`,
@@ -33,14 +33,14 @@ repeat run reused the same snapshot ID, and both run records succeeded. That
 live record used retrieval processor v1. The reviewed v2 hardening is currently
 working-tree code and has not been deployed.
 
-Local verification passes 23 tests plus typecheck, production build, and lint.
+Local verification passes 24 tests plus typecheck, production build, and lint.
 The tests cover unchanged reuse, a changed raw artifact, an A to B to A source
 reversion recorded as version 3, out-of-order retrieval timestamps, independent
 chains for two URLs with identical content, requested-domain rejection,
-redirected-domain rejection, target 404 rejection, missing raw content,
-Firecrawl failure, metadata normalization, blob cleanup, hashing, and
-idempotent seeding. No AI model call, AgentMail integration, authentication,
-production promotion, or public pipeline surface exists yet.
+redirected-domain rejection, target 404 rejection, missing target status,
+missing raw content, Firecrawl failure, metadata normalization, blob cleanup,
+hashing, and idempotent seeding. No AI model call, AgentMail integration,
+authentication, production promotion, or public pipeline surface exists yet.
 
 ### 2026-08-27 - dd12d01
 

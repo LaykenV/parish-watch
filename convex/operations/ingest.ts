@@ -215,10 +215,14 @@ async function ingestSeedUrl(
       Number.isInteger(metadata.statusCode)
         ? metadata.statusCode
         : undefined
-    if (
-      targetStatusCode !== undefined &&
-      (targetStatusCode < 200 || targetStatusCode >= 300)
-    ) {
+    if (targetStatusCode === undefined) {
+      return await failOutcome(
+        'missing_target_status',
+        `Firecrawl returned no valid target HTTP status for ${retrievedUrl}`,
+        true,
+      )
+    }
+    if (targetStatusCode < 200 || targetStatusCode >= 300) {
       return await failOutcome(
         'target_http_status',
         `Official source returned HTTP ${targetStatusCode}: ${retrievedUrl}`,
