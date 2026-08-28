@@ -101,7 +101,7 @@ export const commitRetrieval = internalMutation({
 
     const previous = await ctx.db
       .query('sourceSnapshots')
-      .withIndex('by_registry_and_canonical_url_and_retrieval_time', (q) =>
+      .withIndex('by_registry_and_canonical_url_and_version', (q) =>
         q
           .eq('registryId', args.registryId)
           .eq('canonicalUrl', args.canonicalUrl),
@@ -224,7 +224,7 @@ export const getLatestForSource = internalQuery({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('sourceSnapshots')
-      .withIndex('by_registry_and_canonical_url_and_retrieval_time', (q) =>
+      .withIndex('by_registry_and_canonical_url_and_version', (q) =>
         q
           .eq('registryId', args.registryId)
           .eq('canonicalUrl', args.canonicalUrl),
@@ -257,7 +257,7 @@ export const listForSource = internalQuery({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('sourceSnapshots')
-      .withIndex('by_registry_and_canonical_url_and_retrieval_time', (q) =>
+      .withIndex('by_registry_and_canonical_url_and_version', (q) =>
         q
           .eq('registryId', args.registryId)
           .eq('canonicalUrl', args.canonicalUrl),

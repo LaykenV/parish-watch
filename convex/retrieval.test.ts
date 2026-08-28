@@ -73,6 +73,7 @@ function snapshotIdOf(result: {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
 })
@@ -271,6 +272,47 @@ test('content reverting to an older hash creates a new head in the version chain
     canonicalUrl: HUB_URL,
   })
   expect(snapshots).toHaveLength(3)
+})
+
+test('version order keeps the chain head stable when retrieval timestamps arrive out of order', async () => {
+  const t = initTest()
+  const now = vi.spyOn(Date, 'now')
+  now.mockReturnValue(2_000)
+  stubScrape(MD_1, RAW_1)
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+  const first = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+
+  now.mockReturnValue(1_000)
+  stubScrape(MD_2, RAW_2)
+  const second = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+  now.mockRestore()
+
+  expect(second).toMatchObject({ outcome: 'created', version: 2 })
+  const latest = await t.query(internal.sources.snapshots.getLatestForSource, {
+    registryId,
+    canonicalUrl: HUB_URL,
+  })
+  expect(latest).toMatchObject({
+    _id: snapshotIdOf(second),
+    previousSnapshotId: snapshotIdOf(first),
+    retrievalTime: 1_000,
+    version: 2,
+  })
+
+  const snapshots = await t.query(internal.sources.snapshots.listForSource, {
+    registryId,
+    canonicalUrl: HUB_URL,
+  })
+  expect(snapshots.map((snapshot) => snapshot.version)).toEqual([2, 1])
 })
 
 test('a raw artifact change creates a new version even when normalized markdown is unchanged', async () => {

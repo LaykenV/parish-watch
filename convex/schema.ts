@@ -127,6 +127,11 @@ export default defineSchema({
       'registryId',
       'canonicalUrl',
       'retrievalTime',
+    ])
+    .index('by_registry_and_canonical_url_and_version', [
+      'registryId',
+      'canonicalUrl',
+      'version',
     ]),
 
   pipelineRuns: defineTable({
