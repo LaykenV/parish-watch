@@ -503,6 +503,30 @@ test('a missing target status fails closed without creating a snapshot', async (
   expect(snapshots).toHaveLength(0)
 })
 
+test('a missing content type fails closed without storing rendered HTML', async () => {
+  const t = initTest()
+  stubScrape(MD_1, RAW_1, { contentType: undefined })
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+
+  const result = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+
+  expect(result).toMatchObject({
+    outcome: 'failed',
+    errorClass: 'missing_content_type',
+    retryable: true,
+  })
+  const snapshots = await t.query(internal.sources.snapshots.listForRegistry, {
+    registryId,
+  })
+  expect(snapshots).toHaveLength(0)
+})
+
 test('missing raw html fails instead of mislabeling markdown as the raw artifact', async () => {
   const t = initTest()
   stubScrape(MD_1, undefined)

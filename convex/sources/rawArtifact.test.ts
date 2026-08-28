@@ -39,3 +39,24 @@ test('classifies a PDF body stream failure as retryable', async () => {
     retryable: true,
   })
 })
+
+test('rejects a non-PDF response even when the server labels it as PDF', async () => {
+  const response = new Response('<html>not a PDF</html>', {
+    status: 200,
+    headers: { 'content-type': 'application/pdf' },
+  })
+  Object.defineProperty(response, 'url', { value: PDF_URL })
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => response),
+  )
+
+  const result = await downloadOfficialPdf(PDF_URL, ['apps.lafayettela.gov'])
+
+  expect(result).toEqual({
+    ok: false,
+    errorClass: 'raw_artifact_signature',
+    errorDetail: `Official response did not contain a PDF signature: ${PDF_URL}`,
+    retryable: false,
+  })
+})

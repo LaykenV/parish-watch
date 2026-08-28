@@ -2,6 +2,7 @@ import { canonicalizeUrl, isAllowedOfficialHost } from './domains'
 
 const MAX_RAW_ARTIFACT_BYTES = 25 * 1024 * 1024
 const TRANSIENT_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504])
+const PDF_SIGNATURE = new TextEncoder().encode('%PDF-')
 
 export type RawArtifactDownload =
   | {
@@ -137,5 +138,29 @@ export async function downloadOfficialPdf(
       retryable: true,
     }
   }
+  if (!hasPdfSignature(bytes)) {
+    return {
+      ok: false,
+      errorClass: 'raw_artifact_signature',
+      errorDetail: `Official response did not contain a PDF signature: ${finalUrl}`,
+      retryable: false,
+    }
+  }
   return { ok: true, bytes, contentType, finalUrl }
+}
+
+function hasPdfSignature(bytes: Uint8Array): boolean {
+  const searchLimit = Math.min(bytes.byteLength, 1024)
+  for (
+    let offset = 0;
+    offset <= searchLimit - PDF_SIGNATURE.byteLength;
+    offset += 1
+  ) {
+    if (
+      PDF_SIGNATURE.every((value, index) => bytes[offset + index] === value)
+    ) {
+      return true
+    }
+  }
+  return false
 }

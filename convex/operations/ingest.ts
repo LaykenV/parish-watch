@@ -161,16 +161,37 @@ function validateScrape(
     }
   }
 
+  const sourceContentType =
+    typeof metadata.contentType === 'string' ? metadata.contentType.trim() : ''
+  if (!sourceContentType) {
+    return {
+      ok: false,
+      errorClass: 'missing_content_type',
+      errorDetail: `Firecrawl returned no content type for ${retrievedUrl}`,
+      retryable: true,
+    }
+  }
+  const normalizedContentType = sourceContentType.toLowerCase()
+  if (
+    !normalizedContentType.startsWith('application/pdf') &&
+    !normalizedContentType.startsWith('text/html') &&
+    !normalizedContentType.startsWith('application/xhtml+xml')
+  ) {
+    return {
+      ok: false,
+      errorClass: 'unsupported_content_type',
+      errorDetail: `Firecrawl returned unsupported content type ${sourceContentType}: ${retrievedUrl}`,
+      retryable: false,
+    }
+  }
+
   return {
     ok: true,
     metadata,
     retrievedUrl,
     targetStatusCode,
     markdown,
-    sourceContentType:
-      typeof metadata.contentType === 'string'
-        ? metadata.contentType
-        : 'unknown',
+    sourceContentType,
     warning:
       typeof document.warning === 'string' ? document.warning : undefined,
   }

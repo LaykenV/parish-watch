@@ -363,6 +363,11 @@ the run retryable and creates no snapshot. This uses two Firecrawl scrapes for
 each PDF so the normalized text and immutable raw file come from one stable
 source version.
 
+The processor fails closed when Firecrawl omits the content type or reports a
+type outside HTML, XHTML, and PDF. Direct PDF downloads must contain a `%PDF-`
+signature within their first 1,024 bytes. Missing metadata and mislabeled files
+never become source snapshots.
+
 ## Core Data Model
 
 The first schema should include these tables.

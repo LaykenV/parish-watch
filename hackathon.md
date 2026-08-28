@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-28T19:03:11Z
+- **Last updated:** 2026-08-28T19:56:20Z
 
 ## Log
 
@@ -54,7 +54,7 @@ and 4,274 bytes of Markdown. The corrected minutes snapshot
 The earlier version 1 PDF snapshots remain in development as transparent spike
 evidence and contain rendered HTML rather than the source PDFs.
 
-`npm run verify` passes typechecking, 28 tests, the production build, and lint.
+`npm run verify` passes typechecking, 30 tests, the production build, and lint.
 The Convex review found no public function, auth, query-scan, validator, or
 unbounded-result issue in this change. A hosted development build was uploaded
 to `https://woozy-wren-227.convex.site`; a direct GET and the live readiness
@@ -68,7 +68,9 @@ when both raw hashes agree. A regression test changes the PDF between those
 downloads and proves that no mixed snapshot is created. The revised processor
 was pushed to the personal development deployment and ingested the agenda again.
 Both official downloads matched around the fresh Firecrawl scrape, and the run
-reused snapshot `js7facykrk86ep9rgf98ttj52n8dadh2` at version 2.
+reused snapshot `js7facykrk86ep9rgf98ttj52n8dadh2` at version 2. The final
+fail-closed content-type and PDF-signature checks passed the same live dev run
+and reused that snapshot again.
 
 Added the hackathon release path in the working tree. Pull requests run the full
 verification command. A reviewed merge to `main` will deploy the matching
