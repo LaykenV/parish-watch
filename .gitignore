@@ -16,5 +16,8 @@ coverage/
 .claude/
 skills-lock.json
 
+# PR evidence screenshots; paste into GitHub, never commit
+.github/pr-assets/
+
 # Convex local state and generated deployment artifacts
 .convex/
