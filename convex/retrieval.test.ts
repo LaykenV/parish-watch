@@ -588,7 +588,70 @@ test('a PDF stores the official source bytes alongside Firecrawl markdown', asyn
   expect(snapshot?.contentHash).toBe(
     await sha256HexOfText('%PDF-1.7 official agenda bytes'),
   )
-  expect(fetchMock).toHaveBeenCalledTimes(2)
+  expect(fetchMock).toHaveBeenCalledTimes(4)
+})
+
+test('a PDF that changes during extraction creates no mixed snapshot', async () => {
+  const t = initTest()
+  const firstPdf = new TextEncoder().encode('%PDF-1.7 first version')
+  const secondPdf = new TextEncoder().encode('%PDF-1.7 revised version')
+  let rawDownloadCount = 0
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string | URL | Request) => {
+      const requestUrl =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url
+      if (requestUrl === PDF_URL) {
+        const bytes = rawDownloadCount === 0 ? firstPdf : secondPdf
+        rawDownloadCount += 1
+        const response = new Response(bytes, {
+          status: 200,
+          headers: { 'content-type': 'application/pdf' },
+        })
+        Object.defineProperty(response, 'url', { value: PDF_URL })
+        return response
+      }
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            markdown: '# Regular meeting agenda',
+            metadata: {
+              sourceURL: PDF_URL,
+              url: PDF_URL,
+              statusCode: 200,
+              contentType: 'application/pdf',
+              creditsUsed: 2,
+            },
+          },
+        }),
+        { status: 200 },
+      )
+    }),
+  )
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+
+  const result = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId, urlOverride: PDF_URL },
+  )
+
+  expect(result).toMatchObject({
+    outcome: 'failed',
+    errorClass: 'source_changed_during_retrieval',
+    retryable: true,
+  })
+  const snapshots = await t.query(internal.sources.snapshots.listForRegistry, {
+    registryId,
+  })
+  expect(snapshots).toHaveLength(0)
 })
 
 test('a firecrawl failure marks the run failed without creating a snapshot', async () => {

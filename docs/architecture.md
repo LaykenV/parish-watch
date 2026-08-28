@@ -356,6 +356,13 @@ published claim was based. Normal retrieval accepts a redirected result only
 when its final URL remains inside the registry's approved official domains and
 its target HTTP status is successful.
 
+PDF retrieval brackets a forced fresh Firecrawl extraction with two downloads
+of the official file. The action commits only when both raw SHA-256 hashes,
+resolved URLs, and PDF content types agree. A change during that interval marks
+the run retryable and creates no snapshot. This uses two Firecrawl scrapes for
+each PDF so the normalized text and immutable raw file come from one stable
+source version.
+
 ## Core Data Model
 
 The first schema should include these tables.

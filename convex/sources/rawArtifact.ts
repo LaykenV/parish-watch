@@ -8,6 +8,7 @@ export type RawArtifactDownload =
       ok: true
       bytes: Uint8Array<ArrayBuffer>
       contentType: string
+      finalUrl: string
     }
   | {
       ok: false
@@ -136,5 +137,5 @@ export async function downloadOfficialPdf(
       retryable: true,
     }
   }
-  return { ok: true, bytes, contentType }
+  return { ok: true, bytes, contentType, finalUrl }
 }
