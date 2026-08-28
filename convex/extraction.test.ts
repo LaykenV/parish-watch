@@ -1080,6 +1080,18 @@ test('an uncited material field fails validation', async () => {
     'material_field_uncited',
   ])
   expect(findings[0].fieldPath).toBe('/title')
+
+  const extraction = await extractionByRun(t, start.runId)
+  const replay = await t.action(internal.extraction.validate.runValidation, {
+    runId: start.runId,
+    extractionId: extraction!._id,
+    validateStageId: start.validateStageId,
+  })
+  expect(replay).toEqual({
+    outcome: 'validation_failed',
+    codes: ['material_field_uncited'],
+  })
+  expect(await findingsByRun(t, start.runId)).toHaveLength(1)
 })
 
 test('a fact value that differs from its candidate field fails validation', async () => {

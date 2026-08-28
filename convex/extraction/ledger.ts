@@ -612,16 +612,36 @@ export const persistValidationFailure = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const now = Date.now()
-    for (const finding of args.findings) {
-      await ctx.db.insert('validationFindings', {
-        runId: args.runId,
-        extractionId: args.extractionId,
-        candidateId: args.candidateId,
-        code: finding.code,
-        fieldPath: finding.fieldPath,
-        detail: finding.detail.slice(0, 500),
-        createdAt: now,
+    const existing = await ctx.db
+      .query('validationFindings')
+      .withIndex('by_extraction', (q) =>
+        q.eq('extractionId', args.extractionId),
+      )
+      .take(MATERIAL_ARRAY_LIMITS.facts + 1)
+    if (
+      existing.some(
+        (finding) =>
+          finding.runId !== args.runId ||
+          finding.candidateId !== args.candidateId,
+      )
+    ) {
+      throw new ConvexError({
+        code: 'validation_idempotency_collision',
+        message: `Extraction ${args.extractionId} has findings for another run or candidate`,
       })
+    }
+    if (existing.length === 0) {
+      for (const finding of args.findings) {
+        await ctx.db.insert('validationFindings', {
+          runId: args.runId,
+          extractionId: args.extractionId,
+          candidateId: args.candidateId,
+          code: finding.code,
+          fieldPath: finding.fieldPath,
+          detail: finding.detail.slice(0, 500),
+          createdAt: now,
+        })
+      }
     }
     await ctx.db.patch(args.candidateId, { state: 'validation_failed' })
     await ctx.db.patch(args.validateStageId, {
