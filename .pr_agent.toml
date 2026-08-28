@@ -1,0 +1,30 @@
+# PR-Agent configuration — read from the repository root.
+# Docs: https://docs.pr-agent.ai/usage-guide/configuration_options/
+[config]
+model = "openrouter/z-ai/glm-5.3-flash"
+fallback_models = ["openrouter/z-ai/glm-5.3-flash"]
+# Required: GLM is not in PR-Agent's built-in token table.
+# OpenRouter reports 1,310,720-token context for this model; 1M stays safely inside it.
+custom_model_max_tokens = 1000000
+# v0.40+ feature: re-runs edit existing inline findings instead of posting duplicates.
+persistent_inline_comments = true
+# Least-privilege: lets the workflow run with contents: read (no repo-write permission).
+restricted_mode = true
+
+[openrouter]
+# Optional hardening: pin routing so Flash only runs on Z.ai's infrastructure.
+# provider_only = ["z-ai"]
+
+[github_action_config]
+auto_review = true
+auto_describe = true
+auto_improve = false
+pr_actions = ["opened", "reopened", "ready_for_review", "synchronize"]
+handle_push_trigger = true
+push_commands = [
+  "/review",
+]
+
+[pr_reviewer]
+require_score_review = true
+persistent_comment = true
