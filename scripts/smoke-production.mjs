@@ -31,7 +31,12 @@ await getApp(DIRECT_ORIGIN)
 await getApp(CANONICAL_ORIGIN)
 
 const apexResponse = await get(`${APEX_ORIGIN}/smoke?source=github`)
-if (new URL(apexResponse.url).origin !== CANONICAL_ORIGIN) {
+const apexFinalUrl = new URL(apexResponse.url)
+if (
+  apexFinalUrl.origin !== CANONICAL_ORIGIN ||
+  apexFinalUrl.pathname !== '/smoke' ||
+  apexFinalUrl.searchParams.get('source') !== 'github'
+) {
   throw new Error(`Apex redirect ended at ${apexResponse.url}`)
 }
 console.log(`passed: ${APEX_ORIGIN} redirects to ${CANONICAL_ORIGIN}`)
