@@ -17,9 +17,10 @@ not spend it on decorative features.
 - Record vendor cost and quality from the first external call.
 - End each day with a deployed or locally reproducible proof, a test, or a
   documented blocker.
-- Run normal integration work in the personal development deployment. Promote a
-  completed slice to production only after automated checks and a hosted
-  development smoke pass.
+- Run the UI locally against the personal Convex development deployment. A
+  reviewed merge to `main` automatically deploys the matching backend and
+  frontend to production, applies the safe registry seed, and runs the
+  production smoke. Do not add staging during the hackathon.
 - Use real public records. Mark synthetic fixtures and deterministic replays
   clearly.
 - Feature-freeze on September 17.

@@ -12,10 +12,12 @@ revision principles, not code or a submission base.
 
 ## Current state
 
-Phase 0 setup is complete. The repository has a TanStack Start SPA shell,
-separate Convex development and production deployments, one realtime readiness
-query, Convex static hosting, tests, and a reproducible local setup path. The
-public setup shell is live; the evidence pipeline has not started.
+Phase 0 and the Slice 1 evidence backend are complete. The repository has a
+TanStack Start SPA shell, separate Convex development and production
+deployments, a realtime readiness query, Convex static hosting, Firecrawl
+discovery and retrieval, immutable source snapshots, tests, and a reproducible
+local setup path. Slice 1 adds the evidence backend. The public interface
+remains the setup shell until a later slice adds the resident view.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)
@@ -44,6 +46,13 @@ Open `http://localhost:3000`. The page should report `Convex connected`.
 `npx convex dev --once` creates the ignored `.env.local` file. Copy
 `.env.example` only when documenting variable names. Never commit real values.
 
+The frontend runs on the laptop. The backend does not. `npm run dev` runs Vite
+locally and keeps the personal Convex development deployment synchronized with
+the current branch. The local UI, development database, actions, and file
+storage all use that remote development deployment. It is one shared personal
+development deployment, not one deployment per branch. After switching
+branches, run `npm run dev` so the remote backend matches the checked-out code.
+
 Useful commands:
 
 ```bash
@@ -54,13 +63,20 @@ npm run test
 npm run build
 npm run lint
 npm run hosting:smoke:dev
+npm run smoke:production
 ```
 
 `npm run hosting:smoke:dev` builds with the development deployment URL and
-uploads the result to that deployment's `convex.site` host. Production builds
-fail when `VITE_CONVEX_URL` is missing. `npm run deploy` lets the static-hosting
-CLI build with the production URL, deploy the Convex backend, and upload the
-matching frontend. Production promotion requires explicit owner approval.
+uploads the result to that deployment's `convex.site` host. Use it only when a
+change needs the real static host. Production builds fail when
+`VITE_CONVEX_URL` is missing.
+
+Pull requests run `npm run verify`. Merging a reviewed PR to `main` is the
+production approval for this hackathon and triggers the `Deploy production`
+workflow. It verifies the merge commit, runs `npm run deploy` to publish the
+matching backend and frontend, applies the idempotent source-registry seed, and
+runs `npm run smoke:production`. The smoke checks the direct `convex.site`, the
+canonical custom domain, the apex redirect, and the production readiness query.
 
 The bare-domain redirect is isolated in
 [`infra/apex-redirect`](infra/apex-redirect/README.md). It preserves paths and
@@ -68,10 +84,9 @@ query strings but never hosts the application frontend. The hackathon submission
 URL remains the public `convex.site` host; the custom domain is an additional
 resident-facing entry point.
 
-Development is the normal integration environment. Promote a completed slice
-to production only after its tests and hosted development smoke pass. Use a
-preview deployment for auth, webhook, routing, or schema work that needs an
-isolated hosted check.
+There is no staging environment during the hackathon. Test branches with the
+local UI and personal development backend. Use a preview deployment only when
+auth, webhook, routing, or schema work genuinely needs isolation.
 
 ## Canonical documents
 

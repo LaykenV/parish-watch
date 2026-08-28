@@ -1,4 +1,5 @@
 import { FirecrawlClient } from '@firecrawl/firecrawl-convex'
+import type { FirecrawlDocument } from '@firecrawl/firecrawl-convex'
 import { ConvexError, v } from 'convex/values'
 
 import { components, internal } from '../_generated/api'
@@ -12,6 +13,7 @@ import {
 } from '../sources/domains'
 import { sha256HexOfBytes, sha256HexOfText } from '../sources/hashing'
 import { normalizeFirecrawlMetadata } from '../sources/metadata'
+import { downloadOfficialPdf } from '../sources/rawArtifact'
 import { cleanupStoredArtifacts } from '../sources/storageCleanup'
 import { retrievalContentKey } from '../pipeline/keys'
 
@@ -37,6 +39,23 @@ const ingestOutcome = v.union(
 )
 
 type IngestOutcome = typeof ingestOutcome.type
+
+type ValidatedScrape =
+  | {
+      ok: true
+      metadata: Record<string, unknown>
+      retrievedUrl: string
+      targetStatusCode: number
+      markdown: string
+      sourceContentType: string
+      warning?: string
+    }
+  | {
+      ok: false
+      errorClass: string
+      errorDetail: string
+      retryable: boolean
+    }
 
 const TRANSIENT_STATUSES = new Set([0, 408, 425, 429, 500, 502, 503, 504])
 
@@ -76,6 +95,105 @@ function classifyError(error: unknown): {
     errorClass: 'unexpected',
     errorDetail: error instanceof Error ? error.message : String(error),
     retryable: true,
+  }
+}
+
+function validateScrape(
+  document: FirecrawlDocument,
+  requestedUrl: string,
+  officialDomains: string[],
+): ValidatedScrape {
+  const metadata = (document.metadata ?? {}) as Record<string, unknown>
+  const retrievedUrl = canonicalizeUrl(
+    typeof metadata.url === 'string'
+      ? metadata.url
+      : typeof metadata.sourceURL === 'string'
+        ? metadata.sourceURL
+        : requestedUrl,
+  )
+  if (!retrievedUrl) {
+    return {
+      ok: false,
+      errorClass: 'invalid_retrieved_url',
+      errorDetail: `Firecrawl returned an invalid retrieved URL for ${requestedUrl}`,
+      retryable: false,
+    }
+  }
+  if (!isAllowedOfficialHost(retrievedUrl, officialDomains)) {
+    return {
+      ok: false,
+      errorClass: 'redirect_domain_not_allowed',
+      errorDetail: `Retrieved URL is outside the registered official domains: ${retrievedUrl}`,
+      retryable: false,
+    }
+  }
+
+  const targetStatusCode =
+    typeof metadata.statusCode === 'number' &&
+    Number.isInteger(metadata.statusCode)
+      ? metadata.statusCode
+      : undefined
+  if (targetStatusCode === undefined) {
+    return {
+      ok: false,
+      errorClass: 'missing_target_status',
+      errorDetail: `Firecrawl returned no valid target HTTP status for ${retrievedUrl}`,
+      retryable: true,
+    }
+  }
+  if (targetStatusCode < 200 || targetStatusCode >= 300) {
+    return {
+      ok: false,
+      errorClass: 'target_http_status',
+      errorDetail: `Official source returned HTTP ${targetStatusCode}: ${retrievedUrl}`,
+      retryable: TRANSIENT_STATUSES.has(targetStatusCode),
+    }
+  }
+
+  const markdown =
+    typeof document.markdown === 'string' ? document.markdown : ''
+  if (!markdown.trim()) {
+    return {
+      ok: false,
+      errorClass: 'empty_content',
+      errorDetail: `Firecrawl returned no markdown for ${requestedUrl}`,
+      retryable: false,
+    }
+  }
+
+  const sourceContentType =
+    typeof metadata.contentType === 'string' ? metadata.contentType.trim() : ''
+  if (!sourceContentType) {
+    return {
+      ok: false,
+      errorClass: 'missing_content_type',
+      errorDetail: `Firecrawl returned no content type for ${retrievedUrl}`,
+      retryable: true,
+    }
+  }
+  const normalizedContentType = sourceContentType.toLowerCase()
+  if (
+    !normalizedContentType.startsWith('application/pdf') &&
+    !normalizedContentType.startsWith('text/html') &&
+    !normalizedContentType.startsWith('application/xhtml+xml')
+  ) {
+    return {
+      ok: false,
+      errorClass: 'unsupported_content_type',
+      errorDetail: `Firecrawl returned unsupported content type ${sourceContentType}: ${retrievedUrl}`,
+      retryable: false,
+    }
+  }
+
+  return {
+    ok: true,
+    metadata,
+    retrievedUrl,
+    targetStatusCode,
+    markdown,
+    sourceContentType,
+    warning:
+      typeof document.warning === 'string' ? document.warning : undefined,
   }
 }
 
@@ -182,81 +300,121 @@ async function ingestSeedUrl(
   let rawStorageId: Id<'_storage'> | undefined
 
   try {
-    const document = await firecrawl.scrape(ctx, url, {
+    let document = await firecrawl.scrape(ctx, url, {
       formats: ['markdown', 'rawHtml'],
       onlyMainContent: false,
     })
-
-    const metadata = (document.metadata ?? {}) as Record<string, unknown>
-    const retrievedUrl = canonicalizeUrl(
-      typeof metadata.url === 'string'
-        ? metadata.url
-        : typeof metadata.sourceURL === 'string'
-          ? metadata.sourceURL
-          : url,
-    )
-    if (!retrievedUrl) {
+    let scraped = validateScrape(document, url, officialDomains)
+    if (!scraped.ok) {
       return await failOutcome(
-        'invalid_retrieved_url',
-        `Firecrawl returned an invalid retrieved URL for ${url}`,
-        false,
+        scraped.errorClass,
+        scraped.errorDetail,
+        scraped.retryable,
       )
     }
-    if (!isAllowedOfficialHost(retrievedUrl, officialDomains)) {
-      return await failOutcome(
-        'redirect_domain_not_allowed',
-        `Retrieved URL is outside the registered official domains: ${retrievedUrl}`,
-        false,
-      )
-    }
-
-    const targetStatusCode =
-      typeof metadata.statusCode === 'number' &&
-      Number.isInteger(metadata.statusCode)
-        ? metadata.statusCode
+    let creditsUsed =
+      typeof scraped.metadata.creditsUsed === 'number'
+        ? scraped.metadata.creditsUsed
         : undefined
-    if (targetStatusCode === undefined) {
-      return await failOutcome(
-        'missing_target_status',
-        `Firecrawl returned no valid target HTTP status for ${retrievedUrl}`,
-        true,
+    let rawBytes: Uint8Array<ArrayBuffer>
+    let rawContentType: string
+    if (scraped.sourceContentType.toLowerCase().startsWith('application/pdf')) {
+      const beforeArtifact = await downloadOfficialPdf(
+        scraped.retrievedUrl,
+        officialDomains,
       )
-    }
-    if (targetStatusCode < 200 || targetStatusCode >= 300) {
-      return await failOutcome(
-        'target_http_status',
-        `Official source returned HTTP ${targetStatusCode}: ${retrievedUrl}`,
-        TRANSIENT_STATUSES.has(targetStatusCode),
+      if (!beforeArtifact.ok) {
+        return await failOutcome(
+          beforeArtifact.errorClass,
+          beforeArtifact.errorDetail,
+          beforeArtifact.retryable,
+        )
+      }
+
+      document = await firecrawl.scrape(ctx, scraped.retrievedUrl, {
+        formats: ['markdown', 'rawHtml'],
+        onlyMainContent: false,
+        maxAge: 0,
+      })
+      const verifiedScrape = validateScrape(
+        document,
+        scraped.retrievedUrl,
+        officialDomains,
       )
-    }
+      if (!verifiedScrape.ok) {
+        return await failOutcome(
+          verifiedScrape.errorClass,
+          verifiedScrape.errorDetail,
+          verifiedScrape.retryable,
+        )
+      }
+      if (
+        verifiedScrape.retrievedUrl !== scraped.retrievedUrl ||
+        !verifiedScrape.sourceContentType
+          .toLowerCase()
+          .startsWith('application/pdf')
+      ) {
+        return await failOutcome(
+          'source_changed_during_retrieval',
+          `Official PDF changed its resolved URL or content type during retrieval: ${url}`,
+          true,
+        )
+      }
 
-    const markdown =
-      typeof document.markdown === 'string' ? document.markdown : ''
-    if (!markdown.trim()) {
-      return await failOutcome(
-        'empty_content',
-        `Firecrawl returned no markdown for ${url}`,
-        false,
+      const afterArtifact = await downloadOfficialPdf(
+        verifiedScrape.retrievedUrl,
+        officialDomains,
       )
+      if (!afterArtifact.ok) {
+        return await failOutcome(
+          afterArtifact.errorClass,
+          afterArtifact.errorDetail,
+          afterArtifact.retryable,
+        )
+      }
+      const beforeHash = await sha256HexOfBytes(beforeArtifact.bytes)
+      const afterHash = await sha256HexOfBytes(afterArtifact.bytes)
+      if (
+        beforeHash !== afterHash ||
+        beforeArtifact.finalUrl !== afterArtifact.finalUrl ||
+        afterArtifact.finalUrl !== verifiedScrape.retrievedUrl ||
+        beforeArtifact.contentType !== afterArtifact.contentType
+      ) {
+        return await failOutcome(
+          'source_changed_during_retrieval',
+          `Official PDF changed while Firecrawl extracted it: ${url}`,
+          true,
+        )
+      }
+
+      const verificationCredits =
+        typeof verifiedScrape.metadata.creditsUsed === 'number'
+          ? verifiedScrape.metadata.creditsUsed
+          : undefined
+      creditsUsed =
+        creditsUsed === undefined && verificationCredits === undefined
+          ? undefined
+          : (creditsUsed ?? 0) + (verificationCredits ?? 0)
+      scraped = verifiedScrape
+      rawBytes = afterArtifact.bytes
+      rawContentType = afterArtifact.contentType
+    } else {
+      const rawHtml =
+        typeof document.rawHtml === 'string' ? document.rawHtml : ''
+      if (!rawHtml.trim()) {
+        return await failOutcome(
+          'missing_raw_artifact',
+          `Firecrawl returned no raw HTML for ${url}`,
+          true,
+        )
+      }
+      rawBytes = new TextEncoder().encode(rawHtml)
+      rawContentType = 'text/html'
     }
-
-    const rawHtml = typeof document.rawHtml === 'string' ? document.rawHtml : ''
-    if (!rawHtml.trim()) {
-      return await failOutcome(
-        'missing_raw_artifact',
-        `Firecrawl returned no raw HTML for ${url}`,
-        true,
-      )
-    }
-
-    const warning =
-      typeof document.warning === 'string' ? document.warning : undefined
-
     const retrievalTime = Date.now()
-    const markdownBytes = new TextEncoder().encode(markdown)
-    const rawBytes = new TextEncoder().encode(rawHtml)
+    const markdownBytes = new TextEncoder().encode(scraped.markdown)
     const contentHash = await sha256HexOfBytes(rawBytes)
-    const normalizedContentHash = await sha256HexOfText(markdown)
+    const normalizedContentHash = await sha256HexOfText(scraped.markdown)
     const idempotencyKey = await retrievalContentKey(
       registryId,
       url,
@@ -266,7 +424,7 @@ async function ingestSeedUrl(
       new Blob([markdownBytes], { type: 'text/markdown' }),
     )
     rawStorageId = await ctx.storage.store(
-      new Blob([rawBytes], { type: 'text/html' }),
+      new Blob([rawBytes], { type: rawContentType }),
     )
 
     const committed = await ctx.runMutation(
@@ -276,15 +434,12 @@ async function ingestSeedUrl(
         runId,
         stageId,
         canonicalUrl: url,
-        retrievedUrl,
+        retrievedUrl: scraped.retrievedUrl,
         contentHash,
         normalizedContentHash,
         idempotencyKey,
-        contentType:
-          typeof metadata.contentType === 'string'
-            ? metadata.contentType
-            : 'unknown',
-        targetStatusCode,
+        contentType: scraped.sourceContentType,
+        targetStatusCode: scraped.targetStatusCode,
         retrievalTime,
         normalized: {
           storageId: normalizedStorageId,
@@ -292,15 +447,15 @@ async function ingestSeedUrl(
         },
         raw: {
           storageId: rawStorageId,
-          contentType: 'text/html',
+          contentType: rawContentType,
           byteLength: rawBytes.byteLength,
         },
-        truncation: { truncated: warning !== undefined, detail: warning },
-        firecrawlMetadata: normalizeFirecrawlMetadata(metadata),
-        creditsUsed:
-          typeof metadata.creditsUsed === 'number'
-            ? metadata.creditsUsed
-            : undefined,
+        truncation: {
+          truncated: scraped.warning !== undefined,
+          detail: scraped.warning,
+        },
+        firecrawlMetadata: normalizeFirecrawlMetadata(scraped.metadata),
+        creditsUsed,
       },
     )
 

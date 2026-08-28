@@ -24,6 +24,7 @@
     "test:watch": "vitest",
     "verify": "npm run typecheck && npm run test && npm run build && npm run lint",
     "hosting:smoke:dev": "npx @convex-dev/static-hosting upload --build --dist dist/client",
+    "smoke:production": "node scripts/smoke-production.mjs && npx convex run --prod system/status:readiness '{}'",
     "deploy": "npx @convex-dev/static-hosting deploy --dist dist/client"
   },
   "dependencies": {

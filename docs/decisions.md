@@ -214,10 +214,13 @@ expand the promise.
 - Serve per-issue Open Graph HTML through a small Convex HTTP route backed only
   by published issue data.
 - Test direct issue links, share links, and route precedence on the real host.
-- Use the personal development deployment for normal integration work and its
-  `convex.site` host for pre-production smoke tests.
-- Keep a public production deployment from Phase 0 onward. Promote only a
-  completed slice whose automated checks and hosted development smoke pass.
+- Use the local UI with the personal Convex development deployment for normal
+  branch integration. The backend, database, actions, and file storage remain
+  remote while Vite serves the frontend locally.
+- Do not add staging during the hackathon. A reviewed merge to `main` triggers
+  the production backend and frontend deployment, registry seed, and smoke test.
+- Keep the development `convex.site` upload as an optional hosting check, not a
+  required step for every pull request.
 - Use preview deployments selectively for auth, webhook, routing, or schema
   work that needs isolation.
 - Build the production frontend with the production Convex URL during the same

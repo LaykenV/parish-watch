@@ -1,0 +1,49 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment:
+      name: production
+      url: https://befitting-flamingo-587.convex.site
+    env:
+      CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PROD_DEPLOY_KEY }}
+      VITE_CONVEX_URL: https://befitting-flamingo-587.convex.cloud
+    steps:
+      - name: Check out the release commit
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Use npm 11.6.2
+        run: npm install --global npm@11.6.2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify the release commit
+        run: npm run verify
+
+      - name: Deploy the backend and frontend
+        run: npm run deploy
+
+      - name: Seed production source configuration
+        run: npx convex run operations/seed:seedLaunchCoverage '{}'
+
+      - name: Smoke-test production
+        run: npm run smoke:production

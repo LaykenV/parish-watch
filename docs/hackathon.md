@@ -114,9 +114,18 @@ Phase 0 was completed on August 27:
 - the public root, production-bound asset, direct not-found route, and desktop
   and mobile layouts were tested signed out.
 
-The public setup shell is live; the resident evidence experience and
-vibeapps.dev submission remain pending. No Firecrawl source ingestion, OpenAI
-model call, AgentMail integration, or authentication flow exists yet.
+The public setup shell is live. The Slice 1 evidence backend has been proven on
+the personal development deployment with the official Lafayette council hub,
+an agenda PDF, and its minutes PDF. The resident evidence experience and
+vibeapps.dev submission remain pending. No OpenAI model call, AgentMail
+integration, or authentication flow exists yet.
+
+During the hackathon, branches use the local Vite frontend with the personal
+Convex development deployment. There is no staging deployment. Pull requests
+run the full verification command. A reviewed merge to `main` is the production
+approval and deploys the matching Convex backend and static frontend, applies
+the idempotent registry seed, and runs the production smoke. The development
+`convex.site` upload remains available for changes that need a hosted check.
 
 ## Judging Map
 

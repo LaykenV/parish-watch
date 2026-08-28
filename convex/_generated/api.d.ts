@@ -9,14 +9,20 @@
  */
 
 import type * as http from "../http.js";
+import type * as operations_discover from "../operations/discover.js";
 import type * as operations_ingest from "../operations/ingest.js";
 import type * as operations_seed from "../operations/seed.js";
+import type * as pipeline_keys from "../pipeline/keys.js";
 import type * as pipeline_runs from "../pipeline/runs.js";
 import type * as pipeline_state from "../pipeline/state.js";
+import type * as sources_discovery from "../sources/discovery.js";
 import type * as sources_domains from "../sources/domains.js";
 import type * as sources_hashing from "../sources/hashing.js";
+import type * as sources_metadata from "../sources/metadata.js";
+import type * as sources_rawArtifact from "../sources/rawArtifact.js";
 import type * as sources_registries from "../sources/registries.js";
 import type * as sources_snapshots from "../sources/snapshots.js";
+import type * as sources_storageCleanup from "../sources/storageCleanup.js";
 import type * as system_aiGateway from "../system/aiGateway.js";
 import type * as system_status from "../system/status.js";
 
@@ -28,14 +34,20 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   http: typeof http;
+  "operations/discover": typeof operations_discover;
   "operations/ingest": typeof operations_ingest;
   "operations/seed": typeof operations_seed;
+  "pipeline/keys": typeof pipeline_keys;
   "pipeline/runs": typeof pipeline_runs;
   "pipeline/state": typeof pipeline_state;
+  "sources/discovery": typeof sources_discovery;
   "sources/domains": typeof sources_domains;
   "sources/hashing": typeof sources_hashing;
+  "sources/metadata": typeof sources_metadata;
+  "sources/rawArtifact": typeof sources_rawArtifact;
   "sources/registries": typeof sources_registries;
   "sources/snapshots": typeof sources_snapshots;
+  "sources/storageCleanup": typeof sources_storageCleanup;
   "system/aiGateway": typeof system_aiGateway;
   "system/status": typeof system_status;
 }>;

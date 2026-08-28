@@ -12,35 +12,76 @@
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-28T12:56:41Z
+- **Last updated:** 2026-08-28T19:56:20Z
 
 ## Log
 
 ### 2026-08-28 - working tree
 
-Built the Slice 1 source ledger and Firecrawl retrieval path. The schema now
-holds jurisdictions, bodies, registries, per-source immutable snapshot chains,
-pipeline runs, and stage evidence. Retrieval processor v2 validates both the
-requested and final URL, requires a successful target status, hashes the raw
-artifact separately from normalized Markdown, reuses only the same source and
-raw hash at the current chain head, orders each source chain by its monotonic
-version, and cleans redundant or failed uploads (`convex/schema.ts`,
-`convex/operations/ingest.ts`, `convex/sources/`, `convex/pipeline/`).
+Built and deployed the Slice 1 source ledger and retrieval processor v2 to the
+personal development deployment `woozy-wren-227`. Production remained
+untouched. The schema holds jurisdictions, bodies, registries, per-source
+immutable snapshot chains, pipeline runs, and stage evidence. The processor
+checks requested and final URLs, requires a successful target status, hashes
+the raw artifact separately from normalized Markdown, reuses only the current
+source-chain head with the same raw hash, and cleans redundant or failed file
+uploads (`convex/schema.ts`, `convex/operations/ingest.ts`, `convex/sources/`,
+`convex/pipeline/`).
 
-The earlier development run against the real Lafayette council hub created
-snapshot v1 with hash `53188bd7…`, 37 KB of Markdown, and 132 KB of raw HTML. A
-repeat run reused the same snapshot ID, and both run records succeeded. That
-live record used retrieval processor v1. The reviewed v2 hardening is currently
-working-tree code and has not been deployed.
+The real Lafayette council hub created processor v2 snapshot
+`js7c4pvv6xx0x1p8d9hk3zw64s8danvf`. It stores 37,372 bytes of normalized
+Markdown and 131,799 bytes of raw HTML. The raw artifact hash starts
+`d02b2171…`; its separate normalized hash starts `53188bd7…`. An immediate
+repeat reused the same snapshot ID and version 2.
 
-Local verification passes 24 tests plus typecheck, production build, and lint.
-The tests cover unchanged reuse, a changed raw artifact, an A to B to A source
-reversion recorded as version 3, out-of-order retrieval timestamps, independent
-chains for two URLs with identical content, requested-domain rejection,
-redirected-domain rejection, target 404 rejection, missing target status,
-missing raw content, Firecrawl failure, metadata normalization, blob cleanup,
-hashing, and idempotent seeding. No AI model call, AgentMail integration,
-authentication, production promotion, or public pipeline surface exists yet.
+Expanded the Lafayette registry from one seed to the council hub, council
+document search, and schedule/research pages. A bounded Firecrawl map found 19
+official council pages. The portal did not expose individual records to the
+map, so two official-domain-restricted Firecrawl searches found 50 ranked
+candidates, including stable `/obcouncil/api/Document/<id>/` records. The
+official portal query paired the April 21, 2026 Lafayette City Council agenda
+with its minutes.
+
+The first PDF spike revealed that Firecrawl's `rawHtml` is a rendered
+representation, not the original PDF. The processor now keeps Firecrawl's
+Markdown extraction and downloads the approved official PDF as the immutable
+raw artifact. That download checks redirects, status, and content type, stops
+after 60 seconds, and enforces a streamed 25 MB limit. The corrected agenda
+snapshot `js7facykrk86ep9rgf98ttj52n8dadh2` stores a 172,034-byte, two-page PDF
+and 4,274 bytes of Markdown. The corrected minutes snapshot
+`js76769zsap7fwv3e1j6r2tqbh8db1cv` stores a 160,754-byte, seven-page PDF and
+12,696 bytes of Markdown. Immediate repeats reused both version 2 snapshot IDs.
+The earlier version 1 PDF snapshots remain in development as transparent spike
+evidence and contain rendered HTML rather than the source PDFs.
+
+`npm run verify` passes typechecking, 30 tests, the production build, and lint.
+The Convex review found no public function, auth, query-scan, validator, or
+unbounded-result issue in this change. A hosted development build was uploaded
+to `https://woozy-wren-227.convex.site`; a direct GET and the live readiness
+query passed. PR review caught a PDF body-stream timeout that could escape the
+structured failure path after response headers arrived. The downloader now
+records that case as retryable, and a regression test fails the stream after
+its first chunk. A later review found that Firecrawl Markdown and the direct PDF
+download could straddle an agency file replacement. PDF ingestion now brackets
+a forced fresh Firecrawl scrape with official-file downloads and commits only
+when both raw hashes agree. A regression test changes the PDF between those
+downloads and proves that no mixed snapshot is created. The revised processor
+was pushed to the personal development deployment and ingested the agenda again.
+Both official downloads matched around the fresh Firecrawl scrape, and the run
+reused snapshot `js7facykrk86ep9rgf98ttj52n8dadh2` at version 2. The final
+fail-closed content-type and PDF-signature checks passed the same live dev run
+and reused that snapshot again.
+
+Added the hackathon release path in the working tree. Pull requests run the full
+verification command. A reviewed merge to `main` will deploy the matching
+backend and frontend, apply the idempotent registry seed, and run a production
+smoke. The smoke script checks the direct `convex.site` origin, the canonical
+custom domain, the path-preserving apex redirect, a built JavaScript asset, and
+the live readiness query. Its read-only HTTP checks pass against the current
+production shell. The new workflow has not run yet because this working tree
+has not merged. No AI model call, AgentMail integration, authentication,
+production promotion of Slice 1, public evidence interface, or public pipeline
+function exists yet.
 
 ### 2026-08-27 - dd12d01
 

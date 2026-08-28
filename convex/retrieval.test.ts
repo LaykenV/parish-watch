@@ -13,6 +13,7 @@ const modules = import.meta.glob('./**/*.ts')
 const HUB_URL =
   'https://www.lafayettela.gov/your-government/city-and-parish-councils/'
 const ALT_URL = 'https://apps.lafayettela.gov/obcouncil/index.html'
+const PDF_URL = 'https://apps.lafayettela.gov/obcouncil/api/Document/2553291/'
 
 const MD_1 =
   '# Lafayette City and Parish Councils\n\nRegular meetings occur on the first and third Tuesday of each month.'
@@ -502,6 +503,30 @@ test('a missing target status fails closed without creating a snapshot', async (
   expect(snapshots).toHaveLength(0)
 })
 
+test('a missing content type fails closed without storing rendered HTML', async () => {
+  const t = initTest()
+  stubScrape(MD_1, RAW_1, { contentType: undefined })
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+
+  const result = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+
+  expect(result).toMatchObject({
+    outcome: 'failed',
+    errorClass: 'missing_content_type',
+    retryable: true,
+  })
+  const snapshots = await t.query(internal.sources.snapshots.listForRegistry, {
+    registryId,
+  })
+  expect(snapshots).toHaveLength(0)
+})
+
 test('missing raw html fails instead of mislabeling markdown as the raw artifact', async () => {
   const t = initTest()
   stubScrape(MD_1, undefined)
@@ -518,6 +543,133 @@ test('missing raw html fails instead of mislabeling markdown as the raw artifact
   expect(result).toMatchObject({
     outcome: 'failed',
     errorClass: 'missing_raw_artifact',
+    retryable: true,
+  })
+  const snapshots = await t.query(internal.sources.snapshots.listForRegistry, {
+    registryId,
+  })
+  expect(snapshots).toHaveLength(0)
+})
+
+test('a PDF stores the official source bytes alongside Firecrawl markdown', async () => {
+  const t = initTest()
+  const pdfBytes = new TextEncoder().encode('%PDF-1.7 official agenda bytes')
+  const fetchMock = vi.fn(async (input: string | URL | Request) => {
+    const requestUrl =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url
+    if (requestUrl === PDF_URL) {
+      const response = new Response(pdfBytes, {
+        status: 200,
+        headers: { 'content-type': 'application/pdf' },
+      })
+      Object.defineProperty(response, 'url', { value: PDF_URL })
+      return response
+    }
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          markdown: '# Regular meeting agenda',
+          rawHtml: '<html><body>Firecrawl PDF rendering</body></html>',
+          metadata: {
+            sourceURL: PDF_URL,
+            url: PDF_URL,
+            statusCode: 200,
+            contentType: 'application/pdf',
+            creditsUsed: 2,
+          },
+        },
+      }),
+      { status: 200 },
+    )
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+
+  const result = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId, urlOverride: PDF_URL },
+  )
+
+  expect(result).toMatchObject({ outcome: 'created', version: 1 })
+  const snapshot = await t.query(
+    internal.sources.snapshots.getLatestForSource,
+    { registryId, canonicalUrl: PDF_URL },
+  )
+  expect(snapshot).toMatchObject({
+    contentType: 'application/pdf',
+    rawContentType: 'application/pdf',
+    rawByteLength: pdfBytes.byteLength,
+    normalizedContentType: 'text/markdown',
+  })
+  expect(snapshot?.contentHash).toBe(
+    await sha256HexOfText('%PDF-1.7 official agenda bytes'),
+  )
+  expect(fetchMock).toHaveBeenCalledTimes(4)
+})
+
+test('a PDF that changes during extraction creates no mixed snapshot', async () => {
+  const t = initTest()
+  const firstPdf = new TextEncoder().encode('%PDF-1.7 first version')
+  const secondPdf = new TextEncoder().encode('%PDF-1.7 revised version')
+  let rawDownloadCount = 0
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string | URL | Request) => {
+      const requestUrl =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url
+      if (requestUrl === PDF_URL) {
+        const bytes = rawDownloadCount === 0 ? firstPdf : secondPdf
+        rawDownloadCount += 1
+        const response = new Response(bytes, {
+          status: 200,
+          headers: { 'content-type': 'application/pdf' },
+        })
+        Object.defineProperty(response, 'url', { value: PDF_URL })
+        return response
+      }
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            markdown: '# Regular meeting agenda',
+            metadata: {
+              sourceURL: PDF_URL,
+              url: PDF_URL,
+              statusCode: 200,
+              contentType: 'application/pdf',
+              creditsUsed: 2,
+            },
+          },
+        }),
+        { status: 200 },
+      )
+    }),
+  )
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+
+  const result = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId, urlOverride: PDF_URL },
+  )
+
+  expect(result).toMatchObject({
+    outcome: 'failed',
+    errorClass: 'source_changed_during_retrieval',
     retryable: true,
   })
   const snapshots = await t.query(internal.sources.snapshots.listForRegistry, {
@@ -571,4 +723,13 @@ test('seeding is idempotent by slug', async () => {
   )
 
   expect(second).toEqual(first)
+
+  const registry = await t.query(internal.sources.registries.get, {
+    registryId: first.registryId,
+  })
+  expect(registry?.seedUrls).toEqual([
+    HUB_URL,
+    ALT_URL,
+    'https://www.lafayettela.gov/your-government/city-and-parish-councils/schedule-research-ord-reso/',
+  ])
 })

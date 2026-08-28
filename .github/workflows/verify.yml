@@ -1,0 +1,34 @@
+name: Verify
+
+on:
+  pull_request:
+
+concurrency:
+  group: verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      VITE_CONVEX_URL: https://woozy-wren-227.convex.cloud
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Use npm 11.6.2
+        run: npm install --global npm@11.6.2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify the application
+        run: npm run verify
