@@ -5,6 +5,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { wgslVitePlugin } from '@vgpu/wgsl/loader-vite'
 
 const config = defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -23,6 +24,7 @@ const config = defineConfig(({ command, mode }) => {
     plugins: [
       devtools(),
       tailwindcss(),
+      wgslVitePlugin(),
       tanstackStart({
         spa: {
           enabled: true,

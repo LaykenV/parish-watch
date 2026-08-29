@@ -17,12 +17,16 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Public Parish',
+        title: 'Public Parish — See how local government is changing',
       },
       {
         name: 'description',
         content:
-          'Source-cited Louisiana local-government decisions and outcomes.',
+          'Public Parish connects Louisiana decisions to the official record, public deadlines, and what happens next.',
+      },
+      {
+        name: 'theme-color',
+        content: '#FAFAF9',
       },
     ],
     links: [
@@ -30,6 +34,19 @@ export const Route = createRootRoute({
         rel: 'icon',
         href: '/brand-mark.svg',
         type: 'image/svg+xml',
+      },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.googleapis.com',
+      },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossOrigin: 'anonymous',
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap',
       },
       {
         rel: 'stylesheet',

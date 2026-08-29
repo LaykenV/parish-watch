@@ -94,7 +94,7 @@ Use this exact working copy:
 
 ### Heading
 
-> See what local government may change.
+> See how local government is changing.
 
 ### Supporting copy
 
@@ -109,13 +109,24 @@ Use this exact working copy:
 
 `Choose your area`
 
-The placeholder mark lives at [`../public/brand-mark.svg`](../public/brand-mark.svg).
-Render the product name as live text. Do not generate a raster lockup containing
-the name.
+The selected double-P mark lives at
+[`../public/brand-mark.svg`](../public/brand-mark.svg). Render the product name as
+live text. The marketing-page header uses the name without the mark. Keep the
+mark for favicons and compact app contexts. Do not generate a raster lockup
+containing the name.
 
 The hero is the page thesis. It should show something specific to Public Parish,
 not a generic gradient, abstract orb, device mockup, fake dashboard, or Louisiana
 tourism collage.
+
+During prelaunch, render the Louisiana coverage field as an interactive WebGPU
+relief. It shares the hero background instead of sitting inside a card. Do not
+add a border, title bar, key strip, or shadow around it. Static pins and labels
+identify Lafayette, Rapides, and East Baton Rouge. Pointer movement anywhere in
+the hero may control a restrained tilt when the device has a fine pointer and
+hover. Touch-first devices render one static frame with no ambient loop. On
+mobile, keep the headline above the relief and move the supporting copy below
+it. Preserve a labeled SVG fallback when WebGPU is unavailable.
 
 ## Product proof
 

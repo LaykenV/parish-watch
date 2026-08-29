@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#F7F3E8" />
+    <title>Public Parish — See what local government may change</title>
+    <meta
+      name="description"
+      content="Public Parish connects Louisiana decisions to the official record, public deadlines, and what happens next."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --color-paper: oklch(96.42% 0.0152 90.23);
+        --color-surface: oklch(99.14% 0.0098 87.47);
+        --color-ink: oklch(20.63% 0.0335 309.45);
+        --color-purple: oklch(34.58% 0.136 306.78);
+        --color-purple-strong: oklch(26.9% 0.1098 306.35);
+        --color-gold: oklch(74.4% 0.1454 87.37);
+        --color-cypress: oklch(44.91% 0.073 170.33);
+        --color-muted: oklch(49.32% 0.0199 316.88);
+        --color-rule: oklch(85.74% 0.0239 82.11);
+        --color-focus: var(--color-purple);
+        --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+        --font-body: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, sans-serif;
+        --font-data: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-6: 1.5rem;
+        --space-8: 2rem;
+        --space-12: 3rem;
+        --space-16: 4rem;
+        --space-24: 6rem;
+        --radius-sm: 0.25rem;
+        --radius-md: 0.625rem;
+        --radius-lg: 1.125rem;
+        --rule: 1px;
+        --dur-fast: 160ms;
+        --dur-standard: 240ms;
+        --dur-deliberate: 520ms;
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --container: 68rem;
+        --line-x: 0.875rem;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        overflow-x: clip;
+      }
+
+      body {
+        margin: 0;
+        color: var(--color-ink);
+        background: var(--color-paper);
+        font-family: var(--font-body);
+        font-size: 1.0625rem;
+        line-height: 1.62;
+      }
+
+      :focus-visible {
+        outline: 3px solid var(--color-focus);
+        outline-offset: 3px;
+        border-radius: 2px;
+      }
+
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        z-index: 10;
+        padding: var(--space-3) var(--space-4);
+        background: var(--color-purple);
+        color: var(--color-paper);
+      }
+
+      .skip-link:focus-visible {
+        left: 0;
+      }
+
+      .container {
+        width: min(100% - 2.5rem, var(--container));
+        margin-inline: auto;
+      }
+
+      a {
+        color: var(--color-purple);
+        text-underline-offset: 0.18em;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 500;
+        line-height: 1.06;
+        overflow-wrap: anywhere;
+      }
+
+      /* ---------- Header ---------- */
+
+      .site-header {
+        border-top: 3px solid var(--color-ink);
+        border-bottom: var(--rule) solid var(--color-rule);
+        box-shadow: 0 3px 0 0 oklch(from var(--color-ink) l c h / 12%);
+      }
+
+      .site-header .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding-block: var(--space-4);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        color: var(--color-ink);
+        text-decoration: none;
+        min-height: 44px;
+      }
+
+      .brand-mark {
+        width: 2.25rem;
+        height: 2.25rem;
+        color: var(--color-purple);
+        flex: none;
+      }
+
+      .brand-name {
+        font-family: var(--font-display);
+        font-size: 1.3rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+      }
+
+      /* ---------- Buttons ---------- */
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0.65rem 1.3rem;
+        border: 2px solid var(--color-purple-strong);
+        border-radius: var(--radius-sm);
+        color: var(--color-paper);
+        background: var(--color-purple);
+        font-family: var(--font-body);
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          background-color var(--dur-fast) var(--ease-out),
+          transform var(--dur-fast) var(--ease-out);
+      }
+
+      .btn:hover {
+        background: var(--color-purple-strong);
+        transform: translateY(-1px);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn:focus-visible {
+        outline-color: var(--color-purple-strong);
+      }
+
+      .btn-small {
+        padding: 0.45rem 0.95rem;
+        font-size: 0.95rem;
+      }
+
+      /* ---------- Hero ---------- */
+
+      .hero {
+        padding-block: clamp(3rem, 9vw, 6.5rem) clamp(3.5rem, 8vw, 6rem);
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+        gap: clamp(2.5rem, 6vw, 5rem);
+        align-items: center;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.65rem, 5vw + 0.7rem, 4.8rem);
+        font-weight: 500;
+        font-variation-settings: 'opsz' 100;
+        letter-spacing: -0.02em;
+        line-height: 1.04;
+      }
+
+      .may {
+        padding: 0 0.14em;
+        background: var(--color-gold);
+        color: var(--color-ink);
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+      }
+
+      .hero-lede {
+        max-width: 33rem;
+        margin: var(--space-6) 0 0;
+        color: var(--color-muted);
+        font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+        line-height: 1.55;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4);
+        margin-top: var(--space-8);
+      }
+
+      .hero-note {
+        margin: 0;
+        color: var(--color-muted);
+        font-family: var(--font-data);
+        font-size: 0.85rem;
+      }
+
+      /* Fanned field sheets */
+
+      .field-sheets {
+        position: relative;
+        height: clamp(15rem, 30vw, 23rem);
+      }
+
+      .fsheet {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 74%;
+        height: 68%;
+        padding: 14% 9%;
+        border: var(--rule) solid var(--color-rule);
+        border-top: 6px solid var(--color-rule);
+        border-radius: var(--radius-md);
+        background:
+          repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 26px,
+            oklch(from var(--color-rule) l c h / 55%) 26px,
+            oklch(from var(--color-rule) l c h / 55%) 27px
+          ),
+          var(--color-surface);
+        box-shadow: 0 1rem 2.25rem oklch(20.63% 0.0335 309.45 / 8%);
+      }
+
+      .fsheet-1 {
+        border-top-color: var(--color-purple);
+        animation: fan-1 640ms var(--ease-out) 80ms both;
+      }
+
+      .fsheet-2 {
+        border-top-width: 4px;
+        border-top-color: oklch(from var(--color-purple) calc(l + 18%) c h);
+        animation: fan-2 640ms var(--ease-out) 200ms both;
+      }
+
+      .fsheet-3 {
+        border-top: 3px solid var(--color-gold);
+        animation: fan-3 640ms var(--ease-out) 320ms both;
+      }
+
+      @keyframes fan-1 {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-58%, -52%) rotate(-6deg);
+        }
+      }
+
+      @keyframes fan-2 {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-44%, -56%) rotate(3deg);
+        }
+      }
+
+      @keyframes fan-3 {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-51%, -42%) rotate(-1.5deg);
+        }
+      }
+
+      /* ---------- Proof: the traverse ---------- */
+
+      .proof {
+        padding-block: clamp(3.5rem, 8vw, 6.5rem);
+        border-top: var(--rule) solid var(--color-rule);
+      }
+
+      .traverse {
+        --walker: 0px;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .traverse::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: var(--line-x);
+        border-left: 2px dashed oklch(from var(--color-muted) l c h / 55%);
+      }
+
+      .station {
+        position: relative;
+        padding: 0 0 var(--space-12) var(--space-8);
+      }
+
+      .station:last-child {
+        padding-bottom: 0;
+      }
+
+      .station-marker {
+        position: absolute;
+        top: 0.4rem;
+        left: calc(var(--line-x) - 9px);
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--color-purple);
+        border-radius: 50%;
+        background: var(--color-paper);
+        transition: background-color var(--dur-standard) var(--ease-out);
+      }
+
+      .station.on .station-marker {
+        background: var(--color-gold);
+        border-color: var(--color-purple);
+      }
+
+      .walker {
+        position: absolute;
+        top: 0;
+        left: calc(var(--line-x) - 4px);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--color-gold);
+        box-shadow: 0 0 0 3px var(--color-paper);
+        transform: translateY(var(--walker));
+        transition: transform var(--dur-deliberate) var(--ease-out);
+      }
+
+      .station-card {
+        max-width: 30rem;
+      }
+
+      .station-no {
+        display: block;
+        color: var(--color-cypress);
+        font-family: var(--font-data);
+        font-size: 0.9rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .station h3 {
+        margin-top: var(--space-2);
+        font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+        font-weight: 500;
+        letter-spacing: -0.015em;
+      }
+
+      .station p {
+        margin: var(--space-3) 0 0;
+        color: var(--color-muted);
+        max-width: 28rem;
+      }
+
+      .js .station .station-inner {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      .js .station.on .station-inner {
+        opacity: 1;
+        transform: translateY(0);
+        transition:
+          opacity var(--dur-deliberate) var(--ease-out),
+          transform var(--dur-deliberate) var(--ease-out);
+      }
+
+      /* ---------- Trust ---------- */
+
+      .trust {
+        padding-block: clamp(3.5rem, 8vw, 6.5rem);
+        border-top: var(--rule) solid var(--color-rule);
+        background: var(--color-surface);
+      }
+
+      .trust-head {
+        max-width: 40rem;
+      }
+
+      .trust h2 {
+        font-size: clamp(1.9rem, 3vw, 2.7rem);
+        font-variation-settings: 'opsz' 60;
+        letter-spacing: -0.02em;
+      }
+
+      .trust-copy {
+        margin: var(--space-4) 0 0;
+      }
+
+      .coverage-copy {
+        max-width: 36rem;
+        margin: var(--space-6) 0 0;
+        color: var(--color-muted);
+      }
+
+      .plots {
+        display: grid;
+        gap: var(--space-4);
+        margin-top: var(--space-8);
+      }
+
+      .plot-row {
+        position: relative;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-4) var(--space-6);
+        border: var(--rule) solid var(--color-rule);
+        background: var(--color-paper);
+      }
+
+      .plot-row::before,
+      .plot-row::after {
+        position: absolute;
+        color: var(--color-muted);
+        font-family: var(--font-data);
+        font-size: 0.8rem;
+        line-height: 1;
+      }
+
+      .plot-row::before {
+        top: 4px;
+        left: 6px;
+        content: '+';
+      }
+
+      .plot-row::after {
+        bottom: 4px;
+        right: 6px;
+        content: '+';
+      }
+
+      .plot-name {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 500;
+      }
+
+      .plot-state {
+        color: var(--color-cypress);
+        font-family: var(--font-data);
+        font-size: 0.82rem;
+        white-space: nowrap;
+      }
+
+      /* ---------- Footer ---------- */
+
+      .site-footer {
+        padding-block: var(--space-8) var(--space-12);
+        border-top: 3px solid var(--color-ink);
+        box-shadow: inset 0 4px 0 -3px oklch(from var(--color-ink) l c h / 30%);
+        background: var(--color-surface);
+      }
+
+      .site-footer .container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--space-4);
+      }
+
+      .provenance {
+        margin: 0;
+        max-width: 30rem;
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+      }
+
+      .footer-side {
+        display: flex;
+        align-items: center;
+        gap: var(--space-6);
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-6);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .footer-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        font-size: 0.95rem;
+      }
+
+      .north-mark {
+        width: 2.5rem;
+        height: 2.5rem;
+        color: var(--color-muted);
+        flex: none;
+      }
+
+      /* ---------- Hero entrance (moment 1) ---------- */
+
+      .js .hero-copy > * {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+
+      .js.ready .hero-copy > * {
+        opacity: 1;
+        transform: translateY(0);
+        transition:
+          opacity var(--dur-deliberate) var(--ease-out),
+          transform var(--dur-deliberate) var(--ease-out);
+      }
+
+      .js.ready .hero-copy > *:nth-child(1) {
+        transition-delay: 0ms;
+      }
+
+      .js.ready .hero-copy > *:nth-child(2) {
+        transition-delay: 110ms;
+      }
+
+      .js.ready .hero-copy > *:nth-child(3) {
+        transition-delay: 220ms;
+      }
+
+      /* ---------- Responsive ---------- */
+
+      @media (min-width: 60rem) {
+        .traverse {
+          --line-x: 50%;
+        }
+
+        .station {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 3rem minmax(0, 1fr);
+          padding: 0 0 var(--space-16) 0;
+        }
+
+        .station-marker {
+          top: 0.55rem;
+          left: calc(50% - 9px);
+        }
+
+        .station:nth-child(odd) .station-card {
+          grid-column: 1;
+          grid-row: 1;
+          justify-self: end;
+          text-align: right;
+        }
+
+        .station:nth-child(odd) p {
+          margin-left: auto;
+        }
+
+        .station:nth-child(even) .station-card {
+          grid-column: 3;
+          grid-row: 1;
+        }
+
+        .walker {
+          left: calc(50% - 4px);
+        }
+      }
+
+      @media (max-width: 60rem) {
+        .hero-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .field-sheets {
+          height: clamp(13rem, 42vw, 18rem);
+          margin-top: var(--space-4);
+        }
+
+        .walker {
+          display: none;
+        }
+      }
+
+      @media (max-width: 30rem) {
+        body {
+          font-size: 1rem;
+        }
+
+        .brand-name {
+          font-size: 1.1rem;
+        }
+      }
+
+      @media (max-width: 22rem) {
+        .site-header .container {
+          flex-wrap: wrap;
+        }
+
+        .site-header .btn {
+          flex: 1 1 100%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 1ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 1ms !important;
+        }
+
+        .js .hero-copy > *,
+        .js .station .station-inner {
+          opacity: 1;
+          transform: none;
+        }
+
+        .walker {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container">
+        <a class="brand" href="/" aria-label="Public Parish home">
+          <svg class="brand-mark" viewBox="0 0 64 64" role="img" aria-label="Public Parish mark">
+            <path
+              d="M19 54V10h18c10 0 17 6.2 17 15.5S47 41 37 41H19"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="8"
+            />
+          </svg>
+          <span class="brand-name">Public Parish</span>
+        </a>
+        <a class="btn btn-small" href="https://github.com/LaykenV/public-parish">
+          Follow the build
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <h1 id="hero-title">See what local government <span class="may">may</span> change.</h1>
+            <p class="hero-lede">
+              Public Parish connects Louisiana decisions to the official record, public deadlines,
+              and what happens next.
+            </p>
+            <div class="hero-actions">
+              <a class="btn" href="https://github.com/LaykenV/public-parish">Follow the build</a>
+              <p class="hero-note">Lafayette · Rapides · East Baton Rouge first</p>
+            </div>
+          </div>
+
+          <div class="field-sheets" aria-hidden="true">
+            <div class="fsheet fsheet-1"></div>
+            <div class="fsheet fsheet-2"></div>
+            <div class="fsheet fsheet-3"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="proof" aria-label="How evidence becomes an update">
+        <div class="container">
+          <ol class="traverse" id="traverse">
+            <li class="station on">
+              <span class="station-marker" aria-hidden="true"></span>
+              <div class="station-card station-inner">
+                <span class="station-no" aria-hidden="true">Step 1</span>
+                <h3>Find the official record</h3>
+                <p>Public Parish watches validated local-government sources.</p>
+              </div>
+            </li>
+            <li class="station">
+              <span class="station-marker" aria-hidden="true"></span>
+              <div class="station-card station-inner">
+                <span class="station-no" aria-hidden="true">Step 2</span>
+                <h3>Attach the evidence</h3>
+                <p>Dates, amounts, deadlines, and outcomes stay tied to exact excerpts.</p>
+              </div>
+            </li>
+            <li class="station">
+              <span class="station-marker" aria-hidden="true"></span>
+              <div class="station-card station-inner">
+                <span class="station-no" aria-hidden="true">Step 3</span>
+                <h3>Make it understandable</h3>
+                <p>Residents see what may change and ask questions from the same evidence.</p>
+              </div>
+            </li>
+            <li class="station">
+              <span class="station-marker" aria-hidden="true"></span>
+              <div class="station-card station-inner">
+                <span class="station-no" aria-hidden="true">Step 4</span>
+                <h3>Follow what happens</h3>
+                <p>Material changes and final outcomes return to the issue and its followers.</p>
+              </div>
+            </li>
+            <span class="walker" id="walker" aria-hidden="true"></span>
+          </ol>
+        </div>
+      </section>
+
+      <section class="trust" aria-labelledby="trust-title">
+        <div class="container">
+          <div class="trust-head">
+            <h2 id="trust-title">See the source behind every claim.</h2>
+            <p class="trust-copy">
+              Public Parish publishes from validated official records. Dates, amounts, deadlines,
+              and outcomes link to the exact source. If evidence is missing, the page says so.
+            </p>
+            <p class="coverage-copy">
+              Building first for Lafayette Parish, Rapides Parish, and East Baton Rouge Parish. A
+              place appears as supported only after its sources pass the same evidence checks.
+            </p>
+          </div>
+          <dl class="plots">
+            <div class="plot-row">
+              <dt class="plot-name">Lafayette Parish</dt>
+              <dd class="plot-state">Planned first</dd>
+            </div>
+            <div class="plot-row">
+              <dt class="plot-name">Rapides Parish</dt>
+              <dd class="plot-state">Planned first</dd>
+            </div>
+            <div class="plot-row">
+              <dt class="plot-name">East Baton Rouge Parish</dt>
+              <dd class="plot-state">Planned first</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p class="provenance">Free, open source, and built for the Convex All Gas Hackathon.</p>
+        <div class="footer-side">
+          <ul class="footer-links">
+            <li><a href="https://github.com/LaykenV/public-parish">Repository</a></li>
+            <li>
+              <a href="https://github.com/LaykenV/public-parish/blob/main/hackathon.md">Build log</a>
+            </li>
+          </ul>
+          <svg class="north-mark" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="1.5" />
+            <path d="M20 7v18M20 7l-5 9M20 7l5 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      document.documentElement.classList.add('js')
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      // Hero entrance (moment 1)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.documentElement.classList.add('ready')
+        })
+      })
+
+      // Traverse stations (moment 2)
+      const traverse = document.getElementById('traverse')
+      const stations = Array.from(document.querySelectorAll('.station'))
+      const walker = document.getElementById('walker')
+
+      function moveWalker(station) {
+        if (!walker || !traverse) return
+        const marker = station.querySelector('.station-marker')
+        if (!marker) return
+        const tr = traverse.getBoundingClientRect()
+        const mr = marker.getBoundingClientRect()
+        const y = mr.top + mr.height / 2 - tr.top - 4
+        walker.style.setProperty('--walker', y + 'px')
+      }
+
+      if (reduced) {
+        stations.forEach((s) => s.classList.add('on'))
+      } else if ('IntersectionObserver' in window && traverse) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('on')
+                moveWalker(entry.target)
+              }
+            })
+          },
+          { rootMargin: '0px 0px -25% 0px' }
+        )
+        stations.forEach((s) => io.observe(s))
+      } else {
+        stations.forEach((s) => s.classList.add('on'))
+      }
+    </script>
+  </body>
+</html>

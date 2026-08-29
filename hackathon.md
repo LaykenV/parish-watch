@@ -12,9 +12,46 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-29T00:08:49Z
+- **Last updated:** 2026-08-29T06:11:29Z
 
 ## Log
+
+### 2026-08-29 - 28ba0c3
+
+Selected Field Notes as the production landing page in `cf828ad`, then replaced
+its hero note stack with an interactive three-dimensional Louisiana relief built
+with vGPU and WebGPU. The relief now shares the hero's page plane instead of
+sitting inside a card. Pointer movement anywhere across the hero controls its
+tilt. The solid dark slab keeps three labeled static cobalt launch pins,
+perimeter light, floor radiance, and one traveling flare behind the silhouette.
+The flare has a visible core, halo, and rotating beam but no scanning line or
+marker pulses. Ambient draws run at a low rate only while visible, pointer
+settling briefly runs faster, and reduced-motion mode holds one static frame.
+The ray walk and render resolution are capped, and the component keeps a static
+SVG fallback (`src/features/landing/`).
+
+Added Coss UI Button and Badge primitives, Base UI behavior, and semantic design
+tokens. Replaced the placeholder mark with a path-based double-P SVG and recorded
+the selected logo, Inter and Geist Mono typography, tokens, and component rules
+in the design system (`src/components/ui/`, `public/brand-mark.svg`,
+`docs/design-system.html`). Browser checks passed at desktop, 390-pixel, and
+320-pixel widths with the WebGPU render ready, hero-wide tilt responding, all
+three pin labels in view, and no horizontal overflow. The
+marketing header now uses the live-text name without the mark. On mobile, the
+headline appears before the Louisiana field while the state remains visible in
+the first viewport. Supporting copy follows the field. Sequence labels use plain
+numbers without leading zeroes, and the connector stops at step 4.
+`npm run verify` passes typechecking, 70 tests, the production build and
+prerender, and lint. No deployment was made.
+
+### 2026-08-29 - working tree
+
+Reduced the desktop Louisiana field so it supports the headline without
+filling the right side of the hero. Fine-pointer devices keep the hero-wide
+tilt and low-rate flare. Touch-first devices render one static WebGPU frame with
+no pointer listeners or ambient loop. Browser checks passed at 1414 by 872 and
+390 by 844 with the WebGPU render ready and no horizontal overflow. No
+deployment was made.
 
 ### 2026-08-28 - working tree
 
