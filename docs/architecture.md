@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0 and evidence-engine Slices 1 and 2 are implemented and deployed; Slice 3 is next
+Status: Phase 0 and evidence-engine Slices 1 and 2 are deployed; Slice 3 is implemented and proven in development
 
 ## Architecture Goal
 
@@ -32,6 +32,15 @@ Slice 2 registers `@convex-dev/workflow` 0.4.6 and adds the private
 and completion. The model step has three attempts, workflow parallelism is
 capped at two, and the run key covers the registry, snapshot, target record,
 prompt, schema, and processor versions.
+
+Slice 3 adds the separate `reviewAndPublishCandidateV1` workflow. It binds one
+validated candidate to its extraction, snapshot, and exact fact set. Source and
+input-hash checks run before and after the Luna call. The reviewer sees the
+candidate and cited spans, cannot repair fields, and must judge every fact under
+strict schema. A deterministic policy then writes a full, source-only limited,
+or withheld immutable version. Withheld versions stay in history but never
+replace the last full or limited current pointer. The projection tables exist,
+but Slice 5 still owns the resident-facing query and interface.
 
 The Slice 2 evidence ledger uses `aiCalls`, `extractions`,
 `decisionCandidates`, `candidateFacts`, and `validationFindings`. All extraction
@@ -388,11 +397,12 @@ never become source snapshots.
 
 ## Core Data Model
 
-The schema through Slice 2 implements `jurisdictions`, `governmentBodies`,
-`sourceRegistries`, `sourceSnapshots`, `pipelineRuns`, `pipelineStages`, and the
-five private extraction-evidence tables described below. Coverage expectations,
-incidents, public records, publication, issues, chat, auth-linked resident data,
-and notifications remain planned.
+The schema through Slice 3 implements `jurisdictions`, `governmentBodies`,
+`sourceRegistries`, `sourceSnapshots`, `pipelineRuns`, `pipelineStages`, the
+private extraction evidence, independent reviews, stable decision records,
+immutable publication versions, and publication citations described below.
+Coverage expectations, incidents, meetings, issues, chat, auth-linked resident
+data, and notifications remain planned.
 
 ### Coverage
 
@@ -461,10 +471,10 @@ Indexes: idempotency key; state plus retry time; run plus stage.
 
 #### `aiCalls`
 
-Fields: run and stage, optional extraction, route, model role and ID, prompt and
-schema versions, attempt, status, HTTP evidence, latency, request ID, token
-usage, estimated cost, retry evidence, error class, and created time.
-Indexes: run plus created time; extraction.
+Fields: run and stage, optional extraction or review, route, model role and ID,
+prompt and schema versions, attempt, status, HTTP evidence, latency, request ID,
+token usage, estimated cost, retry evidence, error class, and created time.
+Indexes: run plus created time; extraction; review.
 
 #### `extractions`
 
@@ -479,19 +489,24 @@ Candidates store the private structured decision and validation state. Facts
 bind one material JSON Pointer path and value to an exact snapshot excerpt,
 with page or section evidence when verifiable. Findings record every
 deterministic rejection by run, extraction, candidate, path, and code. These
-tables are private inputs to Slice 3, not public projections.
+tables remain private publication inputs.
 
 #### `reviews`
 
-Fields: target type and ID, reviewer model, prompt version, schema version,
-verdict, findings, citation checks, created time.
-Indexes: target plus created time; verdict plus created time.
+Fields: exact run, stage, candidate, extraction, registry, snapshot, input hash,
+reviewer role and model, route, processor, prompt and schema versions, verdict,
+raw response evidence, failure evidence, and created time. Separate check rows
+bind every judgment to one candidate fact. Finding rows record info, limited,
+or fail severity.
+Indexes: run; candidate plus created time; input hash; checks by review and
+field path; findings by review.
 
 #### `citations`
 
-Fields: owner type and ID, field path, source snapshot, source URL, exact excerpt,
-PDF page or section, normalized offsets, retrieval time.
-Indexes: owner plus field path; source snapshot.
+Fields: publication version, candidate fact, field path, source snapshot,
+official URL, exact excerpt, PDF page or section, normalized offsets, and
+retrieval time.
+Indexes: publication version plus field path; source snapshot.
 
 ### Government Records
 
@@ -503,11 +518,10 @@ Indexes: body plus scheduled time; publication state plus scheduled time.
 
 #### `decisionRecords`
 
-Fields: body, meeting, source record identifier, record type, title, structured
-summary, lifecycle state, scheduled time, decision time, amounts, affected areas,
-public actions, confidence, publication state.
-Indexes: body plus scheduled time; meeting; lifecycle state plus scheduled time;
-publication state plus scheduled time.
+Slice 3 fields: stable record key, registry, government body, source record ID,
+current published version, current mode, and creation and update times. Slice 4
+can add meeting and issue relationships without replacing atomic records.
+Indexes: stable record key; registry plus source record ID.
 
 #### `issues`
 
@@ -531,9 +545,10 @@ Indexes: target; score plus target time.
 
 #### `publicationVersions`
 
-Fields: target, version, source snapshot set, structured public payload, publish
-mode, reason, published time, superseded time.
-Indexes: target plus version; publish mode plus published time.
+Fields: decision record, run, candidate, review, source snapshot, monotonic
+version, full or limited or withheld mode, deterministic reason, policy and
+payload versions, hashed structured payload, and created time.
+Indexes: run; decision record plus version; candidate.
 
 ### Resident Product
 

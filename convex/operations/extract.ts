@@ -11,6 +11,7 @@ import {
 import { extractionRunKey } from '../pipeline/keys'
 import { extractionWorkflowManager } from '../pipeline/workflowManager'
 import { MATERIAL_STRING_LIMITS } from '../extraction/contractV1'
+import { startCandidatePublicationTransaction } from './publication'
 
 const startExtractionResultValidator = v.object({
   runId: v.id('pipelineRuns'),
@@ -71,6 +72,30 @@ export const startSnapshotExtraction = internalMutation({
       const extractStage = stages.find((stage) => stage.stage === 'extract')
       const validateStage = stages.find((stage) => stage.stage === 'validate')
       if (extractStage && validateStage) {
+        if (existing.state === 'succeeded') {
+          const extraction = await ctx.db
+            .query('extractions')
+            .withIndex('by_run', (q) => q.eq('runId', existing._id))
+            .unique()
+          if (!extraction || extraction.state === 'failed') {
+            throw new ConvexError({
+              code: 'run_completion_invariant_failed',
+              message: 'A successful extraction run needs its result',
+            })
+          }
+          if (extraction.state === 'extracted') {
+            if (extraction.candidateId === undefined) {
+              throw new ConvexError({
+                code: 'run_completion_invariant_failed',
+                message: 'A found extraction needs its validated candidate',
+              })
+            }
+            await startCandidatePublicationTransaction(ctx, {
+              candidateId: extraction.candidateId,
+              trigger: 'validated_candidate',
+            })
+          }
+        }
         return {
           runId: existing._id,
           extractStageId: extractStage._id,

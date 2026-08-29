@@ -10,9 +10,9 @@
 - **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`
 - **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, durable workflows
 - **Auth:** none
-- **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction through Convex AI Gateway
+- **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction and `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-29T07:16:42Z
+- **Last updated:** 2026-08-29T15:31:25Z
 
 ## Log
 
@@ -61,7 +61,50 @@ filling the right side of the hero. Fine-pointer devices keep the hero-wide
 tilt and low-rate flare. Touch-first devices render one static WebGPU frame with
 no pointer listeners or ambient loop. Browser checks passed at 1414 by 872 and
 390 by 844 with the WebGPU render ready and no horizontal overflow. No
-deployment was made.
+deployment was made for that landing-page refinement.
+
+Implemented Slice 3 as a separate `reviewAndPublishCandidateV1` durable
+workflow. A validated candidate now queues an exact candidate, snapshot, and
+fact set for a high-reasoning `MODEL_FAST` review. Luna receives the candidate
+and cited spans, not the full source document, and must return one check for
+every stored fact under strict JSON Schema. The contract rejects missing,
+duplicate, unknown, or mismatched checks. The review model cannot match the
+Terra extraction model. Deterministic source and input-hash checks run before
+and after the model step (`convex/review/`, `convex/publication/`,
+`convex/extraction/workflow.ts`).
+
+Added immutable review, check, finding, decision-record, publication-version,
+and citation evidence. The final policy derives full, limited, or withheld from
+the stored checks. Luna cannot repair fields or choose the public payload. A
+limited version contains only source record ID, title, registered body, and
+official-source metadata. A withheld version cannot replace the last full or
+limited current pointer. The starter is internal and idempotent on the exact
+candidate plus review, policy, and payload versions (`convex/schema.ts`,
+`convex/operations/publication.ts`).
+
+Fourteen Slice 3 tests cover full publication, incomplete-source limiting,
+core evidence withholding, dishonest verdict rejection, same-model rejection,
+exact-check enforcement, current-pointer preservation, and replay. They also
+prove that a limited finding on a core field withholds the record, duplicate
+checks fail at persistence and finalization, a late failure cannot reuse a
+successful review, a gateway response cannot substitute the extraction model,
+and replay repairs a successful extraction that has no publication run. The
+extraction workflow now completes the extraction and starts publication in one
+mutation, so a scheduling failure rolls back both changes. The full suite passes
+84 tests, typecheck, build, prerender, and lint.
+
+The original Slice 3 proof was pushed to personal development deployment
+`woozy-wren-227` and set `MODEL_FAST_ID` there to
+`openai/gpt-5.6-luna`. Run `jd75t07cb5m350nt3fyys67e8n8dckn5`
+reviewed candidate `k571jxydqzev299r67v2d0ew2d8ddmcd` through Convex AI
+Gateway in one 11.953-second call. It used 1,707 prompt tokens, 1,281 completion
+tokens, 641 reasoning tokens, and an estimated $0.001879. Luna rejected the
+`recordType` and `lifecycleState` excerpts while supporting the core identity.
+The deterministic policy wrote limited version
+`ks74a1k6nh3gc49f5bby3q7vcn8dc6kz` with only three core citations. Replaying
+the starter returned `reused: true`, kept one AI call, and created no second
+version. The replay and review hardening described above has not been deployed.
+Production remains unchanged.
 
 ### 2026-08-28 - 74ce97e
 

@@ -169,7 +169,7 @@ async function runRoute(
   } catch (error) {
     return await recordContentFailure(
       'schema_invalid',
-      `Response did not match the extraction schema: ${
+      `Response did not match the requested schema: ${
         error instanceof ValidationError ? error.message : String(error)
       }`,
       normalized.content,

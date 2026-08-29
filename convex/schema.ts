@@ -145,6 +145,8 @@ export default defineSchema({
     workflowId: v.optional(v.string()),
     sourceKind: v.optional(sourceKinds),
     targetRecordId: v.optional(v.string()),
+    candidateId: v.optional(v.id('decisionCandidates')),
+    upstreamRunId: v.optional(v.id('pipelineRuns')),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
   })
@@ -162,6 +164,8 @@ export default defineSchema({
     inputSnapshotId: v.optional(v.id('sourceSnapshots')),
     outputSnapshotId: v.optional(v.id('sourceSnapshots')),
     outputExtractionId: v.optional(v.id('extractions')),
+    outputReviewId: v.optional(v.id('reviews')),
+    outputPublicationVersionId: v.optional(v.id('publicationVersions')),
     promptVersion: v.optional(v.string()),
     schemaVersion: v.optional(v.string()),
     errorClass: v.optional(v.string()),
@@ -183,6 +187,7 @@ export default defineSchema({
     runId: v.id('pipelineRuns'),
     stageId: v.optional(v.id('pipelineStages')),
     extractionId: v.optional(v.id('extractions')),
+    reviewId: v.optional(v.id('reviews')),
     route: aiRoutes,
     modelRole: modelRoles,
     modelId: v.string(),
@@ -205,7 +210,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_run_and_created_at', ['runId', 'createdAt'])
-    .index('by_extraction', ['extractionId']),
+    .index('by_extraction', ['extractionId'])
+    .index('by_review', ['reviewId']),
 
   extractions: defineTable({
     runId: v.id('pipelineRuns'),
@@ -304,4 +310,159 @@ export default defineSchema({
   })
     .index('by_extraction', ['extractionId'])
     .index('by_run', ['runId']),
+
+  reviews: defineTable({
+    runId: v.id('pipelineRuns'),
+    stageId: v.id('pipelineStages'),
+    candidateId: v.id('decisionCandidates'),
+    extractionId: v.id('extractions'),
+    registryId: v.id('sourceRegistries'),
+    snapshotId: v.id('sourceSnapshots'),
+    inputHash: v.string(),
+    state: v.union(v.literal('succeeded'), v.literal('failed')),
+    verdict: v.optional(
+      v.union(v.literal('pass'), v.literal('limited'), v.literal('fail')),
+    ),
+    modelRole: modelRoles,
+    modelId: v.optional(v.string()),
+    route: v.optional(aiRoutes),
+    promptVersion: v.string(),
+    schemaVersion: v.string(),
+    processorVersion: v.string(),
+    rawResponseStorageId: v.optional(v.id('_storage')),
+    responseHash: v.optional(v.string()),
+    responseByteLength: v.optional(v.number()),
+    errorClass: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_run', ['runId'])
+    .index('by_candidate_and_created_at', ['candidateId', 'createdAt'])
+    .index('by_input_hash', ['inputHash']),
+
+  reviewChecks: defineTable({
+    reviewId: v.id('reviews'),
+    candidateFactId: v.id('candidateFacts'),
+    fieldPath: v.string(),
+    assessment: v.union(
+      v.literal('supported'),
+      v.literal('unclear'),
+      v.literal('unsupported'),
+    ),
+    detail: v.string(),
+  })
+    .index('by_review_and_field_path', ['reviewId', 'fieldPath'])
+    .index('by_candidate_fact', ['candidateFactId']),
+
+  reviewFindings: defineTable({
+    reviewId: v.id('reviews'),
+    code: v.string(),
+    severity: v.union(
+      v.literal('info'),
+      v.literal('limited'),
+      v.literal('fail'),
+    ),
+    fieldPath: v.optional(v.string()),
+    detail: v.string(),
+  }).index('by_review', ['reviewId']),
+
+  decisionRecords: defineTable({
+    recordKey: v.string(),
+    registryId: v.id('sourceRegistries'),
+    governmentBodyId: v.id('governmentBodies'),
+    sourceRecordId: v.string(),
+    currentPublishedVersionId: v.optional(v.id('publicationVersions')),
+    currentMode: v.optional(v.union(v.literal('full'), v.literal('limited'))),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_record_key', ['recordKey'])
+    .index('by_registry_and_source_record', ['registryId', 'sourceRecordId']),
+
+  publicationVersions: defineTable({
+    recordId: v.id('decisionRecords'),
+    runId: v.id('pipelineRuns'),
+    candidateId: v.id('decisionCandidates'),
+    reviewId: v.id('reviews'),
+    snapshotId: v.id('sourceSnapshots'),
+    version: v.number(),
+    mode: v.union(
+      v.literal('full'),
+      v.literal('limited'),
+      v.literal('withheld'),
+    ),
+    reasonCode: v.string(),
+    policyVersion: v.string(),
+    payloadVersion: v.string(),
+    payloadHash: v.string(),
+    payload: v.union(
+      v.null(),
+      v.object({
+        kind: v.literal('limited'),
+        sourceRecordId: v.string(),
+        title: v.string(),
+        bodyName: v.string(),
+        source: v.object({
+          snapshotId: v.id('sourceSnapshots'),
+          sourceKind: sourceKinds,
+          officialUrl: v.string(),
+          retrievedAt: v.number(),
+        }),
+      }),
+      v.object({
+        kind: v.literal('full'),
+        sourceRecordId: v.string(),
+        recordType: recordTypes,
+        title: v.string(),
+        bodyName: v.string(),
+        meetingAt: v.union(v.string(), v.null()),
+        lifecycleState: lifecycleStates,
+        plainLanguageSummary: v.string(),
+        affectedPlaces: v.array(v.string()),
+        amounts: v.array(
+          v.object({
+            value: v.number(),
+            currency: v.literal('USD'),
+            context: v.string(),
+          }),
+        ),
+        publicActions: v.array(
+          v.object({
+            type: publicActionTypes,
+            deadline: v.union(v.string(), v.null()),
+            instructions: v.string(),
+          }),
+        ),
+        source: v.object({
+          snapshotId: v.id('sourceSnapshots'),
+          sourceKind: sourceKinds,
+          officialUrl: v.string(),
+          retrievedAt: v.number(),
+        }),
+      }),
+    ),
+    createdAt: v.number(),
+  })
+    .index('by_run', ['runId'])
+    .index('by_record_and_version', ['recordId', 'version'])
+    .index('by_candidate', ['candidateId']),
+
+  citations: defineTable({
+    publicationVersionId: v.id('publicationVersions'),
+    candidateFactId: v.id('candidateFacts'),
+    fieldPath: v.string(),
+    snapshotId: v.id('sourceSnapshots'),
+    officialUrl: v.string(),
+    excerpt: v.string(),
+    page: v.optional(v.number()),
+    section: v.optional(v.string()),
+    normalizedStartOffset: v.number(),
+    normalizedEndOffset: v.number(),
+    retrievedAt: v.number(),
+  })
+    .index('by_publication_and_field_path', [
+      'publicationVersionId',
+      'fieldPath',
+    ])
+    .index('by_snapshot', ['snapshotId']),
 })

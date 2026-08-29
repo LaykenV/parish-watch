@@ -128,7 +128,7 @@ passed production smoke. No Terra extraction was run in production.
 
 ### Slice 3: Independent Publication
 
-Status: next. No public projection or independent Luna review exists yet.
+Status: implemented and proven on the personal development deployment.
 
 - Build the separate `MODEL_FAST` reviewer call and schema through AI Gateway.
   The reviewer must not run on the extraction model.
@@ -138,6 +138,24 @@ Status: next. No public projection or independent Luna review exists yet.
 - Prove an incomplete source does not produce a confident summary.
 
 Exit gate: extraction and review disagreement cannot publish silently.
+
+Proof: `reviewAndPublishCandidateV1` binds one validated candidate, snapshot,
+and fact set to a separate strict-schema `MODEL_FAST` call, then rechecks the
+input and applies deterministic policy. Fourteen Slice 3 tests cover full,
+limited, withheld, dishonest-verdict, same-model, exact-check, history-pointer,
+and replay behavior. Persistence and finalization both reject duplicate fact
+checks. Extraction completion and publication scheduling share one mutation,
+and replay repairs a successful extraction that lacks a publication run.
+`npm run verify` passes 84 tests, typecheck, build, prerender, and lint.
+
+Development run `jd75t07cb5m350nt3fyys67e8n8dckn5` reviewed the real
+`CO-029-2026` v1.4 candidate with `openai/gpt-5.6-luna` through Convex AI
+Gateway. Luna supported the core identity but rejected the `recordType` and
+`lifecycleState` excerpts. Policy v1 wrote one limited source-only version with
+three core citations, so neither disputed field appeared in the payload. The
+call used 1,707 prompt tokens, 1,281 completion tokens, and 641 reasoning tokens
+at an estimated cost of $0.001879. Replay reused the same run with one AI call
+and one version. Production was not changed.
 
 ### Slice 4: Issue, Rank, and Change
 
