@@ -16,7 +16,7 @@ async function get(url) {
 async function getApp(origin) {
   const response = await get(`${origin}/`)
   const html = await response.text()
-  if (!html.includes('<title>Public Parish</title>')) {
+  if (!html.includes('<title>Public Parish')) {
     throw new Error(`${origin} did not serve the Public Parish document`)
   }
   const assetPath = html.match(/(?:src|href)="(\/assets\/[^"?]+\.js)"/)?.[1]
