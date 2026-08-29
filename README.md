@@ -12,16 +12,19 @@ revision principles, not code or a submission base.
 
 ## Current state
 
-Phase 0 and evidence-engine Slices 1 through 3 are complete and deployed. The
+Phase 0 and evidence-engine Slices 1 through 4 are complete and deployed. The
 repository has a TanStack Start SPA, separate Convex development and production
 deployments, a realtime readiness query, Convex static hosting, Firecrawl
 discovery and retrieval, immutable source snapshots, and a private durable
 workflow that extracts, validates, independently reviews, and creates immutable
-full, limited, or withheld publication versions for cited atomic decisions. The
-real Terra extraction, Luna review, and idempotent replay proofs ran in the
-personal development deployment. Slice 3 deployed through PR #12 as `8df651c`
-and passed production smoke. No production extraction or model review was run.
-The resident evidence interface remains unbuilt.
+full, limited, or withheld publication versions for cited atomic decisions.
+Slice 4 adds material-change history plus independently reviewed issue links and
+deterministic importance scores without replacing the atomic records. The real
+Terra extraction, Luna review, and idempotent replay proofs ran in the personal
+development deployment. Slice 4 deployed through PR #13 as `c162543` and passed
+the exact production workflow plus an independent smoke. No production
+extraction, model review, or issue build was run. The resident evidence
+interface remains unbuilt.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)

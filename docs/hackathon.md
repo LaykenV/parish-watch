@@ -114,7 +114,7 @@ Phase 0 was completed on August 27:
 - the public root, production-bound asset, direct not-found route, and desktop
   and mobile layouts were tested signed out.
 
-The public landing page and evidence backend through Slice 3 are live in
+The public landing page and evidence backend through Slice 4 are live in
 production.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
@@ -129,17 +129,18 @@ or version. PR #12 merged as `8df651c`; production workflow `33261235916`
 deployed the hardened Slice 3 backend and frontend, applied the registry seed,
 and passed smoke.
 
-Slice 4 is implemented only in personal development. Real Lafayette agenda and
-minutes records `CO-022-2026` and `CO-023-2026` now retain separate decision
-histories while linking into issue `n57071y9n25rrs09yaanb1hz918dd1fs` through
-citations that name their shared counterparty. The minutes record the approved
-votes. Independent review accepted one public-assets consequence factor, and
-code assigned 5 of 100 points. The issue also keeps an earlier withheld version
+Slice 4 deployed through PR #13 as `c162543`. Production workflow `33273984552`
+and the independent production smoke passed. Real Lafayette agenda and minutes
+records `CO-022-2026` and `CO-023-2026` retain separate decision histories in
+the personal development deployment while linking into issue
+`n57071y9n25rrs09yaanb1hz918dd1fs` through citations that name their shared
+counterparty. Independent review accepted one public-assets consequence factor,
+and code assigned 5 of 100 points. The issue keeps an earlier withheld version
 whose weak importance rationale failed review. Replaying the accepted inputs
 returned the same build without another model call or version. The full suite
-passes 102 tests. No Slice 4 code, extraction, model review, or issue build has
-run in production. The resident evidence interface and vibeapps.dev submission
-remain pending. No AgentMail integration or authentication flow exists yet.
+passes 110 tests. No production extraction, model review, or issue build has
+run. The resident evidence interface and vibeapps.dev submission remain
+pending. No AgentMail integration or authentication flow exists yet.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

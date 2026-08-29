@@ -12,9 +12,19 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-29T20:26:00Z
+- **Last updated:** 2026-08-29T20:39:04Z
 
 ## Log
+
+### 2026-08-29 - c162543
+
+Deployed Phase 1 Slice 4 through PR #13. Production workflow `33273984552`
+verified the merge commit, deployed the backend and static frontend, applied the
+idempotent registry seed, and passed its smoke. The independent production smoke
+then passed the direct Convex host, canonical domain, apex redirect, and
+readiness query. Production now has the Slice 4 evidence engine. No production
+extraction, model review, or issue build ran, so the real issue proof remains in
+the personal development deployment.
 
 ### 2026-08-29 - 1ad6a8a
 

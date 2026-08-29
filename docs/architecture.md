@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0 and evidence-engine Slices 1 through 3 are deployed; Slice 4 is implemented and proven in personal development
+Status: Phase 0 and evidence-engine Slices 1 through 4 are deployed; resident interface design is next
 
 ## Architecture Goal
 
@@ -57,14 +57,16 @@ version. A withheld version remains in history and cannot replace the current
 full or limited pointer.
 
 The extraction, publication, and issue ledgers remain internal. No
-resident-facing decision query, issue interface, or chat path exists yet. PR #12 merged as
-`8df651c`; production workflow `33261235916` deployed the matching backend and
-frontend, applied the registry seed, and passed smoke. The real Terra
-extraction, Luna review, and idempotent replay ran only in the personal
-development deployment. Slice 4 development issue
+resident-facing decision query, issue interface, or chat path exists yet. PR
+#13 merged as `c162543`; production workflow `33273984552` deployed the Slice 4
+backend and frontend, applied the registry seed, and passed smoke. The
+independent production smoke then passed the direct Convex host, canonical
+domain, apex redirect, and readiness query. The real Terra extraction, Luna
+review, and idempotent replay ran only in the personal development deployment.
+Slice 4 development issue
 `n57071y9n25rrs09yaanb1hz918dd1fs` links two real Lafayette decisions and
-publishes a reviewed score of 5. No Slice 4 code or production model workflow
-has reached production.
+publishes a reviewed score of 5. No production extraction, model review, or
+issue build has run.
 
 ## System Boundaries
 
@@ -132,12 +134,11 @@ seed, and runs the production smoke. The static-hosting deploy builds with the
 production Convex URL, deploys the backend, and uploads the matching static
 assets. Never upload a previously built `dist/` directory to production.
 
-The Slice 4 working tree changes the extraction processor from v1.4 to v1.7 and
-the extraction prompt from v1.2 to v1.4. Deployment alone makes no model calls.
-The next extraction request for an existing snapshot and record will not reuse
-its Slice 3 run, so a bulk production rerun would re-extract the corpus on
-`MODEL_STRONG`. Estimate that spend and get approval before a bulk rerun. Name
-this consequence in the Slice 4 production merge question.
+The Slice 4 release changed the extraction processor from v1.4 to v1.7 and the
+extraction prompt from v1.2 to v1.4. Its deployment made no model calls. The
+next extraction request for an existing snapshot and record will not reuse its
+Slice 3 run, so a bulk production rerun would re-extract the corpus on
+`MODEL_STRONG`. Estimate that spend and get approval before a bulk rerun.
 
 `npm run hosting:smoke:dev` remains available for a change that needs the real
 development HTTP router, caching, SPA fallback, or build-time URL. It is not a

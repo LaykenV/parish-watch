@@ -161,8 +161,8 @@ extraction or model review was run.
 
 ### Slice 4: Issue, Rank, and Change
 
-Status: implemented and proven in the personal development deployment on
-August 29, 2026. It is not deployed to production.
+Status: implemented, proven in the personal development deployment, and
+deployed to production through PR #13 on August 29, 2026.
 
 - Preserve atomic decisions.
 - Link one real issue across at least two records.
@@ -191,18 +191,20 @@ confirmed every fact. Replaying the input records in reverse order returned
 `reused: true`, kept the same run, and made no new model call or issue version.
 The accepted build used two AI Gateway calls at an estimated combined cost of
 $0.042153. `npm run verify` passes 110 tests, typecheck, build, prerender, and
-lint. Production remains on Slice 3.
+lint. PR #13 merged as `c162543`; production workflow `33273984552` and the
+independent production smoke passed. Production now includes the Slice 4
+backend. No production extraction, model review, or issue build has run.
 
 Post-proof review found three correctness gaps. Lifecycle labels were reading
 the current state instead of the transition, lost meeting-time precision could
 look like an amendment, and a failed issue build reserved its idempotency key.
-The working tree now tests the corrected transition rules, permits a new attempt
+The final release tests the corrected transition rules, permits a new attempt
 after a terminal failure, and rejects the government's own name or home
 jurisdiction as the only shared signal. Issue-link prompt v1.3 tells Terra the
 same rule. These fixes have local automated proof but have not made a new live
 model call.
 
-Promotion note: deploying the code does not call a model. The extraction
+Promotion note: the production deployment did not call a model. The extraction
 processor and prompt version changes mean a later extraction request will not
 reuse Slice 3 runs. A bulk production rerun would call `MODEL_STRONG` for the
 existing corpus and needs a cost estimate and separate approval.

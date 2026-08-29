@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0 and evidence-engine Slices 1 through 3 are deployed; Slice 4 is implemented and proven in personal development
+Status: Phase 0 and evidence-engine Slices 1 through 4 are deployed; resident interface design is next
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -8,11 +8,12 @@ The production backend stores immutable official-source snapshots, extracts and
 deterministically validates cited atomic decisions, runs a separate independent
 review, and writes full, limited, or withheld immutable publication versions.
 The real Terra extraction and Luna review proofs ran in the personal development
-deployment. PR #12 deployed the hardened Slice 3 backend as `8df651c` and passed
-production smoke. Slice 4 now links two real published decisions into one cited
-issue, records source and publication changes, and computes a deterministic
-importance score after independent review. That work is not deployed to
-production. No production extraction, model review, or issue build has run.
+deployment. PR #12 deployed the hardened Slice 3 backend as `8df651c`. PR #13
+deployed Slice 4 as `c162543`; production workflow `33273984552` and the
+independent production smoke passed. Slice 4 links two real published decisions
+into one cited issue, records source and publication changes, and computes a
+deterministic importance score after independent review. No production
+extraction, model review, or issue build has run.
 
 ## Executive Decision
 

@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 3 are deployed, Slice 4 is proven in development, and resident interface design is next
+Status: approved product plan; evidence Slices 1 through 4 are deployed, and resident interface design is next
 
 ## Product Sentence
 
@@ -13,8 +13,8 @@ and alerts followers when the issue changes or reaches an outcome.
 ### Design The Resident Interface As One System
 
 Do not design or implement resident pages incrementally during backend work.
-After Slice 4 settles the issue, importance, timeline, and change contracts,
-define the complete page inventory and every page's content, actions,
+Slice 4 settled the issue, importance, timeline, and change contracts. Define
+the complete page inventory and every page's content, actions,
 navigation, mobile priority, and system states. The founder then creates and
 approves the complete interface in the selected design tool. Implement that
 approved frontend as one cohesive pass. Later backend slices connect chat,
