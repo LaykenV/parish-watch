@@ -28,10 +28,12 @@ as `OPENROUTER__KEY`, because PR-Agent maps double underscores to config section
 
 ## Config choices worth explaining
 
-`custom_model_max_tokens = 1000000` is required, not a nice-to-have. GLM is not in
-PR-Agent's built-in token table, and without this setting the agent assumes a small
-default context and clips or fails on normal PRs. One million sits safely inside the
-model's real 1.31M window.
+Two settings raise the review ceiling to one million tokens. They do different jobs.
+`custom_model_max_tokens = 1000000` tells PR-Agent how much context GLM supports because
+the model is not in PR-Agent's built-in token table. `max_model_tokens = 1000000`
+replaces PR-Agent's separate 32,000-token quality cap. Without the second setting,
+PR-Agent prunes larger diffs even though the model can accept them. One million leaves
+room inside the model's 1.31M-token context window for the response.
 
 `persistent_inline_comments = true` (a v0.40 feature) stops the same finding from being
 posted again on every push. `persistent_comment = true` keeps the score-and-summary as a
@@ -86,10 +88,17 @@ pipeline through its paces:
 - The action logs confirmed every call was served by
   `openrouter/z-ai/glm-5.3-flash`.
 - Three LLM calls total, less than half a cent on the OpenRouter dashboard.
+- Later production reviews exposed PR-Agent's separate 32,000-token cap. Diffs with
+  41,590, 43,233, and 63,145 tokens all logged `pruning diff` even though
+  `custom_model_max_tokens` was already one million. Setting `max_model_tokens` to one
+  million moved those diff sizes below the pruning threshold.
 
 ## Notes for future changes
 
 - Both files must be on the default branch before the bot activates on new PRs.
+- If a review appears to omit files, inspect the Action log for `total tokens over
+limit` and `pruning diff`. The model-capacity setting and PR-Agent's own cap are
+  independent.
 - Each push leaves a one-line "Persistent review updated" stub comment under the
   main review. The summary itself never duplicates, but stubs do accumulate on
   busy PRs.
