@@ -150,7 +150,7 @@
   font-size: clamp(3.25rem, 6.2vw, 5.75rem);
   font-weight: 650;
   letter-spacing: -0.065em;
-  line-height: 0.95;
+  line-height: 1;
 }
 
 .landing .hero-lede {
