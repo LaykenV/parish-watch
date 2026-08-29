@@ -123,9 +123,10 @@ During prelaunch, render the Louisiana coverage field as an interactive WebGPU
 relief. It shares the hero background instead of sitting inside a card. Do not
 add a border, title bar, key strip, or shadow around it. Static pins and labels
 identify Lafayette, Rapides, and East Baton Rouge. Pointer movement anywhere in
-the hero may control a restrained tilt. On mobile, keep the headline above the
-relief and move the supporting copy below it. Preserve a labeled SVG fallback
-when WebGPU is unavailable.
+the hero may control a restrained tilt when the device has a fine pointer and
+hover. Touch-first devices render one static frame with no ambient loop. On
+mobile, keep the headline above the relief and move the supporting copy below
+it. Preserve a labeled SVG fallback when WebGPU is unavailable.
 
 ## Product proof
 

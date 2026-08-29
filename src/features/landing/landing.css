@@ -212,9 +212,12 @@
 
 .landing .hero-relief {
   grid-area: relief;
-  align-self: stretch;
+  align-self: center;
+  justify-self: end;
+  width: min(100%, 41rem);
+  height: clamp(32rem, 40vw, 38rem);
   min-width: 0;
-  margin: -3rem -5rem -3rem -2.5rem;
+  margin-right: -2rem;
   animation: relief-enter 650ms var(--ease-out) 120ms both;
 }
 
@@ -232,7 +235,7 @@
 .landing .relief-viewport {
   position: relative;
   height: 100%;
-  min-height: 34rem;
+  min-height: 0;
   overflow: hidden;
   background: transparent;
 }
@@ -616,8 +619,10 @@
   }
 
   .landing .hero-relief {
+    align-self: stretch;
+    justify-self: start;
     width: min(100%, 48rem);
-    min-height: 31rem;
+    height: 31rem;
     margin: -2rem 0 -2rem -2rem;
   }
 
@@ -672,12 +677,8 @@
 
   .landing .hero-relief {
     width: calc(100% + 2rem);
-    min-height: 23rem;
+    height: 23rem;
     margin: -1.5rem -1rem;
-  }
-
-  .landing .hero-relief .relief-viewport {
-    min-height: 23rem;
   }
 
   .landing .plot-row {

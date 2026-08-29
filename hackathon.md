@@ -12,11 +12,11 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-29T06:04:38Z
+- **Last updated:** 2026-08-29T06:11:29Z
 
 ## Log
 
-### 2026-08-29 - working tree
+### 2026-08-29 - 28ba0c3
 
 Selected Field Notes as the production landing page in `cf828ad`, then replaced
 its hero note stack with an interactive three-dimensional Louisiana relief built
@@ -43,6 +43,15 @@ the first viewport. Supporting copy follows the field. Sequence labels use plain
 numbers without leading zeroes, and the connector stops at step 4.
 `npm run verify` passes typechecking, 70 tests, the production build and
 prerender, and lint. No deployment was made.
+
+### 2026-08-29 - working tree
+
+Reduced the desktop Louisiana field so it supports the headline without
+filling the right side of the hero. Fine-pointer devices keep the hero-wide
+tilt and low-rate flare. Touch-first devices render one static WebGPU frame with
+no pointer listeners or ambient loop. Browser checks passed at 1414 by 872 and
+390 by 844 with the WebGPU render ready and no horizontal overflow. No
+deployment was made.
 
 ### 2026-08-28 - working tree
 

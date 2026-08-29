@@ -33,6 +33,10 @@ export function LouisianaRelief() {
     const reducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches
+    const hasFinePointer = window.matchMedia(
+      '(hover: hover) and (pointer: fine)',
+    ).matches
+    const motionEnabled = !reducedMotion && hasFinePointer
     const motion = {
       yaw: 0,
       pitch: -0.03,
@@ -50,7 +54,7 @@ export function LouisianaRelief() {
             resolution: canvasSurface?.size ?? [1, 1],
             yaw: motion.yaw,
             pitch: motion.pitch,
-            time: reducedMotion ? 0 : (timestamp - startedAt) / 1000,
+            time: motionEnabled ? (timestamp - startedAt) / 1000 : 0,
             energy: motion.energy,
           },
         })
@@ -76,7 +80,7 @@ export function LouisianaRelief() {
 
       render(timestamp)
 
-      if (!reducedMotion) {
+      if (motionEnabled) {
         scheduleAnimation(false, settling ? 16 : 66)
       }
     }
@@ -101,7 +105,7 @@ export function LouisianaRelief() {
     }
 
     const handlePointerMove = (event: PointerEvent) => {
-      if (reducedMotion || event.pointerType === 'touch') return
+      if (!motionEnabled || event.pointerType === 'touch') return
       const bounds = interactionSurface.getBoundingClientRect()
       const pointerX = (event.clientX - bounds.left) / bounds.width - 0.5
       const pointerY = (event.clientY - bounds.top) / bounds.height - 0.5
@@ -120,12 +124,14 @@ export function LouisianaRelief() {
 
     const resizeObserver = new ResizeObserver(() => scheduleAnimation())
     resizeObserver.observe(canvas)
-    interactionSurface.addEventListener('pointermove', handlePointerMove, {
-      passive: true,
-    })
-    interactionSurface.addEventListener('pointerleave', handlePointerLeave, {
-      passive: true,
-    })
+    if (motionEnabled) {
+      interactionSurface.addEventListener('pointermove', handlePointerMove, {
+        passive: true,
+      })
+      interactionSurface.addEventListener('pointerleave', handlePointerLeave, {
+        passive: true,
+      })
+    }
 
     const visibilityObserver = new IntersectionObserver(
       ([entry]) => {
@@ -171,7 +177,7 @@ export function LouisianaRelief() {
         })
         render(performance.now())
         setRenderState('ready')
-        if (!reducedMotion) scheduleAnimation(false, 66)
+        if (motionEnabled) scheduleAnimation(false, 66)
       } catch {
         if (!lifecycle.disposed) setRenderState('fallback')
       }
@@ -181,8 +187,13 @@ export function LouisianaRelief() {
       lifecycle.disposed = true
       resizeObserver.disconnect()
       visibilityObserver.disconnect()
-      interactionSurface.removeEventListener('pointermove', handlePointerMove)
-      interactionSurface.removeEventListener('pointerleave', handlePointerLeave)
+      if (motionEnabled) {
+        interactionSurface.removeEventListener('pointermove', handlePointerMove)
+        interactionSurface.removeEventListener(
+          'pointerleave',
+          handlePointerLeave,
+        )
+      }
       if (animationFrame) cancelAnimationFrame(animationFrame)
       if (animationTimer) window.clearTimeout(animationTimer)
       canvasSurface?.dispose()
