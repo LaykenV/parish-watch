@@ -1,14 +1,16 @@
 # Public Parish Plan
 
-Status: Phase 0 and evidence-engine Slices 1 and 2 are complete and deployed; Slice 3 independent review is next
+Status: Phase 0 and evidence-engine Slices 1 and 2 are deployed; Slice 3 is implemented and proven in development, with production promotion pending
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
-The production backend now stores immutable official-source snapshots and can
+The production backend stores immutable official-source snapshots and can
 privately extract and deterministically validate one cited atomic decision. The
-real Terra proof ran against the personal development deployment. Production
-contains the reviewed workflow code, but no production model extraction or
-public decision projection has run.
+personal development deployment now runs the separate Luna review and creates
+full, limited, or withheld immutable publication versions. The real Slice 3
+proof limited a Lafayette record after Luna rejected two secondary fields.
+Production still contains the Slice 2 backend. No production extraction,
+review, or decision projection has run.
 
 ## Executive Decision
 

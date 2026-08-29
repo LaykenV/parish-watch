@@ -121,9 +121,12 @@ Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 deterministically validated agenda candidate. PR #6 merged the reviewed Slice 2
 backend as `74ce97e`; production workflow `33222925340` deployed it and passed
 smoke. The real Terra extraction and replay ran in development, not production.
-The resident evidence experience and vibeapps.dev submission remain pending. No
-AgentMail integration, authentication flow, independent Luna review, or public
-decision projection exists yet.
+Slice 3 then ran a real independent Luna review in development. Luna rejected
+two secondary fields, and the deterministic policy produced one limited
+source-only version with three core citations. Replay made no second model call
+or version. The resident evidence interface and vibeapps.dev submission remain
+pending. No AgentMail integration or authentication flow exists yet. Slice 3
+has not been promoted to production.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests
@@ -372,10 +375,10 @@ other contested project.
 ### Product
 
 - [x] Convex is the application backend
-- [ ] Firecrawl feeds real official data
-- [ ] Convex AI Gateway calls OpenAI from actions
-- [ ] `openai/gpt-5.6-terra` does meaningful structured extraction work
-- [ ] `openai/gpt-5.6-luna` independently reviews publication candidates
+- [x] Firecrawl feeds real official data
+- [x] Convex AI Gateway calls OpenAI from actions
+- [x] `openai/gpt-5.6-terra` does meaningful structured extraction work
+- [x] `openai/gpt-5.6-luna` independently reviews publication candidates
 - [ ] Convex Auth v2 alpha Google OAuth works
 - [ ] AgentMail verifies an email-only subscription
 - [ ] AgentMail inbox and outbound alert both work

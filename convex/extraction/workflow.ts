@@ -170,11 +170,23 @@ export const extractSnapshotV1 = extractionWorkflowManager
       }
     }
 
-    await step.runMutation(
-      internal.extraction.ledger.completeExtractionRun,
-      { runId: args.runId, extractionId: extractionResult.extractionId },
-      { name: 'complete-extraction-v1' },
-    )
+    if (validation.outcome === 'validated') {
+      await step.runMutation(
+        internal.operations.publication.completeExtractionAndStartPublication,
+        {
+          runId: args.runId,
+          extractionId: extractionResult.extractionId,
+          candidateId: validation.candidateId,
+        },
+        { name: 'complete-and-queue-publication-v1' },
+      )
+    } else {
+      await step.runMutation(
+        internal.extraction.ledger.completeExtractionRun,
+        { runId: args.runId, extractionId: extractionResult.extractionId },
+        { name: 'complete-extraction-v1' },
+      )
+    }
 
     return validation.outcome === 'validated'
       ? {

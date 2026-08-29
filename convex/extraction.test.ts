@@ -605,12 +605,12 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
   expect(modelCallCount(fetchMock)).toBe(1)
 })
 
-test('the private pipeline creates no public publication records', async () => {
+test('the publication pipeline fails closed when MODEL_FAST is not configured', async () => {
   const t = initTest()
-  expect('decisionRecords' in schema.tables).toBe(false)
-  expect('citations' in schema.tables).toBe(false)
-  expect('reviews' in schema.tables).toBe(false)
-  expect('publicationVersions' in schema.tables).toBe(false)
+  expect('decisionRecords' in schema.tables).toBe(true)
+  expect('citations' in schema.tables).toBe(true)
+  expect('reviews' in schema.tables).toBe(true)
+  expect('publicationVersions' in schema.tables).toBe(true)
 
   const modelResponses: ModelResponseSpec[] = []
   stubFetch({ modelResponses })
@@ -624,6 +624,32 @@ test('the private pipeline creates no public publication records', async () => {
     ctx.db.get(extraction!.candidateId!),
   )
   expect(candidate?.state).toBe('deterministically_validated')
+  const publicationRuns = await t.run(async (ctx) =>
+    ctx.db
+      .query('pipelineRuns')
+      .withIndex('by_registry_and_started_time', (q) =>
+        q.eq('registryId', registryId),
+      )
+      .collect(),
+  )
+  expect(
+    publicationRuns.find((run) => run.trigger === 'validated_candidate'),
+  ).toMatchObject({ state: 'failed_terminal', candidateId: candidate?._id })
+  const reviews = await t.run(async (ctx) => ctx.db.query('reviews').collect())
+  expect(reviews).toHaveLength(1)
+  expect(reviews[0]).toMatchObject({
+    state: 'failed',
+    errorClass: 'model_role_not_configured',
+  })
+  expect(
+    await t.run(async (ctx) => ctx.db.query('decisionRecords').collect()),
+  ).toHaveLength(0)
+  expect(
+    await t.run(async (ctx) => ctx.db.query('publicationVersions').collect()),
+  ).toHaveLength(0)
+  expect(
+    await t.run(async (ctx) => ctx.db.query('citations').collect()),
+  ).toHaveLength(0)
 })
 
 test('a repeated start returns the existing successful run', async () => {

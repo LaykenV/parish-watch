@@ -44,3 +44,24 @@ export async function extractionRunKey(input: {
   )
   return `extract:${input.processorVersion}:${inputHash}`
 }
+
+export async function publicationRunKey(input: {
+  candidateId: Id<'decisionCandidates'>
+  processorVersion: string
+  promptVersion: string
+  schemaVersion: string
+  policyVersion: string
+  payloadVersion: string
+}): Promise<string> {
+  const inputHash = await sha256HexOfText(
+    [
+      input.candidateId,
+      input.processorVersion,
+      input.promptVersion,
+      input.schemaVersion,
+      input.policyVersion,
+      input.payloadVersion,
+    ].join('\n'),
+  )
+  return `publish:${input.processorVersion}:${inputHash}`
+}

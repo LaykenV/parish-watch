@@ -15,6 +15,8 @@ export const stageNames = v.union(
   v.literal('retrieve'),
   v.literal('extract'),
   v.literal('validate'),
+  v.literal('review'),
+  v.literal('finalize'),
 )
 
 export type StageName = typeof stageNames.type
@@ -22,6 +24,8 @@ export type StageName = typeof stageNames.type
 export const runTriggers = v.union(
   v.literal('manual_ingest'),
   v.literal('manual_extraction'),
+  v.literal('validated_candidate'),
+  v.literal('manual_publication'),
 )
 
 export type RunTrigger = typeof runTriggers.type
@@ -51,6 +55,18 @@ export const EXTRACTION_PROMPT_VERSION = 'v1.2'
 export const EXTRACTION_SCHEMA_VERSION = 'v1'
 
 export const EXTRACTION_WORKFLOW_NAME = 'extractSnapshotV1'
+
+export const PUBLICATION_PROCESSOR_VERSION = 'v1'
+
+export const REVIEW_PROMPT_VERSION = 'v1'
+
+export const REVIEW_SCHEMA_VERSION = 'v1'
+
+export const PUBLICATION_POLICY_VERSION = 'v1'
+
+export const PUBLICATION_PAYLOAD_VERSION = 'v1'
+
+export const PUBLICATION_WORKFLOW_NAME = 'reviewAndPublishCandidateV1'
 
 export const MODEL_STEP_RETRY = {
   maxAttempts: 3,

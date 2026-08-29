@@ -745,91 +745,95 @@ export const completeExtractionRun = internalMutation({
     extractionId: v.id('extractions'),
   },
   returns: v.null(),
-  handler: async (ctx, args) => {
-    const run = await ctx.db.get(args.runId)
-    if (!run) {
+  handler: async (ctx, args) => completeExtractionRunTransaction(ctx, args),
+})
+
+export async function completeExtractionRunTransaction(
+  ctx: MutationCtx,
+  args: { runId: Id<'pipelineRuns'>; extractionId: Id<'extractions'> },
+): Promise<null> {
+  const run = await ctx.db.get(args.runId)
+  if (!run) {
+    throw new ConvexError({
+      code: 'run_missing',
+      message: `Pipeline run ${args.runId} does not exist`,
+    })
+  }
+  if (run.state === 'failed_terminal' || run.state === 'superseded') {
+    throw new ConvexError({
+      code: 'run_state_collision',
+      message: `Run ${args.runId} cannot complete from ${run.state}`,
+    })
+  }
+  const stages = await ctx.db
+    .query('pipelineStages')
+    .withIndex('by_run_and_stage', (q) => q.eq('runId', args.runId))
+    .take(8)
+  const extractStage = stages.find((stage) => stage.stage === 'extract')
+  const validateStage = stages.find((stage) => stage.stage === 'validate')
+  const extraction = await ctx.db.get(args.extractionId)
+  if (
+    !extractStage ||
+    !validateStage ||
+    run.processorVersion !== EXTRACTION_PROCESSOR_VERSION ||
+    extractStage.state !== 'succeeded' ||
+    validateStage.state !== 'succeeded' ||
+    extractStage.outputExtractionId !== args.extractionId ||
+    validateStage.outputExtractionId !== args.extractionId ||
+    !extraction ||
+    extraction.runId !== run._id ||
+    extraction.registryId !== run.registryId ||
+    extraction.snapshotId !== run.snapshotId ||
+    extraction.sourceKind !== run.sourceKind ||
+    extraction.targetRecordId !== run.targetRecordId
+  ) {
+    throw new ConvexError({
+      code: 'run_completion_invariant_failed',
+      message: 'Extraction and validation must both finish for the same target',
+    })
+  }
+  if (extraction.state === 'failed') {
+    throw new ConvexError({
+      code: 'run_completion_invariant_failed',
+      message: 'A failed extraction cannot complete successfully',
+    })
+  }
+  if (extraction.state === 'not_found') {
+    if (extraction.candidateId !== undefined) {
       throw new ConvexError({
-        code: 'run_missing',
-        message: `Pipeline run ${args.runId} does not exist`,
+        code: 'run_completion_invariant_failed',
+        message: 'A not-found extraction cannot own a candidate',
       })
     }
-    if (run.state === 'failed_terminal' || run.state === 'superseded') {
-      throw new ConvexError({
-        code: 'run_state_collision',
-        message: `Run ${args.runId} cannot complete from ${run.state}`,
-      })
-    }
-    const stages = await ctx.db
-      .query('pipelineStages')
-      .withIndex('by_run_and_stage', (q) => q.eq('runId', args.runId))
-      .take(8)
-    const extractStage = stages.find((stage) => stage.stage === 'extract')
-    const validateStage = stages.find((stage) => stage.stage === 'validate')
-    const extraction = await ctx.db.get(args.extractionId)
+  } else {
+    const candidate = extraction.candidateId
+      ? await ctx.db.get(extraction.candidateId)
+      : null
     if (
-      !extractStage ||
-      !validateStage ||
-      run.processorVersion !== EXTRACTION_PROCESSOR_VERSION ||
-      extractStage.state !== 'succeeded' ||
-      validateStage.state !== 'succeeded' ||
-      extractStage.outputExtractionId !== args.extractionId ||
-      validateStage.outputExtractionId !== args.extractionId ||
-      !extraction ||
-      extraction.runId !== run._id ||
-      extraction.registryId !== run.registryId ||
-      extraction.snapshotId !== run.snapshotId ||
-      extraction.sourceKind !== run.sourceKind ||
-      extraction.targetRecordId !== run.targetRecordId
+      !candidate ||
+      candidate.extractionId !== extraction._id ||
+      candidate.runId !== run._id ||
+      candidate.registryId !== extraction.registryId ||
+      candidate.snapshotId !== extraction.snapshotId ||
+      candidate.sourceKind !== extraction.sourceKind ||
+      candidate.targetRecordId !== extraction.targetRecordId ||
+      candidate.state !== 'deterministically_validated'
     ) {
       throw new ConvexError({
         code: 'run_completion_invariant_failed',
-        message:
-          'Extraction and validation must both finish for the same target',
+        message: 'A found extraction needs its validated candidate',
       })
     }
-    if (extraction.state === 'failed') {
-      throw new ConvexError({
-        code: 'run_completion_invariant_failed',
-        message: 'A failed extraction cannot complete successfully',
-      })
-    }
-    if (extraction.state === 'not_found') {
-      if (extraction.candidateId !== undefined) {
-        throw new ConvexError({
-          code: 'run_completion_invariant_failed',
-          message: 'A not-found extraction cannot own a candidate',
-        })
-      }
-    } else {
-      const candidate = extraction.candidateId
-        ? await ctx.db.get(extraction.candidateId)
-        : null
-      if (
-        !candidate ||
-        candidate.extractionId !== extraction._id ||
-        candidate.runId !== run._id ||
-        candidate.registryId !== extraction.registryId ||
-        candidate.snapshotId !== extraction.snapshotId ||
-        candidate.sourceKind !== extraction.sourceKind ||
-        candidate.targetRecordId !== extraction.targetRecordId ||
-        candidate.state !== 'deterministically_validated'
-      ) {
-        throw new ConvexError({
-          code: 'run_completion_invariant_failed',
-          message: 'A found extraction needs its validated candidate',
-        })
-      }
-    }
-    if (run.state === 'succeeded') {
-      return null
-    }
-    await ctx.db.patch(args.runId, {
-      state: 'succeeded',
-      completedAt: Date.now(),
-    })
+  }
+  if (run.state === 'succeeded') {
     return null
-  },
-})
+  }
+  await ctx.db.patch(args.runId, {
+    state: 'succeeded',
+    completedAt: Date.now(),
+  })
+  return null
+}
 
 export const loadValidationRows = internalQuery({
   args: {
