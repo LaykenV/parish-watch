@@ -659,11 +659,12 @@
       'intro'
       'relief'
       'details';
-    row-gap: 2rem;
+    row-gap: 1.25rem;
   }
 
   .landing .hero h1 {
     font-size: clamp(3rem, 15.5vw, 4.2rem);
+    line-height: 1;
   }
 
   .landing .hero-actions {
@@ -677,8 +678,14 @@
 
   .landing .hero-relief {
     width: calc(100% + 2rem);
-    height: 23rem;
-    margin: -1.5rem -1rem;
+    height: 19rem;
+    margin: -0.75rem -1rem;
+  }
+
+  .landing .relief-map-label {
+    min-height: 1.2rem;
+    padding-inline: 0.38rem;
+    font-size: 0.52rem;
   }
 
   .landing .plot-row {
