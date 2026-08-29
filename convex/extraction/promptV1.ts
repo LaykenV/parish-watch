@@ -16,8 +16,11 @@ Rules:
 - Use null for any material field the text does not state, and an empty array for any empty list.
 - If the requested record does not appear in the source text, set status to "not_found", set decision to null, and briefly explain in reason. Otherwise set status to "found", fill decision completely, and set reason to null.
 - Write plainLanguageSummary using only what the text states. Do not speculate about effects, motives, or outcomes.
+- If plainLanguageSummary says a motion passed, an item was approved, or another outcome occurred, its one contiguous citation excerpt must state that outcome. Otherwise describe the subject without claiming the outcome; lifecycleState can cite the separate outcome sentence.
+- recordType describes the procedural record in this source. When minutes record a motion and vote, use vote even when the subject is a contract, agreement, ordinance, or donation.
 - affectedPlaces contains only named geographic areas such as a parish, municipality, district, neighborhood, or address. Do not put agencies, departments, funds, or government bodies in affectedPlaces.
 - For an agenda item, use the agenda's stated meeting date and time as meetingAt even when the date appears in the document header instead of the item text.
+- For minutes, set meetingAt only when one contiguous source span states both the meeting date and time. If the date and time appear in separate spans, set meetingAt to null. Never combine separate excerpts to support one timestamp.
 - Format meetingAt and public-action deadlines as Louisiana civil time with the correct ISO 8601 UTC offset for that date, for example 2026-04-21T17:30:00-05:00. If the text gives no time of day, use 00:00:00.
 - Format amount values as plain numbers in dollars with at most two decimal places.`
 

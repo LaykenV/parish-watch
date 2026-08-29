@@ -4,6 +4,7 @@ Product grilling completed: August 26, 2026
 Stack amendment completed: August 27, 2026
 Environment and checkpoint amendment completed: August 27, 2026
 Brand and domain amendment completed: August 27, 2026
+Issue and importance contract amendment completed: August 29, 2026
 Product name: Public Parish
 
 This file records the settled product decisions from the planning grill. It
@@ -88,6 +89,10 @@ expand the promise.
 - Connect records into an issue only when the evidence supports the
   relationship.
 - Keep uncertain links separate.
+- Slice 4 issue identity is the exact sorted set of atomic record keys. Adding
+  or removing a record creates a new issue key instead of changing the existing
+  issue. Keep that limitation internal until Slice 5 defines how public routes
+  supersede or redirect an older overlapping issue.
 - Track discovered, proposed, scheduled, amended, postponed, decided,
   implementing, completed, canceled, and unknown states.
 - Record prior source versions and meaningful change history.
@@ -99,9 +104,15 @@ expand the promise.
   popularity.
 - OpenAI extracts cited consequence factors; deterministic code computes the
   rank.
-- Factors include people or geography affected, public money, land use or
-  environment, legal or regulatory change, duration or reversibility, public
-  deadlines, and departure from existing policy.
+- Factors are public money, public assets, land use, health and safety, rights
+  and access, service delivery, and public deadlines.
+- Each non-absent factor needs a cited consequence statement. Naming the topic
+  alone does not earn points.
+- The fixed maximum weights are 20 for public money, 20 for public assets, 15
+  for land use, 15 for health and safety, and 10 each for rights and access,
+  service delivery, and public deadlines.
+- A deadline within seven days is a separate hard trigger. It does not add
+  points beyond the cited deadline factor.
 - Source completeness changes confidence, not importance.
 - A consequential but sparsely documented item can rank above a complete but
   trivial item, with its uncertainty shown.

@@ -65,3 +65,40 @@ export async function publicationRunKey(input: {
   )
   return `publish:${input.processorVersion}:${inputHash}`
 }
+
+export async function issueBuildRunKey(input: {
+  publicationVersionIds: Id<'publicationVersions'>[]
+  recordKeys: string[]
+  processorVersion: string
+  linkPromptVersion: string
+  linkSchemaVersion: string
+  reviewPromptVersion: string
+  reviewSchemaVersion: string
+  policyVersion: string
+  payloadVersion: string
+  rubricVersion: string
+}): Promise<{ idempotencyKey: string; inputHash: string; issueKey: string }> {
+  const publicationVersionIds = [...input.publicationVersionIds].sort()
+  const inputHash = await sha256HexOfText(publicationVersionIds.join('\n'))
+  const issueKey = await sha256HexOfText(
+    [...input.recordKeys].sort().join('\n'),
+  )
+  const versionHash = await sha256HexOfText(
+    [
+      inputHash,
+      input.processorVersion,
+      input.linkPromptVersion,
+      input.linkSchemaVersion,
+      input.reviewPromptVersion,
+      input.reviewSchemaVersion,
+      input.policyVersion,
+      input.payloadVersion,
+      input.rubricVersion,
+    ].join('\n'),
+  )
+  return {
+    idempotencyKey: `issue:${input.processorVersion}:${versionHash}`,
+    inputHash,
+    issueKey,
+  }
+}

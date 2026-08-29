@@ -161,6 +161,9 @@ extraction or model review was run.
 
 ### Slice 4: Issue, Rank, and Change
 
+Status: implemented and proven in the personal development deployment on
+August 29, 2026. It is not deployed to production.
+
 - Preserve atomic decisions.
 - Link one real issue across at least two records.
 - Extract cited importance factors and compute the deterministic score.
@@ -170,6 +173,39 @@ extraction or model review was run.
 
 Exit gate: one issue shows a correct timeline, “Why this matters,” and a visible
 change with citations.
+
+Proof: the internal `buildIssueV1` workflow runs Terra issue linking, separate
+Luna review, deterministic ranking, and versioned publication. Real Lafayette
+records `CO-022-2026` and `CO-023-2026` retain separate decision identities and
+link through cited references to Terrebonne Parish Consolidated Government.
+Issue `n57071y9n25rrs09yaanb1hz918dd1fs` has a full current version with two
+decision links, a decided lifecycle, and one accepted `public_assets` factor.
+Rubric v1 assigns 5 of 100 points and reports 14 percent factor completeness.
+
+The same evidence query returns each record's agenda and minutes publication
+history. It records the move from a scheduled proposal to an approved vote and
+the expansion from a limited publication to a full cited payload. A failed
+importance rationale produced a withheld issue version without replacing a
+public pointer. Prompt v1.2 then produced the accepted version after Luna
+confirmed every fact. Replaying the input records in reverse order returned
+`reused: true`, kept the same run, and made no new model call or issue version.
+The accepted build used two AI Gateway calls at an estimated combined cost of
+$0.042153. `npm run verify` passes 110 tests, typecheck, build, prerender, and
+lint. Production remains on Slice 3.
+
+Post-proof review found three correctness gaps. Lifecycle labels were reading
+the current state instead of the transition, lost meeting-time precision could
+look like an amendment, and a failed issue build reserved its idempotency key.
+The working tree now tests the corrected transition rules, permits a new attempt
+after a terminal failure, and rejects the government's own name or home
+jurisdiction as the only shared signal. Issue-link prompt v1.3 tells Terra the
+same rule. These fixes have local automated proof but have not made a new live
+model call.
+
+Promotion note: deploying the code does not call a model. The extraction
+processor and prompt version changes mean a later extraction request will not
+reuse Slice 3 runs. A bulk production rerun would call `MODEL_STRONG` for the
+existing corpus and needs a cost estimate and separate approval.
 
 ### Slice 5: Complete Resident Interface
 
