@@ -128,7 +128,7 @@ passed production smoke. No Terra extraction was run in production.
 
 ### Slice 3: Independent Publication
 
-Status: implemented and proven on the personal development deployment.
+Status: complete and deployed through PR #12 on August 29, 2026.
 
 - Build the separate `MODEL_FAST` reviewer call and schema through AI Gateway.
   The reviewer must not run on the extraction model.
@@ -155,7 +155,9 @@ Gateway. Luna supported the core identity but rejected the `recordType` and
 three core citations, so neither disputed field appeared in the payload. The
 call used 1,707 prompt tokens, 1,281 completion tokens, and 641 reasoning tokens
 at an estimated cost of $0.001879. Replay reused the same run with one AI call
-and one version. Production was not changed.
+and one version. PR #12 merged as `8df651c`; production workflow `33261235916`
+deployed the hardened backend and frontend and passed smoke. No production
+extraction or model review was run.
 
 ### Slice 4: Issue, Rank, and Change
 
@@ -169,15 +171,30 @@ and one version. Production was not changed.
 Exit gate: one issue shows a correct timeline, “Why this matters,” and a visible
 change with citations.
 
-### Slice 5: Thin Resident Proof
+### Slice 5: Complete Resident Interface
 
-- Scaffold the minimal TanStack Start shell.
-- Display major decisions, one issue page, citations, and coverage status.
-- Subscribe to the public issue projection through Convex.
-- Verify a published change updates an open page without refresh.
+Do not design or build resident pages one at a time during backend slices.
+Slice 4 must first settle the issue, importance, timeline, and change contracts.
+Then pause implementation and complete this design handoff:
 
-Exit gate: the backend vertical is visible and live. Visual polish is still
-secondary.
+- decide the full in-scope page inventory together;
+- define each page's information, actions, navigation, mobile priority, and
+  loading, empty, limited, error, signed-out, and signed-in states;
+- prepare one reusable design context pack from the product specification,
+  architecture, data contracts, copy constraints, and existing visual system;
+- have the founder create and approve the complete interface in the selected
+  design tool;
+- implement the approved page system in one cohesive frontend pass instead of
+  growing it route by route;
+- connect the issue, decision, citation, coverage, and realtime publication
+  paths that already work;
+- keep chat, follow, email, and coverage actions hidden until their backend
+  behavior is complete and proven.
+
+Exit gate: the approved resident interface is implemented as one responsive
+system, one real issue and its citations are live, and a published change
+updates an open page without refresh. Later slices connect remaining actions
+without reopening page layout or visual direction.
 
 Use the first official September Lafayette meeting cycle if the posted schedule
 and documents confirm it.

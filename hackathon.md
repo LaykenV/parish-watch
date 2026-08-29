@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction and `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-29T15:31:25Z
+- **Last updated:** 2026-08-29T16:33:30Z
 
 ## Log
 
@@ -22,9 +22,9 @@ Reconciled the public record with the release history. Slice 2 merged through
 PR #6 as `74ce97e`; production workflow `33222925340` deployed the reviewed
 private extraction backend and passed smoke. The real Terra extraction and
 idempotent replay ran in the personal development deployment, not production.
-The current `main` release at `0b49718` also passed its production workflow, so
-the Slice 2 backend remains deployed. Publication and independent Luna review
-remain unbuilt.
+At that checkpoint, release `0b49718` also passed its production workflow. The
+Slice 2 backend was deployed, while publication and independent Luna review
+remained unbuilt.
 
 ### 2026-08-29 - 28ba0c3
 
@@ -54,14 +54,17 @@ numbers without leading zeroes, and the connector stops at step 4.
 `npm run verify` passes typechecking, 70 tests, the production build and
 prerender, and lint. No deployment was made.
 
-### 2026-08-29 - working tree
+### 2026-08-29 - ed9aebd
 
 Reduced the desktop Louisiana field so it supports the headline without
 filling the right side of the hero. Fine-pointer devices keep the hero-wide
 tilt and low-rate flare. Touch-first devices render one static WebGPU frame with
 no pointer listeners or ambient loop. Browser checks passed at 1414 by 872 and
 390 by 844 with the WebGPU render ready and no horizontal overflow. No
-deployment was made for that landing-page refinement.
+deployment was made for that landing-page refinement at the time. The later
+`8df651c` release carried it to production.
+
+### 2026-08-29 - 8df651c
 
 Implemented Slice 3 as a separate `reviewAndPublishCandidateV1` durable
 workflow. A validated candidate now queues an exact candidate, snapshot, and
@@ -93,7 +96,7 @@ extraction workflow now completes the extraction and starts publication in one
 mutation, so a scheduling failure rolls back both changes. The full suite passes
 84 tests, typecheck, build, prerender, and lint.
 
-The original Slice 3 proof was pushed to personal development deployment
+The original Slice 3 proof ran on personal development deployment
 `woozy-wren-227` and set `MODEL_FAST_ID` there to
 `openai/gpt-5.6-luna`. Run `jd75t07cb5m350nt3fyys67e8n8dckn5`
 reviewed candidate `k571jxydqzev299r67v2d0ew2d8ddmcd` through Convex AI
@@ -103,8 +106,11 @@ tokens, 641 reasoning tokens, and an estimated $0.001879. Luna rejected the
 The deterministic policy wrote limited version
 `ks74a1k6nh3gc49f5bby3q7vcn8dc6kz` with only three core citations. Replaying
 the starter returned `reused: true`, kept one AI call, and created no second
-version. The replay and review hardening described above has not been deployed.
-Production remains unchanged.
+version. PR #12 merged the reviewed hardening as `8df651c`. Production workflow
+`33261235916` verified the release, deployed the backend and frontend, applied
+the registry seed, and passed its smoke. An independent production smoke then
+passed the direct `convex.site` host, canonical domain, apex redirect, and
+readiness query. No production extraction or model review was run.
 
 ### 2026-08-28 - 74ce97e
 

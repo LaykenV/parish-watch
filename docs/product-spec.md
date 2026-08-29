@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; private evidence Slices 1 and 2 are deployed, resident interface not started
+Status: approved product plan; evidence Slices 1 through 3 are deployed, resident interface design starts after Slice 4
 
 ## Product Sentence
 
@@ -9,6 +9,17 @@ about to decide, shows the official evidence, answers source-grounded questions,
 and alerts followers when the issue changes or reaches an outcome.
 
 ## Experience Principles
+
+### Design The Resident Interface As One System
+
+Do not design or implement resident pages incrementally during backend work.
+After Slice 4 settles the issue, importance, timeline, and change contracts,
+define the complete page inventory and every page's content, actions,
+navigation, mobile priority, and system states. The founder then creates and
+approves the complete interface in the selected design tool. Implement that
+approved frontend as one cohesive pass. Later backend slices connect chat,
+follows, email, and coverage behavior without reopening the visual system.
+Hide any action that does not work yet.
 
 ### Start With Consequence
 

@@ -114,7 +114,8 @@ Phase 0 was completed on August 27:
 - the public root, production-bound asset, direct not-found route, and desktop
   and mobile layouts were tested signed out.
 
-The public landing page and private evidence backend are live in production.
+The public landing page and evidence backend through Slice 3 are live in
+production.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -124,9 +125,11 @@ smoke. The real Terra extraction and replay ran in development, not production.
 Slice 3 then ran a real independent Luna review in development. Luna rejected
 two secondary fields, and the deterministic policy produced one limited
 source-only version with three core citations. Replay made no second model call
-or version. The resident evidence interface and vibeapps.dev submission remain
-pending. No AgentMail integration or authentication flow exists yet. Slice 3
-has not been promoted to production.
+or version. PR #12 merged as `8df651c`; production workflow `33261235916`
+deployed the hardened Slice 3 backend and frontend, applied the registry seed,
+and passed smoke. No production extraction or model review was run. The resident
+evidence interface and vibeapps.dev submission remain pending. No AgentMail
+integration or authentication flow exists yet.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

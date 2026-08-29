@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0 and evidence-engine Slices 1 and 2 are deployed; Slice 3 is implemented and proven in development
+Status: Phase 0 and evidence-engine Slices 1 through 3 are deployed; Slice 4 is next
 
 ## Architecture Goal
 
@@ -42,13 +42,12 @@ or withheld immutable version. Withheld versions stay in history but never
 replace the last full or limited current pointer. The projection tables exist,
 but Slice 5 still owns the resident-facing query and interface.
 
-The Slice 2 evidence ledger uses `aiCalls`, `extractions`,
-`decisionCandidates`, `candidateFacts`, and `validationFindings`. All extraction
-and validation functions remain internal. No public decision, review,
-publication, or chat path exists. PR #6 merged as `74ce97e`; its production
-workflow deployed the backend and frontend and passed smoke. The real Terra
-extraction and idempotent replay ran only in the personal development
-deployment.
+The extraction and publication ledgers remain internal. No resident-facing
+decision query, issue interface, or chat path exists yet. PR #12 merged as
+`8df651c`; production workflow `33261235916` deployed the matching backend and
+frontend, applied the registry seed, and passed smoke. The real Terra
+extraction, Luna review, and idempotent replay ran only in the personal
+development deployment. No production model workflow has run.
 
 ## System Boundaries
 
@@ -1103,7 +1102,9 @@ The event does not provide OpenAI or Convex credits. Before broad crawling:
 3. Validation plus independent review produces a versioned public projection.
 4. A changed snapshot creates a visible material revision.
 5. Atomic decisions link into one issue timeline and importance record.
-6. A minimal TanStack page displays the live issue and citations.
+6. After the complete page contract and designs are approved, one cohesive
+   frontend pass implements the resident interface. The issue and citation
+   paths go live first, while incomplete actions remain hidden.
 7. Anonymous chat answers only from the issue evidence.
 8. Convex Auth v2 Google accounts, verified email-only follows, and AgentMail
    close the outcome loop.
