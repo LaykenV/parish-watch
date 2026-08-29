@@ -1,8 +1,14 @@
 # Public Parish Plan
 
-Status: Phase 0 and the public production shell are complete; evidence-engine implementation is next
+Status: Phase 0 and evidence-engine Slices 1 and 2 are complete and deployed; Slice 3 independent review is next
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
+
+The production backend now stores immutable official-source snapshots and can
+privately extract and deterministically validate one cited atomic decision. The
+real Terra proof ran against the personal development deployment. Production
+contains the reviewed workflow code, but no production model extraction or
+public decision projection has run.
 
 ## Executive Decision
 

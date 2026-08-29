@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: approved implementation plan; Phase 0 development and production environments are live
+Status: Phase 0 and evidence-engine Slices 1 and 2 are implemented and deployed; Slice 3 is next
 
 ## Architecture Goal
 
@@ -22,6 +22,24 @@ Official source changes
 
 The architecture should make this loop obvious in the live app and in the
 under-three-minute demo.
+
+## Current implementation checkpoint
+
+Slice 1 implements the official registry, immutable source snapshots, raw and
+normalized artifact hashes, file storage, and retrieval pipeline evidence.
+Slice 2 registers `@convex-dev/workflow` 0.4.6 and adds the private
+`extractSnapshotV1` path: prepare, Terra extraction, deterministic validation,
+and completion. The model step has three attempts, workflow parallelism is
+capped at two, and the run key covers the registry, snapshot, target record,
+prompt, schema, and processor versions.
+
+The Slice 2 evidence ledger uses `aiCalls`, `extractions`,
+`decisionCandidates`, `candidateFacts`, and `validationFindings`. All extraction
+and validation functions remain internal. No public decision, review,
+publication, or chat path exists. PR #6 merged as `74ce97e`; its production
+workflow deployed the backend and frontend and passed smoke. The real Terra
+extraction and idempotent replay ran only in the personal development
+deployment.
 
 ## System Boundaries
 
@@ -370,7 +388,11 @@ never become source snapshots.
 
 ## Core Data Model
 
-The first schema should include these tables.
+The schema through Slice 2 implements `jurisdictions`, `governmentBodies`,
+`sourceRegistries`, `sourceSnapshots`, `pipelineRuns`, `pipelineStages`, and the
+five private extraction-evidence tables described below. Coverage expectations,
+incidents, public records, publication, issues, chat, auth-linked resident data,
+and notifications remain planned.
 
 ### Coverage
 
@@ -436,6 +458,28 @@ Indexes: state plus created time; registry plus created time.
 Fields: run, stage, idempotency key, state, attempt, input references, output
 reference, error class, retry time, timing, token and vendor cost metadata.
 Indexes: idempotency key; state plus retry time; run plus stage.
+
+#### `aiCalls`
+
+Fields: run and stage, optional extraction, route, model role and ID, prompt and
+schema versions, attempt, status, HTTP evidence, latency, request ID, token
+usage, estimated cost, retry evidence, error class, and created time.
+Indexes: run plus created time; extraction.
+
+#### `extractions`
+
+Fields: run, registry, snapshot, source kind, target record, prompt, schema and
+processor versions, model evidence, state, failure evidence, raw response
+storage, response hash and size, candidate, and created time.
+Indexes: run; snapshot plus created time.
+
+#### `decisionCandidates`, `candidateFacts`, and `validationFindings`
+
+Candidates store the private structured decision and validation state. Facts
+bind one material JSON Pointer path and value to an exact snapshot excerpt,
+with page or section evidence when verifiable. Findings record every
+deterministic rejection by run, extraction, candidate, path, and code. These
+tables are private inputs to Slice 3, not public projections.
 
 #### `reviews`
 
@@ -604,6 +648,23 @@ Strict output means:
 - the application verifies excerpts against normalized source text;
 - dates and amounts are parsed and range-checked by deterministic code;
 - prompt, model, schema, and processor versions are stored.
+
+### Implemented Slice 2 path
+
+The current contract is schema v1, prompt v1.2, and processor v1.4. The action
+sends the static system prompt first, treats source text as untrusted data, uses
+high reasoning with `store: false`, and requires strict Chat Completions
+Structured Outputs. Convex AI Gateway is the normal route. Direct OpenAI stays
+behind the same provider interface and is disabled unless an operator enables
+the documented fallback flag.
+
+Deterministic validation rechecks snapshot identity, hash basis, stored hash and
+size, truncation, approved domains, target record, body, citations, material
+paths and values, dates, amounts, and agenda-versus-outcome rules. An excerpt
+must occur in the immutable normalized source. A page is accepted only when a
+page map proves it. Dates without a stated time require exact midnight. A
+passing candidate becomes `deterministically_validated`, which means ready for
+independent review, not published.
 
 ## OpenAI plan
 

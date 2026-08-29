@@ -12,9 +12,19 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-29T06:11:29Z
+- **Last updated:** 2026-08-29T07:16:42Z
 
 ## Log
+
+### 2026-08-29 - 0b49718
+
+Reconciled the public record with the release history. Slice 2 merged through
+PR #6 as `74ce97e`; production workflow `33222925340` deployed the reviewed
+private extraction backend and passed smoke. The real Terra extraction and
+idempotent replay ran in the personal development deployment, not production.
+The current `main` release at `0b49718` also passed its production workflow, so
+the Slice 2 backend remains deployed. Publication and independent Luna review
+remain unbuilt.
 
 ### 2026-08-29 - 28ba0c3
 
@@ -53,7 +63,7 @@ no pointer listeners or ambient loop. Browser checks passed at 1414 by 872 and
 390 by 844 with the WebGPU render ready and no horizontal overflow. No
 deployment was made.
 
-### 2026-08-28 - working tree
+### 2026-08-28 - 74ce97e
 
 Implemented Slice 2, the cited atomic decision. Registered `@convex-dev/workflow`
 0.4.6 and built `extractSnapshotV1`, a durable workflow that runs the pipeline

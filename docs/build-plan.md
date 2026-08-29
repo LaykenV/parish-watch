@@ -89,6 +89,8 @@ Dates: August 27 through September 2
 
 ### Slice 1: Immutable Source
 
+Status: complete and deployed through PR #5 on August 28, 2026.
+
 - Define jurisdictions, bodies, registries, snapshots, pipeline runs, and stage
   state.
 - Register the Firecrawl component.
@@ -101,6 +103,8 @@ Exit gate: the same source does not duplicate work, and a changed source creates
 a new immutable snapshot.
 
 ### Slice 2: Cited Atomic Decision
+
+Status: complete and deployed through PR #6 on August 29, 2026.
 
 - Adopt `@convex-dev/workflow` to orchestrate the now multi-stage extraction
   flow durably. Workflow steps execute and retry the work; the pipelineRuns and
@@ -115,7 +119,16 @@ a new immutable snapshot.
 
 Exit gate: every accepted material field resolves to the exact source snapshot.
 
+Proof: processor v1.4, prompt v1.2, and schema v1 produced a private
+`CO-029-2026` candidate with nine source-bound facts and no validation findings
+in the personal development deployment. Replaying the starter reused the same
+run and made no second model call. `npm run verify` passed 70 tests, including
+40 extraction cases. Merge commit `74ce97e` deployed the Slice 2 backend and
+passed production smoke. No Terra extraction was run in production.
+
 ### Slice 3: Independent Publication
+
+Status: next. No public projection or independent Luna review exists yet.
 
 - Build the separate `MODEL_FAST` reviewer call and schema through AI Gateway.
   The reviewer must not run on the extraction model.

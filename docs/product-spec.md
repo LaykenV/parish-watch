@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; Phase 0 setup shell is public, resident interface not started
+Status: approved product plan; private evidence Slices 1 and 2 are deployed, resident interface not started
 
 ## Product Sentence
 

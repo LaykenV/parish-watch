@@ -12,12 +12,15 @@ revision principles, not code or a submission base.
 
 ## Current state
 
-Phase 0 and the Slice 1 evidence backend are complete. The repository has a
-TanStack Start SPA shell, separate Convex development and production
+Phase 0 and evidence-engine Slices 1 and 2 are complete and deployed. The
+repository has a TanStack Start SPA, separate Convex development and production
 deployments, a realtime readiness query, Convex static hosting, Firecrawl
-discovery and retrieval, immutable source snapshots, tests, and a reproducible
-local setup path. Slice 1 adds the evidence backend. The public interface
-remains the setup shell until a later slice adds the resident view.
+discovery and retrieval, immutable source snapshots, and a private durable
+workflow that extracts and deterministically validates one cited atomic
+decision. The real Terra extraction proof and idempotent replay ran in the
+personal development deployment. The Slice 2 backend code deployed to
+production through PR #6, but no production model extraction was run. The
+resident evidence interface and publication path remain unbuilt.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)
@@ -104,6 +107,8 @@ auth, webhook, routing, or schema work genuinely needs isolation.
 - TanStack Start in SPA/static-prerender mode
 - Convex backend and realtime queries, with static hosting registered
 - Firecrawl for official-source discovery, retrieval, PDFs, and change detection
+- `@convex-dev/workflow` for the private prepare, extract, validate, and complete
+  pipeline
 - Convex AI Gateway for OpenAI Chat Completions with strict structured outputs
 - `openai/gpt-5.6-terra` for record extraction, consequence factors, and issue
   linking; `openai/gpt-5.6-luna` for discovery classification, ranking,
@@ -113,8 +118,10 @@ auth, webhook, routing, or schema work genuinely needs isolation.
   material-change alerts
 
 Direct dependencies and the lockfile use exact versions. Convex Auth v2 is
-pinned to `2.0.0-alpha.1`; auth is not implemented yet. The planned model split
-must still pass the labeled-set benchmark before publication code relies on it.
+pinned to `2.0.0-alpha.1`; auth is not implemented yet. Terra extraction has
+passed one real agenda case and its adversarial contract suite. Luna review and
+the broader labeled-set benchmark remain Slice 3 work before publication code
+can rely on the two-model split.
 
 ## License
 

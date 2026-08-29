@@ -1,12 +1,23 @@
 # Official-Source Plan
 
-Status: candidate registry for implementation
-Last researched: August 26, 2026
+Status: Lafayette council registry and representative snapshots implemented; remaining launch sources are candidates
+Last verified: August 28, 2026
 
 This document supplies starting points, not a claim of complete coverage. Every
 URL must be checked during the Firecrawl source spike, and every public body must
 pass the same gold-set and freshness gate before Public Parish marks it
 supported.
+
+## Implemented checkpoint
+
+Slice 1 seeded the Lafayette City Council registry with the council hub,
+document search, and schedule/research URLs. The personal development deployment
+ingested one real agenda PDF and its corresponding minutes PDF as immutable raw
+artifacts with separate normalized Markdown hashes. Repeat retrievals reused
+the version 2 snapshots. Slice 2 extracted and deterministically validated
+`CO-029-2026` from the agenda snapshot. This proof does not mark Lafayette or
+any other body publicly supported. Every remaining source and region stays
+behind the coverage gate below.
 
 ## Source Policy
 
