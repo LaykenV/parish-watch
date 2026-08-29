@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#1C1323" />
+    <title>Public Parish — See what local government may change</title>
+    <meta
+      name="description"
+      content="Public Parish connects Louisiana decisions to the official record, public deadlines, and what happens next."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: oklch(20.63% 0.0335 309.45);
+        --raised: oklch(24.6% 0.034 309.45);
+        --raised-2: oklch(28.4% 0.036 309.45);
+        --text: oklch(96.42% 0.0152 90.23);
+        --text-muted: oklch(79% 0.019 90.23);
+        --rule-dark: oklch(31.5% 0.032 309.45);
+        --purple: oklch(34.58% 0.136 306.78);
+        --purple-hover: oklch(43% 0.14 306.78);
+        --gold: oklch(74.4% 0.1454 87.37);
+        --cypress-lift: oklch(74% 0.09 170.33);
+        --focus: var(--gold);
+
+        /* Paper band tokens */
+        --paper: oklch(96.42% 0.0152 90.23);
+        --paper-surface: oklch(99.14% 0.0098 87.47);
+        --ink: oklch(20.63% 0.0335 309.45);
+        --muted-paper: oklch(45.5% 0.02 316.88);
+        --rule-paper: oklch(85.74% 0.0239 82.11);
+        --cypress: oklch(44.91% 0.073 170.33);
+
+        --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+        --font-body: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+        --font-data: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-6: 1.5rem;
+        --space-8: 2rem;
+        --space-12: 3rem;
+        --space-16: 4rem;
+        --space-24: 6rem;
+        --radius-sm: 0.25rem;
+        --radius-md: 0.625rem;
+        --radius-lg: 1.125rem;
+        --rule: 1px;
+        --dur-fast: 160ms;
+        --dur-standard: 240ms;
+        --dur-deliberate: 520ms;
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --container: 66rem;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        overflow-x: clip;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background: var(--bg);
+        font-family: var(--font-body);
+        font-size: 1.0625rem;
+        line-height: 1.62;
+      }
+
+      :focus-visible {
+        outline: 3px solid var(--gold);
+        outline-offset: 3px;
+        border-radius: 2px;
+      }
+
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        z-index: 10;
+        padding: var(--space-3) var(--space-4);
+        background: var(--gold);
+        color: var(--ink);
+      }
+
+      .skip-link:focus-visible {
+        left: 0;
+      }
+
+      .container {
+        width: min(100% - 2.5rem, var(--container));
+        margin-inline: auto;
+      }
+
+      a {
+        color: var(--text);
+        text-underline-offset: 0.18em;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-weight: 700;
+        line-height: 1.05;
+        overflow-wrap: anywhere;
+      }
+
+      /* ---------- Inspection brackets (signature) ---------- */
+
+      .corners {
+        position: relative;
+      }
+
+      .corner {
+        position: absolute;
+        width: 26px;
+        height: 26px;
+        border: 0 solid var(--gold);
+        pointer-events: none;
+      }
+
+      .corner-tl {
+        top: -14px;
+        left: -14px;
+        border-top-width: 2px;
+        border-left-width: 2px;
+      }
+
+      .corner-tr {
+        top: -14px;
+        right: -14px;
+        border-top-width: 2px;
+        border-right-width: 2px;
+      }
+
+      .corner-bl {
+        bottom: -14px;
+        left: -14px;
+        border-bottom-width: 2px;
+        border-left-width: 2px;
+      }
+
+      .corner-br {
+        bottom: -14px;
+        right: -14px;
+        border-bottom-width: 2px;
+        border-right-width: 2px;
+      }
+
+      /* ---------- Header ---------- */
+
+      .site-header {
+        border-bottom: var(--rule) solid var(--rule-dark);
+      }
+
+      .site-header .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding-block: var(--space-4);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        color: var(--text);
+        text-decoration: none;
+        min-height: 44px;
+      }
+
+      .brand-mark {
+        width: 2.25rem;
+        height: 2.25rem;
+        color: var(--gold);
+        flex: none;
+      }
+
+      .brand-name {
+        font-family: var(--font-display);
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+      }
+
+      /* ---------- Buttons ---------- */
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0.65rem 1.3rem;
+        border: none;
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        background: var(--purple);
+        font-family: var(--font-body);
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          background-color var(--dur-fast) var(--ease-out),
+          transform var(--dur-fast) var(--ease-out);
+      }
+
+      .btn:hover {
+        background: var(--purple-hover);
+        transform: translateY(-1px);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn:focus-visible {
+        outline-color: var(--gold);
+      }
+
+      .btn-small {
+        padding: 0.5rem 1rem;
+        font-size: 0.95rem;
+      }
+
+      /* ---------- Hero ---------- */
+
+      .hero {
+        padding-block: clamp(3.5rem, 10vw, 7.5rem);
+      }
+
+      .exhibit {
+        position: relative;
+        padding: clamp(1.5rem, 4vw, 2.75rem) clamp(1.25rem, 4vw, 3rem);
+        max-width: 56rem;
+      }
+
+      .exhibit h1 {
+        font-size: clamp(2.5rem, 5.5vw + 0.5rem, 4.75rem);
+        font-variation-settings: 'opsz' 96;
+        letter-spacing: -0.025em;
+        color: var(--text);
+      }
+
+      .hero-lede {
+        max-width: 33rem;
+        margin: var(--space-6) 0 0;
+        color: var(--text-muted);
+        font-size: clamp(1.1rem, 1.5vw, 1.28rem);
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4);
+        margin-top: var(--space-8);
+      }
+
+      .hero-note {
+        margin: 0;
+        color: var(--text-muted);
+        font-family: var(--font-data);
+        font-size: 0.82rem;
+      }
+
+      /* ---------- Proof ---------- */
+
+      .proof {
+        padding-block: clamp(3rem, 7vw, 5.5rem);
+        border-top: var(--rule) solid var(--rule-dark);
+      }
+
+      .proof-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+        gap: clamp(2rem, 5vw, 4rem);
+        align-items: start;
+      }
+
+      /* Specimen sheet */
+
+      .specimen {
+        position: relative;
+        height: clamp(19rem, 34vw, 26rem);
+        border: var(--rule) solid var(--rule-dark);
+        border-radius: var(--radius-lg);
+        background: var(--raised);
+        overflow: visible;
+      }
+
+      .specimen-inner {
+        position: absolute;
+        inset: 10% 12%;
+        padding: 8% 9%;
+        border: var(--rule) solid var(--rule-dark);
+        border-radius: var(--radius-md);
+        background: var(--bg);
+        overflow: hidden;
+      }
+
+      .spec-bar {
+        height: 9px;
+        border-radius: 2px;
+        background: var(--raised-2);
+      }
+
+      .spec-bar + .spec-bar {
+        margin-top: 13px;
+      }
+
+      .spec-bar-material {
+        background: oklch(from var(--text-muted) l c h / 32%);
+      }
+
+      .spec-bar-2 {
+        width: 76%;
+      }
+
+      .spec-bar-4 {
+        width: 60%;
+      }
+
+      .spec-bar-6 {
+        width: 36%;
+      }
+
+      .scan-bar {
+        position: absolute;
+        left: 6%;
+        right: 6%;
+        top: 8%;
+        height: 3px;
+        border-radius: 2px;
+        background: var(--purple-hover);
+        opacity: 0;
+      }
+
+      .scan-bar.run {
+        animation: scan 1.15s var(--ease-in-out) 1 forwards;
+      }
+
+      @keyframes scan {
+        0% {
+          transform: translateY(0);
+          opacity: 0;
+        }
+        12% {
+          opacity: 1;
+        }
+        88% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(clamp(8rem, 18vw, 14rem));
+          opacity: 0.9;
+        }
+      }
+
+      .evidence-box {
+        position: absolute;
+        left: 17%;
+        width: 44%;
+        top: 24%;
+        height: 12%;
+      }
+
+      .evidence-box-2 {
+        top: 52%;
+        left: 21%;
+        width: 40%;
+      }
+
+      .bracket {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border: 0 solid var(--gold);
+        opacity: 0;
+      }
+
+      .bracket-tl {
+        top: -7px;
+        left: -7px;
+        border-top-width: 2px;
+        border-left-width: 2px;
+      }
+
+      .bracket-tr {
+        top: -7px;
+        right: -7px;
+        border-top-width: 2px;
+        border-right-width: 2px;
+      }
+
+      .bracket-bl {
+        bottom: -7px;
+        left: -7px;
+        border-bottom-width: 2px;
+        border-left-width: 2px;
+      }
+
+      .bracket-br {
+        bottom: -7px;
+        right: -7px;
+        border-bottom-width: 2px;
+        border-right-width: 2px;
+      }
+
+      .tie-dot {
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--gold);
+        opacity: 0;
+      }
+
+      .tie-line {
+        position: absolute;
+        border-top: 2px dashed oklch(from var(--gold) l c h / 60%);
+        opacity: 0;
+      }
+
+      .tick {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        color: var(--cypress-lift);
+        opacity: 0;
+      }
+
+      .question-badge {
+        position: absolute;
+        top: 14%;
+        right: 15%;
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--cypress-lift);
+        border-radius: 50%;
+        color: var(--cypress-lift);
+        font-family: var(--font-data);
+        font-size: 1.1rem;
+        opacity: 0;
+      }
+
+      .specimen[data-step='2'] .bracket,
+      .specimen[data-step='2'] .tie-dot,
+      .specimen[data-step='2'] .tie-line {
+        opacity: 1;
+        transition: opacity var(--dur-standard) var(--ease-out);
+      }
+
+      .specimen[data-step='3'] .tick,
+      .specimen[data-step='3'] .question-badge {
+        opacity: 1;
+        transition: opacity var(--dur-standard) var(--ease-out);
+      }
+
+      .outcome-strip {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-4) 8%;
+        border-top: 3px solid var(--gold);
+        border-radius: 0 0 var(--radius-md) var(--radius-md);
+        background: var(--raised-2);
+        transform: translateY(105%);
+      }
+
+      .specimen[data-step='4'] .outcome-strip {
+        transform: translateY(0);
+        transition: transform var(--dur-deliberate) var(--ease-out);
+      }
+
+      .outcome-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--gold);
+        flex: none;
+      }
+
+      .outcome-bar {
+        height: 9px;
+        width: 52%;
+        border-radius: 2px;
+        background: oklch(from var(--gold) l c h / 40%);
+      }
+
+      /* Step rail */
+
+      .step-rail {
+        display: grid;
+        gap: var(--space-3);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .step-card {
+        width: 100%;
+        min-height: 44px;
+        padding: var(--space-4) var(--space-4);
+        border: var(--rule) solid var(--rule-dark);
+        border-left: 3px solid var(--rule-dark);
+        border-radius: var(--radius-md);
+        background: var(--raised);
+        color: var(--text);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition:
+          border-color var(--dur-fast) var(--ease-out),
+          background-color var(--dur-fast) var(--ease-out);
+      }
+
+      .step-card:hover {
+        background: var(--raised-2);
+      }
+
+      .step-card[aria-current='step'] {
+        border-left-color: var(--gold);
+        background: var(--raised-2);
+      }
+
+      .step-no {
+        display: block;
+        margin-bottom: var(--space-1);
+        color: var(--gold);
+        font-family: var(--font-data);
+        font-size: 0.8rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .step-title {
+        display: block;
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .step-copy {
+        display: block;
+        margin-top: var(--space-1);
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+
+      /* ---------- Trust (paper band) ---------- */
+
+      .trust {
+        padding-block: clamp(3.5rem, 8vw, 6.5rem);
+        color: var(--ink);
+        background: var(--paper);
+      }
+
+      .trust :focus-visible {
+        outline-color: var(--ink);
+      }
+
+      .trust-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+        gap: clamp(2rem, 5vw, 4.5rem);
+        align-items: start;
+      }
+
+      .trust h2 {
+        font-size: clamp(1.85rem, 3vw, 2.6rem);
+        font-variation-settings: 'opsz' 60;
+        letter-spacing: -0.025em;
+      }
+
+      .trust-copy {
+        max-width: 32rem;
+        margin: var(--space-4) 0 0;
+      }
+
+      .coverage {
+        margin-top: var(--space-6);
+        padding-top: var(--space-4);
+        border-top: 3px solid var(--ink);
+      }
+
+      .coverage-copy {
+        margin: 0 0 var(--space-4);
+        color: var(--muted-paper);
+      }
+
+      .parish-list {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .parish-list li {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding-block: var(--space-3);
+        border-bottom: var(--rule) solid var(--rule-paper);
+      }
+
+      .parish-name {
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 500;
+      }
+
+      .parish-state {
+        color: var(--cypress);
+        font-family: var(--font-data);
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      /* ---------- Footer ---------- */
+
+      .site-footer {
+        padding-block: var(--space-8) var(--space-12);
+        border-top: var(--rule) solid var(--rule-dark);
+      }
+
+      .site-footer .container {
+        display: grid;
+        gap: var(--space-4);
+      }
+
+      .provenance {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        font-weight: 500;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-6);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .footer-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        color: var(--text-muted);
+        font-family: var(--font-data);
+        font-size: 0.88rem;
+      }
+
+      .footer-links a:hover {
+        color: var(--gold);
+      }
+
+      /* ---------- Entrance (moment 1) ---------- */
+
+      .js .rise {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+
+      .js.ready .rise {
+        opacity: 1;
+        transform: translateY(0);
+        transition:
+          opacity var(--dur-deliberate) var(--ease-out),
+          transform var(--dur-deliberate) var(--ease-out);
+        transition-delay: var(--d, 0ms);
+      }
+
+      .js .corner {
+        opacity: 0;
+      }
+
+      .js.ready .corner {
+        opacity: 1;
+        transition: opacity var(--dur-standard) var(--ease-out) 320ms;
+      }
+
+      /* ---------- Responsive ---------- */
+
+      @media (max-width: 60rem) {
+        .proof-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .step-rail {
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(72%, 1fr);
+          gap: var(--space-4);
+          overflow-x: auto;
+          scroll-snap-type: x proximity;
+          padding: var(--space-2) var(--space-4) var(--space-4);
+          margin-inline: calc(-1 * var(--space-4));
+          scroll-padding-inline: var(--space-4);
+        }
+
+        .step-rail li {
+          scroll-snap-align: start;
+        }
+
+        .specimen {
+          height: clamp(16rem, 52vw, 21rem);
+        }
+      }
+
+      @media (max-width: 30rem) {
+        body {
+          font-size: 1rem;
+        }
+
+        .brand-name {
+          font-size: 1.05rem;
+        }
+
+        .exhibit {
+          padding-inline: 1.1rem;
+        }
+      }
+
+      @media (max-width: 22rem) {
+        .site-header .container {
+          flex-wrap: wrap;
+        }
+
+        .site-header .btn {
+          flex: 1 1 100%;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 1ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 1ms !important;
+        }
+
+        .js .rise,
+        .js .corner {
+          opacity: 1;
+          transform: none;
+        }
+
+        .scan-bar.run {
+          animation: none;
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container">
+        <a class="brand" href="/" aria-label="Public Parish home">
+          <svg class="brand-mark" viewBox="0 0 64 64" role="img" aria-label="Public Parish mark">
+            <path
+              d="M19 54V10h18c10 0 17 6.2 17 15.5S47 41 37 41H19"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="8"
+            />
+          </svg>
+          <span class="brand-name">Public Parish</span>
+        </a>
+        <a class="btn btn-small" href="https://github.com/LaykenV/public-parish">
+          Follow the build
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="container">
+          <div class="exhibit corners">
+            <span class="corner corner-tl" aria-hidden="true"></span>
+            <span class="corner corner-tr" aria-hidden="true"></span>
+            <span class="corner corner-bl" aria-hidden="true"></span>
+            <span class="corner corner-br" aria-hidden="true"></span>
+            <h1 id="hero-title" class="rise" style="--d: 0ms">
+              See what local government may&nbsp;change.
+            </h1>
+            <p class="hero-lede rise" style="--d: 130ms">
+              Public Parish connects Louisiana decisions to the official record, public deadlines,
+              and what happens next.
+            </p>
+            <div class="hero-actions rise" style="--d: 260ms">
+              <a class="btn" href="https://github.com/LaykenV/public-parish">Follow the build</a>
+              <p class="hero-note">Lafayette · Rapides · East Baton Rouge first</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="proof" aria-label="How evidence becomes an update">
+        <div class="container proof-grid">
+          <div class="specimen corners" data-step="1" aria-hidden="true">
+            <span class="corner corner-tl" aria-hidden="true"></span>
+            <span class="corner corner-tr" aria-hidden="true"></span>
+            <span class="corner corner-bl" aria-hidden="true"></span>
+            <span class="corner corner-br" aria-hidden="true"></span>
+            <div class="specimen-inner">
+              <div class="spec-bar spec-bar-1"></div>
+              <div class="spec-bar spec-bar-2 spec-bar-material"></div>
+              <div class="spec-bar spec-bar-3"></div>
+              <div class="spec-bar spec-bar-4 spec-bar-material"></div>
+              <div class="spec-bar spec-bar-5"></div>
+              <div class="spec-bar spec-bar-6"></div>
+              <div class="scan-bar" id="scan-bar"></div>
+              <div class="outcome-strip">
+                <span class="outcome-dot"></span>
+                <span class="outcome-bar"></span>
+              </div>
+            </div>
+            <div class="evidence-box">
+              <span class="bracket bracket-tl"></span>
+              <span class="bracket bracket-tr"></span>
+              <span class="bracket bracket-bl"></span>
+              <span class="bracket bracket-br"></span>
+            </div>
+            <div class="evidence-box evidence-box-2">
+              <span class="bracket bracket-tl"></span>
+              <span class="bracket bracket-tr"></span>
+              <span class="bracket bracket-bl"></span>
+              <span class="bracket bracket-br"></span>
+            </div>
+            <span class="tie-dot" style="top: 30%; right: 10%"></span>
+            <span class="tie-line" style="top: 33%; right: 11%; width: 8%"></span>
+            <span class="tie-dot" style="top: 58%; right: 10%"></span>
+            <span class="tie-line" style="top: 61%; right: 11%; width: 8%"></span>
+            <svg class="tick" style="left: 8%; top: 18%" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3 11l5 5 9-12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <svg class="tick" style="left: 8%; top: 46%" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3 11l5 5 9-12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <svg class="tick" style="left: 8%; top: 74%" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M3 11l5 5 9-12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="question-badge">?</span>
+          </div>
+
+          <ol class="step-rail" role="group" aria-label="Evidence sequence, four steps">
+            <li>
+              <button class="step-card" type="button" data-step-btn="1" aria-current="step">
+                <span class="step-no" aria-hidden="true">1</span>
+                <span class="step-title">Find the official record</span>
+                <span class="step-copy">Public Parish watches validated local-government sources.</span>
+              </button>
+            </li>
+            <li>
+              <button class="step-card" type="button" data-step-btn="2">
+                <span class="step-no" aria-hidden="true">2</span>
+                <span class="step-title">Attach the evidence</span>
+                <span class="step-copy">Dates, amounts, deadlines, and outcomes stay tied to exact excerpts.</span>
+              </button>
+            </li>
+            <li>
+              <button class="step-card" type="button" data-step-btn="3">
+                <span class="step-no" aria-hidden="true">3</span>
+                <span class="step-title">Make it understandable</span>
+                <span class="step-copy">Residents see what may change and ask questions from the same evidence.</span>
+              </button>
+            </li>
+            <li>
+              <button class="step-card" type="button" data-step-btn="4">
+                <span class="step-no" aria-hidden="true">4</span>
+                <span class="step-title">Follow what happens</span>
+                <span class="step-copy">Material changes and final outcomes return to the issue and its followers.</span>
+              </button>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="trust" aria-labelledby="trust-title">
+        <div class="container trust-grid">
+          <div>
+            <h2 id="trust-title">See the source behind every claim.</h2>
+            <p class="trust-copy">
+              Public Parish publishes from validated official records. Dates, amounts, deadlines,
+              and outcomes link to the exact source. If evidence is missing, the page says so.
+            </p>
+          </div>
+          <div class="coverage">
+            <p class="coverage-copy">
+              Building first for Lafayette Parish, Rapides Parish, and East Baton Rouge Parish. A
+              place appears as supported only after its sources pass the same evidence checks.
+            </p>
+            <ul class="parish-list">
+              <li>
+                <span class="parish-name">Lafayette Parish</span>
+                <span class="parish-state">Planned first</span>
+              </li>
+              <li>
+                <span class="parish-name">Rapides Parish</span>
+                <span class="parish-state">Planned first</span>
+              </li>
+              <li>
+                <span class="parish-name">East Baton Rouge Parish</span>
+                <span class="parish-state">Planned first</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p class="provenance">Free, open source, and built for the Convex All Gas Hackathon.</p>
+        <ul class="footer-links">
+          <li><a href="https://github.com/LaykenV/public-parish">Repository</a></li>
+          <li>
+            <a href="https://github.com/LaykenV/public-parish/blob/main/hackathon.md">Build log</a>
+          </li>
+        </ul>
+      </div>
+    </footer>
+
+    <script>
+      document.documentElement.classList.add('js')
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      // Hero entrance (moment 1)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.documentElement.classList.add('ready')
+        })
+      })
+
+      // Specimen stages (moment 2)
+      const specimen = document.querySelector('.specimen')
+      const buttons = Array.from(document.querySelectorAll('[data-step-btn]'))
+      const proof = document.querySelector('.proof')
+      let step = 1
+      let timer = null
+      let paused = false
+
+      function restartScan() {
+        const bar = document.getElementById('scan-bar')
+        if (!bar) return
+        bar.classList.remove('run')
+        void bar.offsetWidth
+        bar.classList.add('run')
+      }
+
+      function setStep(n) {
+        step = n
+        if (specimen) specimen.setAttribute('data-step', String(n))
+        buttons.forEach((b, i) => {
+          if (i + 1 === n) {
+            b.setAttribute('aria-current', 'step')
+          } else {
+            b.removeAttribute('aria-current')
+          }
+        })
+        if (n === 1 && !reduced) restartScan()
+      }
+
+      function tick() {
+        if (paused || document.hidden) return
+        const next = (step % 4) + 1
+        setStep(next)
+        if (next === 4) stopAuto()
+      }
+
+      function stopAuto() {
+        if (timer) {
+          clearInterval(timer)
+          timer = null
+        }
+      }
+
+      function startAuto() {
+        if (reduced) return
+        stopAuto()
+        timer = setInterval(tick, 3800)
+      }
+
+      buttons.forEach((b) => {
+        b.addEventListener('click', () => {
+          setStep(Number(b.getAttribute('data-step-btn')))
+          stopAuto()
+        })
+      })
+
+      if (proof) {
+        proof.addEventListener('mouseenter', () => { paused = true })
+        proof.addEventListener('mouseleave', () => { paused = false })
+        proof.addEventListener('focusin', () => { paused = true })
+        proof.addEventListener('focusout', () => { paused = false })
+      }
+
+      setStep(1)
+      startAuto()
+    </script>
+  </body>
+</html>
