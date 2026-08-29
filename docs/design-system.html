@@ -3,26 +3,43 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Public Parish design system foundation</title>
+    <title>Public Parish design system</title>
     <meta
       name="description"
-      content="Version-zero brand, interaction, mobile, motion, and accessibility rules for Public Parish."
+      content="Brand, component, mobile, motion, and accessibility rules for Public Parish."
     />
     <style>
-      /* Hallmark · internal design reference · not a landing-page design */
+      /* Internal design reference. Coss UI supplies the component and token model. */
       :root {
-        --color-paper: oklch(96.42% 0.0152 90.23);
-        --color-surface: oklch(99.14% 0.0098 87.47);
-        --color-ink: oklch(20.63% 0.0335 309.45);
-        --color-purple: oklch(34.58% 0.136 306.78);
-        --color-purple-strong: oklch(26.9% 0.1098 306.35);
-        --color-gold: oklch(74.4% 0.1454 87.37);
-        --color-cypress: oklch(44.91% 0.073 170.33);
-        --color-muted: oklch(49.32% 0.0199 316.88);
-        --color-rule: oklch(85.74% 0.0239 82.11);
-        --color-focus: var(--color-purple);
-        --font-body: ui-sans-serif, system-ui, sans-serif;
-        --font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        --background: #fafaf9;
+        --card: #ffffff;
+        --foreground: #171717;
+        --primary: #171717;
+        --primary-foreground: #fafafa;
+        --info: #315bea;
+        --info-foreground: #2446bd;
+        --success: #10b981;
+        --success-foreground: #047857;
+        --warning: #f59e0b;
+        --warning-foreground: #a16207;
+        --muted: #f5f5f4;
+        --muted-foreground: #686864;
+        --border: rgb(0 0 0 / 9%);
+        --ring: #8a8a86;
+        --color-paper: var(--background);
+        --color-surface: var(--card);
+        --color-ink: var(--foreground);
+        --color-purple: var(--primary);
+        --color-purple-strong: #0a0a0a;
+        --color-gold: var(--info);
+        --color-cypress: var(--success-foreground);
+        --color-muted: var(--muted-foreground);
+        --color-rule: var(--border);
+        --color-focus: var(--ring);
+        --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+        --font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
+        --font-mono:
+          'Geist Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
         --space-1: 0.25rem;
         --space-2: 0.5rem;
         --space-3: 0.75rem;
@@ -32,9 +49,9 @@
         --space-12: 3rem;
         --space-16: 4rem;
         --space-24: 6rem;
-        --radius-sm: 0.25rem;
-        --radius-md: 0.625rem;
-        --radius-lg: 1.125rem;
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.625rem;
         --rule: 1px;
         --dur-instant: 100ms;
         --dur-fast: 160ms;
@@ -108,6 +125,7 @@
       h2,
       h3 {
         margin: 0;
+        font-family: var(--font-heading);
         line-height: 1.12;
         overflow-wrap: anywhere;
       }
@@ -210,8 +228,8 @@
         padding: var(--space-6);
         border: var(--rule) solid var(--color-rule);
         border-radius: var(--radius-md);
-        color: var(--color-surface);
-        background: var(--color-ink);
+        color: var(--primary-foreground);
+        background: var(--primary);
       }
 
       table {
@@ -287,23 +305,24 @@
         class="site-mark"
         viewBox="0 0 64 64"
         role="img"
-        aria-label="Public Parish placeholder mark"
+        aria-label="Public Parish mark"
       >
+        <rect x="1" y="1" width="62" height="62" rx="15" fill="#171717" />
         <path
-          d="M18 54V10H34C44.5 10 51 15.9 51 25C51 34.1 44.5 40 34 40H18M18 14H33.5C41.3 14 46 18 46 25C46 32 41.3 36 33.5 36H18"
+          d="M13 48V17h6.5C26 17 30 20.4 30 26s-4 9-10.5 9H13M35 48V17h6.5C48 17 52 20.4 52 26s-4 9-10.5 9H35"
           fill="none"
-          stroke="currentColor"
+          stroke="#fff"
           stroke-width="6"
           stroke-linecap="round"
           stroke-linejoin="round"
         />
       </svg>
       <div>
-        <h1>Public Parish design system foundation</h1>
+        <h1>Public Parish design system</h1>
         <p class="summary">
-          Version 0.1. This file locks brand foundations and interaction
-          contracts. It does not lock the final typography, component styling,
-          or application layout.
+          Version 0.2. This file records the selected Coss UI component model,
+          semantic colors, typography, logo, interaction rules, and product
+          contracts.
         </p>
       </div>
     </header>
@@ -329,13 +348,12 @@
             </ul>
           </article>
           <article class="panel">
-            <h3>This file does not control yet</h3>
+            <h3>Still decided with real product data</h3>
             <ul>
-              <li>Final display and body typefaces.</li>
-              <li>Final button, card, header, or navigation appearance.</li>
-              <li>The product's final spacing character and density.</li>
-              <li>One visual signature for the marketing page or app.</li>
-              <li>A component library or animation dependency.</li>
+              <li>Decision-card density and evidence-receipt composition.</li>
+              <li>Issue, meeting, search, and account layouts.</li>
+              <li>Navigation destinations that do not work yet.</li>
+              <li>Live status treatments that need real failure states.</li>
             </ul>
           </article>
         </div>
@@ -381,6 +399,11 @@
               branding, campaign language, government seals, and decorative
               civic clip art.
             </p>
+            <p>
+              The prelaunch Louisiana relief is a coverage indicator. Keep it on
+              the hero's page plane with labeled launch pins. Do not frame it as
+              a card or add decorative map furniture.
+            </p>
           </article>
         </div>
       </section>
@@ -388,10 +411,10 @@
       <section aria-labelledby="color-title">
         <h2 id="color-title">Color system</h2>
         <p class="section-intro">
-          Purple carries identity and primary actions. Gold marks emphasis and
-          motion but is not body text on the paper background. Cypress green is
-          reserved for evidence, source health, and supporting state. The three
-          Louisiana colors never receive equal visual weight.
+          Public Parish uses the Coss UI semantic token model. Neutral ink owns
+          identity and primary actions. River blue marks information and focus.
+          Green and amber appear only for factual success, source health, and
+          warning states. Color never carries a status by itself.
         </p>
         <div class="swatches">
           <article class="swatch">
@@ -400,9 +423,8 @@
               style="--swatch: var(--color-paper)"
             ></div>
             <div class="swatch-copy">
-              <h3>Paper</h3>
-              <code>#F7F3E8</code><br />
-              <code>oklch(96.42% 0.0152 90.23)</code>
+              <h3>Background</h3>
+              <code>#FAFAF9</code>
             </div>
           </article>
           <article class="swatch">
@@ -411,47 +433,39 @@
               style="--swatch: var(--color-surface)"
             ></div>
             <div class="swatch-copy">
-              <h3>Surface</h3>
-              <code>#FFFCF5</code><br />
-              <code>oklch(99.14% 0.0098 87.47)</code>
+              <h3>Card</h3>
+              <code>#FFFFFF</code>
             </div>
           </article>
           <article class="swatch">
             <div class="swatch-color" style="--swatch: var(--color-ink)"></div>
             <div class="swatch-copy">
-              <h3>Ink</h3>
-              <code>#1C1323</code><br />
-              <code>oklch(20.63% 0.0335 309.45)</code>
+              <h3>Foreground</h3>
+              <code>#171717</code>
+            </div>
+          </article>
+          <article class="swatch">
+            <div class="swatch-color" style="--swatch: var(--info)"></div>
+            <div class="swatch-copy">
+              <h3>Information</h3>
+              <code>#315BEA</code>
+            </div>
+          </article>
+          <article class="swatch">
+            <div class="swatch-color" style="--swatch: var(--success)"></div>
+            <div class="swatch-copy">
+              <h3>Success</h3>
+              <code>#10B981</code>
             </div>
           </article>
           <article class="swatch">
             <div
               class="swatch-color"
-              style="--swatch: var(--color-purple)"
+              style="--swatch: var(--muted-foreground)"
             ></div>
             <div class="swatch-copy">
-              <h3>Public purple</h3>
-              <code>#4C1D6F</code><br />
-              <code>oklch(34.58% 0.1360 306.78)</code>
-            </div>
-          </article>
-          <article class="swatch">
-            <div class="swatch-color" style="--swatch: var(--color-gold)"></div>
-            <div class="swatch-copy">
-              <h3>Brass gold</h3>
-              <code>#D3A51E</code><br />
-              <code>oklch(74.40% 0.1454 87.37)</code>
-            </div>
-          </article>
-          <article class="swatch">
-            <div
-              class="swatch-color"
-              style="--swatch: var(--color-cypress)"
-            ></div>
-            <div class="swatch-copy">
-              <h3>Cypress</h3>
-              <code>#21624F</code><br />
-              <code>oklch(44.91% 0.0730 170.33)</code>
+              <h3>Muted foreground</h3>
+              <code>#686864</code>
             </div>
           </article>
         </div>
@@ -465,42 +479,48 @@
           </thead>
           <tbody>
             <tr>
-              <td>Ink on paper</td>
-              <td>16.23:1</td>
+              <td>Foreground on background</td>
+              <td>17.17:1</td>
               <td>Default body copy.</td>
             </tr>
             <tr>
-              <td>Purple on paper</td>
-              <td>11.06:1</td>
-              <td>Primary links, actions, and identity.</td>
+              <td>Information on background</td>
+              <td>5.27:1</td>
+              <td>Information text, markers, and focus support.</td>
             </tr>
             <tr>
-              <td>Cypress on paper</td>
-              <td>6.48:1</td>
+              <td>Success foreground on background</td>
+              <td>5.25:1</td>
               <td>Evidence and source-health text.</td>
             </tr>
             <tr>
-              <td>Muted ink on paper</td>
-              <td>5.62:1</td>
+              <td>Muted foreground on background</td>
+              <td>5.36:1</td>
               <td>Secondary text at normal sizes.</td>
             </tr>
             <tr>
-              <td>Ink on gold</td>
-              <td>7.86:1</td>
-              <td>Short highlighted labels or controls only.</td>
+              <td>Warning foreground on background</td>
+              <td>4.71:1</td>
+              <td>Normal-size warning text with a written status.</td>
             </tr>
           </tbody>
         </table>
         <pre><code>:root {
-  --color-paper: oklch(96.42% 0.0152 90.23);
-  --color-surface: oklch(99.14% 0.0098 87.47);
-  --color-ink: oklch(20.63% 0.0335 309.45);
-  --color-purple: oklch(34.58% 0.1360 306.78);
-  --color-purple-strong: oklch(26.90% 0.1098 306.35);
-  --color-gold: oklch(74.40% 0.1454 87.37);
-  --color-cypress: oklch(44.91% 0.0730 170.33);
-  --color-muted: oklch(49.32% 0.0199 316.88);
-  --color-rule: oklch(85.74% 0.0239 82.11);
+  --background: #fafaf9;
+  --card: #ffffff;
+  --foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --info: #315bea;
+  --info-foreground: #2446bd;
+  --success: #10b981;
+  --success-foreground: #047857;
+  --warning: #f59e0b;
+  --warning-foreground: #a16207;
+  --muted: #f5f5f4;
+  --muted-foreground: #686864;
+  --border: rgb(0 0 0 / 9%);
+  --ring: #8a8a86;
 }</code></pre>
       </section>
 
@@ -512,20 +532,22 @@
               class="logo-specimen"
               viewBox="0 0 64 64"
               role="img"
-              aria-label="Basic purple P placeholder"
+              aria-label="Public Parish double P mark"
             >
+              <rect x="1" y="1" width="62" height="62" rx="15" fill="#171717" />
               <path
-                d="M18 54V10H34C44.5 10 51 15.9 51 25C51 34.1 44.5 40 34 40H18M18 14H33.5C41.3 14 46 18 46 25C46 32 41.3 36 33.5 36H18"
+                d="M13 48V17h6.5C26 17 30 20.4 30 26s-4 9-10.5 9H13M35 48V17h6.5C48 17 52 20.4 52 26s-4 9-10.5 9H35"
                 fill="none"
-                stroke="currentColor"
+                stroke="#fff"
                 stroke-width="6"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
             </svg>
             <p>
-              The current mark is a temporary, transparent SVG. It is a basic P
-              with no wordmark, tile, seal, mascot, or decorative background.
+              The selected mark is a path-based double P inside a neutral
+              rounded square. It reads at favicon size, avoids government-seal
+              cues, and keeps the product name as live text.
             </p>
           </article>
           <article class="panel">
@@ -533,32 +555,41 @@
             <ul>
               <li>Keep the mark legible at 16, 32, 64, and 180 pixels.</li>
               <li>Use the symbol alone for favicons and compact app chrome.</li>
-              <li>Use the name as live text beside the mark when needed.</li>
+              <li>
+                The marketing header uses the live-text name without the mark.
+              </li>
+              <li>
+                Use the name as live text beside the mark in compact app
+                contexts.
+              </li>
               <li>Do not bake the name into a raster logo image.</li>
-              <li>Preserve transparent space outside the symbol.</li>
+              <li>Do not recolor individual letterforms.</li>
               <li>Do not imply government ownership or endorsement.</li>
             </ul>
           </article>
         </div>
         <p class="status">
-          Logo exploration is paused. Replace the placeholder only after the
-          landing-page experiments reveal a stronger visual direction.
+          The logo is selected for the prelaunch system. Revisit it only when a
+          real legibility or ownership problem appears.
         </p>
       </section>
 
       <section aria-labelledby="type-title">
         <h2 id="type-title">Typography</h2>
         <p class="section-intro">
-          Typography remains open during the landing-page experiments. Each
-          agent must make a deliberate choice, name the role of every face, and
-          use fonts that the open-source project can legally ship.
+          Inter handles body text, headings, controls, and navigation. Geist
+          Mono handles dates, source labels, step numbers, and other compact
+          data. These roles match Coss UI's font-variable contract.
         </p>
         <div class="grid">
           <article class="panel">
-            <h3>Required</h3>
+            <h3>Selected roles</h3>
             <ul>
-              <li>Readable body text at 16 CSS pixels or larger.</li>
-              <li>Clear distinction between display, body, and data roles.</li>
+              <li>Inter at 16 CSS pixels or larger for body text.</li>
+              <li>Inter at 600 or 700 for headings and primary labels.</li>
+              <li>
+                Geist Mono for dates, steps, receipts, and source metadata.
+              </li>
               <li>Upright emphasis. Do not use italic contrast text.</li>
               <li>
                 Tabular numerals where dates, money, or vote counts need it.
@@ -568,12 +599,16 @@
             </ul>
           </article>
           <article class="panel">
-            <h3>Still open</h3>
+            <h3>Type behavior</h3>
             <ul>
-              <li>Serif, sans-serif, slab, or mixed display direction.</li>
-              <li>One family or a deliberate pairing.</li>
-              <li>Final weights, widths, and letter spacing.</li>
-              <li>The final responsive type scale.</li>
+              <li>Headings use tight spacing, not decorative type effects.</li>
+              <li>Controls keep Coss UI's compact, medium-weight treatment.</li>
+              <li>
+                Data labels remain short and never replace plain language.
+              </li>
+              <li>
+                Responsive sizes use fluid clamps and must work at 320 pixels.
+              </li>
             </ul>
           </article>
         </div>
@@ -674,8 +709,10 @@
             Animate transform and opacity. Do not animate layout properties.
           </li>
           <li>Focus rings appear immediately and never animate.</li>
+          <li>No bounce, overshoot, scroll-jacking, or marker pulses.</li>
           <li>
-            No bounce, overshoot, scroll-jacking, or endless ambient loops.
+            The Louisiana relief may use low-rate lighting while visible.
+            Pointer movement across the hero controls a restrained tilt.
           </li>
           <li>Motion cannot hide source status or delay access to content.</li>
           <li>
@@ -688,8 +725,9 @@
       <section aria-labelledby="components-title">
         <h2 id="components-title">Reusable component contracts</h2>
         <p class="section-intro">
-          These contracts describe behavior. Their visual treatment remains open
-          until the landing-page experiments establish a direction.
+          Coss UI supplies the Base UI behavior, Tailwind v4 token usage, and
+          default visual treatment for common controls. Public Parish owns the
+          civic content, evidence states, and page composition.
         </p>
         <table>
           <thead>
@@ -706,7 +744,7 @@
                 Default, hover, focus, active, disabled, loading, error, and
                 success states. Labels name the resulting action.
               </td>
-              <td>Open</td>
+              <td>Coss Button selected</td>
             </tr>
             <tr>
               <td>Decision card</td>
@@ -739,15 +777,16 @@
                 Uses text and an icon or shape. Color never carries meaning
                 alone. Labels stay factual and explain limited states.
               </td>
-              <td>No default pill</td>
+              <td>Coss Badge, always paired with status text</td>
             </tr>
             <tr>
               <td>Header</td>
               <td>
-                Prelaunch shows the mark, live-text name, and Follow the build.
-                Future navigation appears only when destinations work.
+                Prelaunch shows the live-text name and Follow the build. The
+                mark stays out of the marketing header. Future navigation
+                appears only when destinations work.
               </td>
-              <td>Open</td>
+              <td>Coss border, spacing, and button treatment selected</td>
             </tr>
           </tbody>
         </table>
@@ -783,7 +822,7 @@
                 frames.
               </li>
               <li>A repeated hero, three-card grid, CTA, footer template.</li>
-              <li>Equal-weight purple, gold, and green blocks.</li>
+              <li>Equal-weight blue, green, and amber blocks.</li>
               <li>Red-versus-blue political framing.</li>
             </ul>
           </article>
@@ -809,23 +848,24 @@
         <h2 id="governance-title">How this foundation evolves</h2>
         <ol>
           <li>
-            Build several marketing-page experiments from the shared brief.
+            Start with Coss UI primitives and semantic tokens for common
+            controls.
           </li>
           <li>
-            Choose useful typography, spacing, component, and motion decisions.
+            Compose civic product patterns from real source and decision data.
           </li>
-          <li>Record only the selected decisions here.</li>
+          <li>Record reusable decisions here after runtime verification.</li>
           <li>
-            Build production React components during the resident UI slices.
+            Keep page-specific WebGPU and motion work outside primitive
+            controls.
           </li>
           <li>
             Verify each component on real mobile widths and real civic data.
           </li>
         </ol>
         <p>
-          A design experiment cannot change this file merely because its own
-          page needs an exception. Update the foundation only after the owner
-          approves a reusable decision.
+          Page-specific code may narrow these rules. It cannot weaken the
+          product evidence, accessibility, mobile, or status contracts.
         </p>
       </section>
     </main>
@@ -841,28 +881,31 @@
 
     <script type="application/json" id="public-parish-design-foundation">
       {
-        "version": "0.1",
-        "status": "foundation",
+        "version": "0.2",
+        "status": "selected prelaunch system",
         "sourceOfTruth": "docs/design-system.html",
         "colors": {
-          "paper": "oklch(96.42% 0.0152 90.23)",
-          "surface": "oklch(99.14% 0.0098 87.47)",
-          "ink": "oklch(20.63% 0.0335 309.45)",
-          "purple": "oklch(34.58% 0.1360 306.78)",
-          "purpleStrong": "oklch(26.90% 0.1098 306.35)",
-          "gold": "oklch(74.40% 0.1454 87.37)",
-          "cypress": "oklch(44.91% 0.0730 170.33)",
-          "muted": "oklch(49.32% 0.0199 316.88)",
-          "rule": "oklch(85.74% 0.0239 82.11)"
+          "background": "#FAFAF9",
+          "card": "#FFFFFF",
+          "foreground": "#171717",
+          "info": "#315BEA",
+          "success": "#10B981",
+          "warning": "#F59E0B",
+          "mutedForeground": "#686864",
+          "border": "rgb(0 0 0 / 9%)"
         },
         "logo": {
-          "status": "placeholder",
+          "status": "selected",
           "path": "public/brand-mark.svg",
-          "background": "transparent",
+          "background": "rounded neutral tile",
+          "headerUsage": "live text only",
           "wordmarkInAsset": false
         },
         "typography": {
-          "status": "open",
+          "status": "selected",
+          "sans": "Inter",
+          "heading": "Inter",
+          "mono": "Geist Mono",
           "italicContrast": false,
           "minimumBodyPx": 16
         },
@@ -873,7 +916,8 @@
           "properties": ["transform", "opacity"],
           "reducedMotionRequired": true
         },
-        "componentVisuals": "open until experiment selection"
+        "componentLibrary": "Coss UI registry components on Base UI",
+        "componentVisuals": "Coss semantic tokens with Public Parish composition"
       }
     </script>
   </body>

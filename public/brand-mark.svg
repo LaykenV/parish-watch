@@ -4,12 +4,13 @@
   role="img"
   aria-label="Public Parish"
 >
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="#171717" />
   <path
-    d="M19 54V10h18c10 0 17 6.2 17 15.5S47 41 37 41H19"
+    d="M13 48V17h6.5C26 17 30 20.4 30 26s-4 9-10.5 9H13M35 48V17h6.5C48 17 52 20.4 52 26s-4 9-10.5 9H35"
     fill="none"
-    stroke="#4C1D6F"
+    stroke="#fff"
     stroke-linecap="round"
     stroke-linejoin="round"
-    stroke-width="8"
+    stroke-width="6"
   />
 </svg>

@@ -26,7 +26,7 @@ export const Route = createRootRoute({
       },
       {
         name: 'theme-color',
-        content: '#F7F3E8',
+        content: '#FAFAF9',
       },
     ],
     links: [
@@ -46,7 +46,7 @@ export const Route = createRootRoute({
       },
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap',
+        href: 'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap',
       },
       {
         rel: 'stylesheet',
