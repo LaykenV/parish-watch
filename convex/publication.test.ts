@@ -115,7 +115,7 @@ async function seedValidatedCandidate(
       registryId,
       trigger: 'manual_extraction',
       state: 'succeeded',
-      processorVersion: 'v1.4',
+      processorVersion: 'v1.7',
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
@@ -128,9 +128,9 @@ async function seedValidatedCandidate(
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
-      promptVersion: 'v1.2',
+      promptVersion: 'v1.4',
       schemaVersion: 'v1',
-      processorVersion: 'v1.4',
+      processorVersion: 'v1.7',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
       route: 'ai_gateway',
@@ -156,7 +156,7 @@ async function seedValidatedCandidate(
       amounts: [],
       publicActions: [],
       state: 'deterministically_validated',
-      promptVersion: 'v1.2',
+      promptVersion: 'v1.4',
       schemaVersion: 'v1',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
@@ -295,7 +295,7 @@ async function seedReextractedCandidate(
       registryId: original.registryId,
       trigger: 'manual_extraction',
       state: 'succeeded',
-      processorVersion: 'v1.4',
+      processorVersion: 'v1.7',
       snapshotId: original.snapshotId,
       sourceKind: original.sourceKind,
       targetRecordId: original.targetRecordId,
@@ -310,7 +310,7 @@ async function seedReextractedCandidate(
       targetRecordId: original.targetRecordId,
       promptVersion: original.promptVersion,
       schemaVersion: original.schemaVersion,
-      processorVersion: 'v1.4',
+      processorVersion: 'v1.7',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
       route: 'ai_gateway',
@@ -631,7 +631,13 @@ test('a later withheld review does not replace the last published version', asyn
       .withIndex('by_run', (q) => q.eq('runId', secondRun.runId))
       .unique()
     const record = await ctx.db.get(firstVersion.recordId)
-    return { firstVersion, secondVersion, record }
+    const changes = await ctx.db
+      .query('materialChanges')
+      .withIndex('by_record_and_created_at', (q) =>
+        q.eq('recordId', firstVersion.recordId),
+      )
+      .collect()
+    return { firstVersion, secondVersion, record, changes }
   })
   expect(result.firstVersion).toMatchObject({
     runId: firstRun.runId,
@@ -644,6 +650,43 @@ test('a later withheld review does not replace the last published version', asyn
   })
   expect(result.record?.currentPublishedVersionId).toBe(result.firstVersion._id)
   expect(result.record?.currentMode).toBe('full')
+  expect(result.changes).toHaveLength(0)
+})
+
+test('a later accepted version records a comparison even when the public payload is unchanged', async () => {
+  const t = initTest()
+  const first = await seedValidatedCandidate(t, '-same-public-payload')
+  const second = await seedReextractedCandidate(t, first)
+  stubReviewFetch([
+    JSON.stringify(reviewResponse(first.factIds)),
+    JSON.stringify(reviewResponse(second.factIds)),
+  ])
+  await startAndDrain(t, first.candidateId)
+  await startAndDrain(t, second.candidateId)
+
+  const result = await t.run(async (ctx) => {
+    const versions = await ctx.db
+      .query('publicationVersions')
+      .withIndex('by_candidate', (q) => q.eq('candidateId', second.candidateId))
+      .collect()
+    const secondVersion = versions[0]
+    const changes = await ctx.db
+      .query('materialChanges')
+      .withIndex('by_current_publication', (q) =>
+        q.eq('currentPublicationVersionId', secondVersion._id),
+      )
+      .collect()
+    return { secondVersion, changes }
+  })
+  expect(result.secondVersion).toMatchObject({ version: 2, mode: 'full' })
+  expect(result.changes).toEqual([
+    expect.objectContaining({
+      currentPublicationVersionId: result.secondVersion._id,
+      classification: 'no_public_change',
+      material: false,
+      fieldChanges: [],
+    }),
+  ])
 })
 
 test('a reviewer verdict that hides its own disagreement fails without a publication version', async () => {
@@ -734,9 +777,9 @@ test('replaying a succeeded extraction repairs a missing publication run', async
     snapshotId: seeded.snapshotId,
     sourceKind: 'agenda',
     targetRecordId: 'CO-029-2026',
-    promptVersion: 'v1.2',
+    promptVersion: 'v1.4',
     schemaVersion: 'v1',
-    processorVersion: 'v1.4',
+    processorVersion: 'v1.7',
   })
   await t.run(async (ctx) => {
     await ctx.db.patch(seeded.runId, { idempotencyKey })
@@ -748,7 +791,7 @@ test('replaying a succeeded extraction repairs a missing publication run', async
       attempt: 1,
       inputSnapshotId: seeded.snapshotId,
       outputExtractionId: seeded.extractionId,
-      promptVersion: 'v1.2',
+      promptVersion: 'v1.4',
       schemaVersion: 'v1',
     })
     await ctx.db.insert('pipelineStages', {

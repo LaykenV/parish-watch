@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0 and evidence-engine Slices 1 through 3 are deployed; Slice 4 is next
+Status: Phase 0 and evidence-engine Slices 1 through 3 are deployed; Slice 4 is implemented and proven in personal development
 
 ## Architecture Goal
 
@@ -42,12 +42,29 @@ or withheld immutable version. Withheld versions stay in history but never
 replace the last full or limited current pointer. The projection tables exist,
 but Slice 5 still owns the resident-facing query and interface.
 
-The extraction and publication ledgers remain internal. No resident-facing
-decision query, issue interface, or chat path exists yet. PR #12 merged as
+Slice 4 adds source-snapshot comparisons, publication material changes, and the
+`buildIssueV1` durable workflow. Every accepted publication after the first is
+compared with the previous accepted version. Formatting-only or lost time
+precision does not create a material change. Atomic decisions keep their stable
+record keys while issue versions point to the exact publication versions that
+the linker saw.
+
+The issue linker runs on `MODEL_STRONG` and must cite a concrete shared signal
+across every input decision. `MODEL_FAST` independently reviews each proposed
+fact from cited excerpts. Code then removes unsupported factors, computes the
+fixed importance score, and writes a full, limited, or withheld immutable issue
+version. A withheld version remains in history and cannot replace the current
+full or limited pointer.
+
+The extraction, publication, and issue ledgers remain internal. No
+resident-facing decision query, issue interface, or chat path exists yet. PR #12 merged as
 `8df651c`; production workflow `33261235916` deployed the matching backend and
 frontend, applied the registry seed, and passed smoke. The real Terra
 extraction, Luna review, and idempotent replay ran only in the personal
-development deployment. No production model workflow has run.
+development deployment. Slice 4 development issue
+`n57071y9n25rrs09yaanb1hz918dd1fs` links two real Lafayette decisions and
+publishes a reviewed score of 5. No Slice 4 code or production model workflow
+has reached production.
 
 ## System Boundaries
 
@@ -114,6 +131,13 @@ verifies the merge commit, runs `npm run deploy`, applies the idempotent registr
 seed, and runs the production smoke. The static-hosting deploy builds with the
 production Convex URL, deploys the backend, and uploads the matching static
 assets. Never upload a previously built `dist/` directory to production.
+
+The Slice 4 working tree changes the extraction processor from v1.4 to v1.7 and
+the extraction prompt from v1.2 to v1.4. Deployment alone makes no model calls.
+The next extraction request for an existing snapshot and record will not reuse
+its Slice 3 run, so a bulk production rerun would re-extract the corpus on
+`MODEL_STRONG`. Estimate that spend and get approval before a bulk rerun. Name
+this consequence in the Slice 4 production merge question.
 
 `npm run hosting:smoke:dev` remains available for a change that needs the real
 development HTTP router, caching, SPA fallback, or build-time URL. It is not a
@@ -470,7 +494,7 @@ Indexes: idempotency key; state plus retry time; run plus stage.
 
 #### `aiCalls`
 
-Fields: run and stage, optional extraction or review, route, model role and ID,
+Fields: run and stage, optional extraction, review, or issue build, route, model role and ID,
 prompt and schema versions, attempt, status, HTTP evidence, latency, request ID,
 token usage, estimated cost, retry evidence, error class, and created time.
 Indexes: run plus created time; extraction; review.
@@ -507,6 +531,16 @@ official URL, exact excerpt, PDF page or section, normalized offsets, and
 retrieval time.
 Indexes: publication version plus field path; source snapshot.
 
+#### `sourceSnapshotChanges` and `materialChanges`
+
+Source changes bind the previous and current immutable snapshots and distinguish
+raw-only changes, normalized changes, hash-basis migrations, and unusable
+predecessors. Material changes compare consecutive accepted publication
+versions. They store a bounded list of changed field paths and old and new JSON
+values, plus a deterministic classification such as decided, postponed,
+amended, amount changed, date changed, information limited, or information
+expanded. Withheld publication versions do not create material changes.
+
 ### Government Records
 
 #### `meetings`
@@ -517,30 +551,43 @@ Indexes: body plus scheduled time; publication state plus scheduled time.
 
 #### `decisionRecords`
 
-Slice 3 fields: stable record key, registry, government body, source record ID,
-current published version, current mode, and creation and update times. Slice 4
-can add meeting and issue relationships without replacing atomic records.
+Fields: stable record key, registry, government body, source record ID, current
+published version, current mode, and creation and update times. Issue links
+refer to these records without replacing them.
 Indexes: stable record key; registry plus source record ID.
 
-#### `issues`
+#### `issueBuilds`, `issueBuildReviews`, and `issueBuildReviewChecks`
 
-Fields: slug, title, plain-language summary, jurisdiction set, topic set,
-lifecycle state, next known time, importance assessment, current publication
-version.
-Indexes: slug; lifecycle state plus next known time; jurisdiction plus next
-known time.
+Issue builds bind two to ten atomic records, their exact current publication
+versions, the prompt and schema versions, raw model evidence, proposed issue
+facts, review, deterministic result, and output version. Reviews use a separate
+model and keep one supported, unclear, or unsupported check per issue fact.
+Indexes cover the idempotency key, run, issue key, review input hash, and check
+field path.
+
+#### `issues` and `issueVersions`
+
+An issue stores a stable issue key, slug, government body, and current accepted
+version pointer. Slice 4 computes the key from the exact sorted atomic record
+keys. Membership is frozen for that key. Adding or removing a record creates a
+new issue rather than extending the old one. Slice 5 must define supersession or
+redirect behavior before exposing overlapping issue routes. Immutable versions
+store the build, monotonic version, full, limited, or withheld mode, reason,
+payload hash, score summary, lifecycle, title, summary, and topics. Withheld
+versions have no public payload and do not move the accepted pointer.
+Indexes: issue key; slug; issue plus version; build.
 
 #### `issueDecisionLinks`
 
-Fields: issue, decision, relationship type, evidence citations, confidence,
-linker version, state.
-Indexes: issue plus state; decision plus state.
+Fields: issue version, atomic decision, exact publication version, relationship
+type, cited reason, linker version, and creation time.
+Indexes: issue version; decision plus creation time.
 
 #### `importanceAssessments`
 
-Fields: target, factor values, factor citations, deterministic score, hard
-triggers, explanation, model and prompt version.
-Indexes: target; score plus target time.
+Fields: issue version, factor, accepted level, deterministic points, maximum
+points, cited rationale, citation IDs, rubric version, and creation time.
+Indexes: issue version plus factor; issue plus creation time.
 
 #### `publicationVersions`
 
@@ -711,15 +758,14 @@ problem to fix, not a stage to buy a larger model for.
 
 ### Stage assignment
 
-| Stage                                      | Role           | Reasoning | Why                                                                              |
-| ------------------------------------------ | -------------- | --------- | -------------------------------------------------------------------------------- |
-| Source discovery and document-type routing | `MODEL_FAST`   | low       | Real classification over short inputs, and the highest call volume in the system |
-| Record extraction and citation grounding   | `MODEL_STRONG` | high      | Generative, long OCR-quality input, and the origin of every published claim      |
-| Consequence factors                        | `MODEL_STRONG` | high      | Judgment that must stay inside cited evidence                                    |
-| Issue-link proposal                        | `MODEL_STRONG` | high      | High blast radius, and expensive to reverse once a timeline is wrong             |
-| Independent publication review             | `MODEL_FAST`   | high      | Verification over a short input, after deterministic validation has already run  |
-| Ranking                                    | `MODEL_FAST`   | low       | Ordering over already-validated records                                          |
-| Resident chat                              | `MODEL_FAST`   | low       | Grounded answering over retrieved evidence, and the only latency-sensitive stage |
+| Stage                                       | Executor           | Reasoning | Why                                                                              |
+| ------------------------------------------- | ------------------ | --------- | -------------------------------------------------------------------------------- |
+| Source discovery and document-type routing  | `MODEL_FAST`       | low       | Real classification over short inputs, and the highest call volume in the system |
+| Record extraction and citation grounding    | `MODEL_STRONG`     | high      | Generative, long OCR-quality input, and the origin of every published claim      |
+| Consequence factors and issue-link proposal | `MODEL_STRONG`     | high      | Both jobs must stay inside cited evidence and affect multiple public views       |
+| Independent publication and issue review    | `MODEL_FAST`       | high      | Verification over cited facts after deterministic source checks have run         |
+| Importance score and ordering               | Deterministic code | not used  | Fixed weights make the same accepted factors produce the same score              |
+| Resident chat                               | `MODEL_FAST`       | low       | Grounded answering over retrieved evidence, and the only latency-sensitive stage |
 
 The strong tier sits on generation rather than on review because the two jobs
 fail differently. Extraction originates the record, and a reviewer can reject a
@@ -817,35 +863,40 @@ reviewer, but deterministic checks still verify source, location, and excerpt.
 Linking uses multiple signals:
 
 - official matter, ordinance, resolution, case, parcel, or project identifiers;
-- normalized titles and named entities;
-- government body and jurisdiction;
-- meeting chronology;
-- location;
+- named counterparties;
+- projects and transactions;
+- locations;
 - explicit cross-references in the source.
 
-OpenAI can propose links with cited reasons. Deterministic policy accepts only
-high-confidence links or links with a stable official identifier. Ambiguous
-records stay atomic and searchable. Never merge two controversies merely
-because their titles look similar.
+OpenAI proposes links with cited reasons. Deterministic policy requires one
+link per input record and at least one concrete shared signal whose exact value
+appears in cited evidence for every record. Each link reason cites its own
+record and at least one other record. Similar titles, the government body's own
+name, and its home jurisdiction fail the contract. Failed builds may retry the
+same deterministic input. Active and successful builds still replay without a
+second model call. Ambiguous records stay atomic and searchable.
 
 ## Importance Ranking
 
 OpenAI extracts cited factor levels. Code computes the result.
 
-| Factor                              | Maximum points |
-| ----------------------------------- | -------------: |
-| People or geography affected        |             20 |
-| Public money                        |             20 |
-| Land use or environment             |             15 |
-| Legal or regulatory change          |             15 |
-| Duration or reversibility           |             10 |
-| Public deadline or immediate action |             10 |
-| Departure from existing policy      |             10 |
+| Factor            | Maximum points |
+| ----------------- | -------------: |
+| Public money      |             20 |
+| Public assets     |             20 |
+| Land use          |             15 |
+| Health and safety |             15 |
+| Rights and access |             10 |
+| Service delivery  |             10 |
+| Public deadline   |             10 |
 
 Each factor must be absent or carry a citation and a short evidence-based reason.
-Source completeness becomes a separate confidence field and never multiplies the
-importance score down. Hard triggers, such as a near public deadline, can
-promote an item while visibly showing limited evidence.
+The reason must state a documented consequence, not repeat the subject. Low is
+25 percent of the factor maximum rounded up, moderate is 50 percent rounded up,
+and high receives the maximum. Unsupported factors receive zero without
+reducing another accepted factor. Completeness is the percentage of factors
+with accepted evidence and never multiplies the score down. A cited public
+deadline within seven days sets a separate hard trigger without adding points.
 
 The user-facing “Why this matters” text is generated from the accepted factor
 record. Popularity, clicks, partisan valence, and social engagement do not
@@ -1100,17 +1151,17 @@ The event does not provide OpenAI or Convex credits. Before broad crawling:
 1. One Lafayette source becomes an immutable Convex snapshot.
 2. One snapshot becomes a strict, cited atomic decision.
 3. Validation plus independent review produces a versioned public projection.
-4. A changed snapshot creates a visible material revision.
-5. Atomic decisions link into one issue timeline and importance record.
-6. After the complete page contract and designs are approved, one cohesive
+4. A changed snapshot creates a material revision, and atomic decisions link
+   into one issue timeline and importance record.
+5. After the complete page contract and designs are approved, one cohesive
    frontend pass implements the resident interface. The issue and citation
    paths go live first, while incomplete actions remain hidden.
-7. Anonymous chat answers only from the issue evidence.
-8. Convex Auth v2 Google accounts, verified email-only follows, and AgentMail
+6. Anonymous chat answers only from the issue evidence.
+7. Convex Auth v2 Google accounts, verified email-only follows, and AgentMail
    close the outcome loop.
-9. The dynamic coverage compiler adds the rest of Lafayette, then Rapides and
+8. The dynamic coverage compiler adds the rest of Lafayette, then Rapides and
    East Baton Rouge behind the same gate.
-10. Public coverage, demand capture, per-issue share routes, and production
-    hardening complete the submission.
+9. Public coverage, demand capture, per-issue share routes, and production
+   hardening complete the submission.
 
 Do not reverse this order to polish a dashboard before the evidence path works.

@@ -13,6 +13,7 @@ import {
   overrideGatewayTokenMinterForTests,
   resetGatewayTokenMinterForTests,
 } from './ai/chatCompletions'
+import { checkExtractionContractV1 } from './extraction/contractV1'
 import {
   centsOf,
   parseZonedIsoDateTime,
@@ -227,6 +228,28 @@ function goldDecision(snapshotId: string) {
     },
   }
 }
+
+test('the extraction contract preserves a bounded 327-character official ordinance title', () => {
+  const response = goldDecision('snapshot-id')
+  const officialTitle =
+    'An ordinance of the Lafayette City Council authorizing the Lafayette Mayor-President to enter into a Cooperative Endeavor Agreement and Act of Donation by and between Lafayette City-Parish Consolidated Government and the Terrebonne Parish Consolidated Government concerning the donation of a surplus 2016 Crew Cab pickup. (CAO)'
+  response.decision.title = officialTitle
+  const titleFact = response.decision.facts.find(
+    (fact) => fact.fieldPath === '/title',
+  )
+  if (!titleFact) throw new Error('Gold title fact is missing')
+  titleFact.value = officialTitle
+  titleFact.citation.excerpt = officialTitle
+
+  expect(officialTitle.length).toBe(327)
+  expect(checkExtractionContractV1(response)).toBeNull()
+
+  response.decision.title = 'x'.repeat(501)
+  titleFact.value = response.decision.title
+  expect(checkExtractionContractV1(response)).toBe(
+    'title exceeds the 500 character limit',
+  )
+})
 
 function setFactValue(
   decision: ReturnType<typeof goldDecision>['decision'],
@@ -493,7 +516,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     ['validate', 'succeeded'],
   ])
   expect(stages[0].attempt).toBe(1)
-  expect(stages[0].promptVersion).toBe('v1.2')
+  expect(stages[0].promptVersion).toBe('v1.4')
   expect(stages[0].schemaVersion).toBe('v1')
 
   const extraction = await extractionByRun(t, start.runId)
@@ -503,9 +526,9 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     modelRole: 'MODEL_STRONG',
     modelId: MODEL_ID,
     route: 'ai_gateway',
-    promptVersion: 'v1.2',
+    promptVersion: 'v1.4',
     schemaVersion: 'v1',
-    processorVersion: 'v1.4',
+    processorVersion: 'v1.7',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
@@ -600,6 +623,12 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
   expect(messages[0].content).toContain('untrusted data')
   expect(messages[0].content).toContain('JSON Pointer with a leading slash')
   expect(messages[0].content).toContain('Do not add JSON quotes')
+  expect(messages[0].content).toContain(
+    'one contiguous source span states both the meeting date and time',
+  )
+  expect(messages[0].content).toContain(
+    'When minutes record a motion and vote, use vote',
+  )
   expect(messages[1].content).toContain(`Source snapshot ID: ${snapshotId}`)
   expect(messages[1].content).toContain('SOURCE BEGIN')
   expect(modelCallCount(fetchMock)).toBe(1)
@@ -816,7 +845,7 @@ test('an old processor run cannot persist under the new processor label', async 
       sourceKind: 'agenda',
       targetRecordId: TARGET_RECORD_ID,
       modelRole: 'MODEL_STRONG',
-      promptVersion: 'v1.2',
+      promptVersion: 'v1.4',
       schemaVersion: 'v1',
       errorClass: 'forced',
       errorDetail: 'must reject mixed processor versions',

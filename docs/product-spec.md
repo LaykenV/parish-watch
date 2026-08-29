@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 3 are deployed, resident interface design starts after Slice 4
+Status: approved product plan; evidence Slices 1 through 3 are deployed, Slice 4 is proven in development, and resident interface design is next
 
 ## Product Sentence
 
@@ -233,13 +233,13 @@ Every material answer carries a citation affordance.
 
 Show only accepted consequence factors:
 
-- people or area affected;
 - public money;
-- land use or environment;
-- legal or regulatory change;
-- duration or reversibility;
-- deadline;
-- departure from policy.
+- public assets;
+- land use;
+- health and safety;
+- rights and access;
+- service delivery;
+- public deadlines.
 
 Each factor opens its evidence. Unknown factors stay absent instead of becoming
 boilerplate.

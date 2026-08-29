@@ -10,11 +10,75 @@
 - **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`
 - **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, durable workflows
 - **Auth:** none
-- **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction and `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
+- **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-29T16:33:30Z
+- **Last updated:** 2026-08-29T20:26:00Z
 
 ## Log
+
+### 2026-08-29 - 1ad6a8a
+
+Implemented Phase 1 Slice 4 in the personal development deployment. Added
+immutable source-snapshot comparisons and publication material changes. The
+change classifier distinguishes normalized source edits from raw-only churn and
+records field-level amendments, date or amount changes, decisions,
+postponements, cancellations, public-action changes, information limits, and
+information expansion. Withheld publication versions do not create a public
+change or replace the last accepted pointer (`convex/changes/`, `convex/publication/`,
+`convex/sources/snapshots.ts`).
+
+Added the `buildIssueV1` durable workflow with separate link, review, rank, and
+publish stages. Terra proposes one issue only from exact published decision
+versions and citations. A concrete shared signal must appear in evidence from
+every record, and each link reason must cite its own record plus another. Luna
+then reviews every proposed fact from the cited excerpts. Deterministic code
+removes unsupported factors, assigns the fixed 100-point score, and writes a
+full, limited, or withheld immutable issue version. The backend keeps atomic
+decision records, exact issue links, review checks, importance assessments, raw
+model response evidence, and idempotent build keys (`convex/issues/`,
+`convex/operations/issues.ts`, `convex/schema.ts`).
+
+Proved the path with real Lafayette agenda and minutes records `CO-022-2026` and
+`CO-023-2026`. Extraction prompt v1.4 produced full minutes publications with
+supported vote and approved-outcome facts. Issue
+`n57071y9n25rrs09yaanb1hz918dd1fs` links both records through cited references
+to Terrebonne Parish Consolidated Government. Luna accepted one
+`public_assets` consequence factor, and rubric v1 assigned 5 of 100 points with
+14 percent factor completeness. The evidence query returns both publication
+histories, the scheduled-to-decided progression, and the earlier limited-to-full
+expansion.
+
+The proof failed closed twice before acceptance. The first linker response used
+a mismatched fact value, which led to exact fact-copy instructions and raw
+failure-response persistence. The next candidate named the asset topic without
+stating what the approved action authorized, so Luna withheld issue version 1.
+Prompt v1.2 required a cited consequence statement. Luna then passed every fact,
+and deterministic policy wrote full issue version 2. Replaying the input records
+in reverse order returned the same build with `reused: true` and created no new
+model call or issue version. The accepted issue build used one Terra and one Luna
+AI Gateway call at an estimated combined cost of $0.042153.
+
+Reviewing the real development history caught two noisy change labels. A
+trailing-period edit had been called an amendment, and a full-to-limited
+evidence downgrade had been called an amount change because the limited payload
+omitted an empty amounts array. The classifier now suppresses punctuation,
+casing, and whitespace-only text edits and labels evidence downgrades
+`information_limited`. The two stale development rows were recomputed from
+their immutable publication payloads. The temporary internal repair operation
+was removed after use.
+
+A later code review found three more correctness gaps. Lifecycle labels now
+require an actual state transition. Losing time precision stays quiet, while a
+newly supported date or clock-time change is public. A terminal issue-build
+failure no longer reserves the deterministic input key, so the same evidence
+can retry and a later success resumes normal replay. Deterministic link
+validation also rejects the government body's own name or home jurisdiction as
+the only shared signal. Issue-link prompt v1.3 states the same rule.
+
+`npm run verify` passes typechecking, 110 tests across 14 files, the production
+build and prerender, and lint. The final schema and functions are ready on the
+personal development deployment. No new model call, production deployment, or
+public interface change was made.
 
 ### 2026-08-29 - 0b49718
 

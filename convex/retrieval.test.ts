@@ -5,6 +5,7 @@ import { convexTest } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
 
 import { internal } from './_generated/api'
+import type { Id } from './_generated/dataModel'
 import schema from './schema'
 import { sha256HexOfText } from './sources/hashing'
 
@@ -66,11 +67,11 @@ function stubScrape(
 function snapshotIdOf(result: {
   outcome: string
   snapshotId?: string
-}): string {
+}): Id<'sourceSnapshots'> {
   if (result.outcome === 'failed' || !result.snapshotId) {
     throw new Error(`Expected a snapshot, got ${result.outcome}`)
   }
-  return result.snapshotId
+  return result.snapshotId as Id<'sourceSnapshots'>
 }
 
 afterEach(() => {
@@ -219,6 +220,23 @@ test('changed content creates a new immutable version linked to the previous sna
   expect(latest?.contentHash).not.toBe(
     snapshots.find((s) => s._id === firstId)?.contentHash,
   )
+  const changes = await t.run(async (ctx) =>
+    ctx.db
+      .query('sourceSnapshotChanges')
+      .withIndex('by_current_snapshot', (q) =>
+        q.eq('currentSnapshotId', snapshotIdOf(second)),
+      )
+      .collect(),
+  )
+  expect(changes).toEqual([
+    expect.objectContaining({
+      previousSnapshotId: firstId,
+      currentSnapshotId: snapshotIdOf(second),
+      classification: 'normalized_changed',
+      rawChanged: true,
+      normalizedChanged: true,
+    }),
+  ])
 })
 
 test('content reverting to an older hash creates a new head in the version chain', async () => {
@@ -345,6 +363,23 @@ test('a raw artifact change creates a new version even when normalized markdown 
   expect(snapshots[0].normalizedContentHash).toBe(
     snapshots[1].normalizedContentHash,
   )
+  const changes = await t.run(async (ctx) =>
+    ctx.db
+      .query('sourceSnapshotChanges')
+      .withIndex('by_current_snapshot', (q) =>
+        q.eq('currentSnapshotId', snapshotIdOf(second)),
+      )
+      .collect(),
+  )
+  expect(changes).toEqual([
+    expect.objectContaining({
+      previousSnapshotId: snapshotIdOf(first),
+      currentSnapshotId: snapshotIdOf(second),
+      classification: 'raw_only',
+      rawChanged: true,
+      normalizedChanged: false,
+    }),
+  ])
 })
 
 test('different source urls keep separate version chains even when their content hashes match', async () => {

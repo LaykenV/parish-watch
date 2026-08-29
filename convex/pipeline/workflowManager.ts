@@ -13,3 +13,4 @@ const pipelineWorkflowManager = new WorkflowManager(components.workflow, {
 
 export const extractionWorkflowManager = pipelineWorkflowManager
 export const publicationWorkflowManager = pipelineWorkflowManager
+export const issueWorkflowManager = pipelineWorkflowManager

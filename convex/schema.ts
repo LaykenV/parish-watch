@@ -8,6 +8,13 @@ import {
   recordTypes,
 } from './extraction/contractV1'
 import {
+  importanceFactorNames,
+  importanceLevels,
+  issueCandidateV1,
+  issueLifecycleStates,
+  issueRelationshipTypes,
+} from './issues/contractV1'
+import {
   processingStates,
   runTriggers,
   sourceKindUnion,
@@ -32,6 +39,38 @@ const cadenceKinds = v.union(
 )
 
 const sourceKinds = sourceKindUnion
+
+const publicationModes = v.union(
+  v.literal('full'),
+  v.literal('limited'),
+  v.literal('withheld'),
+)
+
+const acceptedPublicationModes = v.union(
+  v.literal('full'),
+  v.literal('limited'),
+)
+
+const issueScore = v.object({
+  score: v.number(),
+  maxScore: v.number(),
+  completenessPercent: v.number(),
+  supportedFactorCount: v.number(),
+  totalFactorCount: v.number(),
+  hasNearTermPublicDeadline: v.boolean(),
+})
+
+const issuePayload = v.object({
+  kind: acceptedPublicationModes,
+  title: v.string(),
+  summary: v.string(),
+  lifecycleState: v.optional(issueLifecycleStates),
+  nextKnownAction: v.optional(
+    v.object({ description: v.string(), at: v.union(v.string(), v.null()) }),
+  ),
+  topics: v.array(v.string()),
+  importance: issueScore,
+})
 
 export default defineSchema({
   jurisdictions: defineTable({
@@ -146,6 +185,7 @@ export default defineSchema({
     sourceKind: v.optional(sourceKinds),
     targetRecordId: v.optional(v.string()),
     candidateId: v.optional(v.id('decisionCandidates')),
+    issueBuildId: v.optional(v.id('issueBuilds')),
     upstreamRunId: v.optional(v.id('pipelineRuns')),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
@@ -166,6 +206,8 @@ export default defineSchema({
     outputExtractionId: v.optional(v.id('extractions')),
     outputReviewId: v.optional(v.id('reviews')),
     outputPublicationVersionId: v.optional(v.id('publicationVersions')),
+    outputIssueBuildReviewId: v.optional(v.id('issueBuildReviews')),
+    outputIssueVersionId: v.optional(v.id('issueVersions')),
     promptVersion: v.optional(v.string()),
     schemaVersion: v.optional(v.string()),
     errorClass: v.optional(v.string()),
@@ -188,6 +230,8 @@ export default defineSchema({
     stageId: v.optional(v.id('pipelineStages')),
     extractionId: v.optional(v.id('extractions')),
     reviewId: v.optional(v.id('reviews')),
+    issueBuildId: v.optional(v.id('issueBuilds')),
+    issueBuildReviewId: v.optional(v.id('issueBuildReviews')),
     route: aiRoutes,
     modelRole: modelRoles,
     modelId: v.string(),
@@ -211,7 +255,9 @@ export default defineSchema({
   })
     .index('by_run_and_created_at', ['runId', 'createdAt'])
     .index('by_extraction', ['extractionId'])
-    .index('by_review', ['reviewId']),
+    .index('by_review', ['reviewId'])
+    .index('by_issue_build', ['issueBuildId'])
+    .index('by_issue_build_review', ['issueBuildReviewId']),
 
   extractions: defineTable({
     runId: v.id('pipelineRuns'),
@@ -386,11 +432,7 @@ export default defineSchema({
     reviewId: v.id('reviews'),
     snapshotId: v.id('sourceSnapshots'),
     version: v.number(),
-    mode: v.union(
-      v.literal('full'),
-      v.literal('limited'),
-      v.literal('withheld'),
-    ),
+    mode: publicationModes,
     reasonCode: v.string(),
     policyVersion: v.string(),
     payloadVersion: v.string(),
@@ -465,4 +507,215 @@ export default defineSchema({
       'fieldPath',
     ])
     .index('by_snapshot', ['snapshotId']),
+
+  sourceSnapshotChanges: defineTable({
+    registryId: v.id('sourceRegistries'),
+    canonicalUrl: v.string(),
+    previousSnapshotId: v.id('sourceSnapshots'),
+    currentSnapshotId: v.id('sourceSnapshots'),
+    classification: v.union(
+      v.literal('raw_only'),
+      v.literal('normalized_changed'),
+      v.literal('hash_basis_migration'),
+      v.literal('unusable_predecessor'),
+    ),
+    rawChanged: v.boolean(),
+    normalizedChanged: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index('by_current_snapshot', ['currentSnapshotId'])
+    .index('by_source_and_created_at', [
+      'registryId',
+      'canonicalUrl',
+      'createdAt',
+    ]),
+
+  materialChanges: defineTable({
+    recordId: v.id('decisionRecords'),
+    previousPublicationVersionId: v.id('publicationVersions'),
+    currentPublicationVersionId: v.id('publicationVersions'),
+    classification: v.union(
+      v.literal('information_expanded'),
+      v.literal('information_limited'),
+      v.literal('date_changed'),
+      v.literal('amount_changed'),
+      v.literal('amended'),
+      v.literal('postponed'),
+      v.literal('decided'),
+      v.literal('canceled'),
+      v.literal('public_action_changed'),
+      v.literal('no_public_change'),
+    ),
+    material: v.boolean(),
+    fieldChanges: v.array(
+      v.object({
+        fieldPath: v.string(),
+        kind: v.union(
+          v.literal('added'),
+          v.literal('removed'),
+          v.literal('changed'),
+        ),
+        previousValue: v.union(v.string(), v.null()),
+        currentValue: v.union(v.string(), v.null()),
+      }),
+    ),
+    createdAt: v.number(),
+  })
+    .index('by_current_publication', ['currentPublicationVersionId'])
+    .index('by_record_and_created_at', ['recordId', 'createdAt']),
+
+  issueBuilds: defineTable({
+    runId: v.id('pipelineRuns'),
+    registryId: v.id('sourceRegistries'),
+    governmentBodyId: v.id('governmentBodies'),
+    issueKey: v.string(),
+    idempotencyKey: v.string(),
+    inputHash: v.string(),
+    recordIds: v.array(v.id('decisionRecords')),
+    publicationVersionIds: v.array(v.id('publicationVersions')),
+    state: v.union(
+      v.literal('queued'),
+      v.literal('candidate_ready'),
+      v.literal('reviewed'),
+      v.literal('ranked'),
+      v.literal('published'),
+      v.literal('withheld'),
+      v.literal('failed'),
+    ),
+    promptVersion: v.string(),
+    schemaVersion: v.string(),
+    processorVersion: v.string(),
+    modelRole: modelRoles,
+    modelId: v.optional(v.string()),
+    route: v.optional(aiRoutes),
+    rawResponseStorageId: v.optional(v.id('_storage')),
+    responseHash: v.optional(v.string()),
+    responseByteLength: v.optional(v.number()),
+    candidate: v.optional(issueCandidateV1),
+    candidateHash: v.optional(v.string()),
+    reviewId: v.optional(v.id('issueBuildReviews')),
+    rankedResult: v.optional(
+      v.object({
+        mode: publicationModes,
+        reasonCode: v.string(),
+        supportedFactPaths: v.array(v.string()),
+        importance: issueScore,
+      }),
+    ),
+    issueVersionId: v.optional(v.id('issueVersions')),
+    errorClass: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_idempotency_key', ['idempotencyKey'])
+    .index('by_run', ['runId'])
+    .index('by_issue_key_and_created_at', ['issueKey', 'createdAt']),
+
+  issueBuildReviews: defineTable({
+    runId: v.id('pipelineRuns'),
+    stageId: v.id('pipelineStages'),
+    issueBuildId: v.id('issueBuilds'),
+    inputHash: v.string(),
+    state: v.union(v.literal('succeeded'), v.literal('failed')),
+    verdict: v.optional(
+      v.union(v.literal('pass'), v.literal('limited'), v.literal('fail')),
+    ),
+    modelRole: modelRoles,
+    modelId: v.optional(v.string()),
+    route: v.optional(aiRoutes),
+    promptVersion: v.string(),
+    schemaVersion: v.string(),
+    processorVersion: v.string(),
+    rawResponseStorageId: v.optional(v.id('_storage')),
+    responseHash: v.optional(v.string()),
+    responseByteLength: v.optional(v.number()),
+    findings: v.array(
+      v.object({
+        code: v.string(),
+        severity: v.union(
+          v.literal('info'),
+          v.literal('limited'),
+          v.literal('fail'),
+        ),
+        fieldPath: v.union(v.string(), v.null()),
+        detail: v.string(),
+      }),
+    ),
+    errorClass: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_run', ['runId'])
+    .index('by_build_and_input_hash', ['issueBuildId', 'inputHash']),
+
+  issueBuildReviewChecks: defineTable({
+    reviewId: v.id('issueBuildReviews'),
+    issueBuildId: v.id('issueBuilds'),
+    fieldPath: v.string(),
+    assessment: v.union(
+      v.literal('supported'),
+      v.literal('unclear'),
+      v.literal('unsupported'),
+    ),
+    detail: v.string(),
+  })
+    .index('by_review_and_field_path', ['reviewId', 'fieldPath'])
+    .index('by_build', ['issueBuildId']),
+
+  issues: defineTable({
+    issueKey: v.string(),
+    slug: v.string(),
+    governmentBodyId: v.id('governmentBodies'),
+    currentVersionId: v.optional(v.id('issueVersions')),
+    currentMode: v.optional(acceptedPublicationModes),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_issue_key', ['issueKey'])
+    .index('by_slug', ['slug']),
+
+  issueVersions: defineTable({
+    issueId: v.id('issues'),
+    buildId: v.id('issueBuilds'),
+    version: v.number(),
+    mode: publicationModes,
+    reasonCode: v.string(),
+    policyVersion: v.string(),
+    payloadVersion: v.string(),
+    payloadHash: v.string(),
+    payload: v.union(v.null(), issuePayload),
+    createdAt: v.number(),
+  })
+    .index('by_issue_and_version', ['issueId', 'version'])
+    .index('by_build', ['buildId']),
+
+  issueDecisionLinks: defineTable({
+    issueId: v.id('issues'),
+    issueVersionId: v.id('issueVersions'),
+    recordId: v.id('decisionRecords'),
+    publicationVersionId: v.id('publicationVersions'),
+    relationship: issueRelationshipTypes,
+    reason: v.string(),
+    citationIds: v.array(v.id('citations')),
+    linkerVersion: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_issue_version', ['issueVersionId'])
+    .index('by_record_and_created_at', ['recordId', 'createdAt']),
+
+  importanceAssessments: defineTable({
+    issueId: v.id('issues'),
+    issueVersionId: v.id('issueVersions'),
+    factor: importanceFactorNames,
+    level: importanceLevels,
+    points: v.number(),
+    maxPoints: v.number(),
+    rationale: v.string(),
+    citationIds: v.array(v.id('citations')),
+    rubricVersion: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_issue_version_and_factor', ['issueVersionId', 'factor'])
+    .index('by_issue_and_created_at', ['issueId', 'createdAt']),
 })

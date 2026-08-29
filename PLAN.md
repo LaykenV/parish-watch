@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0 and evidence-engine Slices 1 through 3 are deployed; Slice 4 is next
+Status: Phase 0 and evidence-engine Slices 1 through 3 are deployed; Slice 4 is implemented and proven in personal development
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -9,7 +9,10 @@ deterministically validates cited atomic decisions, runs a separate independent
 review, and writes full, limited, or withheld immutable publication versions.
 The real Terra extraction and Luna review proofs ran in the personal development
 deployment. PR #12 deployed the hardened Slice 3 backend as `8df651c` and passed
-production smoke. No production extraction or model review has run.
+production smoke. Slice 4 now links two real published decisions into one cited
+issue, records source and publication changes, and computes a deterministic
+importance score after independent review. That work is not deployed to
+production. No production extraction, model review, or issue build has run.
 
 ## Executive Decision
 
@@ -75,9 +78,9 @@ may matter, when action is expected, how to inspect the original record, and
 what happened next.
 
 It does not tell residents what political position to take. “Why this matters”
-describes documented consequence, money, geography, deadlines, legal change, and
-reversibility. It does not use outrage, popularity, or the founder's opinion as
-a ranking signal.
+describes cited effects on public money, public assets, land use, health and
+safety, rights and access, service delivery, and public deadlines. It does not
+use outrage, popularity, or the founder's opinion as a ranking signal.
 
 ## Launch Coverage
 

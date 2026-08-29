@@ -1,6 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 
 import { internalMutation, internalQuery } from '../_generated/server'
+import { recordSourceSnapshotChange } from '../changes/source'
 import schema from '../schema'
 import { firecrawlMetadataValue } from './metadata'
 
@@ -174,6 +175,21 @@ export const commitRetrieval = internalMutation({
       truncation: args.truncation,
       firecrawlMetadata: args.firecrawlMetadata,
     })
+
+    if (previous) {
+      await recordSourceSnapshotChange(ctx, {
+        registryId: args.registryId,
+        canonicalUrl: args.canonicalUrl,
+        previousSnapshotId: previous._id,
+        currentSnapshotId: snapshotId,
+        previousContentHashBasis: previous.contentHashBasis,
+        previousContentHash: previous.contentHash,
+        currentContentHash: args.contentHash,
+        previousNormalizedContentHash: previous.normalizedContentHash,
+        currentNormalizedContentHash: args.normalizedContentHash,
+        createdAt: now,
+      })
+    }
 
     await ctx.db.patch(args.stageId, {
       idempotencyKey: args.idempotencyKey,

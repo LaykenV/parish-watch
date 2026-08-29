@@ -127,9 +127,19 @@ two secondary fields, and the deterministic policy produced one limited
 source-only version with three core citations. Replay made no second model call
 or version. PR #12 merged as `8df651c`; production workflow `33261235916`
 deployed the hardened Slice 3 backend and frontend, applied the registry seed,
-and passed smoke. No production extraction or model review was run. The resident
-evidence interface and vibeapps.dev submission remain pending. No AgentMail
-integration or authentication flow exists yet.
+and passed smoke.
+
+Slice 4 is implemented only in personal development. Real Lafayette agenda and
+minutes records `CO-022-2026` and `CO-023-2026` now retain separate decision
+histories while linking into issue `n57071y9n25rrs09yaanb1hz918dd1fs` through
+citations that name their shared counterparty. The minutes record the approved
+votes. Independent review accepted one public-assets consequence factor, and
+code assigned 5 of 100 points. The issue also keeps an earlier withheld version
+whose weak importance rationale failed review. Replaying the accepted inputs
+returned the same build without another model call or version. The full suite
+passes 102 tests. No Slice 4 code, extraction, model review, or issue build has
+run in production. The resident evidence interface and vibeapps.dev submission
+remain pending. No AgentMail integration or authentication flow exists yet.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests
@@ -382,12 +392,13 @@ other contested project.
 - [x] Convex AI Gateway calls OpenAI from actions
 - [x] `openai/gpt-5.6-terra` does meaningful structured extraction work
 - [x] `openai/gpt-5.6-luna` independently reviews publication candidates
+- [x] Terra issue linking and separate Luna issue review work in development
 - [ ] Convex Auth v2 alpha Google OAuth works
 - [ ] AgentMail verifies an email-only subscription
 - [ ] AgentMail inbox and outbound alert both work
 - [ ] Signed-out resident path works
 - [ ] Three named launch regions pass or public claims are narrowed honestly
-- [ ] One issue reaches a later change or outcome
+- [x] One development issue reaches two approved vote outcomes
 - [ ] Citations, revisions, uncertainty, and coverage health work
 
 ### Public Artifacts

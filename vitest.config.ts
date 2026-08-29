@@ -31,6 +31,10 @@ export default defineConfig({
   plugins: [neutralizeWorkflowEnvironmentPatch()],
   test: {
     environment: 'edge-runtime',
+    // Convex workflow tests use process-wide fake timers and storage hooks.
+    // Running files in parallel can restore those globals during another
+    // workflow action and produce writes outside its test transaction.
+    fileParallelism: false,
     server: {
       deps: {
         inline: [/@convex-dev\/workflow/],

@@ -96,7 +96,9 @@ export type StoredFactV1 = typeof storedFactsV1.type
 
 export const MATERIAL_STRING_LIMITS = {
   sourceRecordId: 120,
-  title: 300,
+  // Lafayette ordinance captions routinely exceed 300 characters. Keep the
+  // exact official title while retaining a hard document bound.
+  title: 500,
   bodyName: 200,
   meetingAt: 40,
   plainLanguageSummary: 2000,

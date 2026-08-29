@@ -1,8 +1,10 @@
 import { ConvexError, v } from 'convex/values'
 
+import { internal } from '../_generated/api'
 import type { Id } from '../_generated/dataModel'
 import type { MutationCtx } from '../_generated/server'
 import { internalMutation } from '../_generated/server'
+import { recordMaterialChange } from '../changes/material'
 import {
   PUBLICATION_PAYLOAD_VERSION,
   PUBLICATION_POLICY_VERSION,
@@ -249,6 +251,26 @@ export const finalizePublication = internalMutation({
         retrievedAt: args.context.retrievedAt,
       })
     }
+    if (
+      policy.mode !== 'withheld' &&
+      payload !== null &&
+      record.currentPublishedVersionId
+    ) {
+      const previousVersion = await ctx.db.get(record.currentPublishedVersionId)
+      if (!previousVersion || previousVersion.recordId !== record._id) {
+        throw new ConvexError({
+          code: 'publication_history_mismatch',
+          message: 'Current publication pointer does not belong to this record',
+        })
+      }
+      await recordMaterialChange(ctx, {
+        recordId: record._id,
+        previousVersion,
+        currentPublicationVersionId: publicationVersionId,
+        currentPayload: payload,
+        createdAt: now,
+      })
+    }
     await ctx.db.patch(
       record._id,
       policy.mode === 'withheld'
@@ -259,6 +281,13 @@ export const finalizePublication = internalMutation({
             updatedAt: now,
           },
     )
+    if (policy.mode !== 'withheld') {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.operations.issues.refreshLinkedIssues,
+        { recordId: record._id },
+      )
+    }
     await ctx.db.patch(stage._id, {
       state: 'succeeded',
       attempt: stage.attempt + 1,
