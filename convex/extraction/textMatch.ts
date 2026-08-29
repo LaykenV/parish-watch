@@ -213,7 +213,7 @@ export function textSupportsZonedDateTime(
   }
   const times = timesInText(text)
   if (times.length === 0) {
-    return dateTime.hour === 0 && dateTime.minute === 0
+    return dateTime.hour === 0 && dateTime.minute === 0 && dateTime.second === 0
   }
   return times.some(
     (time) =>

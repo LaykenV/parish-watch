@@ -18,7 +18,6 @@ import type * as extraction_prepare from "../extraction/prepare.js";
 import type * as extraction_promptV1 from "../extraction/promptV1.js";
 import type * as extraction_textMatch from "../extraction/textMatch.js";
 import type * as extraction_validate from "../extraction/validate.js";
-import type * as extraction_versions from "../extraction/versions.js";
 import type * as extraction_workflow from "../extraction/workflow.js";
 import type * as http from "../http.js";
 import type * as operations_discover from "../operations/discover.js";
@@ -57,7 +56,6 @@ declare const fullApi: ApiFromModules<{
   "extraction/promptV1": typeof extraction_promptV1;
   "extraction/textMatch": typeof extraction_textMatch;
   "extraction/validate": typeof extraction_validate;
-  "extraction/versions": typeof extraction_versions;
   "extraction/workflow": typeof extraction_workflow;
   http: typeof http;
   "operations/discover": typeof operations_discover;

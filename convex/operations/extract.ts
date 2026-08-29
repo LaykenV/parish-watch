@@ -4,14 +4,12 @@ import { internal } from '../_generated/api'
 import { internalMutation } from '../_generated/server'
 import {
   EXTRACTION_PROCESSOR_VERSION,
+  EXTRACTION_PROMPT_VERSION,
+  EXTRACTION_SCHEMA_VERSION,
   sourceKindUnion,
 } from '../pipeline/state'
 import { extractionRunKey } from '../pipeline/keys'
 import { extractionWorkflowManager } from '../pipeline/workflowManager'
-import {
-  EXTRACTION_PROMPT_VERSION,
-  EXTRACTION_SCHEMA_VERSION,
-} from '../extraction/versions'
 import { MATERIAL_STRING_LIMITS } from '../extraction/contractV1'
 
 const startExtractionResultValidator = v.object({

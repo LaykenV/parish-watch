@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-28T23:23:22Z
+- **Last updated:** 2026-08-29T00:08:49Z
 
 ## Log
 
@@ -56,7 +56,7 @@ validation. Passing validation moves the candidate to
 published. No public decision, citation, review, or publication table exists
 yet.
 
-Added 37 tests around a `CO-029-2026` fixture derived from the official agenda.
+Added 40 tests around a `CO-029-2026` fixture derived from the official agenda.
 The tests ingest stubbed PDF and Firecrawl responses through `convex-test`, then
 use stubbed Gateway responses to cover ordered stages, transient retry without
 a second run, exhausted retry budgets, `Retry-After` evidence, permanent HTTP
@@ -65,7 +65,7 @@ amount and time checks, page-map offsets, public-action deadlines, fact binding,
 and fail-closed model and source errors. Direct mutation tests prove that a run
 cannot complete before both stages agree, a workflow crash writes failure
 evidence, target IDs cannot cross runs, and a validated candidate cannot flip to
-failed. `npm run verify` passes typecheck, 67 tests, build, and lint.
+failed. `npm run verify` passes typecheck, 70 tests, build, and lint.
 
 A manual file-by-file review after the first pull request pass found and fixed
 several gaps. Validation now checks page maps against the original source-text
@@ -76,8 +76,8 @@ candidate, snapshot, source kind, and target ownership before changing state.
 Workflow-level failures create a failed extraction row, and successful run
 completion requires both stages to point to the same validated or not-found
 extraction. Failed ledger handoffs delete any newly stored raw model response
-instead of leaving an orphaned blob. The processor version is `v1.3`, so runs
-made under the earlier validator cannot be reused after these changes.
+instead of leaving an orphaned blob. Those changes used processor `v1.3`, so
+runs made under the earlier validator could not be reused.
 
 Proved the Slice 2 exit gate on the personal development deployment with the
 real processor v2 agenda snapshot `js7facykrk86ep9rgf98ttj52n8dadh2`. Three
@@ -104,6 +104,28 @@ referenced the same extraction, the candidate reached
 `deterministically_validated`, all nine fact rows persisted, and no validation
 finding existed. Repeating the starter returned `reused: true`; the run still
 had one AI call. Production remained untouched.
+
+A second independent review found that a date-only citation accepted a
+timestamp with nonzero seconds. Processor `v1.4` now requires exact midnight
+when the source gives a date without a time. The same review added direct test
+coverage for target-record mismatches, agenda evidence claiming an outcome, and
+citations tied to another snapshot. It also replaced an unexplained AI-call
+query limit with the retry-derived six-call ceiling, rejects a seventh call
+instead of leaving it unlinked, caps validation-stage error details at 500
+characters, removes the duplicate extraction-version re-export, and documents
+why ESLint rather than TypeScript checks first-party unused symbols.
+
+Processor `v1.4` then ran snapshot `js7facykrk86ep9rgf98ttj52n8dadh2`
+as workflow `jd7bpj99vzmfbse5sq4z7zrsy18dcawg`, pipeline run
+`jd73w9yar4s5hc0mh3swbhbce58dc9rf`, extraction
+`k977t7yxh9fbmzv8y1edcaccy18ddnra`, and candidate
+`k571jxydqzev299r67v2d0ew2d8ddmcd`. Terra completed in one attempt with 2,418
+prompt tokens, 2,103 completion tokens, 816 reasoning tokens, and an estimated
+cost of $0.030072. Both stages referenced the same extraction, all nine fact
+rows persisted, the candidate reached `deterministically_validated`, and the
+run had no validation finding. Repeating the starter returned `reused: true`
+with the same run and workflow IDs; the run still had one AI call. Production
+remained untouched.
 
 ### 2026-08-28 - 70ee961
 

@@ -1,4 +1,4 @@
-import { EXTRACTION_PROMPT_VERSION } from './versions'
+import { EXTRACTION_PROMPT_VERSION } from '../pipeline/state'
 
 const SYSTEM_PROMPT_V1 = `You extract exactly one government source record from one official source document for Public Parish, a nonpartisan civic evidence service. You output only the requested record.
 

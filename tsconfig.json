@@ -27,6 +27,8 @@
     /* Linting */
     "skipLibCheck": true,
     "strict": true,
+    /* ESLint checks first-party unused symbols because @convex-dev/workpool
+       ships TypeScript source with an existing unused binding. */
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   }

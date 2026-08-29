@@ -4,18 +4,23 @@ import type { Id } from '../_generated/dataModel'
 import type { MutationCtx } from '../_generated/server'
 import { internalMutation, internalQuery } from '../_generated/server'
 import { aiRoutes, estimateCostUsd, modelRoles } from '../ai/types'
-import { sourceKindUnion } from '../pipeline/state'
+import {
+  EXTRACTION_PROCESSOR_VERSION,
+  EXTRACTION_PROMPT_VERSION,
+  EXTRACTION_SCHEMA_VERSION,
+  MODEL_STEP_RETRY,
+  sourceKindUnion,
+} from '../pipeline/state'
 import schema from '../schema'
 import {
   MATERIAL_ARRAY_LIMITS,
   storedDecisionV1,
   storedFactsV1,
 } from './contractV1'
-import {
-  EXTRACTION_PROCESSOR_VERSION,
-  EXTRACTION_PROMPT_VERSION,
-  EXTRACTION_SCHEMA_VERSION,
-} from './versions'
+
+const MAX_MODEL_ROUTES_PER_ATTEMPT = 2
+const MAX_AI_CALLS_PER_EXTRACTION =
+  MODEL_STEP_RETRY.maxAttempts * MAX_MODEL_ROUTES_PER_ATTEMPT
 
 function requireRunStage(
   run: { _id: string; state: string } | null,
@@ -45,7 +50,13 @@ async function linkAiCallsToExtraction(
   const calls = await ctx.db
     .query('aiCalls')
     .withIndex('by_run_and_created_at', (q) => q.eq('runId', runId))
-    .take(8)
+    .take(MAX_AI_CALLS_PER_EXTRACTION + 1)
+  if (calls.length > MAX_AI_CALLS_PER_EXTRACTION) {
+    throw new ConvexError({
+      code: 'ai_call_limit_exceeded',
+      message: `Run ${runId} has more than ${MAX_AI_CALLS_PER_EXTRACTION} model calls`,
+    })
+  }
   for (const call of calls) {
     if (call.stageId === stageId && call.extractionId === undefined) {
       await ctx.db.patch(call._id, { extractionId })
@@ -996,7 +1007,10 @@ export const persistValidationFailure = internalMutation({
       completedAt: now,
       outputExtractionId: args.extractionId,
       errorClass: 'validation_failed',
-      errorDetail: args.findings.map((finding) => finding.code).join(','),
+      errorDetail: args.findings
+        .map((finding) => finding.code)
+        .join(',')
+        .slice(0, 500),
     })
     return null
   },

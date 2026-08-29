@@ -505,7 +505,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.2',
     schemaVersion: 'v1',
-    processorVersion: 'v1.3',
+    processorVersion: 'v1.4',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
@@ -1265,6 +1265,46 @@ test('a made-up date fails date validation', async () => {
   ])
 })
 
+test.each([
+  {
+    name: 'a target record mismatch',
+    mutate: (decision: ReturnType<typeof goldDecision>['decision']) => {
+      decision.sourceRecordId = 'CO-030-2026'
+      setFactValue(decision, '/sourceRecordId', 'CO-030-2026')
+    },
+    expectedCode: 'target_record_mismatch',
+  },
+  {
+    name: 'an agenda outcome claim',
+    mutate: (decision: ReturnType<typeof goldDecision>['decision']) => {
+      decision.lifecycleState = 'decided'
+      setFactValue(decision, '/lifecycleState', 'decided')
+    },
+    expectedCode: 'agenda_outcome_unsupported',
+  },
+  {
+    name: 'a citation for another snapshot',
+    mutate: (decision: ReturnType<typeof goldDecision>['decision']) => {
+      decision.facts[0].citation.sourceSnapshotId = 'another-snapshot'
+    },
+    expectedCode: 'citation_snapshot_mismatch',
+  },
+])('$name fails deterministic validation', async ({ mutate, expectedCode }) => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = []
+  stubFetch({ modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  modelResponses.push(contentWith(snapshotId, mutate))
+
+  const start = await startExtraction(t, registryId, snapshotId)
+  await drainWorkflows(t)
+
+  expect((await runByRun(t, start.runId))?.state).toBe('failed_terminal')
+  expect(
+    (await findingsByRun(t, start.runId)).map((finding) => finding.code),
+  ).toEqual([expectedCode])
+})
+
 test('a cited public-action deadline requires the exact date and time', async () => {
   const t = initTest()
   const modelResponses: ModelResponseSpec[] = []
@@ -1676,6 +1716,14 @@ test('deterministic date and amount helpers reject malformed values', () => {
       meetingWithSeconds!,
     ),
   ).toBe(true)
+  const midnight = parseZonedIsoDateTime('2026-04-21T00:00:00-05:00')
+  const midnightWithSeconds = parseZonedIsoDateTime('2026-04-21T00:00:30-05:00')
+  expect(midnight).not.toBeNull()
+  expect(midnightWithSeconds).not.toBeNull()
+  expect(textSupportsZonedDateTime('April 21, 2026', midnight!)).toBe(true)
+  expect(
+    textSupportsZonedDateTime('April 21, 2026', midnightWithSeconds!),
+  ).toBe(false)
 
   expect(centsOf(13564.8)).toBe(1356480)
   expect(centsOf(13.564)).toBeNull()

@@ -15,7 +15,7 @@ import {
 import {
   EXTRACTION_PROMPT_VERSION,
   EXTRACTION_SCHEMA_VERSION,
-} from './versions'
+} from '../pipeline/state'
 import {
   checkExtractionContractV1,
   extractionJsonSchemaV1,
