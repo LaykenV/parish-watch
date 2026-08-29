@@ -107,6 +107,12 @@
   padding-block: clamp(3.75rem, 8vw, 7.25rem) var(--section-space);
 }
 
+@media (min-width: 64.0625rem) {
+  .landing .hero {
+    padding-block: clamp(3.25rem, 6.5vw, 5.75rem) clamp(4rem, 7vw, 6.5rem);
+  }
+}
+
 .landing .hero-grid {
   position: relative;
   display: grid;
