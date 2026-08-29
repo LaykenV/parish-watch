@@ -91,3 +91,11 @@ export const listForRun = internalQuery({
       .take(20)
   },
 })
+
+export const getRun = internalQuery({
+  args: { runId: v.id('pipelineRuns') },
+  returns: v.union(v.null(), schema.doc('pipelineRuns')),
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.runId)
+  },
+})

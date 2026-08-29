@@ -8,13 +8,26 @@
  * @module
  */
 
+import type * as ai_chatCompletions from "../ai/chatCompletions.js";
+import type * as ai_provider from "../ai/provider.js";
+import type * as ai_types from "../ai/types.js";
+import type * as extraction_contractV1 from "../extraction/contractV1.js";
+import type * as extraction_extract from "../extraction/extract.js";
+import type * as extraction_ledger from "../extraction/ledger.js";
+import type * as extraction_prepare from "../extraction/prepare.js";
+import type * as extraction_promptV1 from "../extraction/promptV1.js";
+import type * as extraction_textMatch from "../extraction/textMatch.js";
+import type * as extraction_validate from "../extraction/validate.js";
+import type * as extraction_workflow from "../extraction/workflow.js";
 import type * as http from "../http.js";
 import type * as operations_discover from "../operations/discover.js";
+import type * as operations_extract from "../operations/extract.js";
 import type * as operations_ingest from "../operations/ingest.js";
 import type * as operations_seed from "../operations/seed.js";
 import type * as pipeline_keys from "../pipeline/keys.js";
 import type * as pipeline_runs from "../pipeline/runs.js";
 import type * as pipeline_state from "../pipeline/state.js";
+import type * as pipeline_workflowManager from "../pipeline/workflowManager.js";
 import type * as sources_discovery from "../sources/discovery.js";
 import type * as sources_domains from "../sources/domains.js";
 import type * as sources_hashing from "../sources/hashing.js";
@@ -33,13 +46,26 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/chatCompletions": typeof ai_chatCompletions;
+  "ai/provider": typeof ai_provider;
+  "ai/types": typeof ai_types;
+  "extraction/contractV1": typeof extraction_contractV1;
+  "extraction/extract": typeof extraction_extract;
+  "extraction/ledger": typeof extraction_ledger;
+  "extraction/prepare": typeof extraction_prepare;
+  "extraction/promptV1": typeof extraction_promptV1;
+  "extraction/textMatch": typeof extraction_textMatch;
+  "extraction/validate": typeof extraction_validate;
+  "extraction/workflow": typeof extraction_workflow;
   http: typeof http;
   "operations/discover": typeof operations_discover;
+  "operations/extract": typeof operations_extract;
   "operations/ingest": typeof operations_ingest;
   "operations/seed": typeof operations_seed;
   "pipeline/keys": typeof pipeline_keys;
   "pipeline/runs": typeof pipeline_runs;
   "pipeline/state": typeof pipeline_state;
+  "pipeline/workflowManager": typeof pipeline_workflowManager;
   "sources/discovery": typeof sources_discovery;
   "sources/domains": typeof sources_domains;
   "sources/hashing": typeof sources_hashing;
@@ -80,5 +106,6 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
+  workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   firecrawl: import("@firecrawl/firecrawl-convex/_generated/component.js").ComponentApi<"firecrawl">;
 };

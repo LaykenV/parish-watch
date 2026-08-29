@@ -1,7 +1,18 @@
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
-import { processingStates, runTriggers, stageNames } from './pipeline/state'
+import { aiRoutes, modelRoles } from './ai/types'
+import {
+  lifecycleStates,
+  publicActionTypes,
+  recordTypes,
+} from './extraction/contractV1'
+import {
+  processingStates,
+  runTriggers,
+  sourceKindUnion,
+  stageNames,
+} from './pipeline/state'
 import { firecrawlMetadataValue } from './sources/metadata'
 
 const coverageStatuses = v.union(
@@ -20,17 +31,7 @@ const cadenceKinds = v.union(
   v.literal('unknown'),
 )
 
-const sourceKinds = v.union(
-  v.literal('agenda'),
-  v.literal('minutes'),
-  v.literal('ordinance'),
-  v.literal('resolution'),
-  v.literal('notice'),
-  v.literal('calendar'),
-  v.literal('packet'),
-  v.literal('planning_case'),
-  v.literal('other'),
-)
+const sourceKinds = sourceKindUnion
 
 export default defineSchema({
   jurisdictions: defineTable({
@@ -140,11 +141,16 @@ export default defineSchema({
     state: processingStates,
     processorVersion: v.string(),
     snapshotId: v.optional(v.id('sourceSnapshots')),
+    idempotencyKey: v.optional(v.string()),
+    workflowId: v.optional(v.string()),
+    sourceKind: v.optional(sourceKinds),
+    targetRecordId: v.optional(v.string()),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
   })
     .index('by_state_and_started_time', ['state', 'startedAt'])
-    .index('by_registry_and_started_time', ['registryId', 'startedAt']),
+    .index('by_registry_and_started_time', ['registryId', 'startedAt'])
+    .index('by_idempotency_key', ['idempotencyKey']),
 
   pipelineStages: defineTable({
     runId: v.id('pipelineRuns'),
@@ -152,8 +158,12 @@ export default defineSchema({
     idempotencyKey: v.string(),
     state: processingStates,
     attempt: v.number(),
-    inputUrl: v.string(),
+    inputUrl: v.optional(v.string()),
+    inputSnapshotId: v.optional(v.id('sourceSnapshots')),
     outputSnapshotId: v.optional(v.id('sourceSnapshots')),
+    outputExtractionId: v.optional(v.id('extractions')),
+    promptVersion: v.optional(v.string()),
+    schemaVersion: v.optional(v.string()),
     errorClass: v.optional(v.string()),
     errorDetail: v.optional(v.string()),
     retryAt: v.optional(v.number()),
@@ -168,4 +178,130 @@ export default defineSchema({
     .index('by_idempotency_key', ['idempotencyKey'])
     .index('by_state_and_retry_time', ['state', 'retryAt'])
     .index('by_run_and_stage', ['runId', 'stage']),
+
+  aiCalls: defineTable({
+    runId: v.id('pipelineRuns'),
+    stageId: v.optional(v.id('pipelineStages')),
+    extractionId: v.optional(v.id('extractions')),
+    route: aiRoutes,
+    modelRole: modelRoles,
+    modelId: v.string(),
+    promptVersion: v.string(),
+    schemaVersion: v.string(),
+    attempt: v.number(),
+    status: v.string(),
+    httpStatus: v.optional(v.number()),
+    latencyMs: v.number(),
+    requestId: v.optional(v.string()),
+    promptTokens: v.optional(v.number()),
+    completionTokens: v.optional(v.number()),
+    totalTokens: v.optional(v.number()),
+    cachedTokens: v.optional(v.number()),
+    reasoningTokens: v.optional(v.number()),
+    estimatedCostUsd: v.optional(v.number()),
+    retryAfterMs: v.optional(v.number()),
+    errorClass: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_run_and_created_at', ['runId', 'createdAt'])
+    .index('by_extraction', ['extractionId']),
+
+  extractions: defineTable({
+    runId: v.id('pipelineRuns'),
+    registryId: v.id('sourceRegistries'),
+    snapshotId: v.id('sourceSnapshots'),
+    sourceKind: sourceKinds,
+    targetRecordId: v.string(),
+    promptVersion: v.string(),
+    schemaVersion: v.string(),
+    processorVersion: v.string(),
+    modelRole: modelRoles,
+    modelId: v.optional(v.string()),
+    route: v.optional(aiRoutes),
+    state: v.union(
+      v.literal('failed'),
+      v.literal('not_found'),
+      v.literal('extracted'),
+    ),
+    reason: v.optional(v.string()),
+    errorClass: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    rawResponseStorageId: v.optional(v.id('_storage')),
+    responseHash: v.optional(v.string()),
+    responseByteLength: v.optional(v.number()),
+    candidateId: v.optional(v.id('decisionCandidates')),
+    createdAt: v.number(),
+  })
+    .index('by_run', ['runId'])
+    .index('by_snapshot_and_created_at', ['snapshotId', 'createdAt']),
+
+  decisionCandidates: defineTable({
+    extractionId: v.id('extractions'),
+    runId: v.id('pipelineRuns'),
+    registryId: v.id('sourceRegistries'),
+    snapshotId: v.id('sourceSnapshots'),
+    sourceKind: sourceKinds,
+    targetRecordId: v.string(),
+    sourceRecordId: v.union(v.string(), v.null()),
+    recordType: recordTypes,
+    title: v.string(),
+    bodyName: v.string(),
+    meetingAt: v.union(v.string(), v.null()),
+    lifecycleState: lifecycleStates,
+    plainLanguageSummary: v.string(),
+    affectedPlaces: v.array(v.string()),
+    amounts: v.array(
+      v.object({
+        value: v.number(),
+        currency: v.literal('USD'),
+        context: v.string(),
+      }),
+    ),
+    publicActions: v.array(
+      v.object({
+        type: publicActionTypes,
+        deadline: v.union(v.string(), v.null()),
+        instructions: v.string(),
+      }),
+    ),
+    state: v.union(
+      v.literal('extracted'),
+      v.literal('deterministically_validated'),
+      v.literal('validation_failed'),
+    ),
+    promptVersion: v.string(),
+    schemaVersion: v.string(),
+    modelRole: modelRoles,
+    modelId: v.string(),
+    route: aiRoutes,
+    createdAt: v.number(),
+  })
+    .index('by_extraction', ['extractionId'])
+    .index('by_snapshot_and_created_at', ['snapshotId', 'createdAt']),
+
+  candidateFacts: defineTable({
+    candidateId: v.id('decisionCandidates'),
+    extractionId: v.id('extractions'),
+    fieldPath: v.string(),
+    value: v.string(),
+    sourceSnapshotId: v.string(),
+    excerpt: v.string(),
+    page: v.optional(v.number()),
+    section: v.optional(v.string()),
+  })
+    .index('by_candidate_and_field_path', ['candidateId', 'fieldPath'])
+    .index('by_extraction', ['extractionId']),
+
+  validationFindings: defineTable({
+    runId: v.id('pipelineRuns'),
+    extractionId: v.id('extractions'),
+    candidateId: v.optional(v.id('decisionCandidates')),
+    code: v.string(),
+    fieldPath: v.optional(v.string()),
+    detail: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_extraction', ['extractionId'])
+    .index('by_run', ['runId']),
 })
