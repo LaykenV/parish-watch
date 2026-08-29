@@ -94,7 +94,7 @@ Use this exact working copy:
 
 ### Heading
 
-> See what local government may change.
+> See how local government is changing.
 
 ### Supporting copy
 
