@@ -1,0 +1,15 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 64 64"
+  role="img"
+  aria-label="Public Parish"
+>
+  <path
+    d="M19 54V10h18c10 0 17 6.2 17 15.5S47 41 37 41H19"
+    fill="none"
+    stroke="#4C1D6F"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="8"
+  />
+</svg>

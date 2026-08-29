@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Public Parish design system foundation</title>
+    <meta
+      name="description"
+      content="Version-zero brand, interaction, mobile, motion, and accessibility rules for Public Parish."
+    />
+    <style>
+      /* Hallmark · internal design reference · not a landing-page design */
+      :root {
+        --color-paper: oklch(96.42% 0.0152 90.23);
+        --color-surface: oklch(99.14% 0.0098 87.47);
+        --color-ink: oklch(20.63% 0.0335 309.45);
+        --color-purple: oklch(34.58% 0.136 306.78);
+        --color-purple-strong: oklch(26.9% 0.1098 306.35);
+        --color-gold: oklch(74.4% 0.1454 87.37);
+        --color-cypress: oklch(44.91% 0.073 170.33);
+        --color-muted: oklch(49.32% 0.0199 316.88);
+        --color-rule: oklch(85.74% 0.0239 82.11);
+        --color-focus: var(--color-purple);
+        --font-body: ui-sans-serif, system-ui, sans-serif;
+        --font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-6: 1.5rem;
+        --space-8: 2rem;
+        --space-12: 3rem;
+        --space-16: 4rem;
+        --space-24: 6rem;
+        --radius-sm: 0.25rem;
+        --radius-md: 0.625rem;
+        --radius-lg: 1.125rem;
+        --rule: 1px;
+        --dur-instant: 100ms;
+        --dur-fast: 160ms;
+        --dur-standard: 240ms;
+        --dur-deliberate: 520ms;
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+        --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        overflow-x: clip;
+      }
+
+      body {
+        margin: 0;
+        color: var(--color-ink);
+        background: var(--color-paper);
+        font-family: var(--font-body);
+        line-height: 1.6;
+      }
+
+      a {
+        color: var(--color-purple);
+        text-underline-offset: 0.18em;
+      }
+
+      a:focus-visible,
+      button:focus-visible {
+        outline: 3px solid var(--color-focus);
+        outline-offset: 3px;
+      }
+
+      header,
+      main,
+      footer {
+        width: min(100% - 2rem, 72rem);
+        margin-inline: auto;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: 4rem minmax(0, 1fr);
+        gap: var(--space-6);
+        align-items: center;
+        padding-block: var(--space-12) var(--space-8);
+        border-bottom: var(--rule) solid var(--color-rule);
+      }
+
+      .site-mark {
+        display: block;
+        width: 4rem;
+        height: 4rem;
+        color: var(--color-purple);
+      }
+
+      .logo-specimen {
+        display: block;
+        width: 6rem;
+        height: 6rem;
+        color: var(--color-purple);
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.12;
+        overflow-wrap: anywhere;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 4rem);
+        letter-spacing: -0.04em;
+      }
+
+      h2 {
+        font-size: clamp(1.5rem, 3vw, 2.35rem);
+        letter-spacing: -0.025em;
+      }
+
+      h3 {
+        font-size: 1.08rem;
+      }
+
+      p,
+      ul,
+      ol,
+      dl,
+      table,
+      pre {
+        margin-block: var(--space-4) 0;
+      }
+
+      .summary {
+        max-width: 58rem;
+        color: var(--color-muted);
+        font-size: 1.08rem;
+      }
+
+      section {
+        padding-block: var(--space-12);
+        border-bottom: var(--rule) solid var(--color-rule);
+      }
+
+      .section-intro {
+        max-width: 48rem;
+        color: var(--color-muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-4);
+        margin-top: var(--space-8);
+      }
+
+      .panel {
+        min-width: 0;
+        padding: var(--space-6);
+        border: var(--rule) solid var(--color-rule);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
+      }
+
+      .panel > :first-child {
+        margin-top: 0;
+      }
+
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-3);
+        margin-top: var(--space-8);
+      }
+
+      .swatch {
+        min-width: 0;
+        overflow: hidden;
+        border: var(--rule) solid var(--color-rule);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
+      }
+
+      .swatch-color {
+        height: 6rem;
+        background: var(--swatch);
+      }
+
+      .swatch-copy {
+        padding: var(--space-4);
+      }
+
+      .swatch-copy code {
+        overflow-wrap: anywhere;
+      }
+
+      code,
+      pre {
+        font-family: var(--font-mono);
+        font-size: 0.86rem;
+      }
+
+      pre {
+        max-width: 100%;
+        overflow: auto;
+        padding: var(--space-6);
+        border: var(--rule) solid var(--color-rule);
+        border-radius: var(--radius-md);
+        color: var(--color-surface);
+        background: var(--color-ink);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--color-surface);
+      }
+
+      th,
+      td {
+        padding: var(--space-3) var(--space-4);
+        border: var(--rule) solid var(--color-rule);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--color-purple-strong);
+      }
+
+      .status {
+        padding-left: var(--space-3);
+        border-left: 0.25rem solid var(--color-gold);
+      }
+
+      footer {
+        padding-block: var(--space-8) var(--space-12);
+        color: var(--color-muted);
+      }
+
+      @media (max-width: 48rem) {
+        header {
+          grid-template-columns: minmax(0, 1fr);
+          gap: var(--space-4);
+          padding-block: var(--space-8);
+        }
+
+        .site-mark {
+          width: 3rem;
+          height: 3rem;
+        }
+
+        .grid,
+        .swatches {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        section {
+          padding-block: var(--space-8);
+        }
+
+        th,
+        td {
+          padding: var(--space-3);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 1ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 1ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <svg
+        class="site-mark"
+        viewBox="0 0 64 64"
+        role="img"
+        aria-label="Public Parish placeholder mark"
+      >
+        <path
+          d="M18 54V10H34C44.5 10 51 15.9 51 25C51 34.1 44.5 40 34 40H18M18 14H33.5C41.3 14 46 18 46 25C46 32 41.3 36 33.5 36H18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <div>
+        <h1>Public Parish design system foundation</h1>
+        <p class="summary">
+          Version 0.1. This file locks brand foundations and interaction
+          contracts. It does not lock the final typography, component styling,
+          or application layout.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section aria-labelledby="purpose-title">
+        <h2 id="purpose-title">Purpose and authority</h2>
+        <p class="section-intro">
+          Public Parish is a free, open-source, nonpartisan Louisiana civic
+          application. Its interface helps residents discover local-government
+          decisions, inspect the official evidence, ask source-grounded
+          questions, follow an issue, and learn what happened.
+        </p>
+        <div class="grid">
+          <article class="panel">
+            <h3>This file controls</h3>
+            <ul>
+              <li>Brand colors and their permitted roles.</li>
+              <li>Logo use and favicon behavior.</li>
+              <li>Mobile, touch, motion, and accessibility rules.</li>
+              <li>Behavioral contracts shared by reusable components.</li>
+              <li>Design patterns that Public Parish will not use.</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>This file does not control yet</h3>
+            <ul>
+              <li>Final display and body typefaces.</li>
+              <li>Final button, card, header, or navigation appearance.</li>
+              <li>The product's final spacing character and density.</li>
+              <li>One visual signature for the marketing page or app.</li>
+              <li>A component library or animation dependency.</li>
+            </ul>
+          </article>
+        </div>
+        <p class="status">
+          Page-specific briefs must cite this file and may narrow these rules.
+          They may not weaken them. Start with
+          <a href="./marketing-page.md">marketing-page.md</a> for the first
+          landing-page experiment.
+        </p>
+      </section>
+
+      <section aria-labelledby="principles-title">
+        <h2 id="principles-title">Design principles</h2>
+        <div class="grid">
+          <article class="panel">
+            <h3>Resident before institution</h3>
+            <p>
+              Lead with what may change, where, when, and what the public can
+              still do. Government terminology remains available as supporting
+              context.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>Evidence stays beside the claim</h3>
+            <p>
+              Dates, amounts, votes, deadlines, consequences, and outcomes must
+              open the source excerpt that supports them. A source list at the
+              bottom is not enough.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>Uncertainty is visible</h3>
+            <p>
+              Missing or delayed evidence produces a limited state, a dated
+              explanation, or no publication. The interface never fills a gap
+              with confident filler.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>Louisiana without costume</h3>
+            <p>
+              Color and rhythm may feel local. Avoid tourism graphics, sports
+              branding, campaign language, government seals, and decorative
+              civic clip art.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="color-title">
+        <h2 id="color-title">Color system</h2>
+        <p class="section-intro">
+          Purple carries identity and primary actions. Gold marks emphasis and
+          motion but is not body text on the paper background. Cypress green is
+          reserved for evidence, source health, and supporting state. The three
+          Louisiana colors never receive equal visual weight.
+        </p>
+        <div class="swatches">
+          <article class="swatch">
+            <div
+              class="swatch-color"
+              style="--swatch: var(--color-paper)"
+            ></div>
+            <div class="swatch-copy">
+              <h3>Paper</h3>
+              <code>#F7F3E8</code><br />
+              <code>oklch(96.42% 0.0152 90.23)</code>
+            </div>
+          </article>
+          <article class="swatch">
+            <div
+              class="swatch-color"
+              style="--swatch: var(--color-surface)"
+            ></div>
+            <div class="swatch-copy">
+              <h3>Surface</h3>
+              <code>#FFFCF5</code><br />
+              <code>oklch(99.14% 0.0098 87.47)</code>
+            </div>
+          </article>
+          <article class="swatch">
+            <div class="swatch-color" style="--swatch: var(--color-ink)"></div>
+            <div class="swatch-copy">
+              <h3>Ink</h3>
+              <code>#1C1323</code><br />
+              <code>oklch(20.63% 0.0335 309.45)</code>
+            </div>
+          </article>
+          <article class="swatch">
+            <div
+              class="swatch-color"
+              style="--swatch: var(--color-purple)"
+            ></div>
+            <div class="swatch-copy">
+              <h3>Public purple</h3>
+              <code>#4C1D6F</code><br />
+              <code>oklch(34.58% 0.1360 306.78)</code>
+            </div>
+          </article>
+          <article class="swatch">
+            <div class="swatch-color" style="--swatch: var(--color-gold)"></div>
+            <div class="swatch-copy">
+              <h3>Brass gold</h3>
+              <code>#D3A51E</code><br />
+              <code>oklch(74.40% 0.1454 87.37)</code>
+            </div>
+          </article>
+          <article class="swatch">
+            <div
+              class="swatch-color"
+              style="--swatch: var(--color-cypress)"
+            ></div>
+            <div class="swatch-copy">
+              <h3>Cypress</h3>
+              <code>#21624F</code><br />
+              <code>oklch(44.91% 0.0730 170.33)</code>
+            </div>
+          </article>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Pair</th>
+              <th>Contrast</th>
+              <th>Rule</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ink on paper</td>
+              <td>16.23:1</td>
+              <td>Default body copy.</td>
+            </tr>
+            <tr>
+              <td>Purple on paper</td>
+              <td>11.06:1</td>
+              <td>Primary links, actions, and identity.</td>
+            </tr>
+            <tr>
+              <td>Cypress on paper</td>
+              <td>6.48:1</td>
+              <td>Evidence and source-health text.</td>
+            </tr>
+            <tr>
+              <td>Muted ink on paper</td>
+              <td>5.62:1</td>
+              <td>Secondary text at normal sizes.</td>
+            </tr>
+            <tr>
+              <td>Ink on gold</td>
+              <td>7.86:1</td>
+              <td>Short highlighted labels or controls only.</td>
+            </tr>
+          </tbody>
+        </table>
+        <pre><code>:root {
+  --color-paper: oklch(96.42% 0.0152 90.23);
+  --color-surface: oklch(99.14% 0.0098 87.47);
+  --color-ink: oklch(20.63% 0.0335 309.45);
+  --color-purple: oklch(34.58% 0.1360 306.78);
+  --color-purple-strong: oklch(26.90% 0.1098 306.35);
+  --color-gold: oklch(74.40% 0.1454 87.37);
+  --color-cypress: oklch(44.91% 0.0730 170.33);
+  --color-muted: oklch(49.32% 0.0199 316.88);
+  --color-rule: oklch(85.74% 0.0239 82.11);
+}</code></pre>
+      </section>
+
+      <section aria-labelledby="logo-title">
+        <h2 id="logo-title">Logo foundation</h2>
+        <div class="grid">
+          <article class="panel">
+            <svg
+              class="logo-specimen"
+              viewBox="0 0 64 64"
+              role="img"
+              aria-label="Basic purple P placeholder"
+            >
+              <path
+                d="M18 54V10H34C44.5 10 51 15.9 51 25C51 34.1 44.5 40 34 40H18M18 14H33.5C41.3 14 46 18 46 25C46 32 41.3 36 33.5 36H18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <p>
+              The current mark is a temporary, transparent SVG. It is a basic P
+              with no wordmark, tile, seal, mascot, or decorative background.
+            </p>
+          </article>
+          <article class="panel">
+            <h3>Use rules</h3>
+            <ul>
+              <li>Keep the mark legible at 16, 32, 64, and 180 pixels.</li>
+              <li>Use the symbol alone for favicons and compact app chrome.</li>
+              <li>Use the name as live text beside the mark when needed.</li>
+              <li>Do not bake the name into a raster logo image.</li>
+              <li>Preserve transparent space outside the symbol.</li>
+              <li>Do not imply government ownership or endorsement.</li>
+            </ul>
+          </article>
+        </div>
+        <p class="status">
+          Logo exploration is paused. Replace the placeholder only after the
+          landing-page experiments reveal a stronger visual direction.
+        </p>
+      </section>
+
+      <section aria-labelledby="type-title">
+        <h2 id="type-title">Typography</h2>
+        <p class="section-intro">
+          Typography remains open during the landing-page experiments. Each
+          agent must make a deliberate choice, name the role of every face, and
+          use fonts that the open-source project can legally ship.
+        </p>
+        <div class="grid">
+          <article class="panel">
+            <h3>Required</h3>
+            <ul>
+              <li>Readable body text at 16 CSS pixels or larger.</li>
+              <li>Clear distinction between display, body, and data roles.</li>
+              <li>Upright emphasis. Do not use italic contrast text.</li>
+              <li>
+                Tabular numerals where dates, money, or vote counts need it.
+              </li>
+              <li>A comfortable text measure near 55 to 72 characters.</li>
+              <li>Long headings must wrap without horizontal overflow.</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>Still open</h3>
+            <ul>
+              <li>Serif, sans-serif, slab, or mixed display direction.</li>
+              <li>One family or a deliberate pairing.</li>
+              <li>Final weights, widths, and letter spacing.</li>
+              <li>The final responsive type scale.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="layout-title">
+        <h2 id="layout-title">Layout and spacing</h2>
+        <p class="section-intro">
+          Use a 4-pixel spacing base. Agents may create different compositions,
+          but they must express spacing through named tokens rather than
+          isolated values.
+        </p>
+        <pre><code>:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+}</code></pre>
+        <ul>
+          <li>Mobile content must work at 320, 375, 414, and 768 pixels.</li>
+          <li>Use <code>minmax(0, 1fr)</code> for shrinkable grid tracks.</li>
+          <li>
+            Set <code>overflow-x: clip</code> on the document, not hidden.
+          </li>
+          <li>Do not force every section into the same centered container.</li>
+          <li>Do not use full-width pill containers as layout decoration.</li>
+          <li>
+            Keep section structure meaningful. Number only real sequences.
+          </li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="mobile-title">
+        <h2 id="mobile-title">Mobile and touch</h2>
+        <p class="section-intro">
+          Phone use is the primary design case. Desktop is the expansion of the
+          mobile experience, not the source layout squeezed smaller.
+        </p>
+        <div class="grid">
+          <article class="panel">
+            <h3>Touch contract</h3>
+            <ul>
+              <li>Interactive targets have a 44 by 44 CSS pixel minimum.</li>
+              <li>Primary actions remain on one line at supported widths.</li>
+              <li>No essential action depends on hover.</li>
+              <li>
+                Do not place competing tap targets inside a clickable card.
+              </li>
+              <li>Keep visible focus and a logical keyboard order.</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>Horizontal rail contract</h3>
+            <ul>
+              <li>
+                Use rails only for finite peer collections such as decisions.
+              </li>
+              <li>
+                Use native overflow and
+                <code>scroll-snap-type: x proximity</code>.
+              </li>
+              <li>
+                Show part of the next card so touch users discover the rail.
+              </li>
+              <li>Never hijack vertical page scrolling.</li>
+              <li>
+                Provide keyboard access and desktop previous or next controls.
+              </li>
+              <li>Do not require drag as the only input method.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="motion-title">
+        <h2 id="motion-title">Motion</h2>
+        <p class="section-intro">
+          Motion explains state or sequence. It does not decorate every section.
+          The marketing page receives two coordinated moments: one restrained
+          hero treatment and one evidence-sequence animation.
+        </p>
+        <pre><code>:root {
+  --dur-instant: 100ms;
+  --dur-fast: 160ms;
+  --dur-standard: 240ms;
+  --dur-deliberate: 520ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}</code></pre>
+        <ul>
+          <li>
+            Animate transform and opacity. Do not animate layout properties.
+          </li>
+          <li>Focus rings appear immediately and never animate.</li>
+          <li>
+            No bounce, overshoot, scroll-jacking, or endless ambient loops.
+          </li>
+          <li>Motion cannot hide source status or delay access to content.</li>
+          <li>
+            Reduced motion shows the final state immediately or uses a short
+            opacity change.
+          </li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="components-title">
+        <h2 id="components-title">Reusable component contracts</h2>
+        <p class="section-intro">
+          These contracts describe behavior. Their visual treatment remains open
+          until the landing-page experiments establish a direction.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Required behavior</th>
+              <th>Visual status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Button and link</td>
+              <td>
+                Default, hover, focus, active, disabled, loading, error, and
+                success states. Labels name the resulting action.
+              </td>
+              <td>Open</td>
+            </tr>
+            <tr>
+              <td>Decision card</td>
+              <td>
+                Issue title, body and place, lifecycle state, next date or
+                outcome, one evidence-based consequence, freshness, source
+                status, and a clear open action.
+              </td>
+              <td>Open until real data exists</td>
+            </tr>
+            <tr>
+              <td>Horizontal rail</td>
+              <td>
+                Native scrolling, discoverable next item, keyboard access,
+                visible position, and no trapped vertical gesture.
+              </td>
+              <td>Open</td>
+            </tr>
+            <tr>
+              <td>Citation control</td>
+              <td>
+                Sits beside the claim, opens the exact excerpt or page, names
+                the official source, and returns focus when closed.
+              </td>
+              <td>Open</td>
+            </tr>
+            <tr>
+              <td>Status label</td>
+              <td>
+                Uses text and an icon or shape. Color never carries meaning
+                alone. Labels stay factual and explain limited states.
+              </td>
+              <td>No default pill</td>
+            </tr>
+            <tr>
+              <td>Header</td>
+              <td>
+                Prelaunch shows the mark, live-text name, and Follow the build.
+                Future navigation appears only when destinations work.
+              </td>
+              <td>Open</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-labelledby="access-title">
+        <h2 id="access-title">Accessibility floor</h2>
+        <ul>
+          <li>Meet WCAG 2.2 AA contrast and interaction requirements.</li>
+          <li>Use semantic landmarks and a single clear heading hierarchy.</li>
+          <li>Support complete keyboard navigation and visible focus.</li>
+          <li>Label every icon and status with accessible text.</li>
+          <li>Announce material realtime changes without stealing focus.</li>
+          <li>
+            Return focus after drawers, dialogs, and citation panels close.
+          </li>
+          <li>Use readable local dates and machine-readable timestamps.</li>
+          <li>Identify the destination of every official-source link.</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="avoid-title">
+        <h2 id="avoid-title">Patterns to reject</h2>
+        <div class="grid">
+          <article class="panel">
+            <h3>Visual</h3>
+            <ul>
+              <li>Eyebrow labels used as decoration.</li>
+              <li>Pills used for navigation, headings, or generic metadata.</li>
+              <li>Italic words inserted only to create contrast.</li>
+              <li>
+                Gradient blobs, AI sparkles, fake browser chrome, or phone
+                frames.
+              </li>
+              <li>A repeated hero, three-card grid, CTA, footer template.</li>
+              <li>Equal-weight purple, gold, and green blocks.</li>
+              <li>Red-versus-blue political framing.</li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>Content</h3>
+            <ul>
+              <li>
+                Invented metrics, testimonials, partner logos, or usage claims.
+              </li>
+              <li>Claims that unsupported regions are covered.</li>
+              <li>Government motives not stated in the official record.</li>
+              <li>
+                Hackathon or sponsor material placed above resident value.
+              </li>
+              <li>Backend jargon in resident-facing headings.</li>
+              <li>Generic claims that could describe any civic application.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="governance-title">
+        <h2 id="governance-title">How this foundation evolves</h2>
+        <ol>
+          <li>
+            Build several marketing-page experiments from the shared brief.
+          </li>
+          <li>
+            Choose useful typography, spacing, component, and motion decisions.
+          </li>
+          <li>Record only the selected decisions here.</li>
+          <li>
+            Build production React components during the resident UI slices.
+          </li>
+          <li>
+            Verify each component on real mobile widths and real civic data.
+          </li>
+        </ol>
+        <p>
+          A design experiment cannot change this file merely because its own
+          page needs an exception. Update the foundation only after the owner
+          approves a reusable decision.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Source documents:
+        <a href="../PLAN.md">PLAN.md</a>,
+        <a href="./product-spec.md">product-spec.md</a>, and
+        <a href="./architecture.md">architecture.md</a>.
+      </p>
+    </footer>
+
+    <script type="application/json" id="public-parish-design-foundation">
+      {
+        "version": "0.1",
+        "status": "foundation",
+        "sourceOfTruth": "docs/design-system.html",
+        "colors": {
+          "paper": "oklch(96.42% 0.0152 90.23)",
+          "surface": "oklch(99.14% 0.0098 87.47)",
+          "ink": "oklch(20.63% 0.0335 309.45)",
+          "purple": "oklch(34.58% 0.1360 306.78)",
+          "purpleStrong": "oklch(26.90% 0.1098 306.35)",
+          "gold": "oklch(74.40% 0.1454 87.37)",
+          "cypress": "oklch(44.91% 0.0730 170.33)",
+          "muted": "oklch(49.32% 0.0199 316.88)",
+          "rule": "oklch(85.74% 0.0239 82.11)"
+        },
+        "logo": {
+          "status": "placeholder",
+          "path": "public/brand-mark.svg",
+          "background": "transparent",
+          "wordmarkInAsset": false
+        },
+        "typography": {
+          "status": "open",
+          "italicContrast": false,
+          "minimumBodyPx": 16
+        },
+        "mobileWidths": [320, 375, 414, 768],
+        "minimumTouchTargetPx": 44,
+        "motion": {
+          "marketingMajorMoments": 2,
+          "properties": ["transform", "opacity"],
+          "reducedMotionRequired": true
+        },
+        "componentVisuals": "open until experiment selection"
+      }
+    </script>
+  </body>
+</html>

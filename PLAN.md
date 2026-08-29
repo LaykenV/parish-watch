@@ -60,6 +60,15 @@ The missing layer connects:
 - what the public can still do;
 - the final decision and later implementation.
 
+## Adjacent competitor
+
+The Louisiana Legislature's official [LA LEGE app](https://apps.apple.com/us/app/la-lege/id1628109594)
+is an adjacent competitor for Louisiana civic attention. It covers state House
+and Senate bills, schedules, agendas, members, and live video. Public Parish
+will not duplicate that state-legislative access. Its distinct job remains
+explaining and following supported local-government decisions through cited
+evidence, grounded questions, material changes, and outcomes.
+
 ## Product Promise
 
 Public Parish is free, open source, nonpartisan, source-cited, and correctable.
