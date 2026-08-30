@@ -112,6 +112,17 @@ export type AskScenario = (typeof ASK_SCENARIOS)[number]
 export type AskSearch = AskRouteSearch & { fixture?: AskScenario }
 
 /*
+  The anonymous chat adapter has not passed its integration gate, so only a
+  development fixture session can answer a question. The route uses this to
+  resolve the honest unavailable state, and the record pages use it to show
+  the same message instead of inviting a question the product would drop on
+  the way to /ask.
+*/
+export function askCanAnswer(): boolean {
+  return import.meta.env.DEV
+}
+
+/*
   A scenario resolves only in development. Production keeps the parameter in
   the URL so in-page navigation does not drop it, but never resolves a
   scenario and never loads the fixture module.

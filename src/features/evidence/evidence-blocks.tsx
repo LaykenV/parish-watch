@@ -11,7 +11,7 @@ import type { ReactNode } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
-import { issueAskKey, meetingAskKey } from '../ask/contracts'
+import { askCanAnswer, issueAskKey, meetingAskKey } from '../ask/contracts'
 import { setAskDraftHandoff } from '../ask/draft-handoff'
 import { formatDate } from '../discovery/format'
 import { Sheet } from '../discovery/sheet'
@@ -318,6 +318,18 @@ export function AskBlock({
   const navigate = useNavigate()
   const [question, setQuestion] = useState('')
   const fieldId = useId()
+
+  if (!askCanAnswer()) {
+    return (
+      <div className="ev-ask">
+        <p className="ev-ask-scope">{scopeLabel}</p>
+        <p className="ev-ask-label">Ask is not available yet</p>
+        <p className="ev-ask-note">
+          You can still inspect every official source on this page.
+        </p>
+      </div>
+    )
+  }
 
   const navigateToAsk = () => {
     const draft = question.trim()
