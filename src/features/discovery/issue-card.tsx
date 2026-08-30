@@ -21,7 +21,9 @@ function stateTone(state: LifecycleState): 'active' | 'settled' | 'muted' {
   ) {
     return 'active'
   }
-  if (state === 'Decided' || state === 'Completed') return 'settled'
+  if (state === 'Decided' || state === 'Completed' || state === 'Postponed') {
+    return 'settled'
+  }
   return 'muted'
 }
 
@@ -52,12 +54,19 @@ export function IssueCard({
   variant = 'standard',
 }: IssueCardProps) {
   const inertId = useId()
+  const href = issue.href ?? '/issues/' + issue.slug
+  const external = href.startsWith('https://') || href.startsWith('http://')
+  const showSecondaryActions = issue.showSecondaryActions ?? true
 
   const dateLine = issue.nextDate
     ? `${issue.nextDate.label} · ${formatDate(issue.nextDate.date)}`
     : issue.latestOutcome
       ? `${issue.latestOutcome.label} · ${formatDate(issue.latestOutcome.date)}`
-      : 'No next date posted'
+      : issue.state === 'Postponed'
+        ? 'No new date posted'
+        : issue.state === 'Decided' || issue.state === 'Completed'
+          ? 'No outcome date posted'
+          : 'No next date posted'
 
   return (
     <article className="pp-card" data-variant={variant}>
@@ -72,7 +81,13 @@ export function IssueCard({
       </header>
       <div className="pp-card-main">
         <h3 className="pp-card-title">
-          <Link to={'/issues/' + issue.slug}>{issue.title}</Link>
+          {external ? (
+            <a href={href} rel="noreferrer" target="_blank">
+              {issue.title}
+            </a>
+          ) : (
+            <Link to={href}>{issue.title}</Link>
+          )}
         </h3>
         <p className="pp-card-date">{dateLine}</p>
         {issue.whyMatter ? (
@@ -96,13 +111,19 @@ export function IssueCard({
         <div className="pp-card-actions">
           <Button
             className="pp-card-view"
-            render={<Link to={'/issues/' + issue.slug} />}
+            render={
+              external ? (
+                <a href={href} rel="noreferrer" target="_blank" />
+              ) : (
+                <Link to={href} />
+              )
+            }
             size="touch"
             variant={variant === 'lead' ? 'default' : 'outline'}
           >
-            View issue
+            {issue.primaryActionLabel ?? 'View issue'}
           </Button>
-          {variant !== 'rail' ? (
+          {variant !== 'rail' && showSecondaryActions ? (
             <>
               <Button
                 aria-describedby={inertId}

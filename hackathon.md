@@ -12,9 +12,24 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T17:06:22Z
+- **Last updated:** 2026-08-30T17:31:37Z
 
 ## Log
+
+### 2026-08-30 - working tree
+
+Connected Home, For You, and Explore to current full and limited atomic
+publications through a bounded public Convex query. The query returns only
+accepted resident fields, hides withheld versions, and fails closed on stale
+publication pointers. Live cards identify themselves as published decision
+records and open the accepted official source. They do not invent issue
+ranking, topics, or consequence text. Explicit fixture URLs still drive
+development QA and remain disabled in production. The development deployment
+returned four accepted records. `npm run verify` passed typecheck, 169 tests
+across 21 files, the production builds, prerender, and lint. Production-preview
+checks at 390 and 1,440 pixels found no horizontal overflow, rendered four
+official-source links, and ignored fixture parameters. No production deployment
+is claimed (`convex/resident/discovery.ts`, `src/features/discovery/`).
 
 ### 2026-08-30 - b22e321
 

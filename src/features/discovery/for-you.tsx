@@ -9,6 +9,7 @@ import { areaName, getActiveDiscoveryFixture } from './contracts'
 import type { AreaSlug, ForYouScenario, IssueCardData } from './contracts'
 import { ISSUE_FIXTURES } from './fixtures'
 import { IssueCard } from './issue-card'
+import { toDecisionCard, usePublishedDecisions } from './live-publications'
 import { Notice, SectionFailure, UpdateRow } from './notice'
 
 const REASONS: Record<string, string> = {
@@ -26,6 +27,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
   const area = useArea()
   const activeScenario = getActiveDiscoveryFixture(scenario)
   const fixturesEnabled = activeScenario !== undefined
+  const publishedDecisions = usePublishedDecisions(!fixturesEnabled)
   const signedIn = activeScenario === 'signed-in'
   const forcedNoArea = activeScenario === 'no-area'
   const watching: AreaSlug[] = signedIn
@@ -43,7 +45,10 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
 
   let feed: IssueCardData[] = fixturesEnabled
     ? ISSUE_FIXTURES.filter((issue) => watching.includes(issue.placeSlug))
-    : []
+    : (publishedDecisions ?? [])
+        .map(toDecisionCard)
+        .filter((card): card is IssueCardData => card !== null)
+        .filter((card) => watching.includes(card.placeSlug))
   if (signedIn) {
     feed = fixturesEnabled
       ? ISSUE_FIXTURES.filter(
@@ -63,8 +68,9 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
       <header className="pp-page-head">
         <h1>For You</h1>
         <p className="pp-page-lede">
-          One feed of local decisions, ordered by what is happening next. Each
-          item says why it appears.
+          {fixturesEnabled
+            ? 'One feed of local decisions, ordered by what is happening next. Each item says why it appears.'
+            : 'Published decision records for your selected area. Each opens the official source.'}
         </p>
       </header>
 
@@ -93,14 +99,16 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
                 </Button>
               )}
             />
-            <Button
-              className="pp-inline-action"
-              render={<Link to="/following/areas-and-topics" />}
-              size="touch"
-              variant="ghost"
-            >
-              Edit saved interests
-            </Button>
+            {fixturesEnabled ? (
+              <Button
+                className="pp-inline-action"
+                render={<Link to="/following/areas-and-topics" />}
+                size="touch"
+                variant="ghost"
+              >
+                Edit saved interests
+              </Button>
+            ) : null}
           </div>
 
           {activeScenario === 'degraded' ? (
@@ -127,33 +135,45 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
               label="Your feed"
               onRetry={() => setRecovered(true)}
             />
+          ) : !fixturesEnabled && publishedDecisions === undefined ? (
+            <div className="pp-empty" role="status">
+              <p className="pp-empty-title">Loading published records...</p>
+            </div>
           ) : feed.length > 0 ? (
             <div className="pp-foryou-feed">
               {feed.map((issue) => (
                 <IssueCard
                   issue={issue}
                   key={issue.slug}
-                  reason={REASONS[issue.slug]}
+                  reason={
+                    REASONS[issue.slug] ??
+                    `In ${issue.place} · Published decision record`
+                  }
                 />
               ))}
             </div>
           ) : (
             <div className="pp-empty">
               <p className="pp-empty-title">
-                No matches for your saved interests yet.
+                {fixturesEnabled
+                  ? 'No matches for your saved interests yet.'
+                  : 'No published decision records are available for this area.'}
               </p>
               <p className="pp-empty-text">
-                You can widen your interests or browse major decisions across
-                launch areas.
+                {fixturesEnabled
+                  ? 'You can widen your interests or browse major decisions across launch areas.'
+                  : 'New records appear after their official evidence passes the publication checks.'}
               </p>
               <div className="pp-empty-actions">
-                <Button
-                  render={<Link to="/following/areas-and-topics" />}
-                  size="touch"
-                  variant="outline"
-                >
-                  Edit saved interests
-                </Button>
+                {fixturesEnabled ? (
+                  <Button
+                    render={<Link to="/following/areas-and-topics" />}
+                    size="touch"
+                    variant="outline"
+                  >
+                    Edit saved interests
+                  </Button>
+                ) : null}
                 <Button
                   render={<Link to="/explore" />}
                   size="touch"

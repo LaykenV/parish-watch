@@ -40,10 +40,13 @@ candidate and cited spans, cannot repair fields, and must judge every fact under
 strict schema. A deterministic policy then writes a full, source-only limited,
 or withheld immutable version. Withheld versions stay in history but never
 replace the last full or limited current pointer. The projection tables exist,
-but the deployed discovery interface does not read them yet. Development builds
-can render typed fixtures through explicit QA URLs. Production ignores those
-fixture parameters. A later integration slice owns the resident projection and
-ranking query.
+and the discovery interface now reads the current accepted atomic publications
+through one bounded public query. The query uses the current mode and update
+time index, point-loads the accepted version and jurisdiction, returns only
+resident-safe fields, and fails closed on stale or inconsistent pointers.
+Development builds can still render typed fixtures through explicit QA URLs.
+Production ignores those fixture parameters. A later integration slice owns the
+ranked issue projection.
 
 Slice 4 adds source-snapshot comparisons, publication material changes, and the
 `buildIssueV1` durable workflow. Every accepted publication after the first is
@@ -59,9 +62,10 @@ fixed importance score, and writes a full, limited, or withheld immutable issue
 version. A withheld version remains in history and cannot replace the current
 full or limited pointer.
 
-The extraction, publication, and issue ledgers remain internal. No
-resident-facing decision query, issue interface, or chat path exists yet. PR
-#13 merged as `c162543`; production workflow `33273984552` deployed the Slice 4
+The extraction, publication, and issue ledgers remain internal. The public
+decision query exposes only current accepted fields and source metadata. No
+resident-facing issue interface or chat path exists yet. PR #13 merged as
+`c162543`; production workflow `33273984552` deployed the Slice 4
 backend and frontend, applied the registry seed, and passed smoke. The
 independent production smoke then passed the direct Convex host, canonical
 domain, apex redirect, and readiness query. Slice 4 development issue
@@ -72,16 +76,16 @@ issue build had run at that release.
 The later controlled production onboarding ran Terra extraction and Luna review
 for Lafayette atomic records. Current production publications include
 `CO-062-2026`, `CO-069-2026`, and `CO-072-2026`. Production still has no issue
-build, issue-decision link, importance assessment, or feed projection.
+build, issue-decision link, importance assessment, or ranked issue projection.
 
 PR #24 merged resident-interface Design Slice 2 as `4e2ac67`. The application
 now has a responsive shell plus Home, For You, and Explore routes. Explicit
 fixture query parameters drive deterministic QA states in development builds
 without adding a resident-facing banner. Production ignores fixture parameters
-and shows honest empty states until the resident projection is connected. The
-area store, offline notice, URL-restored filters, result sorting, share fallback,
-and responsive navigation run in the browser. The fixture adapter does not read
-the production publication tables.
+and uses the accepted-publication query for Home, For You, and Explore. The area
+store, offline notice, URL-restored filters, result sorting, share fallback, and
+responsive navigation run in the browser. The fixture adapter remains isolated
+from production records and runs only from explicit development QA URLs.
 
 PR #25 deployed the owner phone-review refinements as `b22e321`. The production
 workflow and independent smoke passed. Production now ignores every fixture

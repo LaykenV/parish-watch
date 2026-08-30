@@ -423,6 +423,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_record_key', ['recordKey'])
+    .index('by_current_mode_and_updated_at', ['currentMode', 'updatedAt'])
     .index('by_registry_and_source_record', ['registryId', 'sourceRecordId']),
 
   publicationVersions: defineTable({

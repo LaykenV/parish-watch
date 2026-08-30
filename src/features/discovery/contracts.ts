@@ -1,7 +1,7 @@
 export type AreaSlug =
   'lafayette-parish' | 'east-baton-rouge-parish' | 'rapides-parish'
 
-export type AreaStatus = 'supported' | 'validating'
+export type AreaStatus = 'available' | 'validating'
 
 export type AreaRecord = {
   name: string
@@ -14,6 +14,7 @@ export type LifecycleState =
   | 'Developing'
   | 'Scheduled'
   | 'In progress'
+  | 'Postponed'
   | 'Decided'
   | 'Canceled'
   | 'Completed'
@@ -42,6 +43,9 @@ export type IssueCardData = {
   }
   place: string
   placeSlug: AreaSlug
+  href?: string
+  primaryActionLabel?: string
+  showSecondaryActions?: boolean
   slug: string
   state: LifecycleState
   title: string
@@ -83,6 +87,7 @@ export type ResultRowData = {
   kind: 'Decision record' | 'Meeting' | 'Government body' | 'Routine record'
   meta?: string
   place?: string
+  sourceStatus?: EvidenceStatus
   state?: LifecycleState
   title: string
 }
@@ -160,6 +165,7 @@ export const BODY_OPTIONS = [
 export const LIFECYCLE_OPTIONS = [
   'Scheduled',
   'In progress',
+  'Postponed',
   'Decided',
 ] as const
 

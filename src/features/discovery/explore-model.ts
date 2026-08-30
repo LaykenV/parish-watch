@@ -37,8 +37,9 @@ export function getExploreEntries(
   search: ExploreSearch,
   issues: readonly IssueCardData[],
   rows: readonly ResultRowData[],
+  options: { includeUnfiltered?: boolean } = {},
 ): ExploreEntry[] {
-  if (!hasExploreResultsView(search)) return []
+  if (!options.includeUnfiltered && !hasExploreResultsView(search)) return []
 
   const query = (search.q ?? '').toLowerCase()
   const matches = (text: string | undefined) =>
@@ -78,7 +79,8 @@ export function getExploreEntries(
       return false
     }
     if (search.type === 'meeting' && row.kind !== 'Meeting') return false
-    if (search.topic || search.source) return false
+    if (search.topic) return false
+    if (search.source && row.sourceStatus !== search.source) return false
     if (search.place && row.place !== search.place) return false
     if (search.body && row.body !== search.body) return false
     if (search.lifecycle && row.state !== search.lifecycle) return false

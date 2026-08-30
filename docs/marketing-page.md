@@ -165,8 +165,9 @@ screenshot, email, or successful outcome. A real public item may replace the
 abstract sequence only after the publication contract accepts it.
 
 Design Slice 2 replaced this section with a rail of fixture decisions used for
-deterministic QA.
-A later resident projection will supply real published issues. On mobile, the
+deterministic QA. The live discovery path now supplies accepted atomic
+publications under the separate "Published decision records" heading. A later
+issue projection will supply ranked published issues. On mobile, the
 rail uses native horizontal overflow and proximity scroll snapping. Show part
 of the next card. Never hijack vertical scrolling or require dragging as the
 only input method.
