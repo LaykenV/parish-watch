@@ -32,8 +32,20 @@ const CENTRAL_TIME = new Intl.DateTimeFormat('en-US', {
   hourCycle: 'h23',
 })
 
+function unwrapMatchingMailtoLinks(text: string): string {
+  return text.replace(
+    /(?<!!)\[([^\]\r\n]+)\]\(mailto:([^\s)]+)\)/gi,
+    (link, label: string, address: string) =>
+      label.toLowerCase() === address.toLowerCase() ? label : link,
+  )
+}
+
+function stripWholeLineUnderscoreEmphasis(text: string): string {
+  return text.replace(/^([ \t]*)_([^\r\n]*\S)_([ \t]*)$/gm, '$1$2$3')
+}
+
 export function normalizeForMatch(text: string): string {
-  return text
+  return stripWholeLineUnderscoreEmphasis(unwrapMatchingMailtoLinks(text))
     .replace(/\u00a0/g, ' ')
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201c\u201d]/g, '"')

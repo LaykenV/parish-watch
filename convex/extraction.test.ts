@@ -302,6 +302,59 @@ test('citation matching ignores Firecrawl underline tags around a record ID', ()
   ).toBeGreaterThanOrEqual(0)
 })
 
+test('citation matching ignores Firecrawl paragraph emphasis and a matching mailto link', () => {
+  const visibleParagraph =
+    'Individuals wishing to submit a resume for the above volunteer vacancies must be a registered voter and a resident of Lafayette Parish. Yearly ethics training for all appointees is required as is financial disclosure under certain circumstances. Resumes are to be forwarded to Joseph Gordon-Wiltz, Clerk of the Council, P.O. Box 4017-C, Lafayette, LA 70502 or emailed to BCLafayette@LafayetteLA.gov no later than noon, Tuesday, September 15, 2026 with appointment(s) to be made at the Tuesday, October 6, 2026 Regular Meeting of the Lafayette City Council.'
+  const firecrawlMarkdown = `_Individuals wishing to submit a resume for the above volunteer vacancies must be a registered voter and a_
+_resident of Lafayette Parish. Yearly ethics training for all appointees is required as is financial disclosure under_
+_certain circumstances. Resumes are to be forwarded to Joseph Gordon-Wiltz, Clerk of the Council, P.O. Box_
+_4017-C, Lafayette, LA 70502 or emailed to [BCLafayette@LafayetteLA.gov](mailto:BCLafayette@LafayetteLA.gov) no later than noon, Tuesday,_
+_September 15, 2026 with appointment(s) to be made at the Tuesday, October 6, 2026 Regular Meeting of the_
+_Lafayette City Council._`
+  const source = normalizeForMatch(firecrawlMarkdown)
+
+  expect(source).toBe(visibleParagraph)
+  expect(locateExcerpt(source, visibleParagraph)).toBe(0)
+})
+
+test('citation matching still rejects changed Firecrawl paragraph content', () => {
+  const firecrawlMarkdown =
+    '_Resumes are to be emailed to [BCLafayette@LafayetteLA.gov](mailto:BCLafayette@LafayetteLA.gov) no later than noon, Tuesday, September 15, 2026._'
+  const source = normalizeForMatch(firecrawlMarkdown)
+
+  expect(
+    locateExcerpt(
+      source,
+      'Resumes are to be emailed to CouncilInfo@LafayetteLA.gov no later than noon, Tuesday, September 15, 2026.',
+    ),
+  ).toBe(-1)
+  expect(
+    locateExcerpt(
+      source,
+      'Resumes are to be emailed to BCLafayette@LafayetteLA.gov no later than noon, Tuesday, September 16, 2026.',
+    ),
+  ).toBe(-1)
+  expect(
+    locateExcerpt(
+      source,
+      'Resumes are to be emailed to BCLafayette@LafayetteLA.gov no later than noon Tuesday, September 15, 2026.',
+    ),
+  ).toBe(-1)
+})
+
+test('citation matching does not hide a mismatched mailto destination', () => {
+  const source = normalizeForMatch(
+    '_Resumes are to be emailed to [BCLafayette@LafayetteLA.gov](mailto:CouncilInfo@LafayetteLA.gov) by September 15, 2026._',
+  )
+
+  expect(
+    locateExcerpt(
+      source,
+      'Resumes are to be emailed to BCLafayette@LafayetteLA.gov by September 15, 2026.',
+    ),
+  ).toBe(-1)
+})
+
 function setFactValue(
   decision: ReturnType<typeof goldDecision>['decision'],
   fieldPath: string,
@@ -591,7 +644,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.5',
     schemaVersion: 'v1',
-    processorVersion: 'v1.11',
+    processorVersion: 'v1.12',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
