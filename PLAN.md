@@ -17,9 +17,11 @@ No production issue build, importance assessment, or feed projection has run.
 
 Resident-interface Design Slice 1 established the complete route blueprint.
 Design Slice 2 then shipped the responsive shell plus fixture-backed Home, For
-You, and Explore pages through PR #24 as `4e2ac67`. Those fixtures are labeled
-and do not project production civic records. Issues, evidence, Ask, following,
-accounts, email, and coverage remain in later design and integration slices.
+You, and Explore pages through PR #24 as `4e2ac67`. Fixture URL scenarios remain
+available for deterministic QA, but the resident pages do not show a fixture
+banner. The fixtures do not project production civic records. Issues, evidence,
+Ask, following, accounts, email, and coverage remain in later design and
+integration slices.
 
 ## Executive Decision
 

@@ -235,27 +235,6 @@
   padding-block: 1rem 4rem;
 }
 
-.blueprint-fixture-notice {
-  display: grid;
-  gap: 0.25rem;
-  margin-bottom: 2rem;
-  padding: 0.75rem 1rem;
-  border: 1px dashed var(--info);
-  border-radius: var(--radius-md);
-  color: var(--info-foreground);
-  background: color-mix(in srgb, var(--info) 5%, var(--card));
-  font-size: 0.82rem;
-}
-
-.blueprint-fixture-notice span {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.blueprint-fixture-notice p,
 .blueprint-section ul,
 .blueprint-contract-rail ul,
 .blueprint-contract-rail p {
@@ -448,12 +427,6 @@
   .blueprint-main {
     width: min(100% - 3rem, 80rem);
     padding-top: 1.5rem;
-  }
-
-  .blueprint-fixture-notice {
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 1rem;
-    align-items: baseline;
   }
 
   .blueprint-layout {

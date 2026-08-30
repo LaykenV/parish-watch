@@ -7,16 +7,8 @@ import {
   getExploreViewMode,
 } from './explore-model'
 import { EXPLORE_ROW_FIXTURES, ISSUE_FIXTURES } from './fixtures'
-import { getDiscoveryFixtureLabel } from './notice'
 
 describe('resident interface Slice 2 discovery contracts', () => {
-  it('labels fixture-backed discovery views without requiring a scenario', () => {
-    expect(getDiscoveryFixtureLabel()).toContain('design-only fixture data')
-    expect(getDiscoveryFixtureLabel('No results scenario.')).toContain(
-      'No results scenario.',
-    )
-  })
-
   it('drops URL filter values that the interface cannot display', () => {
     expect(
       parseExploreSearch({

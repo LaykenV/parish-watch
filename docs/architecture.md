@@ -40,7 +40,7 @@ candidate and cited spans, cannot repair fields, and must judge every fact under
 strict schema. A deterministic policy then writes a full, source-only limited,
 or withheld immutable version. Withheld versions stay in history but never
 replace the last full or limited current pointer. The projection tables exist,
-but the deployed discovery interface still reads labeled fixtures. A later
+but the deployed discovery interface still reads typed fixtures. A later
 integration slice owns the resident projection and ranking query.
 
 Slice 4 adds source-snapshot comparisons, publication material changes, and the
@@ -73,8 +73,9 @@ for Lafayette atomic records. Current production publications include
 build, issue-decision link, importance assessment, or feed projection.
 
 PR #24 merged resident-interface Design Slice 2 as `4e2ac67`. The application
-now has a responsive shell plus Home, For You, and Explore routes with typed,
-visibly labeled fixtures. The area store, offline notice, URL-restored filters,
+now has a responsive shell plus Home, For You, and Explore routes with typed
+fixtures. Fixture query parameters drive deterministic QA states without adding
+a resident-facing banner. The area store, offline notice, URL-restored filters,
 result sorting, share fallback, and responsive navigation run in the browser.
 The fixture adapter does not read the production publication tables.
 
@@ -1188,7 +1189,7 @@ proof. The packet split does not change the architecture or product scope below.
    into one issue timeline and importance record.
 5. After the complete page contract and designs are approved, one cohesive
    frontend pass implements the resident interface. Design Slices 1 and 2 are
-   deployed with labeled fixtures. The issue and citation paths go live first,
+   deployed with typed fixtures. The issue and citation paths go live first,
    while incomplete actions remain hidden or explicitly marked as prototypes.
 6. Anonymous chat answers only from the issue evidence.
 7. Convex Auth v2 Google accounts, verified email-only follows, and AgentMail

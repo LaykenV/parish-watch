@@ -3,15 +3,6 @@ import type { ReactNode } from 'react'
 
 import { Button } from '../../components/ui/button'
 
-export const DISCOVERY_FIXTURE_LABEL =
-  'Every record on this page is design-only fixture data, not a production civic claim.'
-
-export function getDiscoveryFixtureLabel(scenarioLabel?: string): string {
-  return scenarioLabel
-    ? `${DISCOVERY_FIXTURE_LABEL} ${scenarioLabel}`
-    : DISCOVERY_FIXTURE_LABEL
-}
-
 export function Notice({
   action,
   children,
@@ -30,15 +21,6 @@ export function Notice({
         {children ? <div className="pp-notice-text">{children}</div> : null}
       </div>
       {action ? <div className="pp-notice-action">{action}</div> : null}
-    </div>
-  )
-}
-
-export function FixtureBanner({ label }: { label: string }) {
-  return (
-    <div className="pp-fixture-banner" role="note">
-      <strong>Design fixture</strong>
-      <span>{label}</span>
     </div>
   )
 }

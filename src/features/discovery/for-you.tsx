@@ -9,27 +9,7 @@ import { areaName } from './contracts'
 import type { AreaSlug, ForYouScenario, IssueCardData } from './contracts'
 import { ISSUE_FIXTURES } from './fixtures'
 import { IssueCard } from './issue-card'
-import {
-  FixtureBanner,
-  getDiscoveryFixtureLabel,
-  Notice,
-  SectionFailure,
-  UpdateRow,
-} from './notice'
-
-const SCENARIO_LABELS: Record<ForYouScenario, string> = {
-  degraded:
-    'Coverage degraded scenario. Dated matches stay visible beside the warning.',
-  'no-area':
-    'Signed-out scenario with no area chosen. The setup block replaces the feed.',
-  'no-matches':
-    'No personalized matches scenario. The feed shows the honest empty state.',
-  'section-failure':
-    'Section failure scenario. The feed fails while the page frame stays up.',
-  'signed-in':
-    'Signed-in scenario with several saved areas. Sign-in is not connected yet.',
-  update: 'Live update scenario. Content changes only after you accept it.',
-}
+import { Notice, SectionFailure, UpdateRow } from './notice'
 
 const REASONS: Record<string, string> = {
   'br-short-term-rental-rules': 'In East Baton Rouge Parish · Saved area',
@@ -76,12 +56,6 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
 
   return (
     <main className="pp-page" id="resident-main">
-      <FixtureBanner
-        label={getDiscoveryFixtureLabel(
-          scenario ? SCENARIO_LABELS[scenario] : undefined,
-        )}
-      />
-
       <header className="pp-page-head">
         <h1>For You</h1>
         <p className="pp-page-lede">

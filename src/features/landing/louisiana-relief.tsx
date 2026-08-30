@@ -3,13 +3,11 @@ import { effect, frame, init, surface } from 'vgpu'
 import type { Effect, Gpu, Surface } from 'vgpu'
 
 import reliefShader from './louisiana-relief.wgsl'
+import { LOUISIANA_OUTLINE_PATH } from './louisiana-path'
 
 import './louisiana-relief.css'
 
 type RenderState = 'loading' | 'ready' | 'fallback'
-
-const FALLBACK_PATH =
-  'M70 10L10 9.7L10 64.2L20 75.8L19.5 85.8L25.1 89.7L23.4 92L28.4 97.1L26.2 100.6L33.2 107.2L34.3 115.2L23.8 141.3L25.6 166.9L15.2 180.1L20.4 191.4L25.1 186.4L47.3 184.5L74.5 195L99.4 194.8L108.5 203.8L119.1 203.1L149.6 216.6L147.5 220.6L151.5 223.3L178.3 222.9L211.6 212.5L218.1 217.3L218.4 230.3L228.7 223.7L234.6 226.6L243.6 211.9L233 200.2L247.4 185.1L250 170.9L246 162.8L211.5 158.2L200.6 134.8L206.2 116.7L119.5 116.9L123 114L118.7 103.3L125 102.1L122.2 95.1L126.8 97.3L124.7 89.2L130 86.3L125 83.4L130.2 84L131.6 77.3L136.5 76.8L131.8 76.5L132.7 72.1L136.9 73.7L145 62.9L141.2 60L144.8 61.3L148.2 56.1L141 56.8L141 53.4L148.7 53.6L154.1 44.1L148.7 45L149.8 40.5L143.2 38.2L144.2 34.7L149 37.5L144.8 34.3L147.7 29.8L141.5 30.9L145.9 25.7L140.9 23.8L145.5 16L144.3 11.7L140.7 16.1L140.9 10.5Z'
 
 export function LouisianaRelief() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -224,7 +222,7 @@ export function LouisianaRelief() {
         </span>
       </div>
       <svg aria-hidden="true" className="relief-fallback" viewBox="0 0 260 240">
-        <path className="relief-fallback-state" d={FALLBACK_PATH} />
+        <path className="relief-fallback-state" d={LOUISIANA_OUTLINE_PATH} />
         <g className="relief-fallback-pins">
           <g transform="translate(100 157)">
             <path d="M0 8c-1.5-2.2-6-7.1-6-11.5a6 6 0 1 1 12 0C6 .9 1.5 5.8 0 8Z" />

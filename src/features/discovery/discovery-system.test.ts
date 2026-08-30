@@ -9,11 +9,33 @@ const css = readFileSync(new URL('./discovery.css', import.meta.url), 'utf8')
 const home = readFileSync(new URL('./home.tsx', import.meta.url), 'utf8')
 const forYou = readFileSync(new URL('./for-you.tsx', import.meta.url), 'utf8')
 const explore = readFileSync(new URL('./explore.tsx', import.meta.url), 'utf8')
+const issueCard = readFileSync(
+  new URL('./issue-card.tsx', import.meta.url),
+  'utf8',
+)
+const notice = readFileSync(new URL('./notice.tsx', import.meta.url), 'utf8')
 const sheet = readFileSync(new URL('./sheet.tsx', import.meta.url), 'utf8')
+const blueprint = readFileSync(
+  new URL('../resident-blueprint/blueprint-page.tsx', import.meta.url),
+  'utf8',
+)
+const shell = readFileSync(
+  new URL('../resident-blueprint/resident-shell.tsx', import.meta.url),
+  'utf8',
+)
 
 describe('resident interface control system', () => {
   it('keeps the shared discovery button at a 44-pixel rendered height', () => {
     expect(buttonVariants({ size: 'touch' })).toContain('h-11')
+  })
+
+  it('uses the Coss primary and outline button treatments', () => {
+    expect(buttonVariants({ variant: 'default' })).toContain('bg-primary')
+    expect(buttonVariants({ variant: 'default' })).toContain(
+      'shadow-primary/24',
+    )
+    expect(buttonVariants({ variant: 'outline' })).toContain('border-input')
+    expect(buttonVariants({ variant: 'outline' })).toContain('bg-popover')
   })
 
   it('keeps card evidence and update-kind base rules singular', () => {
@@ -35,6 +57,21 @@ describe('resident interface control system', () => {
   it('offers one area-selection trigger in first-visit setup', () => {
     expect(home).not.toContain('Show local decisions')
     expect(forYou).not.toContain('Show local decisions')
+  })
+
+  it('keeps fixture scenarios as QA hooks without visible fixture banners', () => {
+    expect(home).not.toContain('FixtureBanner')
+    expect(forYou).not.toContain('FixtureBanner')
+    expect(explore).not.toContain('FixtureBanner')
+    expect(notice).not.toContain('Design fixture')
+    expect(blueprint).not.toContain('blueprint-fixture-notice')
+  })
+
+  it('uses a labeled lifecycle pill and a Louisiana coverage icon', () => {
+    expect(issueCard).toContain('className="pp-card-state"')
+    expect(issueCard).not.toContain('pp-dot')
+    expect(shell).toContain('icon: LouisianaIcon')
+    expect(shell).not.toContain('ShieldCheckIcon')
   })
 
   it('lets residents clear one More filters group', () => {

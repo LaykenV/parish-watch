@@ -14,7 +14,6 @@ export type ResidentBlueprint = {
   actions: BlueprintAction[]
   description: string
   eyebrow: string
-  fixture: string
   sections: BlueprintSection[]
   states: string[]
   title: string
@@ -35,16 +34,12 @@ export type BlueprintKey =
   | 'notifications'
   | 'email-management'
 
-const REAL_ISSUE_NOTE =
-  'Structure is stressed with the development issue about two Lafayette surplus 2016 Crew Cab pickup donations. No fixture is a production civic claim.'
-
 const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
   'for-you': {
     eyebrow: 'For You',
     title: 'Decisions matched to your places and interests',
     description:
       'One ranked feed explains why each issue appears. Temporary filters never change saved interests.',
-    fixture: 'Design fixture: signed-out resident watching Lafayette Parish.',
     actions: [
       { label: 'Choose an area', treatment: 'primary' },
       { href: '/following/areas-and-topics', label: 'Edit saved interests' },
@@ -88,7 +83,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Search issues and official records',
     description:
       'Explore keeps one result sequence and stores the query, filters, and sort in the URL.',
-    fixture: 'Design fixture: mixed Lafayette results before API integration.',
     actions: [
       { label: 'Search published evidence', treatment: 'primary' },
       { label: 'More filters' },
@@ -137,8 +131,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Ask from validated official evidence',
     description:
       'Questions stay within the visible issue, meeting, or full Public Parish evidence scope. Answers appear only after citation validation.',
-    fixture:
-      'Design fixture: empty anonymous conversation, available on this device for 24 hours.',
     actions: [{ label: 'Send question', treatment: 'primary' }],
     states: [
       'Empty corpus-wide Ask',
@@ -180,8 +172,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Source health for launch government bodies',
     description:
       'Coverage reports whether official sources pass the common evidence gate. It does not rank political importance.',
-    fixture:
-      'Design fixture: launch bodies shown in supported, degraded, and validating states.',
     actions: [
       {
         href: '/coverage/request',
@@ -227,7 +217,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Tell Public Parish which place to validate next',
     description:
       'A request records demand. It never starts a crawl or promises a launch date.',
-    fixture: 'Design fixture: new request form. No request is sent.',
     actions: [{ label: 'Request coverage', treatment: 'primary' }],
     states: [
       'New request',
@@ -265,7 +254,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Surplus 2016 Crew Cab pickup donations',
     description:
       'The issue is the main resident object. Its reading order stays stable while evidence and actions expand around it.',
-    fixture: `Design fixture based on real development evidence. ${REAL_ISSUE_NOTE}`,
     actions: [
       { label: 'Follow', treatment: 'primary' },
       { label: 'Share' },
@@ -338,7 +326,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Donate a surplus pickup through a cooperative agreement',
     description:
       'The atomic record preserves the government action and its accepted history without replacing the related issue.',
-    fixture: `Design fixture keyed by the route record identifier. ${REAL_ISSUE_NOTE}`,
     actions: [
       { href: '/issues/surplus-pickup-donations', label: 'View related issue' },
     ],
@@ -385,7 +372,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Lafayette City Council meeting',
     description:
       'Meeting pages group official artifacts, substantive decisions, routine records, and a meeting-scoped Ask entry.',
-    fixture: 'Design fixture: meeting before minutes are due.',
     actions: [
       {
         href: '/ask?meeting=lafayette-city-council-2026-08-18',
@@ -439,8 +425,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'How Public Parish works',
     description:
       'The public method explains where claims come from, when information stays limited, and how corrections enter normal update history.',
-    fixture:
-      'Design fixture: resident-readable method outline. No integration behavior is simulated.',
     actions: [
       { href: '/coverage', label: 'View coverage', treatment: 'primary' },
       {
@@ -484,7 +468,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Manage the updates you asked for',
     description:
       'Following orders saved targets by the latest material change or next known date.',
-    fixture: 'Design fixture: signed-in resident with one active issue follow.',
     actions: [
       {
         href: '/explore',
@@ -528,7 +511,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Areas and topics',
     description:
       'Saved interests affect For You. Temporary Explore filters stay separate.',
-    fixture: 'Design fixture: one saved area and no saved topics.',
     actions: [{ label: 'Save interests', treatment: 'primary' }],
     states: [
       'One signed-out area',
@@ -569,7 +551,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Notification preferences',
     description:
       'Residents can choose immediate material updates, a weekly roundup, or both. Empty roundups are never sent.',
-    fixture: 'Design fixture: immediate updates enabled.',
     actions: [{ label: 'Save notification settings', treatment: 'primary' }],
     states: [
       'Immediate',
@@ -608,8 +589,6 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     title: 'Manage this follow',
     description:
       'This secure page changes one email-only subscription. It does not create an account or reveal other follows.',
-    fixture:
-      'Design fixture: scoped management token. No preference is changed.',
     actions: [
       { label: 'Save delivery frequency', treatment: 'primary' },
       { label: 'Mute' },

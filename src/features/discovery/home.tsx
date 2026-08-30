@@ -16,28 +16,9 @@ import {
 } from './fixtures'
 import { formatDate } from './format'
 import { IssueCard, UpcomingCard } from './issue-card'
-import {
-  FixtureBanner,
-  getDiscoveryFixtureLabel,
-  Notice,
-  SectionFailure,
-  UpdateRow,
-} from './notice'
+import { Notice, SectionFailure, UpdateRow } from './notice'
 import { Rail } from './rail'
 import { ResultRow } from './result-row'
-
-const SCENARIO_LABELS: Record<HomeScenario, string> = {
-  degraded:
-    'Coverage degraded scenario. The warning below is not a live source state.',
-  'no-issues':
-    'Empty feed scenario. No current decisions exist for the watched area.',
-  'section-failure':
-    'Section failure scenario. One section fails while the rest of the page loads.',
-  'signed-in':
-    'Signed-in scenario with several saved areas. Sign-in is not connected yet.',
-  update:
-    'Live update scenario. Content changes only after you accept the refresh.',
-}
 
 export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   const area = useArea()
@@ -54,11 +35,6 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   if (watching.length === 0) {
     return (
       <main className="pp-page" id="resident-main">
-        <FixtureBanner
-          label={getDiscoveryFixtureLabel(
-            scenario ? SCENARIO_LABELS[scenario] : undefined,
-          )}
-        />
         <FirstVisitHero />
         <HomeFeed
           onRefresh={onRefresh}
@@ -72,11 +48,6 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
 
   return (
     <main className="pp-page" id="resident-main">
-      <FixtureBanner
-        label={getDiscoveryFixtureLabel(
-          scenario ? SCENARIO_LABELS[scenario] : undefined,
-        )}
-      />
       <header className="pp-watching">
         <div className="pp-watching-copy">
           <h1 className="pp-watching-title">

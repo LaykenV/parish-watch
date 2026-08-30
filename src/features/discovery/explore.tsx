@@ -24,23 +24,10 @@ import {
   ShowResultsButton,
 } from './filter-pill'
 import { IssueCard } from './issue-card'
-import {
-  FixtureBanner,
-  getDiscoveryFixtureLabel,
-  SectionFailure,
-  UpdateRow,
-} from './notice'
+import { SectionFailure, UpdateRow } from './notice'
 import { ResultRow } from './result-row'
 import { useMediaQuery } from './hooks'
 import { Sheet } from './sheet'
-
-const SCENARIO_LABELS: Record<string, string> = {
-  'no-results':
-    'No search results scenario. The empty state offers a filter reset.',
-  'section-failure':
-    'Section failure scenario. Results fail while the page frame stays up.',
-  update: 'Live update scenario. Results change only after you accept it.',
-}
 
 export function ExplorePage({ search }: { search: ExploreSearch }) {
   const navigate = useNavigate()
@@ -165,12 +152,6 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
 
   return (
     <main className="pp-page" id="resident-main">
-      <FixtureBanner
-        label={getDiscoveryFixtureLabel(
-          search.fixture ? SCENARIO_LABELS[search.fixture] : undefined,
-        )}
-      />
-
       <header className="pp-page-head">
         <h1>Explore</h1>
         <p className="pp-page-lede">
