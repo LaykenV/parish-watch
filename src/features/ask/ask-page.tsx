@@ -299,13 +299,23 @@ export function AskPage({
       })
     } catch (error) {
       if (!(error instanceof AskRequestError)) throw error
-      // The adapter pushed the availability change. Keep the draft.
+      // A refusal carries the state that caused it. Apply it here instead of
+      // waiting for the adapter to push, so the page can never leave an
+      // enabled composer whose Send silently does nothing. Keep the draft.
+      handleAvailability(error.failure)
       return
     }
     // Clear the draft only after the submission is accepted.
     setDraft('')
     setStatus('Checking the official record')
-  }, [adapter, canSubmit, conversation?.id, draft, viewScope])
+  }, [
+    adapter,
+    canSubmit,
+    conversation?.id,
+    draft,
+    handleAvailability,
+    viewScope,
+  ])
 
   const handleRetry = useCallback(
     async (turnId: string) => {
@@ -318,11 +328,12 @@ export function AskPage({
         })
       } catch (error) {
         if (!(error instanceof AskRequestError)) throw error
+        handleAvailability(error.failure)
         return
       }
       setStatus('Checking the official record')
     },
-    [adapter, conversation],
+    [adapter, conversation, handleAvailability],
   )
 
   const handleDismiss = useCallback((turnId: string) => {
