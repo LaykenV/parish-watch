@@ -9,6 +9,7 @@ import type { CitationMap } from '../evidence/contracts'
 import { EvidencePanel, EvidenceProvider } from '../evidence/evidence-surface'
 import { useKeyboardInset, useMediaQuery, useOnline } from '../discovery/hooks'
 import {
+  AskRequestError,
   askScopeIdentity,
   countAnswerSources,
   MAX_ASK_LENGTH,
@@ -21,7 +22,6 @@ import type {
   AskScope,
   AskTurnState,
 } from './contracts'
-import { AskRequestError } from './contracts'
 import { takeAskDraftHandoff } from './draft-handoff'
 import { AskComposer } from './ask-composer'
 import { AskThread } from './ask-thread'
@@ -146,7 +146,7 @@ export function AskPage({
     if (!next || !previous || previous.id !== next.id) return
 
     const added = next.turns[next.turns.length - 1]
-    if (next.turns.length > previous.turns.length && added) {
+    if (next.turns.length > previous.turns.length) {
       if (added.state === 'checking') {
         setStatus('Checking the official record')
       }

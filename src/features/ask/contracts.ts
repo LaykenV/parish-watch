@@ -156,15 +156,15 @@ export type AskUpdate =
   | { kind: 'recent'; recent: AskRecentConversation[] }
 
 export interface AskAdapter {
-  resolveScope(input: AskRouteSearch): Promise<AskScope>
-  listRecent(): Promise<AskRecentConversation[]>
-  open(localHandle: string): Promise<AskConversationView | null>
-  submit(input: AskSubmission): Promise<void>
-  retry(input: AskRetry): Promise<void>
-  startNew(scope: AskScope): Promise<void>
-  clearRecent(): Promise<void>
-  subscribe(listener: (update: AskUpdate) => void): () => void
-  resolveChallenge(challengeId: string): Promise<void>
+  resolveScope: (input: AskRouteSearch) => Promise<AskScope>
+  listRecent: () => Promise<AskRecentConversation[]>
+  open: (localHandle: string) => Promise<AskConversationView | null>
+  submit: (input: AskSubmission) => Promise<void>
+  retry: (input: AskRetry) => Promise<void>
+  startNew: (scope: AskScope) => Promise<void>
+  clearRecent: () => Promise<void>
+  subscribe: (listener: (update: AskUpdate) => void) => () => void
+  resolveChallenge: (challengeId: string) => Promise<void>
 }
 
 /*

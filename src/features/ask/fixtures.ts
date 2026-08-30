@@ -4,7 +4,6 @@ import {
   MEETING_DETAIL_FIXTURES,
 } from '../evidence/record-fixtures'
 import type { CitationData, CitationMap } from '../evidence/contracts'
-import { AskRequestError } from './contracts'
 import type {
   AskAdapter,
   AskAvailability,
@@ -19,7 +18,7 @@ import type {
   AskTurnView,
   AskUpdate,
 } from './contracts'
-import { corpusScope } from './contracts'
+import { AskRequestError, corpusScope } from './contracts'
 
 /*
   Development-only presentation fixtures for Ask. Nothing here is evidence
@@ -143,8 +142,8 @@ function issueScope(slug: string = ISSUE_SLUG): AskScope | null {
 }
 
 function meetingScope(meetingId: string = MEETING_ID): AskScope | null {
+  if (!Object.hasOwn(MEETING_DETAIL_FIXTURES, meetingId)) return null
   const record = MEETING_DETAIL_FIXTURES[meetingId]
-  if (!record) return null
   return {
     kind: 'meeting',
     meetingId,
@@ -216,7 +215,7 @@ function threadHandle(
         : conversation.scope.kind === 'meeting'
           ? conversation.scope.recordTitle
           : 'Public Parish evidence',
-    latestActivityAt: lastTurn?.askedAt ?? new Date().toISOString(),
+    latestActivityAt: lastTurn.askedAt,
     expiresAt: conversation.expiresAt,
   }
 }
@@ -491,20 +490,20 @@ function createAskFixtureAdapter(scenario: AskScenario): AskAdapter {
         })
       }
 
-      const now = Date.now()
+      const submittedAt = Date.now()
       const conversation =
         state.conversation && state.conversation.id === input.conversationId
           ? state.conversation
           : {
-              id: `ask-${now}`,
+              id: `ask-${submittedAt}`,
               scope: input.scope,
-              expiresAt: new Date(now + DAY_MS).toISOString(),
+              expiresAt: new Date(submittedAt + DAY_MS).toISOString(),
               turns: [],
             }
       const turn: AskTurnView = {
-        id: `ask-turn-${now}`,
+        id: `ask-turn-${submittedAt}`,
         question: input.question,
-        askedAt: new Date(now).toISOString(),
+        askedAt: new Date(submittedAt).toISOString(),
         state: 'checking',
       }
 
