@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button'
 import { LouisianaRelief } from '../landing/louisiana-relief'
 import { AreaSelector } from './area-selector'
 import { useArea } from './area-store'
-import { areaName } from './contracts'
+import { areaName, isDiscoveryFixtureEnabled } from './contracts'
 import type { AreaSlug, HomeScenario } from './contracts'
 import {
   ISSUE_FIXTURES,
@@ -22,6 +22,7 @@ import { ResultRow } from './result-row'
 
 export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   const area = useArea()
+  const fixturesEnabled = isDiscoveryFixtureEnabled(scenario)
   const signedIn = scenario === 'signed-in'
   const watching: AreaSlug[] = signedIn
     ? ['lafayette-parish', 'east-baton-rouge-parish']
@@ -40,6 +41,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
           onRefresh={onRefresh}
           refreshed={refreshed}
           scenario={scenario}
+          fixturesEnabled={fixturesEnabled}
           watching={[]}
         />
       </main>
@@ -82,6 +84,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
         onRefresh={onRefresh}
         refreshed={refreshed}
         scenario={scenario}
+        fixturesEnabled={fixturesEnabled}
         watching={watching}
       />
     </main>
@@ -141,14 +144,20 @@ function FirstVisitHero() {
 function HomeFeed({
   watching,
   scenario,
+  fixturesEnabled,
   refreshed,
   onRefresh,
 }: {
   watching: AreaSlug[]
   scenario?: HomeScenario
+  fixturesEnabled: boolean
   refreshed: boolean
   onRefresh: () => void
 }) {
+  if (!fixturesEnabled) {
+    return <UnconnectedHomeFeed watching={watching} />
+  }
+
   const degraded = scenario === 'degraded'
   const showUpdateRow = scenario === 'update' && !refreshed
 
@@ -188,6 +197,42 @@ function HomeFeed({
           </p>
         </Notice>
       ) : null}
+      <VoterStrip />
+    </div>
+  )
+}
+
+function UnconnectedHomeFeed({ watching }: { watching: AreaSlug[] }) {
+  const title =
+    watching.length === 0
+      ? 'Choose an area to see local decisions.'
+      : 'No published decisions are available in this feed yet.'
+
+  return (
+    <div className="pp-home-feed">
+      <section
+        aria-labelledby="major-decisions-title"
+        className="pp-section"
+        id="major-decisions"
+      >
+        <div className="pp-section-head">
+          <h2 id="major-decisions-title">Major local decisions</h2>
+        </div>
+        <div className="pp-empty">
+          <p className="pp-empty-title">{title}</p>
+          <p className="pp-empty-text">
+            Public Parish will list decisions here after their records pass the
+            publication and coverage checks.
+          </p>
+          <Button
+            render={<Link to="/coverage" />}
+            size="touch"
+            variant="outline"
+          >
+            View coverage
+          </Button>
+        </div>
+      </section>
       <VoterStrip />
     </div>
   )

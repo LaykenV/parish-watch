@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '../../components/ui/button'
 import { AreaSelector } from './area-selector'
 import { useArea } from './area-store'
-import { areaName } from './contracts'
+import { areaName, isDiscoveryFixtureEnabled } from './contracts'
 import type { AreaSlug, ForYouScenario, IssueCardData } from './contracts'
 import { ISSUE_FIXTURES } from './fixtures'
 import { IssueCard } from './issue-card'
@@ -24,6 +24,7 @@ const REASONS: Record<string, string> = {
 
 export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
   const area = useArea()
+  const fixturesEnabled = isDiscoveryFixtureEnabled(scenario)
   const signedIn = scenario === 'signed-in'
   const forcedNoArea = scenario === 'no-area'
   const watching: AreaSlug[] = signedIn
@@ -39,13 +40,15 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
   const showUpdateRow = scenario === 'update' && !refreshed && !recovered
   const showFailure = scenario === 'section-failure' && !recovered
 
-  let feed: IssueCardData[] = ISSUE_FIXTURES.filter((issue) =>
-    watching.includes(issue.placeSlug),
-  )
+  let feed: IssueCardData[] = fixturesEnabled
+    ? ISSUE_FIXTURES.filter((issue) => watching.includes(issue.placeSlug))
+    : []
   if (signedIn) {
-    feed = ISSUE_FIXTURES.filter(
-      (issue) => issue.slug !== 'courthouse-security-contract',
-    )
+    feed = fixturesEnabled
+      ? ISSUE_FIXTURES.filter(
+          (issue) => issue.slug !== 'courthouse-security-contract',
+        )
+      : []
   }
   if (refreshed || recovered) {
     feed = feed.filter((issue) => issue.slug !== 'downtown-late-night-permits')
@@ -65,7 +68,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
       </header>
 
       {watching.length === 0 ? (
-        <ForYouSetup />
+        <ForYouSetup showPreview={fixturesEnabled} />
       ) : (
         <>
           <div className="pp-foryou-bar">
@@ -166,7 +169,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
   )
 }
 
-function ForYouSetup() {
+function ForYouSetup({ showPreview }: { showPreview: boolean }) {
   const preview = ISSUE_FIXTURES.slice(0, 3)
 
   return (
@@ -190,14 +193,16 @@ function ForYouSetup() {
           )}
         />
       </div>
-      <div className="pp-setup-preview">
-        <h2>Major decisions across launch areas</h2>
-        <div className="pp-foryou-feed">
-          {preview.map((issue) => (
-            <IssueCard issue={issue} key={issue.slug} />
-          ))}
+      {showPreview ? (
+        <div className="pp-setup-preview">
+          <h2>Major decisions across launch areas</h2>
+          <div className="pp-foryou-feed">
+            {preview.map((issue) => (
+              <IssueCard issue={issue} key={issue.slug} />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
     </section>
   )
 }

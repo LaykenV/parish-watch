@@ -197,6 +197,12 @@ export function areaName(slug: AreaSlug): string {
   }
 }
 
+export function isDiscoveryFixtureEnabled(
+  scenario: string | undefined,
+): boolean {
+  return import.meta.env.DEV && scenario !== undefined
+}
+
 function pick<T extends string>(
   value: unknown,
   allowed: readonly T[],

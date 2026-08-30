@@ -150,8 +150,10 @@ production workflow and independent smoke passed.
 
 PR #14 deployed the labeled low-fidelity route blueprint as `6e46fd7`. PR #24
 then deployed the responsive application shell plus fixture-backed Home, For
-You, and Explore as `4e2ac67`. The fixture query scenarios remain available for
-deterministic QA, but resident pages no longer show a fixture banner.
+You, and Explore as `4e2ac67`. Explicit fixture query scenarios remain available
+for deterministic QA in development builds, but resident pages no longer show a
+fixture banner. Production ignores fixture parameters and does not render those
+records.
 Verification passed 160 tests across 19 files, typecheck,
 production builds, prerender, and lint. Production workflow `33318753459` and
 the independent production smoke passed the direct Convex host, canonical

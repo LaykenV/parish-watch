@@ -9,9 +9,10 @@ limits, mobile behavior, and transition into the resident application.
 The transition is complete. Design Slice 2 kept the headline, lede, Louisiana
 relief, and trust language inside the first-visit resident Home. It replaced the
 prelaunch repository action with the area selector and moved longer method copy
-to the How it works blueprint. The discovery rail still uses typed QA fixtures,
-not production resident data, but it does not put a fixture banner in the
-resident interface. Use the resident-interface documents for current work.
+to the How it works blueprint. Development builds can render the discovery rail
+with typed QA fixtures through an explicit URL. Production ignores fixture
+parameters, and the resident interface does not put a fixture banner on the
+page. Use the resident-interface documents for current work.
 
 ## Required first read
 

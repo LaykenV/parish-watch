@@ -40,8 +40,10 @@ candidate and cited spans, cannot repair fields, and must judge every fact under
 strict schema. A deterministic policy then writes a full, source-only limited,
 or withheld immutable version. Withheld versions stay in history but never
 replace the last full or limited current pointer. The projection tables exist,
-but the deployed discovery interface still reads typed fixtures. A later
-integration slice owns the resident projection and ranking query.
+but the deployed discovery interface does not read them yet. Development builds
+can render typed fixtures through explicit QA URLs. Production ignores those
+fixture parameters. A later integration slice owns the resident projection and
+ranking query.
 
 Slice 4 adds source-snapshot comparisons, publication material changes, and the
 `buildIssueV1` durable workflow. Every accepted publication after the first is
@@ -73,11 +75,13 @@ for Lafayette atomic records. Current production publications include
 build, issue-decision link, importance assessment, or feed projection.
 
 PR #24 merged resident-interface Design Slice 2 as `4e2ac67`. The application
-now has a responsive shell plus Home, For You, and Explore routes with typed
-fixtures. Fixture query parameters drive deterministic QA states without adding
-a resident-facing banner. The area store, offline notice, URL-restored filters,
-result sorting, share fallback, and responsive navigation run in the browser.
-The fixture adapter does not read the production publication tables.
+now has a responsive shell plus Home, For You, and Explore routes. Explicit
+fixture query parameters drive deterministic QA states in development builds
+without adding a resident-facing banner. Production ignores fixture parameters
+and shows honest empty states until the resident projection is connected. The
+area store, offline notice, URL-restored filters, result sorting, share fallback,
+and responsive navigation run in the browser. The fixture adapter does not read
+the production publication tables.
 
 ## System Boundaries
 
@@ -1189,7 +1193,7 @@ proof. The packet split does not change the architecture or product scope below.
    into one issue timeline and importance record.
 5. After the complete page contract and designs are approved, one cohesive
    frontend pass implements the resident interface. Design Slices 1 and 2 are
-   deployed with typed fixtures. The issue and citation paths go live first,
+   deployed with development-only typed fixtures. The issue and citation paths go live first,
    while incomplete actions remain hidden or explicitly marked as prototypes.
 6. Anonymous chat answers only from the issue evidence.
 7. Convex Auth v2 Google accounts, verified email-only follows, and AgentMail

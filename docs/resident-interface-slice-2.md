@@ -18,9 +18,10 @@ and `Browse major decisions`.
 
 Every record shown on these pages is a design fixture. The surplus pickup issue
 mirrors the real development evidence for layout stress. Fixture scenarios are
-reachable through a `?fixture=` URL parameter for deterministic QA. The query
-parameter changes the scenario without adding a banner or resident-facing
-label. No fixture is a production civic claim.
+reachable through a `?fixture=` URL parameter for deterministic QA in a
+development build. The query parameter changes the scenario without adding a
+banner or resident-facing label. Production ignores fixture parameters and does
+not render these records. No fixture is a production civic claim.
 
 ## Application shell
 
@@ -232,7 +233,8 @@ and the For You setup block all open it.
 
 `Notice` (info or warning, left rule), `SectionFailure` (dashed amber, `Retry`
 keeps other sections available), `UpdateRow`, and empty states with one useful
-next action. Fixture URL scenarios do not add a page-top banner. Offline is a
+next action. Development fixture URLs do not add a page-top banner. Production
+ignores fixture parameters. Offline is a
 real global bar. Route loading uses the existing fixed
 region; action loading uses the Button loading slot with a stable label and
 width.
@@ -258,7 +260,9 @@ URL query/filter/sort restoration, route loading region.
 their QA-only boundary in source. The area store persists one signed-out area
 under `public-parish.area.v1`. No fixture reaches Convex tables or production
 data. `FIXTURE_TODAY` anchors relative date filters so fixture scenarios stay
-stable. Resident pages do not show a fixture banner.
+stable. Resident pages do not show a fixture banner. Production builds ignore
+fixture parameters and render an honest empty state until the real projection is
+connected.
 
 ## URL contracts
 

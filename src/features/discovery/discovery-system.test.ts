@@ -6,6 +6,10 @@ import { buttonVariants } from '../../components/ui/button'
 import { withAllFilterOption } from './filter-pill'
 
 const css = readFileSync(new URL('./discovery.css', import.meta.url), 'utf8')
+const contracts = readFileSync(
+  new URL('./contracts.ts', import.meta.url),
+  'utf8',
+)
 const home = readFileSync(new URL('./home.tsx', import.meta.url), 'utf8')
 const forYou = readFileSync(new URL('./for-you.tsx', import.meta.url), 'utf8')
 const explore = readFileSync(new URL('./explore.tsx', import.meta.url), 'utf8')
@@ -65,6 +69,10 @@ describe('resident interface control system', () => {
     expect(explore).not.toContain('FixtureBanner')
     expect(notice).not.toContain('Design fixture')
     expect(blueprint).not.toContain('blueprint-fixture-notice')
+    expect(contracts).toContain('import.meta.env.DEV')
+    expect(home).toContain('UnconnectedHomeFeed')
+    expect(forYou).toContain('fixturesEnabled')
+    expect(explore).toContain('fixturesEnabled')
   })
 
   it('uses a labeled lifecycle pill and a Louisiana coverage icon', () => {

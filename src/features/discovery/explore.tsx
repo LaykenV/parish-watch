@@ -1,6 +1,6 @@
 import { SearchIcon, SlidersHorizontalIcon, XIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
 import { AreaSelector } from './area-selector'
@@ -13,6 +13,7 @@ import {
   SOURCE_OPTIONS,
   TOPIC_OPTIONS,
   TYPE_OPTIONS,
+  isDiscoveryFixtureEnabled,
 } from './contracts'
 import type { ExploreSearch, IssueCardData, ResultRowData } from './contracts'
 import { EXPLORE_ROW_FIXTURES, ISSUE_FIXTURES } from './fixtures'
@@ -32,6 +33,7 @@ import { Sheet } from './sheet'
 export function ExplorePage({ search }: { search: ExploreSearch }) {
   const navigate = useNavigate()
   const desktop = useMediaQuery('(min-width: 64.0625rem)')
+  const fixturesEnabled = isDiscoveryFixtureEnabled(search.fixture)
 
   const [query, setQuery] = useState(search.q ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -76,11 +78,20 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   const showUpdateRow = search.fixture === 'update' && !refreshed
 
   const entries = useMemo(
-    () => getExploreEntries(search, ISSUE_FIXTURES, EXPLORE_ROW_FIXTURES),
-    [search],
+    () =>
+      getExploreEntries(
+        search,
+        fixturesEnabled ? ISSUE_FIXTURES : [],
+        fixturesEnabled ? EXPLORE_ROW_FIXTURES : [],
+      ),
+    [fixturesEnabled, search],
   )
 
   const browse = useMemo(() => {
+    if (!fixturesEnabled) {
+      return { current: [], outcomes: [], routine: [], upcoming: [] }
+    }
+
     const current = ISSUE_FIXTURES.filter((issue) => issue.state !== 'Decided')
     const upcoming = EXPLORE_ROW_FIXTURES.filter(
       (row) => row.kind === 'Decision record' && row.state === 'Scheduled',
@@ -92,7 +103,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
       (row) => row.kind === 'Routine record',
     )
     return { current, outcomes, routine, upcoming }
-  }, [])
+  }, [fixturesEnabled])
 
   const showFailure = search.fixture === 'section-failure' && !recovered
   const viewMode = getExploreViewMode(search, entries.length)
@@ -293,6 +304,27 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   }
 
   function resultsBody() {
+    if (!fixturesEnabled) {
+      return (
+        <div className="pp-empty">
+          <p className="pp-empty-title">
+            No published records are connected to Explore yet.
+          </p>
+          <p className="pp-empty-text">
+            Explore will list records after they pass the publication and
+            coverage checks.
+          </p>
+          <Button
+            render={<Link to="/coverage" />}
+            size="touch"
+            variant="outline"
+          >
+            View coverage
+          </Button>
+        </div>
+      )
+    }
+
     if (viewMode === 'empty') {
       return (
         <div className="pp-empty">

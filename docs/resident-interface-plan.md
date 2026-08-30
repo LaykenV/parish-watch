@@ -880,6 +880,7 @@ work begins. Prove that the complete application fits one responsive shell.
 - Mobile hierarchy works without desktop assumptions.
 - No later API requires moving a primary section.
 - Fixture scenarios remain traceable in code and tests without page-top labels.
+  They render only in development builds through an explicit fixture URL.
 - The owner approves the whole low-fidelity system before Slice 2.
 
 ### Design slice 2: Application shell and discovery
@@ -1177,7 +1178,7 @@ design for frontend and API integration without reopening layout.
 - Connect the ten required prototype flows.
 - Verify navigation, Back behavior, preserved scope, overlays, and return state.
 - Record every fixture-backed interaction and its future API owner in code and
-  tests, not in a resident-facing banner.
+  tests, not in a resident-facing banner. Production ignores fixture parameters.
 - Map every page to a typed data contract and integration readiness gate.
 - Record every route, component, icon, token, content fixture, and responsive
   frame needed for implementation.

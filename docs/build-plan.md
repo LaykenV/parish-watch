@@ -223,11 +223,12 @@ Status: in progress. Design Slice 1 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026.
 
 The deployed Slice 2 release includes the responsive shell plus Home, For You,
-and Explore with typed fixtures. `npm run verify` passed 160 tests across 19
+and Explore with development fixtures. `npm run verify` passed 160 tests across 19
 files, typecheck, production builds, prerender, and lint. Production workflow
-`33318753459` and the independent production smoke passed. Fixture URL scenarios
-remain QA-only and the resident pages no longer reserve a visible banner for
-them. The release does not connect the fixture cards to production publications.
+`33318753459` and the independent production smoke passed. Explicit fixture URL
+scenarios remain available only in development builds, and resident pages do not
+reserve a visible banner for them. Production ignores fixture parameters and
+shows honest empty states until the resident projection is connected.
 
 Do not design or build resident pages one at a time during backend slices.
 Slice 4 must first settle the issue, importance, timeline, and change contracts.
