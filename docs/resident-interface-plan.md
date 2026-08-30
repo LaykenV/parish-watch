@@ -6,8 +6,9 @@ Decision grill completed: August 29, 2026
 
 Implementation checkpoint: Design Slice 1 deployed through PR #14 as
 `6e46fd7`. Design Slice 2 deployed through PR #24 as `4e2ac67` with the
-responsive shell plus fixture-backed Home, For You, and Explore. The remaining
-six design slices and the resident API connections are not complete.
+responsive shell plus fixture-backed Home, For You, and Explore. PR #25 deployed
+the owner phone-review refinements as `b22e321`. The remaining six design slices
+and the resident API connections are not complete.
 
 ## Purpose
 
@@ -885,7 +886,8 @@ work begins. Prove that the complete application fits one responsive shell.
 
 ### Design slice 2: Application shell and discovery
 
-Status: deployed through PR #24 as `4e2ac67` on August 30, 2026.
+Status: deployed through PR #24 as `4e2ac67` and refined through PR #25 as
+`b22e321` on August 30, 2026.
 
 #### Objective
 

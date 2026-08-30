@@ -83,6 +83,12 @@ area store, offline notice, URL-restored filters, result sorting, share fallback
 and responsive navigation run in the browser. The fixture adapter does not read
 the production publication tables.
 
+PR #25 deployed the owner phone-review refinements as `b22e321`. The production
+workflow and independent smoke passed. Production now ignores every fixture
+scenario before Home, For You, or Explore derives page state, so fixture records,
+signed-in areas, update rows, degraded notices, and failure states remain
+development-only.
+
 ## System Boundaries
 
 Public Parish owns:

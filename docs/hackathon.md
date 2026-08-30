@@ -153,16 +153,17 @@ then deployed the responsive application shell plus fixture-backed Home, For
 You, and Explore as `4e2ac67`. Explicit fixture query scenarios remain available
 for deterministic QA in development builds, but resident pages no longer show a
 fixture banner. Production ignores fixture parameters and does not render those
-records.
-Verification passed 160 tests across 19 files, typecheck,
-production builds, prerender, and lint. Production workflow `33318753459` and
-the independent production smoke passed the direct Convex host, canonical
-domain, apex redirect, and readiness query.
+records. PR #25 deployed the owner phone-review refinements as `b22e321`.
+Verification passed 163 tests across 19 files, typecheck, production builds,
+prerender, and lint. Production workflow `33324166404` and the independent
+production smoke passed the direct Convex host, canonical domain, apex redirect,
+and readiness query.
 
 No production issue build, importance assessment, or feed projection has run.
-The live discovery pages still use fixtures. Real issue and evidence views,
-Ask, follows, AgentMail, authentication, coverage integration, and the
-vibeapps.dev submission remain pending.
+The live discovery pages show honest empty states until the real resident
+projection is connected. Real issue and evidence views, Ask, follows, AgentMail,
+authentication, coverage integration, and the vibeapps.dev submission remain
+pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

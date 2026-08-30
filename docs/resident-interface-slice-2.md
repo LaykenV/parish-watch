@@ -1,6 +1,7 @@
 # Resident interface Slice 2
 
-Status: deployed through PR #24 as `4e2ac67`; owner device review is next
+Status: deployed through PR #24 as `4e2ac67`; owner phone review refinements
+deployed through PR #25 as `b22e321`; laptop and real-iPhone review remain
 
 Date: August 30, 2026
 
@@ -322,8 +323,9 @@ browse catalog no longer shows an inert Sort control.
 
 ## Approval gate
 
-PR #24 deployed as `4e2ac67`. Production workflow `33318753459` and the
-independent production smoke passed. The remaining owner gate is the laptop and
+PR #24 deployed as `4e2ac67`. PR #25 deployed the owner phone-review refinements
+as `b22e321`. Production workflow `33324166404` and the independent production
+smoke passed the exact merge. The remaining owner gate is the laptop and
 real-iPhone Safari review of the shell, first-visit and returning Home, For You,
-Explore, card and row families, area selector, and fixture scenarios before
-Slice 3 changes shared patterns.
+Explore, card and row families, area selector, and development fixture scenarios
+before Slice 3 changes shared patterns.

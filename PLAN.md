@@ -20,9 +20,12 @@ Design Slice 2 then shipped the responsive shell plus fixture-backed Home, For
 You, and Explore pages through PR #24 as `4e2ac67`. Explicit fixture URL
 scenarios remain available for deterministic QA in development builds. The
 resident pages do not show a fixture banner, and production ignores fixture
-parameters instead of presenting fixture records. Issues, evidence, Ask,
-following, accounts, email, and coverage remain in later design and integration
-slices.
+parameters instead of presenting fixture records. PR #25 deployed the owner
+phone-review refinements as `b22e321`, including structured card headers and
+status pills, Coss action treatments, one-color Watching text, and a Louisiana
+Coverage icon. Production workflow `33324166404` and the independent smoke
+passed. Issues, evidence, Ask, following, accounts, email, and coverage remain
+in later design and integration slices.
 
 ## Executive Decision
 

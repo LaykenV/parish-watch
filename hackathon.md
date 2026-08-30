@@ -12,9 +12,20 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T16:54:54Z
+- **Last updated:** 2026-08-30T17:06:22Z
 
 ## Log
+
+### 2026-08-30 - b22e321
+
+Deployed the Slice 2 owner phone-review refinements through PR #25. Production
+workflow `33324166404` verified the merge, deployed the backend and frontend,
+seeded source configuration, and passed its smoke. The independent production
+smoke then passed the direct Convex host, canonical domain, apex redirect, and
+backend readiness query. A live 390-pixel check confirmed one-color Watching
+text, the Louisiana Coverage icon, 44-pixel Coverage actions, no fixture banner,
+and no fixture state at `?fixture=update`. The fixture URLs remain
+development-only. No production resident projection is claimed.
 
 ### 2026-08-30 - 0eed59c
 
