@@ -217,6 +217,13 @@ function timesInText(
       second: second === undefined ? null : Number(second),
     })
   }
+  if (/\b(?:due|no\s+later\s+than|by|before|until)\s+noon\b/i.test(normalized)) {
+    times.push({
+      hour: 12,
+      minute: 0,
+      second: null,
+    })
+  }
   return times
 }
 
