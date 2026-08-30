@@ -433,7 +433,7 @@ function buildCo072AgendaReviewPrompt(section: string | null) {
 test('the review prompt treats CO-072 final-adoption placement as scheduled consideration', () => {
   const prompt = buildCo072AgendaReviewPrompt('Final Adoption of Ordinances')
 
-  expect(prompt.promptVersion).toBe('v1.2')
+  expect(prompt.promptVersion).toBe('v1.3')
   expect(prompt.messages[0].content).toContain(
     'an item under Final Adoption of Ordinances is scheduled for final-adoption consideration',
   )
@@ -457,7 +457,7 @@ test('the review prompt does not treat a bare agenda mention as scheduled', () =
   expect(prompt.messages[1].content).toContain('"section":null')
 })
 
-test('review prompt v1.2 creates a new publication idempotency key', async () => {
+test('review prompt v1.3 creates a new publication idempotency key', async () => {
   const t = initTest()
   const seeded = await seedValidatedCandidate(t, '-review-prompt-version')
   const keyFor = (promptVersion: string) =>
@@ -470,7 +470,7 @@ test('review prompt v1.2 creates a new publication idempotency key', async () =>
       payloadVersion: 'v1',
     })
 
-  expect(await keyFor('v1.2')).not.toBe(await keyFor('v1.1'))
+  expect(await keyFor('v1.3')).not.toBe(await keyFor('v1.1'))
 })
 
 test('a second model review publishes one full immutable version with exact citations', async () => {
@@ -532,7 +532,7 @@ test('a second model review publishes one full immutable version with exact cita
     verdict: 'pass',
     modelRole: 'MODEL_FAST',
     modelId: LUNA_MODEL,
-    promptVersion: 'v1.2',
+    promptVersion: 'v1.3',
     schemaVersion: 'v1',
   })
   expect(evidence.version).toMatchObject({
@@ -990,7 +990,7 @@ test('publication finalization rejects persisted duplicate fact checks', async (
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1.2',
+      promptVersion: 'v1.3',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
@@ -1051,7 +1051,7 @@ test('a late failure cannot reuse a succeeded review', async () => {
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1.2',
+      promptVersion: 'v1.3',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
