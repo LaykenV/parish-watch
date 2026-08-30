@@ -403,6 +403,7 @@ function buildCo072AgendaReviewPrompt(section: string | null) {
     sourceKind: 'agenda',
     sourceRecordId: 'CO-072-2026',
     targetRecordId: 'CO-072-2026',
+    recordType: 'proposal',
     candidate: {
       recordType: 'proposal',
       title:
