@@ -116,7 +116,7 @@ async function seedValidatedCandidate(
       registryId,
       trigger: 'manual_extraction',
       state: 'succeeded',
-      processorVersion: 'v1.14',
+      processorVersion: 'v1.24',
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
@@ -131,7 +131,7 @@ async function seedValidatedCandidate(
       targetRecordId: 'CO-029-2026',
       promptVersion: 'v1.5',
       schemaVersion: 'v1',
-      processorVersion: 'v1.14',
+      processorVersion: 'v1.24',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
       route: 'ai_gateway',
@@ -297,7 +297,7 @@ async function seedReextractedCandidate(
       registryId: original.registryId,
       trigger: 'manual_extraction',
       state: 'succeeded',
-      processorVersion: 'v1.14',
+      processorVersion: 'v1.24',
       snapshotId: original.snapshotId,
       sourceKind: original.sourceKind,
       targetRecordId: original.targetRecordId,
@@ -312,7 +312,7 @@ async function seedReextractedCandidate(
       targetRecordId: original.targetRecordId,
       promptVersion: original.promptVersion,
       schemaVersion: original.schemaVersion,
-      processorVersion: 'v1.14',
+      processorVersion: 'v1.24',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
       route: 'ai_gateway',
@@ -466,11 +466,11 @@ test('review prompt v1.4 creates a new publication idempotency key', async () =>
       processorVersion: 'v1',
       promptVersion,
       schemaVersion: 'v1',
-      policyVersion: 'v1.1',
+      policyVersion: 'v1.2',
       payloadVersion: 'v1',
     })
 
-  expect(await keyFor('v1.4')).not.toBe(await keyFor('v1.1'))
+  expect(await keyFor('v1.4')).not.toBe(await keyFor('v1.2'))
 })
 
 test('a second model review publishes one full immutable version with exact citations', async () => {
@@ -539,7 +539,7 @@ test('a second model review publishes one full immutable version with exact cita
     mode: 'full',
     reasonCode: 'all_evidence_supported',
     version: 1,
-    policyVersion: 'v1.1',
+    policyVersion: 'v1.2',
     payloadVersion: 'v1',
     payload: {
       kind: 'full',
@@ -859,7 +859,7 @@ test('replaying a succeeded extraction repairs a missing publication run', async
     targetRecordId: 'CO-029-2026',
     promptVersion: 'v1.5',
     schemaVersion: 'v1',
-    processorVersion: 'v1.14',
+    processorVersion: 'v1.24',
   })
   await t.run(async (ctx) => {
     await ctx.db.patch(seeded.runId, { idempotencyKey })

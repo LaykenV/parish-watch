@@ -67,7 +67,7 @@ export const REVIEW_PROMPT_VERSION = 'v1.4'
 
 export const REVIEW_SCHEMA_VERSION = 'v1'
 
-export const PUBLICATION_POLICY_VERSION = 'v1.1'
+export const PUBLICATION_POLICY_VERSION = 'v1.2'
 
 export const PUBLICATION_PAYLOAD_VERSION = 'v1'
 

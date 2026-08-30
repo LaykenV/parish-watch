@@ -64,7 +64,13 @@ export function evaluateReviewEvidenceV1(input: {
   }
   if (
     input.findings.some((finding) => finding.severity === 'limited') ||
-    input.checks.some((check) => check.assessment !== 'supported')
+    input.checks.some(
+      (check) =>
+        check.assessment !== 'supported' &&
+        !(
+          check.fieldPath === '/sourceRecordId' && !sourceRecordIdRequiresCitation
+        ),
+    )
   ) {
     return {
       verdict: 'limited',
