@@ -466,7 +466,7 @@ test('review prompt v1.3 creates a new publication idempotency key', async () =>
       processorVersion: 'v1',
       promptVersion,
       schemaVersion: 'v1',
-      policyVersion: 'v1',
+      policyVersion: 'v1.1',
       payloadVersion: 'v1',
     })
 
