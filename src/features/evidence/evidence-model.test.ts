@@ -11,10 +11,9 @@ import {
   artifactTone,
   documentHost,
   evidenceSheetSize,
-  getIssueDetail,
   issueSections,
 } from './evidence-model'
-import { ISSUE_DETAIL_FIXTURES } from './fixtures'
+import { ISSUE_DETAIL_FIXTURES, ISSUE_LIVE_UPDATE } from './fixtures'
 import {
   DECISION_DETAIL_FIXTURES,
   MEETING_DETAIL_FIXTURES,
@@ -49,7 +48,7 @@ function expectResolvable(
 
 describe('resident interface Slice 3 evidence contracts', () => {
   it('keeps only citation ids the page actually publishes', () => {
-    const fixture = getIssueDetail('drainage-fee-credit-cap')
+    const fixture = ISSUE_DETAIL_FIXTURES['drainage-fee-credit-cap']
     expect(fixture).not.toBeNull()
     expect(resolveCitationId(fixture!.citations, 'drainage.next')).toBe(
       'drainage.next',
@@ -74,8 +73,8 @@ describe('resident interface Slice 3 evidence contracts', () => {
   })
 
   it('omits sections a limited source cannot support', () => {
-    const limited = getIssueDetail('downtown-late-night-permits')!
-    const full = getIssueDetail('drainage-fee-credit-cap')!
+    const limited = ISSUE_DETAIL_FIXTURES['downtown-late-night-permits']!
+    const full = ISSUE_DETAIL_FIXTURES['drainage-fee-credit-cap']!
 
     expect(issueSections(limited).factors).toBe(false)
     expect(issueSections(limited).publicActions).toBe(false)
@@ -86,8 +85,8 @@ describe('resident interface Slice 3 evidence contracts', () => {
   })
 
   it('moves the accepted date in place when a live update arrives', () => {
-    const before = getIssueDetail('drainage-fee-credit-cap')!
-    const after = applyLiveUpdate(before)
+    const before = ISSUE_DETAIL_FIXTURES['drainage-fee-credit-cap']!
+    const after = applyLiveUpdate(before, ISSUE_LIVE_UPDATE)
 
     expect(before.issue.next?.date).toBe('2026-09-15')
     expect(after.issue.next?.date).toBe('2026-10-06')
@@ -99,13 +98,13 @@ describe('resident interface Slice 3 evidence contracts', () => {
   })
 
   it('leaves issues without a live update untouched', () => {
-    const surplus = getIssueDetail('surplus-pickup-donations')!
-    expect(applyLiveUpdate(surplus)).toBe(surplus)
+    const surplus = ISSUE_DETAIL_FIXTURES['surplus-pickup-donations']!
+    expect(applyLiveUpdate(surplus, ISSUE_LIVE_UPDATE)).toBe(surplus)
   })
 
   it('opens the full sheet for a warning or a long excerpt', () => {
-    const surplus = getIssueDetail('surplus-pickup-donations')!
-    const permits = getIssueDetail('downtown-late-night-permits')!
+    const surplus = ISSUE_DETAIL_FIXTURES['surplus-pickup-donations']!
+    const permits = ISSUE_DETAIL_FIXTURES['downtown-late-night-permits']!
 
     expect(evidenceSheetSize(surplus.citations['surplus.outcome']!)).toBe(
       'full',

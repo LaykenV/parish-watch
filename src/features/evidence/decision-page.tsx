@@ -19,21 +19,20 @@ import {
   EvidenceProvider,
   SourceControl,
 } from './evidence-surface'
-import { getDecisionDetail } from './evidence-model'
-import { getActiveEvidenceFixture, resolveCitationId } from './contracts'
-import type { EvidenceSearch } from './contracts'
+import { resolveCitationId } from './contracts'
+import type { DecisionDetailFixture, EvidenceSearch } from './contracts'
 
 export function DecisionPage({
+  fixture,
   onSelectSource,
   recordKey,
   search,
 }: {
+  fixture: DecisionDetailFixture | null
   onSelectSource: (id: string | null) => void
   recordKey: string
   search: EvidenceSearch
 }) {
-  const activeFixture = getActiveEvidenceFixture(search.fixture)
-  const fixture = activeFixture ? getDecisionDetail(recordKey) : null
   if (!fixture) return <DecisionNotFound recordKey={recordKey} />
 
   const { citations, decision } = fixture

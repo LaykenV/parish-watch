@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T19:35:50Z
+- **Last updated:** 2026-08-30T19:42:59Z
 
 ## Log
 
@@ -33,6 +33,16 @@ the close transition finishes. Browser checks measured aligned definition rows
 at 1,280 pixels with no overflow and kept the excerpt visible during the
 390-pixel drawer exit. Automated revalidation remains with PR checks
 (`src/features/evidence/decision-page.tsx`,
+`src/features/evidence/evidence-surface.tsx`).
+
+The final full-context review found that static imports still placed the
+development evidence fixtures in the production JavaScript graph even though
+the runtime gate prevented rendering them. Route loaders now fetch the fixture
+modules through development-only dynamic imports. The production build can
+drop the fabricated excerpts entirely. Citation URLs opened without a click
+now record the first matching Source control as their focus-return target. The
+next PR checks own automated revalidation
+(`src/features/evidence/evidence-page.data.ts`,
 `src/features/evidence/evidence-surface.tsx`).
 
 ### 2026-08-30 - ac0cc55

@@ -42,6 +42,8 @@ The viewer identifies the official document, locator, retrieval date, exact
 excerpt, and original-document host. OCR or retrieval warnings remain attached
 to the citation. The desktop panel receives focus when it opens. Both desktop
 and mobile viewers return focus to the exact opening control when they close.
+A direct citation URL falls back to the first matching Source control because
+it has no opener.
 
 ## Publication states
 
@@ -66,9 +68,10 @@ issues, decisions, and meetings preserve the parameter so the review path does
 not fall into a production recovery state.
 
 Production builds ignore both fixture values and show the route recovery page.
-The fixtures do not enter Convex, prerendered HTML, or public civic records.
-Real issue, decision-detail, and meeting-detail queries remain integration
-work.
+Development-only dynamic imports keep the evidence fixtures and fabricated
+source excerpts out of the production JavaScript bundle. The fixtures do not
+enter Convex, prerendered HTML, or public civic records. Real issue,
+decision-detail, and meeting-detail queries remain integration work.
 
 ## Shared interface rules
 

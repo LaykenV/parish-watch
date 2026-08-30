@@ -1,45 +1,9 @@
-import { ISSUE_FIXTURES } from '../discovery/fixtures'
-import { ISSUE_DETAIL_FIXTURES, ISSUE_LIVE_UPDATE } from './fixtures'
-import {
-  DECISION_DETAIL_FIXTURES,
-  MEETING_DETAIL_FIXTURES,
-} from './record-fixtures'
-import type { IssueCardData } from '../discovery/contracts'
 import type {
   ArtifactStatus,
   CitationData,
-  DecisionDetailFixture,
   IssueDetailFixture,
-  MeetingDetailFixture,
-  EvidenceScenario,
+  IssueLiveUpdate,
 } from './contracts'
-
-export function getIssueDetail(slug: string): IssueDetailFixture | null {
-  return ISSUE_DETAIL_FIXTURES[slug] ?? null
-}
-
-export function getDecisionDetail(
-  recordKey: string,
-): DecisionDetailFixture | null {
-  return DECISION_DETAIL_FIXTURES[recordKey] ?? null
-}
-
-export function getMeetingDetail(id: string): MeetingDetailFixture | null {
-  return MEETING_DETAIL_FIXTURES[id] ?? null
-}
-
-export function getIssueCards(
-  slugs: string[],
-  fixture: EvidenceScenario | undefined,
-): IssueCardData[] {
-  return slugs
-    .map((slug) => ISSUE_FIXTURES.find((issue) => issue.slug === slug))
-    .filter((issue): issue is IssueCardData => Boolean(issue))
-    .map((issue) => ({
-      ...issue,
-      href: `/issues/${issue.slug}${fixture ? `?fixture=${fixture}` : ''}`,
-    }))
-}
 
 /*
   The live update replaces the accepted version in place. Only the drainage
@@ -51,6 +15,7 @@ export function supportsLiveUpdate(slug: string): boolean {
 
 export function applyLiveUpdate(
   fixture: IssueDetailFixture,
+  liveUpdate: IssueLiveUpdate,
 ): IssueDetailFixture {
   if (!supportsLiveUpdate(fixture.issue.slug)) return fixture
 
@@ -60,19 +25,19 @@ export function applyLiveUpdate(
     ...fixture,
     issue: {
       ...fixture.issue,
-      changes: [ISSUE_LIVE_UPDATE.change, ...fixture.issue.changes],
-      next: ISSUE_LIVE_UPDATE.next,
+      changes: [liveUpdate.change, ...fixture.issue.changes],
+      next: liveUpdate.next,
       timeline: fixture.issue.timeline.map((entry) =>
         entry.date === previousNext
           ? {
               ...entry,
-              date: ISSUE_LIVE_UPDATE.next.date,
+              date: liveUpdate.next.date,
               meaningfulChange:
                 'The Clerk moved final adoption from September 15 to October 6.',
             }
           : entry,
       ),
-      versions: [ISSUE_LIVE_UPDATE.version, ...fixture.issue.versions],
+      versions: [liveUpdate.version, ...fixture.issue.versions],
     },
   }
 }

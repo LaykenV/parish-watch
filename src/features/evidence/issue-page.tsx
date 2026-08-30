@@ -26,29 +26,31 @@ import {
 } from './evidence-surface'
 import {
   applyLiveUpdate,
-  getIssueDetail,
   issueSections,
   supportsLiveUpdate,
 } from './evidence-model'
-import { getActiveEvidenceFixture, resolveCitationId } from './contracts'
+import { resolveCitationId } from './contracts'
 import type {
   EvidenceSearch,
   IssueDetailFixture,
   MarkedDate,
 } from './contracts'
+import type { IssuePageData } from './evidence-page.data'
 
 export function IssuePage({
+  data,
   onSelectSource,
   search,
   slug,
 }: {
+  data: IssuePageData | null
   onSelectSource: (id: string | null) => void
   search: EvidenceSearch
   slug: string
 }) {
-  const activeFixture = getActiveEvidenceFixture(search.fixture)
-  const fixture = activeFixture ? getIssueDetail(slug) : null
-  const live = activeFixture === 'update' && supportsLiveUpdate(slug)
+  const fixture = data?.fixture
+  const liveUpdate = data?.liveUpdate ?? null
+  const live = Boolean(liveUpdate) && supportsLiveUpdate(slug)
   const [updated, setUpdated] = useState(false)
 
   useEffect(() => {
@@ -62,7 +64,8 @@ export function IssuePage({
 
   if (!fixture) return <IssueNotFound slug={slug} />
 
-  const current = updated ? applyLiveUpdate(fixture) : fixture
+  const current =
+    updated && liveUpdate ? applyLiveUpdate(fixture, liveUpdate) : fixture
 
   return (
     <IssueDetail

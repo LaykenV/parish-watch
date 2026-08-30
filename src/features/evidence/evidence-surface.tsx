@@ -66,12 +66,14 @@ export function EvidenceProvider({
   const docked = hydrated && wide
 
   const openerRef = useRef<HTMLElement | null>(null)
+  const openerCitationRef = useRef<string | null>(null)
   const previousSelected = useRef<string | null>(null)
 
   const select = useCallback(
     (id: string | null, opener?: HTMLElement | null) => {
       if (opener) {
         openerRef.current = opener
+        openerCitationRef.current = id
         setTriggerId(opener.id)
       }
       onSelect(id)
@@ -79,7 +81,24 @@ export function EvidenceProvider({
     [onSelect],
   )
 
-  const restoreFocus = useCallback(() => openerRef.current?.focus(), [])
+  const restoreFocus = useCallback(() => {
+    openerRef.current?.focus()
+    openerRef.current = null
+    openerCitationRef.current = null
+    setTriggerId(null)
+  }, [])
+
+  useEffect(() => {
+    if (!selected || openerCitationRef.current === selected) return
+
+    const fallback = Array.from(
+      document.querySelectorAll<HTMLElement>('.ev-source'),
+    ).find((control) => control.dataset.citationId === selected)
+
+    openerRef.current = fallback ?? null
+    openerCitationRef.current = selected
+    setTriggerId(fallback?.id ?? null)
+  }, [selected])
 
   useEffect(() => {
     const was = previousSelected.current
@@ -151,6 +170,7 @@ export function SourceControl({ citationId }: { citationId: string }) {
       aria-expanded={isSelected}
       aria-haspopup={docked ? undefined : 'dialog'}
       className="ev-source"
+      data-citation-id={citationId}
       data-selected={isSelected ? '' : undefined}
       id={controlId}
       onClick={(event) =>

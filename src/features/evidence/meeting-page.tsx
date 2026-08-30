@@ -19,26 +19,27 @@ import {
   EvidenceProvider,
   SourceControl,
 } from './evidence-surface'
-import { artifactTone, getIssueCards, getMeetingDetail } from './evidence-model'
-import { getActiveEvidenceFixture, resolveCitationId } from './contracts'
+import { artifactTone } from './evidence-model'
+import { resolveCitationId } from './contracts'
 import type { EvidenceSearch, MeetingDecisionRow } from './contracts'
+import type { MeetingPageData } from './evidence-page.data'
 
 export function MeetingPage({
+  data,
   meetingId,
   onSelectSource,
   search,
 }: {
+  data: MeetingPageData | null
   meetingId: string
   onSelectSource: (id: string | null) => void
   search: EvidenceSearch
 }) {
-  const activeFixture = getActiveEvidenceFixture(search.fixture)
-  const fixture = activeFixture ? getMeetingDetail(meetingId) : null
-  if (!fixture) return <MeetingNotFound meetingId={meetingId} />
+  if (!data) return <MeetingNotFound meetingId={meetingId} />
 
+  const { fixture, issues } = data
   const { citations, meeting } = fixture
   const selected = resolveCitationId(citations, search.source)
-  const issues = getIssueCards(meeting.issueSlugs, search.fixture)
 
   return (
     <EvidenceProvider
