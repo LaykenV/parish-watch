@@ -1,0 +1,669 @@
+{
+  "schemaVersion": "public_parish_gold_set_v1",
+  "body": {
+    "jurisdictionSlug": "lafayette-parish",
+    "slug": "lafayette-city-council",
+    "name": "Lafayette City Council",
+    "bodyType": "city_council"
+  },
+  "registryExpectation": {
+    "officialDomains": ["lafayettela.gov", "apps.lafayettela.gov"],
+    "sourceKinds": ["agenda", "minutes", "ordinance", "resolution"],
+    "discoveryMode": "dynamic",
+    "expectedCadence": {
+      "kind": "meeting_cycle",
+      "expectedWeekdays": [2]
+    }
+  },
+  "dateWindow": {
+    "from": "2026-07-21",
+    "through": "2026-09-01"
+  },
+  "artifacts": [
+    {
+      "artifactId": "lafayette-city-council-2026-07-21-agenda",
+      "bodySlug": "lafayette-city-council",
+      "sourceKind": "agenda",
+      "sourceUrl": "https://apps.lafayettela.gov/obcouncil/api/Document/2572789/",
+      "expectedCanonicalUrl": null,
+      "meetingDate": "2026-07-21",
+      "documentDate": null,
+      "bodyEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "REGULAR MEETING LAFAYETTE CITY COUNCIL"
+      },
+      "kindEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "AGENDA"
+      },
+      "correspondingArtifactIds": ["lafayette-city-council-2026-07-21-minutes"],
+      "revisionOfArtifactId": null
+    },
+    {
+      "artifactId": "lafayette-city-council-2026-07-21-minutes",
+      "bodySlug": "lafayette-city-council",
+      "sourceKind": "minutes",
+      "sourceUrl": "https://apps.lafayettela.gov/obcouncil/api/Document/2573516/",
+      "expectedCanonicalUrl": null,
+      "meetingDate": "2026-07-21",
+      "documentDate": null,
+      "bodyEvidence": {
+        "page": 1,
+        "section": "Call to order",
+        "excerpt": "Regular City Council Meeting of July 21, 2026"
+      },
+      "kindEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "City Council Meeting Minutes"
+      },
+      "correspondingArtifactIds": ["lafayette-city-council-2026-07-21-agenda"],
+      "revisionOfArtifactId": null
+    },
+    {
+      "artifactId": "lafayette-city-council-2026-08-04-agenda",
+      "bodySlug": "lafayette-city-council",
+      "sourceKind": "agenda",
+      "sourceUrl": "https://apps.lafayettela.gov/obcouncil/api/Document/2574892/",
+      "expectedCanonicalUrl": null,
+      "meetingDate": "2026-08-04",
+      "documentDate": null,
+      "bodyEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "REGULAR MEETING LAFAYETTE CITY COUNCIL"
+      },
+      "kindEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "AGENDA"
+      },
+      "correspondingArtifactIds": ["lafayette-city-council-2026-08-04-minutes"],
+      "revisionOfArtifactId": null
+    },
+    {
+      "artifactId": "lafayette-city-council-2026-08-04-minutes",
+      "bodySlug": "lafayette-city-council",
+      "sourceKind": "minutes",
+      "sourceUrl": "https://apps.lafayettela.gov/obcouncil/api/Document/2577984/",
+      "expectedCanonicalUrl": null,
+      "meetingDate": "2026-08-04",
+      "documentDate": null,
+      "bodyEvidence": {
+        "page": 1,
+        "section": "Call to order",
+        "excerpt": "Regular City Council Meeting of August 4, 2026"
+      },
+      "kindEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "City Council Meeting Minutes"
+      },
+      "correspondingArtifactIds": ["lafayette-city-council-2026-08-04-agenda"],
+      "revisionOfArtifactId": null
+    },
+    {
+      "artifactId": "lafayette-city-council-2026-08-18-agenda",
+      "bodySlug": "lafayette-city-council",
+      "sourceKind": "agenda",
+      "sourceUrl": "https://apps.lafayettela.gov/obcouncil/api/Document/2578922/",
+      "expectedCanonicalUrl": null,
+      "meetingDate": "2026-08-18",
+      "documentDate": null,
+      "bodyEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "REGULAR MEETING LAFAYETTE CITY COUNCIL"
+      },
+      "kindEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "AGENDA"
+      },
+      "correspondingArtifactIds": ["lafayette-city-council-2026-08-18-minutes"],
+      "revisionOfArtifactId": null
+    },
+    {
+      "artifactId": "lafayette-city-council-2026-08-18-minutes",
+      "bodySlug": "lafayette-city-council",
+      "sourceKind": "minutes",
+      "sourceUrl": "https://apps.lafayettela.gov/obcouncil/api/Document/2580143/",
+      "expectedCanonicalUrl": null,
+      "meetingDate": "2026-08-18",
+      "documentDate": null,
+      "bodyEvidence": {
+        "page": 1,
+        "section": "Call to order",
+        "excerpt": "Regular City Council Meeting of August 18, 2026"
+      },
+      "kindEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "City Council Meeting Minutes"
+      },
+      "correspondingArtifactIds": ["lafayette-city-council-2026-08-18-agenda"],
+      "revisionOfArtifactId": null
+    },
+    {
+      "artifactId": "lafayette-city-council-2026-09-01-agenda",
+      "bodySlug": "lafayette-city-council",
+      "sourceKind": "agenda",
+      "sourceUrl": "https://apps.lafayettela.gov/obcouncil/api/Document/2581071/",
+      "expectedCanonicalUrl": null,
+      "meetingDate": "2026-09-01",
+      "documentDate": null,
+      "bodyEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "REGULAR MEETING LAFAYETTE CITY COUNCIL"
+      },
+      "kindEvidence": {
+        "page": 1,
+        "section": "Header",
+        "excerpt": "AGENDA"
+      },
+      "correspondingArtifactIds": [],
+      "revisionOfArtifactId": null
+    },
+    {
+      "artifactId": "co-072-2026-final-adoption-packet",
+      "bodySlug": "lafayette-city-council",
+      "sourceKind": "ordinance",
+      "sourceUrl": "https://apps.lafayettela.gov/obcouncil/api/Document/2580895/",
+      "expectedCanonicalUrl": null,
+      "meetingDate": "2026-09-01",
+      "documentDate": null,
+      "bodyEvidence": {
+        "page": 1,
+        "section": "Ordinance heading",
+        "excerpt": "AN ORDINANCE OF THE LAFAYETTE CITY COUNCIL"
+      },
+      "kindEvidence": {
+        "page": 1,
+        "section": "Ordinance heading",
+        "excerpt": "CITY ORDINANCE NO. CO-072-2026"
+      },
+      "correspondingArtifactIds": ["lafayette-city-council-2026-09-01-agenda"],
+      "revisionOfArtifactId": null
+    }
+  ],
+  "decisionCases": [
+    {
+      "caseId": "co-062-2026-introduced",
+      "targetRecordId": "CO-062-2026",
+      "artifactIds": [
+        "lafayette-city-council-2026-07-21-agenda",
+        "lafayette-city-council-2026-07-21-minutes"
+      ],
+      "expectedFacts": [
+        {
+          "fieldPath": "/sourceRecordId",
+          "value": "CO-062-2026",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-07-21-agenda",
+            "page": 2,
+            "section": "Introductory ordinances",
+            "excerpt": "CO-062-2026 An ordinance of the Lafayette City Council providing for the abandonment of a portion of the Hellen Street right-of-way"
+          }
+        },
+        {
+          "fieldPath": "/lifecycleState",
+          "value": "proposed",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-07-21-minutes",
+            "page": 5,
+            "section": "Introductory ordinances",
+            "excerpt": "Motion to introduce, in globo, was approved."
+          }
+        }
+      ],
+      "requiredCitedFieldPaths": [
+        "/title",
+        "/bodyName",
+        "/meetingAt",
+        "/lifecycleState",
+        "/plainLanguageSummary"
+      ],
+      "mustRemainUnknownClaims": [
+        {
+          "claim": "final disposition",
+          "reason": "Introduction does not prove adoption, rejection, or deferral."
+        }
+      ],
+      "expectedImportanceFactors": [
+        {
+          "factor": "rights_access",
+          "level": "moderate",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-07-21-agenda"]
+        }
+      ]
+    },
+    {
+      "caseId": "co-062-2026-postponed",
+      "targetRecordId": "CO-062-2026",
+      "artifactIds": [
+        "lafayette-city-council-2026-08-04-agenda",
+        "lafayette-city-council-2026-08-04-minutes"
+      ],
+      "expectedFacts": [
+        {
+          "fieldPath": "/meetingAt",
+          "value": "2026-08-04T17:30:00-05:00",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-04-agenda",
+            "page": 1,
+            "section": "Header",
+            "excerpt": "TUESDAY, AUGUST 4, 2026 5:30 p.m."
+          }
+        },
+        {
+          "fieldPath": "/lifecycleState",
+          "value": "postponed",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-04-minutes",
+            "page": 3,
+            "section": "Agenda item no. 7",
+            "excerpt": "Motion to defer indefinitely was approved."
+          }
+        }
+      ],
+      "requiredCitedFieldPaths": [
+        "/title",
+        "/bodyName",
+        "/meetingAt",
+        "/lifecycleState",
+        "/plainLanguageSummary"
+      ],
+      "mustRemainUnknownClaims": [
+        {
+          "claim": "permanent cancellation",
+          "reason": "An indefinite deferral does not prove that the ordinance was canceled."
+        }
+      ],
+      "expectedImportanceFactors": [
+        {
+          "factor": "rights_access",
+          "level": "moderate",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-08-04-agenda"]
+        }
+      ]
+    },
+    {
+      "caseId": "co-069-2026-introduced",
+      "targetRecordId": "CO-069-2026",
+      "artifactIds": [
+        "lafayette-city-council-2026-08-04-agenda",
+        "lafayette-city-council-2026-08-04-minutes"
+      ],
+      "expectedFacts": [
+        {
+          "fieldPath": "/amounts/0/value",
+          "value": "7986192",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-04-agenda",
+            "page": 4,
+            "section": "Introductory ordinances",
+            "excerpt": "increasing revenues in the amount of $7,986,192 in Safe Streets and Roads for all grant funds"
+          }
+        },
+        {
+          "fieldPath": "/amounts/1/value",
+          "value": "2001498",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-04-agenda",
+            "page": 4,
+            "section": "Introductory ordinances",
+            "excerpt": "transferring $2,001,498 in Capital Outlay Funds to serve as a local match"
+          }
+        },
+        {
+          "fieldPath": "/lifecycleState",
+          "value": "proposed",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-04-minutes",
+            "page": 8,
+            "section": "Agenda item no. 26",
+            "excerpt": "Motion to introduce was approved."
+          }
+        }
+      ],
+      "requiredCitedFieldPaths": [
+        "/title",
+        "/bodyName",
+        "/meetingAt",
+        "/lifecycleState",
+        "/plainLanguageSummary",
+        "/amounts/0/value",
+        "/amounts/1/value"
+      ],
+      "mustRemainUnknownClaims": [
+        {
+          "claim": "total project cost",
+          "reason": "The minutes say it was too early to provide that amount."
+        },
+        {
+          "claim": "final median design",
+          "reason": "The minutes discuss a possible design but do not approve one."
+        }
+      ],
+      "expectedImportanceFactors": [
+        {
+          "factor": "public_money",
+          "level": "high",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-08-04-agenda"]
+        },
+        {
+          "factor": "health_safety",
+          "level": "high",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-08-04-minutes"]
+        }
+      ]
+    },
+    {
+      "caseId": "co-069-2026-adopted",
+      "targetRecordId": "CO-069-2026",
+      "artifactIds": [
+        "lafayette-city-council-2026-08-18-agenda",
+        "lafayette-city-council-2026-08-18-minutes"
+      ],
+      "expectedFacts": [
+        {
+          "fieldPath": "/lifecycleState",
+          "value": "decided",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-18-minutes",
+            "page": 3,
+            "section": "Agenda item no. 7",
+            "excerpt": "Motion to adopt was approved."
+          }
+        },
+        {
+          "fieldPath": "/affectedPlaces/0",
+          "value": "Johnston Street between Bertrand Drive and Churchill Drive",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-18-minutes",
+            "page": 3,
+            "section": "Agenda item no. 7",
+            "excerpt": "safety improvements along Johnston Street between Bertrand Drive and Churchill Drive"
+          }
+        }
+      ],
+      "requiredCitedFieldPaths": [
+        "/title",
+        "/bodyName",
+        "/meetingAt",
+        "/lifecycleState",
+        "/plainLanguageSummary",
+        "/affectedPlaces/0"
+      ],
+      "mustRemainUnknownClaims": [
+        {
+          "claim": "construction schedule",
+          "reason": "The source records adoption but no construction schedule."
+        },
+        {
+          "claim": "money spent",
+          "reason": "Budget authority does not prove that funds have been spent."
+        }
+      ],
+      "expectedImportanceFactors": [
+        {
+          "factor": "public_money",
+          "level": "high",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-08-18-agenda"]
+        },
+        {
+          "factor": "health_safety",
+          "level": "high",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-08-18-minutes"]
+        }
+      ]
+    },
+    {
+      "caseId": "co-072-2026-introduced",
+      "targetRecordId": "CO-072-2026",
+      "artifactIds": [
+        "lafayette-city-council-2026-08-18-agenda",
+        "lafayette-city-council-2026-08-18-minutes"
+      ],
+      "expectedFacts": [
+        {
+          "fieldPath": "/sourceRecordId",
+          "value": "CO-072-2026",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-18-agenda",
+            "page": 2,
+            "section": "Introductory ordinances",
+            "excerpt": "CO-072-2026 An ordinance of the Lafayette City Council amending the FY 25/26 operating and capital budget"
+          }
+        },
+        {
+          "fieldPath": "/amounts/0/value",
+          "value": "3982500",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-18-agenda",
+            "page": 2,
+            "section": "Introductory ordinances",
+            "excerpt": "increasing revenues in the amount of $3,982,500 awarded through a federal Sub-Award Grant Agreement"
+          }
+        },
+        {
+          "fieldPath": "/lifecycleState",
+          "value": "proposed",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-08-18-minutes",
+            "page": 4,
+            "section": "Introductory ordinances",
+            "excerpt": "Motion to introduce, in globo, was approved."
+          }
+        }
+      ],
+      "requiredCitedFieldPaths": [
+        "/title",
+        "/bodyName",
+        "/meetingAt",
+        "/lifecycleState",
+        "/plainLanguageSummary",
+        "/amounts/0/value"
+      ],
+      "mustRemainUnknownClaims": [
+        {
+          "claim": "final adoption",
+          "reason": "The August 18 minutes prove introduction only."
+        }
+      ],
+      "expectedImportanceFactors": [
+        {
+          "factor": "public_money",
+          "level": "high",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-08-18-agenda"]
+        },
+        {
+          "factor": "service_delivery",
+          "level": "high",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-08-18-agenda"]
+        }
+      ]
+    },
+    {
+      "caseId": "co-072-2026-scheduled",
+      "targetRecordId": "CO-072-2026",
+      "artifactIds": [
+        "lafayette-city-council-2026-09-01-agenda",
+        "co-072-2026-final-adoption-packet"
+      ],
+      "expectedFacts": [
+        {
+          "fieldPath": "/meetingAt",
+          "value": "2026-09-01T17:30:00-05:00",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-09-01-agenda",
+            "page": 1,
+            "section": "Header",
+            "excerpt": "TUESDAY, SEPTEMBER 1, 2026 5:30 p.m."
+          }
+        },
+        {
+          "fieldPath": "/lifecycleState",
+          "value": "scheduled",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-09-01-agenda",
+            "page": 1,
+            "section": "Ordinances for final adoption",
+            "excerpt": "CO-072-2026 An ordinance of the Lafayette City Council"
+          }
+        },
+        {
+          "fieldPath": "/amounts/0/value",
+          "value": "3982500",
+          "evidence": {
+            "artifactId": "co-072-2026-final-adoption-packet",
+            "page": 1,
+            "section": "Ordinance heading",
+            "excerpt": "increasing revenues in the amount of $3,982,500 awarded through a federal Sub-Award Grant Agreement"
+          }
+        },
+        {
+          "fieldPath": "/amounts/1/value",
+          "value": "3982500",
+          "evidence": {
+            "artifactId": "co-072-2026-final-adoption-packet",
+            "page": 25,
+            "section": "Internal memorandum",
+            "excerpt": "LUS will provide a 50% cost share ($3,982,500) of the Total Award Committed"
+          }
+        }
+      ],
+      "requiredCitedFieldPaths": [
+        "/title",
+        "/bodyName",
+        "/meetingAt",
+        "/lifecycleState",
+        "/plainLanguageSummary",
+        "/amounts/0/value",
+        "/amounts/1/value"
+      ],
+      "mustRemainUnknownClaims": [
+        {
+          "claim": "September 1 vote outcome",
+          "reason": "The packet's final disposition fields are blank before the meeting."
+        },
+        {
+          "claim": "outage reduction",
+          "reason": "The packet names a resiliency project but gives no measured outage reduction."
+        },
+        {
+          "claim": "reconciled federal award total",
+          "reason": "The ordinance and internal memo state $3,982,500, while the sub-award cover sheet appears to state $3,985,125. The packet does not reconcile the difference."
+        }
+      ],
+      "expectedImportanceFactors": [
+        {
+          "factor": "public_money",
+          "level": "high",
+          "evidenceArtifactIds": ["co-072-2026-final-adoption-packet"]
+        },
+        {
+          "factor": "service_delivery",
+          "level": "high",
+          "evidenceArtifactIds": ["co-072-2026-final-adoption-packet"]
+        }
+      ]
+    },
+    {
+      "caseId": "city-board-applications-2026-09-15",
+      "targetRecordId": "CITY-BOARD-APPLICATIONS-2026-09-15",
+      "artifactIds": ["lafayette-city-council-2026-09-01-agenda"],
+      "expectedFacts": [
+        {
+          "fieldPath": "/recordType",
+          "value": "public_action",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-09-01-agenda",
+            "page": 2,
+            "section": "Board and commission vacancies",
+            "excerpt": "Individuals wishing to submit a resume for the above volunteer vacancies"
+          }
+        },
+        {
+          "fieldPath": "/publicActions/0/deadline",
+          "value": "2026-09-15T12:00:00-05:00",
+          "evidence": {
+            "artifactId": "lafayette-city-council-2026-09-01-agenda",
+            "page": 2,
+            "section": "Board and commission vacancies",
+            "excerpt": "no later than noon, Tuesday, September 15, 2026"
+          }
+        }
+      ],
+      "requiredCitedFieldPaths": [
+        "/title",
+        "/bodyName",
+        "/recordType",
+        "/plainLanguageSummary",
+        "/publicActions/0/deadline",
+        "/publicActions/0/instructions"
+      ],
+      "mustRemainUnknownClaims": [
+        {
+          "claim": "applicant names",
+          "reason": "The agenda lists vacancies and a deadline, not applicants."
+        },
+        {
+          "claim": "eventual appointments",
+          "reason": "Appointments are expected at a later meeting."
+        }
+      ],
+      "expectedImportanceFactors": [
+        {
+          "factor": "public_deadline",
+          "level": "high",
+          "evidenceArtifactIds": ["lafayette-city-council-2026-09-01-agenda"]
+        }
+      ]
+    }
+  ],
+  "expectedRecordLinks": [
+    {
+      "fromCaseId": "co-062-2026-introduced",
+      "toCaseId": "co-062-2026-postponed",
+      "relationship": "follow_up_or_outcome",
+      "evidenceArtifactIds": [
+        "lafayette-city-council-2026-07-21-minutes",
+        "lafayette-city-council-2026-08-04-minutes"
+      ]
+    },
+    {
+      "fromCaseId": "co-069-2026-introduced",
+      "toCaseId": "co-069-2026-adopted",
+      "relationship": "follow_up_or_outcome",
+      "evidenceArtifactIds": [
+        "lafayette-city-council-2026-08-04-minutes",
+        "lafayette-city-council-2026-08-18-minutes"
+      ]
+    },
+    {
+      "fromCaseId": "co-072-2026-introduced",
+      "toCaseId": "co-072-2026-scheduled",
+      "relationship": "same_government_action",
+      "evidenceArtifactIds": [
+        "lafayette-city-council-2026-08-18-minutes",
+        "lafayette-city-council-2026-09-01-agenda"
+      ]
+    }
+  ],
+  "negativeCases": [
+    {
+      "caseId": "routine-invocation-2026-08-18",
+      "artifactId": "lafayette-city-council-2026-08-18-agenda",
+      "locator": {
+        "page": 1,
+        "section": "Call to order",
+        "excerpt": "Invocation and Pledge of Allegiance"
+      },
+      "reason": "A routine ceremonial item is not a substantive government decision."
+    }
+  ]
+}
