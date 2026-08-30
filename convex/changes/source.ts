@@ -14,6 +14,7 @@ export async function recordSourceSnapshotChange(
     currentContentHash: string
     previousNormalizedContentHash: string | undefined
     currentNormalizedContentHash: string
+    previousTruncated: boolean
     createdAt: number
   },
 ): Promise<Id<'sourceSnapshotChanges'>> {
@@ -31,7 +32,8 @@ export async function recordSourceSnapshotChange(
   const classification =
     input.previousContentHashBasis !== 'raw_artifact_v2'
       ? 'hash_basis_migration'
-      : input.previousNormalizedContentHash === undefined
+      : input.previousNormalizedContentHash === undefined ||
+          input.previousTruncated
         ? 'unusable_predecessor'
         : normalizedChanged
           ? 'normalized_changed'

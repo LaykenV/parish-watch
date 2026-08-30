@@ -132,7 +132,7 @@ test('first retrieval creates an immutable snapshot with run and stage records',
     outputContentHash: snapshot?.contentHash,
     normalizedContentHash: snapshot?.normalizedContentHash,
   })
-  expect(stages[0].idempotencyKey).toMatch(/^retrieve:v2:/)
+  expect(stages[0].idempotencyKey).toMatch(/^retrieve:v3:/)
 })
 
 test('repeat retrieval of unchanged content reuses the existing snapshot', async () => {
@@ -184,6 +184,64 @@ test('repeat retrieval of unchanged content reuses the existing snapshot', async
     return count
   })
   expect(storageCount).toBe(2)
+})
+
+test('a complete retrieval replaces an unchanged snapshot falsely marked truncated', async () => {
+  const t = initTest()
+  stubScrape(MD_1, RAW_1)
+  const { registryId } = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+  const first = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+  const firstId = snapshotIdOf(first)
+  await t.run(async (ctx) => {
+    await ctx.db.patch(firstId, {
+      truncation: {
+        truncated: true,
+        detail: 'PDF engine reported an unsupported option',
+      },
+    })
+  })
+
+  const second = await t.action(
+    internal.operations.ingest.ingestRegistrySource,
+    { registryId },
+  )
+
+  expect(second).toMatchObject({ outcome: 'created', version: 2 })
+  const snapshots = await t.query(internal.sources.snapshots.listForSource, {
+    registryId,
+    canonicalUrl: HUB_URL,
+  })
+  expect(snapshots).toHaveLength(2)
+  expect(snapshots[0]).toMatchObject({
+    _id: snapshotIdOf(second),
+    previousSnapshotId: firstId,
+    contentHash: snapshots[1].contentHash,
+    normalizedContentHash: snapshots[1].normalizedContentHash,
+    truncation: { truncated: false },
+  })
+  const changes = await t.run(async (ctx) =>
+    ctx.db
+      .query('sourceSnapshotChanges')
+      .withIndex('by_current_snapshot', (q) =>
+        q.eq('currentSnapshotId', snapshotIdOf(second)),
+      )
+      .collect(),
+  )
+  expect(changes).toEqual([
+    expect.objectContaining({
+      previousSnapshotId: firstId,
+      currentSnapshotId: snapshotIdOf(second),
+      classification: 'unusable_predecessor',
+      rawChanged: false,
+      normalizedChanged: false,
+    }),
+  ])
 })
 
 test('changed content creates a new immutable version linked to the previous snapshot', async () => {
@@ -589,39 +647,45 @@ test('missing raw html fails instead of mislabeling markdown as the raw artifact
 test('a PDF stores the official source bytes alongside Firecrawl markdown', async () => {
   const t = initTest()
   const pdfBytes = new TextEncoder().encode('%PDF-1.7 official agenda bytes')
-  const fetchMock = vi.fn(async (input: string | URL | Request) => {
-    const requestUrl =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : input.url
-    if (requestUrl === PDF_URL) {
-      const response = new Response(pdfBytes, {
-        status: 200,
-        headers: { 'content-type': 'application/pdf' },
-      })
-      Object.defineProperty(response, 'url', { value: PDF_URL })
-      return response
-    }
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          markdown: '# Regular meeting agenda',
-          rawHtml: '<html><body>Firecrawl PDF rendering</body></html>',
-          metadata: {
-            sourceURL: PDF_URL,
-            url: PDF_URL,
-            statusCode: 200,
-            contentType: 'application/pdf',
-            creditsUsed: 2,
+  const scrapeBodies: Array<Record<string, unknown>> = []
+  const fetchMock = vi.fn(
+    async (input: string | URL | Request, init?: RequestInit) => {
+      const requestUrl =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url
+      if (requestUrl === PDF_URL) {
+        const response = new Response(pdfBytes, {
+          status: 200,
+          headers: { 'content-type': 'application/pdf' },
+        })
+        Object.defineProperty(response, 'url', { value: PDF_URL })
+        return response
+      }
+      scrapeBodies.push(
+        JSON.parse(String(init?.body)) as Record<string, unknown>,
+      )
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            markdown: '# Regular meeting agenda',
+            rawHtml: '<html><body>Firecrawl PDF rendering</body></html>',
+            metadata: {
+              sourceURL: PDF_URL,
+              url: PDF_URL,
+              statusCode: 200,
+              contentType: 'application/pdf',
+              creditsUsed: 2,
+            },
           },
-        },
-      }),
-      { status: 200 },
-    )
-  })
+        }),
+        { status: 200 },
+      )
+    },
+  )
   vi.stubGlobal('fetch', fetchMock)
   const { registryId } = await t.mutation(
     internal.operations.seed.seedLaunchCoverage,
@@ -648,6 +712,10 @@ test('a PDF stores the official source bytes alongside Firecrawl markdown', asyn
     await sha256HexOfText('%PDF-1.7 official agenda bytes'),
   )
   expect(fetchMock).toHaveBeenCalledTimes(4)
+  expect(scrapeBodies).toHaveLength(2)
+  expect(scrapeBodies.every((body) => body.skipTlsVerification === false)).toBe(
+    true,
+  )
 })
 
 test('a PDF that changes during extraction creates no mixed snapshot', async () => {

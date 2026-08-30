@@ -16,6 +16,8 @@ import {
 import { checkExtractionContractV1 } from './extraction/contractV1'
 import {
   centsOf,
+  locateExcerpt,
+  normalizeForMatch,
   parseZonedIsoDateTime,
   textSupportsAmount,
   textSupportsDate,
@@ -229,10 +231,10 @@ function goldDecision(snapshotId: string) {
   }
 }
 
-test('the extraction contract preserves a bounded 327-character official ordinance title', () => {
+test('the extraction contract preserves the 549-character CO-072-2026 title', () => {
   const response = goldDecision('snapshot-id')
   const officialTitle =
-    'An ordinance of the Lafayette City Council authorizing the Lafayette Mayor-President to enter into a Cooperative Endeavor Agreement and Act of Donation by and between Lafayette City-Parish Consolidated Government and the Terrebonne Parish Consolidated Government concerning the donation of a surplus 2016 Crew Cab pickup. (CAO)'
+    "An ordinance of the Lafayette City Council amending the FY 25/26 operating and capital budget of the Lafayette City-Parish Consolidated Government by increasing revenues in the amount of $3,982,500 awarded through a federal Sub-Award Grant Agreement administered by the Louisiana Department of Conservation and Energy under the U.S. Department of Energy's Grid Deployment Office for the System Hardening and Resiliency Project under Section 40101(D) of the bipartisan infrastructure law and appropriating within the Utilities Department. (Utilities)"
   response.decision.title = officialTitle
   const titleFact = response.decision.facts.find(
     (fact) => fact.fieldPath === '/title',
@@ -241,14 +243,25 @@ test('the extraction contract preserves a bounded 327-character official ordinan
   titleFact.value = officialTitle
   titleFact.citation.excerpt = officialTitle
 
-  expect(officialTitle.length).toBe(327)
+  expect(officialTitle.length).toBe(549)
   expect(checkExtractionContractV1(response)).toBeNull()
 
-  response.decision.title = 'x'.repeat(501)
+  response.decision.title = 'x'.repeat(1001)
   titleFact.value = response.decision.title
   expect(checkExtractionContractV1(response)).toBe(
-    'title exceeds the 500 character limit',
+    'title exceeds the 1000 character limit',
   )
+})
+
+test('citation matching joins a hyphenated PDF line break', () => {
+  const source = normalizeForMatch(
+    'awarded through a federal Sub-\nAward Grant Agreement',
+  )
+
+  expect(source).toBe('awarded through a federal Sub-Award Grant Agreement')
+  expect(
+    locateExcerpt(source, 'federal Sub-Award Grant Agreement'),
+  ).toBeGreaterThanOrEqual(0)
 })
 
 function setFactValue(
@@ -528,7 +541,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.4',
     schemaVersion: 'v1',
-    processorVersion: 'v1.7',
+    processorVersion: 'v1.9',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),

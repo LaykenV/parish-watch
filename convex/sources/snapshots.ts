@@ -110,7 +110,12 @@ export const commitRetrieval = internalMutation({
       .order('desc')
       .first()
     const existing =
-      previous?.contentHash === args.contentHash ? previous : null
+      previous?.contentHash === args.contentHash &&
+      previous.normalizedContentHash === args.normalizedContentHash &&
+      previous.truncation.truncated === args.truncation.truncated &&
+      previous.truncation.detail === args.truncation.detail
+        ? previous
+        : null
 
     if (existing && indexedSnapshot?._id !== existing._id) {
       throw new ConvexError({
@@ -187,6 +192,7 @@ export const commitRetrieval = internalMutation({
         currentContentHash: args.contentHash,
         previousNormalizedContentHash: previous.normalizedContentHash,
         currentNormalizedContentHash: args.normalizedContentHash,
+        previousTruncated: previous.truncation.truncated,
         createdAt: now,
       })
     }

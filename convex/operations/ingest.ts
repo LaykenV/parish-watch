@@ -303,6 +303,10 @@ async function ingestSeedUrl(
     let document = await firecrawl.scrape(ctx, url, {
       formats: ['markdown', 'rawHtml'],
       onlyMainContent: false,
+      // Firecrawl v2 defaults this to true. Its PDF engine does not support
+      // that option and returns a warning even for complete documents. Public
+      // Parish separately verifies the official artifact over TLS below.
+      skipTlsVerification: false,
     })
     let scraped = validateScrape(document, url, officialDomains)
     if (!scraped.ok) {
@@ -334,6 +338,7 @@ async function ingestSeedUrl(
       document = await firecrawl.scrape(ctx, scraped.retrievedUrl, {
         formats: ['markdown', 'rawHtml'],
         onlyMainContent: false,
+        skipTlsVerification: false,
         maxAge: 0,
       })
       const verifiedScrape = validateScrape(

@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T04:13:26Z
+- **Last updated:** 2026-08-30T04:15:10Z
 
 ## Log
 
@@ -44,6 +44,31 @@ navigation stays fixed. The documented mobile contract adds written sheet
 openers, grabbers after opening, medium and full heights, explicit dismissal,
 native issue-rail snapping, browser-owned Back gestures, system sharing, and a
 real-iPhone Safari review after every deployed design slice.
+
+A controlled production run ingested the August 18 City Council minutes, the
+September 1 agenda, and the 27-page CO-072 packet into three immutable source
+snapshots. Firecrawl returned complete page counts and normalized text, but it
+also attached an engine warning about unsupported `skipTlsVerification` to all
+three PDFs. The ingest path conservatively marked every snapshot truncated.
+Both approved CO-072 extraction starts then failed closed at the snapshot check
+before Terra ran. Production still has no AI call, decision record, publication
+version, or planning-body support.
+
+The development backend now explicitly disables Firecrawl's unsupported PDF
+TLS option. Re-ingesting the September 1 agenda produced the same source and
+normalized-text hashes without a truncation warning. Retrieval now creates a
+new immutable version when the raw artifact is unchanged but the prior
+snapshot's normalized hash or truncation state differs. A clean replay after a
+false truncation marker records the old version as an unusable predecessor. The
+extraction contract accepts Lafayette's 549-character official
+CO-072 caption, and citation matching joins a hyphenated PDF line break such as
+`Sub-\nAward` before checking exact excerpts. Processor `v1.9` extracted CO-072
+with Terra, then Luna independently supported all nine cited facts. Development
+published a full record with the $3,982,500 amount and exact offsets into the
+immutable agenda snapshot. Terra cost an estimated $0.024469 and Luna cost
+$0.003019. Replaying the same extraction start returned the original run with
+`reused: true`, so it made no second model call. These fixes are not deployed to
+production.
 
 Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
 horizontal overflow. A later computed-style check measured 125 pixels of
