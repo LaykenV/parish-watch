@@ -261,7 +261,7 @@ function IssueDetail({
 
             <Section id="ask" title="Ask Public Parish">
               <AskBlock
-                scope={`issue:${issue.slug}`}
+                scope={{ issueSlug: issue.slug, kind: 'issue' }}
                 scopeLabel="Answering from this issue"
               />
             </Section>

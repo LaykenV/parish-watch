@@ -169,7 +169,7 @@ export function MeetingPage({
 
             <Section id="ask" title="Ask Public Parish">
               <AskBlock
-                scope={`meeting:${meeting.id}`}
+                scope={{ kind: 'meeting', meetingId: meeting.id }}
                 scopeLabel="Answering from this meeting"
               />
             </Section>

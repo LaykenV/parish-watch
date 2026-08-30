@@ -1002,6 +1002,9 @@ viewer, timeline, and update history from real evidence.
 
 ### Design slice 4: Ask Public Parish
 
+Implementation handoff:
+[`resident-interface-slice-4.md`](./resident-interface-slice-4.md)
+
 #### Objective
 
 Finish corpus-wide, issue-scoped, and meeting-scoped Ask behavior with validated

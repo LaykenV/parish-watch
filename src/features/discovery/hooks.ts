@@ -59,6 +59,30 @@ export function useKeyboardOpen(): boolean {
   return open
 }
 
+/*
+  Pixel height the software keyboard covers inside the layout viewport. Sticky
+  bottom docks add it back so a composer stays above the keyboard.
+*/
+export function useKeyboardInset(): number {
+  const [inset, setInset] = useState(0)
+
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return
+    const update = () =>
+      setInset(Math.max(0, Math.round(window.innerHeight - viewport.height)))
+    viewport.addEventListener('resize', update)
+    viewport.addEventListener('scroll', update)
+    update()
+    return () => {
+      viewport.removeEventListener('resize', update)
+      viewport.removeEventListener('scroll', update)
+    }
+  }, [])
+
+  return inset
+}
+
 export function useOnline(): boolean {
   const [online, setOnline] = useState(() =>
     typeof navigator === 'undefined' ? true : navigator.onLine,
