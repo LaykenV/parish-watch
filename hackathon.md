@@ -12,11 +12,26 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T02:51:13Z
+- **Last updated:** 2026-08-30T04:13:26Z
 
 ## Log
 
 ### 2026-08-30 - working tree
+
+Added a checked, metadata-only gold set for Lafayette City Council. It covers
+four agendas, three corresponding minutes, one ordinance packet, lifecycle
+changes, amounts, a public deadline, exact source excerpts, facts that must
+remain unknown, expected record links, and a negative example. A narrow test
+checks the manifest's domains, body labels, evidence, enums, references, and
+required coverage shapes
+(`docs/gold-sets/lafayette-city-council.v1.json`,
+`scripts/gold-set-manifests.test.ts`).
+
+Mapped Lafayette's separate planning and zoning bodies and their official
+schedules. Broken agenda and result paths prevent a complete recent
+meeting-cycle replay, so Public Parish will not onboard those bodies until each
+one passes the same source and coverage checks as the City Council
+(`docs/source-spikes/lafayette-planning-and-zoning-2026-08-29.md`).
 
 Implemented resident-interface Design Slice 1 as labeled low-fidelity fixtures
 for the approved route graph. Added thin TanStack Start routes, a shared
