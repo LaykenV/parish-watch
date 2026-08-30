@@ -40,12 +40,14 @@ function unwrapMatchingMailtoLinks(text: string): string {
   )
 }
 
-function stripWholeLineUnderscoreEmphasis(text: string): string {
-  return text.replace(/^([ \t]*)_([^\r\n]*\S)_([ \t]*)$/gm, '$1$2$3')
+function unwrapWhitespaceBoundedUnderscoreEmphasis(text: string): string {
+  return text.replace(/(?<!\S)_(\S(?:[^\r\n]*?\S)?)_(?!\S)/g, '$1')
 }
 
 export function normalizeForMatch(text: string): string {
-  return stripWholeLineUnderscoreEmphasis(unwrapMatchingMailtoLinks(text))
+  return unwrapWhitespaceBoundedUnderscoreEmphasis(
+    unwrapMatchingMailtoLinks(text),
+  )
     .replace(/\u00a0/g, ' ')
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201c\u201d]/g, '"')

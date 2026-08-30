@@ -106,8 +106,8 @@ The September 1 agenda exposed a separate citation mismatch after Terra copied
 visible paragraph text from Firecrawl Markdown. Firecrawl wrapped each PDF line
 in underscore emphasis and expanded the visible council email address into a
 matching `mailto:` link, so seven exact citations failed deterministic checks.
-Citation normalization now removes only whole-line underscore emphasis and
-matching email link syntax while preserving the displayed text and punctuation.
+Citation normalization now removes only whitespace-bounded underscore emphasis
+and matching email link syntax while preserving displayed text and punctuation.
 Processor `v1.12` prevents reuse of those failed attempts. Tests cover the exact
 agenda shape and reject changed addresses, dates, punctuation, and mismatched
 link destinations. No production retry or publication is claimed.

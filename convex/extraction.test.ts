@@ -305,16 +305,24 @@ test('citation matching ignores Firecrawl underline tags around a record ID', ()
 test('citation matching ignores Firecrawl paragraph emphasis and a matching mailto link', () => {
   const visibleParagraph =
     'Individuals wishing to submit a resume for the above volunteer vacancies must be a registered voter and a resident of Lafayette Parish. Yearly ethics training for all appointees is required as is financial disclosure under certain circumstances. Resumes are to be forwarded to Joseph Gordon-Wiltz, Clerk of the Council, P.O. Box 4017-C, Lafayette, LA 70502 or emailed to BCLafayette@LafayetteLA.gov no later than noon, Tuesday, September 15, 2026 with appointment(s) to be made at the Tuesday, October 6, 2026 Regular Meeting of the Lafayette City Council.'
-  const firecrawlMarkdown = `_Individuals wishing to submit a resume for the above volunteer vacancies must be a registered voter and a_
-_resident of Lafayette Parish. Yearly ethics training for all appointees is required as is financial disclosure under_
-_certain circumstances. Resumes are to be forwarded to Joseph Gordon-Wiltz, Clerk of the Council, P.O. Box_
-_4017-C, Lafayette, LA 70502 or emailed to [BCLafayette@LafayetteLA.gov](mailto:BCLafayette@LafayetteLA.gov) no later than noon, Tuesday,_
-_September 15, 2026 with appointment(s) to be made at the Tuesday, October 6, 2026 Regular Meeting of the_
-_Lafayette City Council._`
+  const firecrawlMarkdown =
+    '_Individuals wishing to submit a resume for the above volunteer vacancies must be a registered voter and a_ _resident of Lafayette Parish. Yearly ethics training for all appointees is required as is financial disclosure under_ _certain circumstances. Resumes are to be forwarded to Joseph Gordon-Wiltz, Clerk of the Council, P.O. Box_ _4017-C, Lafayette, LA 70502 or emailed to [BCLafayette@LafayetteLA.gov](mailto:BCLafayette@LafayetteLA.gov) no later than noon, Tuesday,_ _September 15, 2026 with appointment(s) to be made at the Tuesday, October 6, 2026 Regular Meeting of the_ _Lafayette City Council._'
   const source = normalizeForMatch(firecrawlMarkdown)
 
   expect(source).toBe(visibleParagraph)
   expect(locateExcerpt(source, visibleParagraph)).toBe(0)
+})
+
+test('citation matching preserves literal and internal underscores', () => {
+  const source =
+    'Keep case_number and _unfinished on this line.\nKeep finished_ on the next line.'
+
+  expect(normalizeForMatch('_Keep case_number intact._')).toBe(
+    'Keep case_number intact.',
+  )
+  expect(normalizeForMatch(source)).toBe(
+    'Keep case_number and _unfinished on this line. Keep finished_ on the next line.',
+  )
 })
 
 test('citation matching still rejects changed Firecrawl paragraph content', () => {
