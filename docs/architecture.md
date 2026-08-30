@@ -106,6 +106,8 @@ layer.
 | Hosting       | `@convex-dev/static-hosting` on `convex.site` | Public no-invite hackathon URL on the required stack                                   |
 | Retrieval     | `@firecrawl/firecrawl-convex`                 | Durable source discovery, crawling, and change-aware ingestion                         |
 | AI            | Convex AI Gateway to OpenAI Chat Completions  | Convex-scoped credentials, strict structured outputs, and per-function spend           |
+| Chat history  | `@convex-dev/agent`                           | Durable threads and messages with application-owned evidence retrieval                 |
+| Rate limits   | `@convex-dev/rate-limiter`                    | Atomic request limits paired with application-owned model token budgets                |
 | Strong model  | `openai/gpt-5.6-terra`                        | Record extraction, consequence factors, and issue linking                              |
 | Fast model    | `openai/gpt-5.6-luna`                         | Discovery classification, ranking, independent review, and chat                        |
 | Email         | `@agentmail/convex`                           | Verification, durable inbound threads, replies, and alerts                             |
@@ -607,14 +609,19 @@ Indexes: run; decision record plus version; candidate.
 
 #### `anonymousSessions`
 
-Fields: opaque session hash, created time, expires time, abuse state.
+Fields: opaque session hash, Agent thread reference, issue or meeting or corpus
+scope, created time, expires time, abuse state.
 Indexes: opaque hash; expires time.
 
-#### `conversations` and `messages`
+#### Agent component threads and messages
 
-Fields: owner anonymous session, scope, role, safe content, evidence references,
-created time, expiry or retention state.
-Indexes: owner plus updated time; conversation plus created time.
+`@convex-dev/agent` owns durable thread and message storage. Public Parish maps
+each thread to an anonymous session and scope, authorizes access before every
+component operation, and supplies its own accepted evidence context. The Agent
+uses `MODEL_FAST` through `convexGateway` and Convex AI Gateway. Do not configure
+an embedding model for the launch corpus or create parallel application message
+tables. Deterministic code validates every returned evidence reference before
+the answer becomes visible.
 
 #### `emailSubscribers`
 
@@ -1154,6 +1161,11 @@ The event does not provide OpenAI or Convex credits. Before broad crawling:
 - set an owner-visible daily spend ceiling.
 
 ## Implementation Slices
+
+The PR-sized execution order for Slices 6 through 9 lives in
+[`post-slice-5-pr-plan.md`](./post-slice-5-pr-plan.md). Each packet owns one
+resident or operator outcome, its data boundary, negative tests, and production
+proof. The packet split does not change the architecture or product scope below.
 
 1. One Lafayette source becomes an immutable Convex snapshot.
 2. One snapshot becomes a strict, cited atomic decision.

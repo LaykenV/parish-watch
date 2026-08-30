@@ -1165,6 +1165,11 @@ pipeline, review, user, or email records.
 
 ## API integration sequence
 
+After the Slice 5 public evidence and realtime gates pass, implement the
+remaining adapters through the PR-sized packets in
+[`post-slice-5-pr-plan.md`](./post-slice-5-pr-plan.md). Those packets must replace
+fixtures without reopening the approved page hierarchy or interaction design.
+
 | Integration       | Frontend contract                                      | Gate before production claim                                                                  |
 | ----------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | Public evidence   | Home, Explore, Issue, Decision, Meeting, Source viewer | Public projection exposes only accepted evidence, direct routes refresh, one real issue loads |

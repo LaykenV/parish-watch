@@ -236,6 +236,11 @@ system, one real issue and its citations are live, and a published change
 updates an open page without refresh. Later slices connect remaining actions
 without reopening page layout or visual direction.
 
+After Slice 5, use
+[`post-slice-5-pr-plan.md`](./post-slice-5-pr-plan.md) as the agent execution
+queue. It splits implementation Slices 6 through 9 into dependency-ordered,
+single-concern PR packets. The split changes delivery size, not product scope.
+
 Use the first official September Lafayette meeting cycle if the posted schedule
 and documents confirm it.
 

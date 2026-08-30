@@ -131,6 +131,15 @@ expand the promise.
 - Preserve anonymous same-device continuity for 24 hours.
 - Let chat answer about the current issue or the full validated Public Parish
   corpus.
+- Use `@convex-dev/agent` for durable chat threads and messages instead of
+  parallel application message tables. Public Parish still owns accepted
+  evidence retrieval, thread authorization, and deterministic citation checks.
+- Run the chat Agent on `MODEL_FAST` through Convex AI Gateway. Do not add an
+  embedding model for the bounded launch corpus unless a checked retrieval
+  benchmark later proves it necessary.
+- Use `@convex-dev/rate-limiter` for atomic request-frequency limits. Keep model
+  token and spend reservations in the Public Parish domain because provider
+  usage must reconcile after each action.
 - Use invisible rate limits first, then CAPTCHA or cooldown when abuse appears.
 - Chat never requires sign-in.
 - Chat can only use published and validated official-source evidence.

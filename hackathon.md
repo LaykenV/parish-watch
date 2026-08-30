@@ -12,11 +12,22 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T00:36:37Z
+- **Last updated:** 2026-08-30T01:02:23Z
 
 ## Log
 
 ### 2026-08-30 - working tree
+
+Split implementation Slices 6 through 9 into 15 dependency-ordered PR packets:
+three for anonymous Ask and four each for accounts and email, coverage expansion,
+and release work. Each packet delivers a complete vertical capability with named
+dependencies, exclusions, tests, and runtime proof. Planned chat uses
+`@convex-dev/agent` for durable threads with `MODEL_FAST` through Convex AI
+Gateway. No component, API, resident feature, provider call, commit, or
+deployment is claimed
+(`docs/post-slice-5-pr-plan.md`, `docs/architecture.md`).
+
+### 2026-08-30 - e169cdf
 
 Completed the Slice 5 resident-interface decision grill and wrote one master
 plan for the full frontend. It fixes the sitemap, page hierarchy, responsive
