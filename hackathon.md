@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T05:14:49Z
+- **Last updated:** 2026-08-30T05:21:53Z
 
 ## Log
 
@@ -101,6 +101,16 @@ matching the existing bounded official-title limit, and processor `v1.11` keeps
 the corrected attempt distinct from the failed run. A focused regression covers
 the CO-069 shape and rejects a 1,001-character excerpt. No production retry or
 publication is claimed.
+
+The September 1 agenda exposed a separate citation mismatch after Terra copied
+visible paragraph text from Firecrawl Markdown. Firecrawl wrapped each PDF line
+in underscore emphasis and expanded the visible council email address into a
+matching `mailto:` link, so seven exact citations failed deterministic checks.
+Citation normalization now removes only whitespace-bounded underscore emphasis
+and matching email link syntax while preserving displayed text and punctuation.
+Processor `v1.12` prevents reuse of those failed attempts. Tests cover the exact
+agenda shape and reject changed addresses, dates, punctuation, and mismatched
+link destinations. No production retry or publication is claimed.
 
 Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
 horizontal overflow. A later computed-style check measured 125 pixels of
