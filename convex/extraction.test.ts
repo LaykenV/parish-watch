@@ -313,6 +313,52 @@ test('citation matching ignores Firecrawl paragraph emphasis and a matching mail
   expect(locateExcerpt(source, visibleParagraph)).toBe(0)
 })
 
+test('citation matching ignores forced-fresh Firecrawl star emphasis', () => {
+  const visibleParagraph =
+    'Individuals wishing to submit a resume for the above volunteer vacancies must be a registered voter and a resident of Lafayette Parish. Yearly ethics training for all appointees is required as is financial disclosure under certain circumstances. Resumes are to be forwarded to Joseph Gordon-Wiltz, Clerk of the Council, P.O. Box 4017-C, Lafayette, LA 70502 or emailed to BCLafayette@LafayetteLA.gov no later than noon, Tuesday, September 15, 2026 with appointment(s) to be made at the Tuesday, October 6, 2026 Regular Meeting of the Lafayette City Council.'
+  const forcedFreshMarkdown =
+    '*Individuals wishing to submit a resume for the above volunteer vacancies must be a registered voter and a*  *resident of Lafayette Parish. Yearly ethics training for all appointees is required as is financial disclosure under*  *certain circumstances. Resumes are to be forwarded to Joseph Gordon-Wiltz, Clerk of the Council, P.O. Box*  *4017-C, Lafayette, LA 70502 or emailed to BCLafayette@LafayetteLA.gov no later than noon, Tuesday,*  *September 15, 2026 with appointment(s) to be made at the Tuesday, October 6, 2026 Regular Meeting of the*  *Lafayette City Council.*'
+  const source = normalizeForMatch(forcedFreshMarkdown)
+
+  expect(source).toBe(visibleParagraph)
+  expect(locateExcerpt(source, visibleParagraph)).toBe(0)
+  expect(locateExcerpt(source, forcedFreshMarkdown)).toBe(0)
+})
+
+test('citation matching preserves non-emphasis asterisks', () => {
+  const source =
+    '* Board vacancy\n* * *\n***\n**bold stays marked**\nKeep 5 * 4 and case*number.\nKeep *unfinished and finished*.'
+
+  expect(normalizeForMatch(source)).toBe(
+    '* Board vacancy * * * *** **bold stays marked** Keep 5 * 4 and case*number. Keep *unfinished and finished*.',
+  )
+})
+
+test('citation matching still rejects changed forced-fresh paragraph content', () => {
+  const forcedFreshMarkdown =
+    '*Resumes are to be emailed to BCLafayette@LafayetteLA.gov no later than noon, Tuesday,*  *September 15, 2026.*'
+  const source = normalizeForMatch(forcedFreshMarkdown)
+
+  expect(
+    locateExcerpt(
+      source,
+      'Resumes are to be emailed to CouncilInfo@LafayetteLA.gov no later than noon, Tuesday, September 15, 2026.',
+    ),
+  ).toBe(-1)
+  expect(
+    locateExcerpt(
+      source,
+      'Resumes are to be emailed to BCLafayette@LafayetteLA.gov no later than noon, Tuesday, September 16, 2026.',
+    ),
+  ).toBe(-1)
+  expect(
+    locateExcerpt(
+      source,
+      'Resumes are to be emailed to BCLafayette@LafayetteLA.gov no later than noon Tuesday, September 15, 2026.',
+    ),
+  ).toBe(-1)
+})
+
 test('citation matching preserves literal and internal underscores', () => {
   const source =
     'Keep case_number and _unfinished on this line.\nKeep finished_ on the next line.'
@@ -652,7 +698,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.5',
     schemaVersion: 'v1',
-    processorVersion: 'v1.13',
+    processorVersion: 'v1.14',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),

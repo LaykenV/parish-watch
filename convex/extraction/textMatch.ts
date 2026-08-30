@@ -44,9 +44,13 @@ function unwrapWhitespaceBoundedUnderscoreEmphasis(text: string): string {
   return text.replace(/(?<!\S)_(\S(?:[^\r\n]*?\S)?)_(?!\S)/g, '$1')
 }
 
+function unwrapWhitespaceBoundedAsteriskEmphasis(text: string): string {
+  return text.replace(/(?<!\S)\*([^\s*](?:[^\r\n]*?[^\s*])?)\*(?!\S)/g, '$1')
+}
+
 export function normalizeForMatch(text: string): string {
-  return unwrapWhitespaceBoundedUnderscoreEmphasis(
-    unwrapMatchingMailtoLinks(text),
+  return unwrapWhitespaceBoundedAsteriskEmphasis(
+    unwrapWhitespaceBoundedUnderscoreEmphasis(unwrapMatchingMailtoLinks(text)),
   )
     .replace(/\u00a0/g, ' ')
     .replace(/[\u2018\u2019]/g, "'")
