@@ -433,7 +433,7 @@ function buildCo072AgendaReviewPrompt(section: string | null) {
 test('the review prompt treats CO-072 final-adoption placement as scheduled consideration', () => {
   const prompt = buildCo072AgendaReviewPrompt('Final Adoption of Ordinances')
 
-  expect(prompt.promptVersion).toBe('v1.3')
+  expect(prompt.promptVersion).toBe('v1.4')
   expect(prompt.messages[0].content).toContain(
     'an item under Final Adoption of Ordinances is scheduled for final-adoption consideration',
   )
@@ -457,7 +457,7 @@ test('the review prompt does not treat a bare agenda mention as scheduled', () =
   expect(prompt.messages[1].content).toContain('"section":null')
 })
 
-test('review prompt v1.3 creates a new publication idempotency key', async () => {
+test('review prompt v1.4 creates a new publication idempotency key', async () => {
   const t = initTest()
   const seeded = await seedValidatedCandidate(t, '-review-prompt-version')
   const keyFor = (promptVersion: string) =>
@@ -470,7 +470,7 @@ test('review prompt v1.3 creates a new publication idempotency key', async () =>
       payloadVersion: 'v1',
     })
 
-  expect(await keyFor('v1.3')).not.toBe(await keyFor('v1.1'))
+  expect(await keyFor('v1.4')).not.toBe(await keyFor('v1.1'))
 })
 
 test('a second model review publishes one full immutable version with exact citations', async () => {
@@ -532,7 +532,7 @@ test('a second model review publishes one full immutable version with exact cita
     verdict: 'pass',
     modelRole: 'MODEL_FAST',
     modelId: LUNA_MODEL,
-    promptVersion: 'v1.3',
+    promptVersion: 'v1.4',
     schemaVersion: 'v1',
   })
   expect(evidence.version).toMatchObject({
@@ -990,7 +990,7 @@ test('publication finalization rejects persisted duplicate fact checks', async (
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1.3',
+      promptVersion: 'v1.4',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
@@ -1051,7 +1051,7 @@ test('a late failure cannot reuse a succeeded review', async () => {
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1.3',
+      promptVersion: 'v1.4',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
@@ -1171,6 +1171,90 @@ test('a limited finding on a core field is withheld', () => {
         detail: 'The title adds wording that does not appear in the source.',
       },
     ],
+  }
+  expect(
+    expectedReviewVerdictV1({
+      sourceRecordIdPresent: true,
+      recordType: 'proposal',
+      checks: review.checks,
+      findings: review.findings,
+    }),
+  ).toBe('fail')
+  expect(
+    applyPublicationPolicyV1({
+      sourceRecordId: 'CO-029-2026',
+      recordType: 'proposal',
+      review,
+    }),
+  ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
+})
+
+test('unsupported sourceRecordId on public_action passes and publishes full', () => {
+  const review = {
+    verdict: 'pass' as const,
+    checks: [
+      {
+        factId: 'fact-1',
+        fieldPath: '/sourceRecordId',
+        assessment: 'unsupported' as const,
+        detail: 'The operator-assigned ID does not appear in the source.',
+      },
+      {
+        factId: 'fact-2',
+        fieldPath: '/title',
+        assessment: 'supported' as const,
+        detail: 'The excerpt supports the title.',
+      },
+      {
+        factId: 'fact-3',
+        fieldPath: '/bodyName',
+        assessment: 'supported' as const,
+        detail: 'The excerpt supports the body name.',
+      },
+    ],
+    findings: [],
+  }
+  expect(
+    expectedReviewVerdictV1({
+      sourceRecordIdPresent: true,
+      recordType: 'public_action',
+      checks: review.checks,
+      findings: review.findings,
+    }),
+  ).toBe('pass')
+  expect(
+    applyPublicationPolicyV1({
+      sourceRecordId: 'CITY-BOARD-APPLICATIONS-2026-09-15',
+      recordType: 'public_action',
+      review,
+    }),
+  ).toEqual({ mode: 'full', reasonCode: 'all_evidence_supported' })
+})
+
+test('unsupported sourceRecordId on proposal fails and withholds', () => {
+  const review = {
+    verdict: 'fail' as const,
+    checks: [
+      {
+        factId: 'fact-1',
+        fieldPath: '/sourceRecordId',
+        assessment: 'unsupported' as const,
+        detail: 'The printed ordinance number does not appear in the excerpt.',
+      },
+      {
+        factId: 'fact-2',
+        fieldPath: '/title',
+        assessment: 'supported' as const,
+        detail: 'The excerpt supports the title.',
+      },
+      {
+        factId: 'fact-3',
+        fieldPath: '/bodyName',
+        assessment: 'supported' as const,
+        detail: 'The excerpt supports the body name.',
+      },
+    ],
+    findings: [],
   }
   expect(
     expectedReviewVerdictV1({
