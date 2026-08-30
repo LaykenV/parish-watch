@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T05:34:02Z
+- **Last updated:** 2026-08-30T05:59:00Z
 
 ## Log
 
@@ -120,10 +120,21 @@ seconds. Extraction processor
 `v1.13` keeps the corrected attempt distinct from the earlier failed runs. No
 production retry or publication is claimed.
 
+Production deadline run `jd7f5xh088k0zwepdh2nfxpx918dewb3` on processor
+`v1.13` reached Terra, then failed closed with six `citation_not_found`
+findings. A forced-fresh Firecrawl reproduction with `maxAge: 0`, matching the
+second PDF scrape during ingest, wrapped each visible deadline paragraph line
+in single-star emphasis, kept the email address as plain text, and inserted
+repeated spaces between spans. Citation normalization now unwraps only complete
+whitespace-bounded `*span*` runs. It preserves bullets, horizontal rules,
+double-star formatting, unmatched or internal asterisks, dates, punctuation,
+and changed source text. Extraction processor `v1.14` makes a corrected attempt
+distinct. No production retry or publication is claimed.
+
 Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
 horizontal overflow. A later computed-style check measured 125 pixels of
 combined app chrome at 390 pixels wide, below the 8-rem budget, and confirmed
-the sticky desktop header at 1280 pixels. `npm run verify` passed 136 tests,
+the sticky desktop header at 1280 pixels. `npm run verify` passed 146 tests,
 typecheck, production client and server builds, prerender, and lint. Every
 unfinished action remains inert and labeled. No API, resident data, provider
 call, deployment, or working production feature is claimed
