@@ -4,6 +4,8 @@ import type { Effect, Gpu, Surface } from 'vgpu'
 
 import reliefShader from './louisiana-relief.wgsl'
 
+import './louisiana-relief.css'
+
 type RenderState = 'loading' | 'ready' | 'fallback'
 
 const FALLBACK_PATH =
@@ -19,7 +21,8 @@ export function LouisianaRelief() {
       setRenderState('fallback')
       return
     }
-    const interactionSurface = canvas.closest<HTMLElement>('.hero') ?? canvas
+    const interactionSurface =
+      canvas.closest<HTMLElement>('[data-relief-interaction]') ?? canvas
 
     const lifecycle = { disposed: false }
     let gpu: Gpu | undefined

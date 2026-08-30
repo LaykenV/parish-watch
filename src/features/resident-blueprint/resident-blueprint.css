@@ -38,10 +38,19 @@
   min-height: 100dvh;
   padding-bottom: 5.25rem;
   color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans);
+}
+
+.blueprint-backdrop {
   background:
     linear-gradient(var(--border) 1px, transparent 1px), var(--background);
   background-size: 100% 4rem;
-  font-family: var(--font-sans);
+}
+
+.resident-blueprint[data-keyboard-open] .resident-mobile-nav,
+.resident-blueprint[data-overlay-open] .resident-mobile-nav {
+  display: none;
 }
 
 .resident-blueprint :focus-visible {

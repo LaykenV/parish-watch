@@ -65,6 +65,24 @@
   --border: rgb(0 0 0 / 9%);
   --input: rgb(0 0 0 / 11%);
   --ring: #8a8a86;
+  --pp-text-caption: 0.75rem;
+  --pp-text-small: 0.875rem;
+  --pp-text-body: 1rem;
+  --pp-text-subhead: 1.125rem;
+  --pp-control-height: 2.75rem;
+  --pp-control-height-large: 3.25rem;
+  --pp-border-control: color-mix(in srgb, var(--foreground) 20%, transparent);
+  --pp-border-hover: color-mix(in srgb, var(--foreground) 26%, transparent);
+  --pp-border-strong: color-mix(in srgb, var(--foreground) 38%, transparent);
+  --pp-backdrop: color-mix(in srgb, var(--foreground) 36%, transparent);
+  --pp-shadow-control: 0 2px 10px
+    color-mix(in srgb, var(--foreground) 10%, transparent);
+  --pp-shadow-menu: 0 12px 32px
+    color-mix(in srgb, var(--foreground) 12%, transparent);
+  --pp-shadow-drawer: 0 -12px 48px
+    color-mix(in srgb, var(--foreground) 16%, transparent);
+  --pp-shadow-dialog: 0 24px 64px
+    color-mix(in srgb, var(--foreground) 18%, transparent);
   --dur-instant: 100ms;
   --dur-fast: 160ms;
   --dur-standard: 240ms;
