@@ -859,7 +859,7 @@ test('replaying a succeeded extraction repairs a missing publication run', async
     targetRecordId: 'CO-029-2026',
     promptVersion: 'v1.5',
     schemaVersion: 'v1',
-    processorVersion: 'v1.24',
+    processorVersion: 'v1.14',
   })
   await t.run(async (ctx) => {
     await ctx.db.patch(seeded.runId, { idempotencyKey })
