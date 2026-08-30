@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T05:21:53Z
+- **Last updated:** 2026-08-30T05:34:02Z
 
 ## Log
 
@@ -111,6 +111,14 @@ and matching email link syntax while preserving displayed text and punctuation.
 Processor `v1.12` prevents reuse of those failed attempts. Tests cover the exact
 agenda shape and reject changed addresses, dates, punctuation, and mismatched
 link destinations. No production retry or publication is claimed.
+
+That deadline record exposed one more deterministic mismatch. Its official
+text says resumes are due at "noon," while the candidate stores the exact
+zoned time as 12:00. Time matching now recognizes deadline phrases ending in
+that word and rejects incidental mentions, other times, and unsupported
+seconds. Extraction processor
+`v1.13` keeps the corrected attempt distinct from the earlier failed runs. No
+production retry or publication is claimed.
 
 Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
 horizontal overflow. A later computed-style check measured 125 pixels of

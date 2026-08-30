@@ -652,7 +652,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.5',
     schemaVersion: 'v1',
-    processorVersion: 'v1.12',
+    processorVersion: 'v1.13',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
@@ -1973,6 +1973,48 @@ test('deterministic date and amount helpers reject malformed values', () => {
       meetingWithSeconds!,
     ),
   ).toBe(true)
+  const noon = parseZonedIsoDateTime('2026-09-15T12:00:00-05:00')
+  const noonWithSeconds = parseZonedIsoDateTime(
+    '2026-09-15T12:00:30-05:00',
+  )
+  expect(noon).not.toBeNull()
+  expect(noonWithSeconds).not.toBeNull()
+  expect(
+    textSupportsZonedDateTime(
+      'no later than noon, Tuesday, September 15, 2026',
+      noon!,
+    ),
+  ).toBe(true)
+  expect(
+    textSupportsZonedDateTime(
+      'Applications are due by noon Tuesday, September 15, 2026',
+      noon!,
+    ),
+  ).toBe(true)
+  expect(
+    textSupportsZonedDateTime(
+      'The Noon Lions Club meets Tuesday, September 15, 2026',
+      noon!,
+    ),
+  ).toBe(false)
+  expect(
+    textSupportsZonedDateTime(
+      'The council will recess at noon Tuesday, September 15, 2026',
+      noon!,
+    ),
+  ).toBe(false)
+  expect(
+    textSupportsZonedDateTime(
+      'no later than midnight, Tuesday, September 15, 2026',
+      noon!,
+    ),
+  ).toBe(false)
+  expect(
+    textSupportsZonedDateTime(
+      'no later than noon, Tuesday, September 15, 2026',
+      noonWithSeconds!,
+    ),
+  ).toBe(false)
   const midnight = parseZonedIsoDateTime('2026-04-21T00:00:00-05:00')
   const midnightWithSeconds = parseZonedIsoDateTime('2026-04-21T00:00:30-05:00')
   expect(midnight).not.toBeNull()
