@@ -12,11 +12,26 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T01:02:23Z
+- **Last updated:** 2026-08-30T02:12:22Z
 
 ## Log
 
 ### 2026-08-30 - working tree
+
+Implemented resident-interface Design Slice 1 as labeled low-fidelity fixtures
+for the approved route graph. Added thin TanStack Start routes, a shared
+responsive shell with router-driven navigation and a fixed loading region,
+typed page and state contracts, a standalone email-management frame, and a
+route inventory check tied to the generated router types. The bottom navigation
+remains available through 1024 pixels and becomes the desktop header at 1025
+pixels. Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
+horizontal overflow, and `npm run verify` passed 124 tests, typecheck, build,
+prerender, and lint. Every unfinished action remains inert and labeled. No API,
+resident data, provider call, deployment, or working production feature is
+claimed (`docs/resident-interface-slice-1.md`,
+`src/features/resident-blueprint/`, `src/routes/`).
+
+### 2026-08-30 - 3996bfc
 
 Split implementation Slices 6 through 9 into 15 dependency-ordered PR packets:
 three for anonymous Ask and four each for accounts and email, coverage expansion,

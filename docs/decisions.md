@@ -255,7 +255,9 @@ expand the promise.
   pages. Use typed local fixtures for unfinished integrations.
 - Fixture-backed success is development proof only. Production cannot present
   an action as working before its real backend path passes.
-- Primary navigation is Home, For You, Explore, Ask, and Coverage.
+- Primary navigation is For You, Explore, Ask, and Coverage. The double-P mark
+  and live-text name link to Home from every page, and the same shell appears on
+  Home.
 - Keep the existing first-visit hero and place area selection inside it. Return
   visits use a compact area header.
 - Use the issue as the main resident object. Call an atomic record a Decision

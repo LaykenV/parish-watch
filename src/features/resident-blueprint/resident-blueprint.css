@@ -1,0 +1,509 @@
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.route-loading-region {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 100;
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.route-loading-region svg {
+  width: 1rem;
+  height: 1rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--info-foreground);
+  background: var(--card);
+  box-sizing: content-box;
+}
+
+.resident-blueprint {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 5.25rem;
+  color: var(--foreground);
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px), var(--background);
+  background-size: 100% 4rem;
+  font-family: var(--font-sans);
+}
+
+.resident-blueprint :focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.resident-skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 110;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  color: var(--primary-foreground);
+  background: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-150%);
+}
+
+.resident-skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.resident-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.resident-standalone-header {
+  display: flex;
+  width: min(100% - 1.5rem, 48rem);
+  min-height: 4rem;
+  margin-inline: auto;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.resident-blueprint-standalone {
+  padding-bottom: 0;
+}
+
+.resident-blueprint-standalone .blueprint-main {
+  width: min(100% - 1.5rem, 48rem);
+}
+
+.resident-header-inner {
+  display: flex;
+  width: min(100% - 1.5rem, 80rem);
+  min-height: 4rem;
+  margin-inline: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.resident-brand {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.65rem;
+  color: inherit;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-decoration: none;
+}
+
+.resident-brand img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+}
+
+.resident-context-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.resident-context-control,
+.resident-account-control {
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.resident-context-control {
+  max-width: 10rem;
+  padding-inline: 0.65rem;
+}
+
+.resident-context-control svg,
+.resident-account-control svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+.resident-context-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resident-desktop-nav {
+  display: none;
+}
+
+.resident-nav-link {
+  position: relative;
+  display: inline-flex;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.resident-nav-link[data-active] {
+  color: var(--foreground);
+}
+
+.resident-nav-link[data-active]::after {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0;
+  left: 0.4rem;
+  height: 2px;
+  content: '';
+  background: var(--info);
+}
+
+.resident-nav-link svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.resident-mobile-nav {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 4.5rem;
+  padding: 0.35rem max(0.35rem, env(safe-area-inset-right))
+    max(0.35rem, env(safe-area-inset-bottom))
+    max(0.35rem, env(safe-area-inset-left));
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 96%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.resident-mobile-nav .resident-nav-link {
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.blueprint-main {
+  width: min(100% - 1.5rem, 80rem);
+  margin-inline: auto;
+  padding-block: 1rem 4rem;
+}
+
+.blueprint-fixture-notice {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 2rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--info);
+  border-radius: var(--radius-md);
+  color: var(--info-foreground);
+  background: color-mix(in srgb, var(--info) 5%, var(--card));
+  font-size: 0.82rem;
+}
+
+.blueprint-fixture-notice span {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.blueprint-fixture-notice p,
+.blueprint-section ul,
+.blueprint-contract-rail ul,
+.blueprint-contract-rail p {
+  margin: 0;
+}
+
+.blueprint-page-header {
+  max-width: 48rem;
+  padding-bottom: 2.25rem;
+}
+
+.blueprint-eyebrow,
+.blueprint-route-detail {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.blueprint-eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--info-foreground);
+  font-weight: 600;
+}
+
+.blueprint-page-header h1 {
+  max-width: 18ch;
+  margin: 0;
+  font-size: clamp(2.25rem, 9vw, 4.75rem);
+  font-weight: 650;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  overflow-wrap: anywhere;
+}
+
+.blueprint-description {
+  max-width: 42rem;
+  margin: 1.25rem 0 0;
+  color: var(--muted-foreground);
+  font-size: clamp(1rem, 2vw, 1.16rem);
+  line-height: 1.6;
+}
+
+.blueprint-route-detail {
+  max-width: 100%;
+  margin: 1rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.blueprint-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.blueprint-action {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  background: var(--card);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.blueprint-action:hover {
+  background: var(--accent);
+}
+
+.blueprint-action-primary {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.blueprint-action-primary:hover {
+  background: color-mix(in srgb, var(--primary) 90%, white);
+}
+
+.blueprint-action-text {
+  border-color: transparent;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.blueprint-action svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.blueprint-layout {
+  display: grid;
+  gap: 2rem;
+}
+
+.blueprint-reading-column {
+  min-width: 0;
+}
+
+.blueprint-section {
+  padding-block: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.blueprint-section-heading {
+  display: grid;
+  grid-template-columns: 0.7rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.blueprint-section-heading > span {
+  height: 0.7rem;
+  border: 1px solid var(--info);
+  background: color-mix(in srgb, var(--info) 12%, var(--card));
+}
+
+.blueprint-section h2,
+.blueprint-contract-rail h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.blueprint-section ul,
+.blueprint-contract-rail ul {
+  padding-left: 1.2rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.blueprint-section li + li,
+.blueprint-contract-rail li + li {
+  margin-top: 0.35rem;
+}
+
+.blueprint-contract-rail {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.blueprint-contract-rail > section {
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.blueprint-contract-rail > .blueprint-evidence-region {
+  border-color: color-mix(in srgb, var(--info) 42%, transparent);
+  box-shadow: inset 3px 0 0 var(--info);
+}
+
+.blueprint-evidence-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.blueprint-evidence-heading svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--info-foreground);
+}
+
+.blueprint-evidence-region p {
+  margin-top: 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.blueprint-not-found {
+  min-height: calc(100vh - 4rem);
+  min-height: calc(100dvh - 4rem);
+  padding-top: clamp(3rem, 10vh, 7rem);
+}
+
+@media (min-width: 48rem) {
+  .blueprint-main {
+    width: min(100% - 3rem, 80rem);
+    padding-top: 1.5rem;
+  }
+
+  .blueprint-fixture-notice {
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 1rem;
+    align-items: baseline;
+  }
+
+  .blueprint-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
+    gap: clamp(2rem, 5vw, 5rem);
+  }
+
+  .blueprint-contract-rail {
+    position: sticky;
+    top: 5.5rem;
+  }
+
+  .resident-blueprint-standalone .blueprint-main {
+    width: min(100% - 3rem, 48rem);
+  }
+
+  .resident-blueprint-standalone .blueprint-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .resident-blueprint-standalone .blueprint-contract-rail {
+    position: static;
+  }
+}
+
+@media (min-width: 64.0625rem) {
+  .resident-blueprint {
+    padding-bottom: 0;
+  }
+
+  .resident-mobile-nav {
+    display: none;
+  }
+
+  .resident-header-inner {
+    width: min(100% - 3rem, 80rem);
+  }
+
+  .resident-desktop-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .resident-desktop-nav .resident-nav-link {
+    padding-inline: 0.7rem;
+  }
+
+  .resident-context-control {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resident-blueprint *,
+  .resident-blueprint *::before,
+  .resident-blueprint *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

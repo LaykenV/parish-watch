@@ -1,0 +1,158 @@
+import {
+  CircleUserRoundIcon,
+  ListFilterIcon,
+  MapPinIcon,
+  MessageCircleQuestionIcon,
+  SearchIcon,
+  ShieldCheckIcon,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Link, useRouterState } from '@tanstack/react-router'
+
+import { Spinner } from '../../components/ui/spinner'
+
+import './resident-blueprint.css'
+
+type NavigationItem = {
+  href: string
+  icon: LucideIcon
+  label: string
+}
+
+const PRIMARY_NAVIGATION: NavigationItem[] = [
+  { href: '/for-you', icon: ListFilterIcon, label: 'For You' },
+  { href: '/explore', icon: SearchIcon, label: 'Explore' },
+  { href: '/ask', icon: MessageCircleQuestionIcon, label: 'Ask' },
+  { href: '/coverage', icon: ShieldCheckIcon, label: 'Coverage' },
+]
+
+export function RouteLoadingRegion() {
+  const isLoading = useRouterState({ select: (state) => state.isLoading })
+
+  return (
+    <div aria-busy={isLoading} className="route-loading-region" role="status">
+      {isLoading ? (
+        <>
+          <Spinner aria-hidden="true" />
+          <span className="visually-hidden">Loading page</span>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+export function ResidentShell({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
+
+  return (
+    <div className="resident-blueprint">
+      <a className="resident-skip-link" href="#resident-main">
+        Skip to content
+      </a>
+      <span className="visually-hidden" id="resident-shell-inert-note">
+        This control is placed for the low-fidelity prototype and is not
+        connected.
+      </span>
+
+      <header className="resident-header">
+        <div className="resident-header-inner">
+          <Link
+            aria-current={pathname === '/' ? 'page' : undefined}
+            className="resident-brand"
+            to="/"
+            aria-label="Public Parish home"
+          >
+            <img src="/brand-mark.svg" alt="" width="32" height="32" />
+            <span>Public Parish</span>
+          </Link>
+
+          <nav className="resident-desktop-nav" aria-label="Primary navigation">
+            {PRIMARY_NAVIGATION.map((item) => (
+              <ResidentNavigationLink
+                item={item}
+                key={item.href}
+                pathname={pathname}
+              />
+            ))}
+          </nav>
+
+          <div className="resident-context-controls">
+            <button
+              aria-describedby="resident-shell-inert-note"
+              type="button"
+              className="resident-context-control"
+            >
+              <MapPinIcon aria-hidden="true" />
+              <span className="resident-context-label">
+                {pathname === '/' ? 'Choose area' : 'Lafayette Parish'}
+              </span>
+            </button>
+            <Link
+              className="resident-account-control"
+              to="/following"
+              aria-label="Open account and following"
+            >
+              <CircleUserRoundIcon aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {children}
+
+      <nav className="resident-mobile-nav" aria-label="Primary navigation">
+        {PRIMARY_NAVIGATION.map((item) => (
+          <ResidentNavigationLink
+            item={item}
+            key={item.href}
+            pathname={pathname}
+          />
+        ))}
+      </nav>
+    </div>
+  )
+}
+
+function ResidentNavigationLink({
+  item,
+  pathname,
+}: {
+  item: NavigationItem
+  pathname: string
+}) {
+  const isActive =
+    pathname === item.href || pathname.startsWith(`${item.href}/`)
+  const Icon = item.icon
+
+  return (
+    <Link
+      aria-current={isActive ? 'page' : undefined}
+      className="resident-nav-link"
+      data-active={isActive ? '' : undefined}
+      to={item.href}
+    >
+      <Icon aria-hidden="true" />
+      <span>{item.label}</span>
+    </Link>
+  )
+}
+
+export function ResidentStandalone({ children }: { children: ReactNode }) {
+  return (
+    <div className="resident-blueprint resident-blueprint-standalone">
+      <a className="resident-skip-link" href="#resident-main">
+        Skip to content
+      </a>
+      <header className="resident-standalone-header">
+        <Link aria-label="Public Parish home" className="resident-brand" to="/">
+          <img src="/brand-mark.svg" alt="" width="32" height="32" />
+          <span>Public Parish</span>
+        </Link>
+      </header>
+      {children}
+    </div>
+  )
+}

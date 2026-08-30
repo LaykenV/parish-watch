@@ -38,27 +38,7 @@ const PARISHES = [
 export function LandingPage() {
   return (
     <div className="landing">
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
-      <header className="site-header">
-        <div className="container header-inner">
-          <a className="brand" href="/" aria-label="Public Parish home">
-            <span className="brand-name">Public Parish</span>
-          </a>
-          <Button
-            className="header-action"
-            render={<a href={REPOSITORY_URL} />}
-            size="lg"
-            variant="outline"
-          >
-            Follow the build
-            <ArrowUpRightIcon aria-hidden="true" />
-          </Button>
-        </div>
-      </header>
-
-      <main id="main">
+      <main id="resident-main">
         <LandingHero />
         <LandingTraverse />
         <TrustSection />

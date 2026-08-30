@@ -153,17 +153,18 @@ Global requirements:
 
 ### Desktop
 
-The desktop header contains the double-P mark and live-text name, Home, For You,
-Explore, Ask, Coverage, the current area control, and the account control. Keep
-the header available while scrolling, but do not let it cover anchored claims
-or headings.
+The desktop header contains the double-P mark and live-text name, For You,
+Explore, Ask, Coverage, the current area control, and the account control. The
+mark and name link to Home from every route, including Home itself. Keep the
+header available while scrolling, but do not let it cover anchored claims or
+headings.
 
 ### Mobile
 
 The mobile top bar contains the compact mark and name, current area control, and
-account control. A persistent bottom bar contains Home, For You, Explore, Ask,
-and Coverage. Hide the bottom bar while the keyboard is open and while a
-full-screen sheet or dialog owns focus.
+account control. The mark and name link to Home. A persistent bottom bar
+contains For You, Explore, Ask, and Coverage. Hide the bottom bar while the
+keyboard is open and while a full-screen sheet or dialog owns focus.
 
 Detail-page Back links sit inside page content. They do not replace the global
 header.
@@ -830,7 +831,7 @@ cards, result rows, filters, and feed update behavior.
 - Design one continuous For You feed with match reasons.
 - Design Explore before search, during search, mixed results, filters, and URL
   restoration.
-- Design desktop header, mobile header, and five-item bottom navigation.
+- Design desktop header, mobile header, and four-item bottom navigation.
 - Design the immediate stable route spinner and inline action spinner.
 - Design the simple Update available row.
 

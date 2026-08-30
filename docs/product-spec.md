@@ -62,11 +62,13 @@ follow action must work in one narrow column.
 
 Primary navigation:
 
-- Home
 - For You
 - Explore
 - Ask
 - Coverage
+
+The double-P mark and live-text name link to Home from every page. Home uses the
+same application shell as the rest of the resident interface.
 
 Account area:
 
