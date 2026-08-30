@@ -10,11 +10,11 @@ import { ResidentShell } from '../features/resident-blueprint/resident-shell'
 
 export const Route = createFileRoute('/issues/$issueSlug')({
   component: ResidentIssue,
-  loader: ({ deps, params }) =>
-    loadIssuePageData(params.issueSlug, deps.fixture),
   loaderDeps: ({ search }) => ({
     fixture: getActiveEvidenceFixture(parseEvidenceSearch(search).fixture),
   }),
+  loader: ({ deps, params }) =>
+    loadIssuePageData(params.issueSlug, deps.fixture),
   validateSearch: parseEvidenceSearch,
 })
 

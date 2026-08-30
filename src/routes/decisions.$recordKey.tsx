@@ -10,11 +10,11 @@ import { ResidentShell } from '../features/resident-blueprint/resident-shell'
 
 export const Route = createFileRoute('/decisions/$recordKey')({
   component: ResidentDecision,
-  loader: ({ deps, params }) =>
-    loadDecisionPageData(params.recordKey, deps.fixture),
   loaderDeps: ({ search }) => ({
     fixture: getActiveEvidenceFixture(parseEvidenceSearch(search).fixture),
   }),
+  loader: ({ deps, params }) =>
+    loadDecisionPageData(params.recordKey, deps.fixture),
   validateSearch: parseEvidenceSearch,
 })
 

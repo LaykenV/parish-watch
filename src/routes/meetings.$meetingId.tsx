@@ -10,11 +10,11 @@ import { ResidentShell } from '../features/resident-blueprint/resident-shell'
 
 export const Route = createFileRoute('/meetings/$meetingId')({
   component: ResidentMeeting,
-  loader: ({ deps, params }) =>
-    loadMeetingPageData(params.meetingId, deps.fixture),
   loaderDeps: ({ search }) => ({
     fixture: getActiveEvidenceFixture(parseEvidenceSearch(search).fixture),
   }),
+  loader: ({ deps, params }) =>
+    loadMeetingPageData(params.meetingId, deps.fixture),
   validateSearch: parseEvidenceSearch,
 })
 
