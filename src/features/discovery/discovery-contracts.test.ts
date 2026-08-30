@@ -1,20 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseExploreSearch } from './contracts'
+import { getActiveDiscoveryFixture, parseExploreSearch } from './contracts'
 import {
   compareExploreDates,
   getExploreEntries,
   getExploreViewMode,
 } from './explore-model'
 import { EXPLORE_ROW_FIXTURES, ISSUE_FIXTURES } from './fixtures'
-import { getDiscoveryFixtureLabel } from './notice'
 
 describe('resident interface Slice 2 discovery contracts', () => {
-  it('labels fixture-backed discovery views without requiring a scenario', () => {
-    expect(getDiscoveryFixtureLabel()).toContain('design-only fixture data')
-    expect(getDiscoveryFixtureLabel('No results scenario.')).toContain(
-      'No results scenario.',
-    )
+  it('requires an explicit scenario before development fixtures can render', () => {
+    expect(getActiveDiscoveryFixture(undefined)).toBeUndefined()
+    expect(getActiveDiscoveryFixture('update')).toBe('update')
   })
 
   it('drops URL filter values that the interface cannot display', () => {

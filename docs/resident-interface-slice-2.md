@@ -16,11 +16,12 @@ display headline, lede, Louisiana relief with launch pins) moves into the
 first-visit resident Home, and the GitHub CTA is replaced by area selection,
 and `Browse major decisions`.
 
-Every record shown on these pages is a labeled design fixture. The surplus
-pickup issue mirrors the real development evidence for layout stress. Fixture
-scenarios are reachable through a `?fixture=` URL parameter and always render a
-labeled banner. The default fixture-backed views render the same banner without
-requiring a scenario parameter. No fixture is a production civic claim.
+Every record shown on these pages is a design fixture. The surplus pickup issue
+mirrors the real development evidence for layout stress. Fixture scenarios are
+reachable through a `?fixture=` URL parameter for deterministic QA in a
+development build. The query parameter changes the scenario without adding a
+banner or resident-facing label. Production ignores fixture parameters and does
+not render these records. No fixture is a production civic claim.
 
 ## Application shell
 
@@ -75,10 +76,9 @@ Parish`) is the second memorable element. Everything else stays quiet.
 
 ### Anti-template check
 
-No stat tiles, no equal feature-card rows on Home, no colored status blocks
-(color never carries a state alone: dot plus text, icon plus text), no
-decorative pills (pills are only filters), lists are ruled rows rather than
-nested cards, and no fake civic claims outside the labeled fixture banner.
+No stat tiles, no equal feature-card rows on Home, and no colored status blocks.
+Color never carries a state alone. Lifecycle uses a text pill, evidence uses an
+icon plus text, and lists are ruled rows rather than nested cards.
 
 ## Pages
 
@@ -146,10 +146,11 @@ keyboard-open state hides the bottom navigation.
 
 ## Repair verification
 
-The August 30 review repair added focused tests for fixture labeling, direct URL
-validation, the forced no-results view, date sorting, topic and source filter
-isolation, timezone-stable date-only records, independent More filters groups,
-and conditional Sort visibility. The final verification result appears below.
+The August 30 review repair added focused tests for fixture scenario isolation,
+direct URL validation, the forced no-results view, date sorting, topic and source
+filter isolation, timezone-stable date-only records, independent More filters
+groups, and conditional Sort visibility. The final verification result appears
+below.
 
 ## Component specifications
 
@@ -160,7 +161,7 @@ Spacing uses the 4-pixel base. Cards use `--radius-lg` (0.625rem) and 1px
 | ----------------- | -------------- | -------------------------------------------------------------------------------------------------------- |
 | Page container    | width          | `min(100% - 2rem, 74rem)`; 3rem gutters at 48rem                                                         |
 | Hero headline     | Inter 650      | `clamp(2.9rem, 13vw, 4.1rem)`, mobile; `clamp(3.25rem, 6.2vw, 5.75rem)` desktop; -0.055em; line-height 1 |
-| Watching masthead | Inter 650      | `clamp(1.9rem, 5.5vw, 2.75rem)`; -0.045em; "Watching" in muted ink                                       |
+| Watching masthead | Inter 650      | `clamp(1.9rem, 5.5vw, 2.75rem)`; -0.045em; one foreground ink color                                      |
 | Page h1           | Inter 650      | `clamp(1.85rem, 5vw, 2.6rem)`; -0.04em                                                                   |
 | Section h2        | Inter 700      | `--pp-text-subhead` (1.125rem); -0.015em                                                                 |
 | Card title        | Inter 600      | `--pp-text-subhead`, 3-line clamp; lead `clamp(1.45rem, 1.05rem + 2vw, 2.05rem)` 650                     |
@@ -230,10 +231,11 @@ and the For You setup block all open it.
 
 ### Notices and states
 
-`Notice` (info or warning, left rule), `FixtureBanner` (dashed river-blue,
-labeled `Design fixture`), `SectionFailure` (dashed amber, `Retry` keeps other
-sections available), `UpdateRow`, and empty states with one useful next
-action. Offline is a real global bar. Route loading uses the existing fixed
+`Notice` (info or warning, left rule), `SectionFailure` (dashed amber, `Retry`
+keeps other sections available), `UpdateRow`, and empty states with one useful
+next action. Development fixture URLs do not add a page-top banner. Production
+ignores fixture parameters. Offline is a
+real global bar. Route loading uses the existing fixed
 region; action loading uses the Button loading slot with a stable label and
 width.
 
@@ -254,12 +256,13 @@ URL query/filter/sort restoration, route loading region.
 
 ## Fixture boundary
 
-`src/features/discovery/fixtures.ts` holds the only fixture records, with a
-header comment marking them as design fixtures. The area store persists one
-signed-out area under `public-parish.area.v1`. No fixture reaches Convex
-tables or production data. Every public fixture view carries the `Design
-fixture` banner. `FIXTURE_TODAY` anchors relative date filters so fixture
-scenarios stay stable.
+`src/features/discovery/fixtures.ts` holds the only fixture records and names
+their QA-only boundary in source. The area store persists one signed-out area
+under `public-parish.area.v1`. No fixture reaches Convex tables or production
+data. `FIXTURE_TODAY` anchors relative date filters so fixture scenarios stay
+stable. Resident pages do not show a fixture banner. Production builds ignore
+fixture parameters and render an honest empty state until the real projection is
+connected.
 
 ## URL contracts
 

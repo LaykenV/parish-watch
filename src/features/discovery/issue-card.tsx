@@ -62,16 +62,15 @@ export function IssueCard({
   return (
     <article className="pp-card" data-variant={variant}>
       {reason ? <p className="pp-card-reason">{reason}</p> : null}
+      <header className="pp-card-head">
+        <p className="pp-card-place">
+          {issue.place} · {issue.body}
+        </p>
+        <p className="pp-card-state" data-tone={stateTone(issue.state)}>
+          {issue.state}
+        </p>
+      </header>
       <div className="pp-card-main">
-        <div className="pp-card-head">
-          <p className="pp-card-place">
-            {issue.place} · {issue.body}
-          </p>
-          <p className="pp-card-state" data-tone={stateTone(issue.state)}>
-            <span aria-hidden="true" className="pp-dot" />
-            {issue.state}
-          </p>
-        </div>
         <h3 className="pp-card-title">
           <Link to={'/issues/' + issue.slug}>{issue.title}</Link>
         </h3>
@@ -80,7 +79,7 @@ export function IssueCard({
           <p className="pp-card-why">{issue.whyMatter}</p>
         ) : null}
       </div>
-      <div className="pp-card-side">
+      <footer className="pp-card-side">
         <p
           className="pp-card-evidence"
           data-tone={evidenceTone(issue.evidence.status)}
@@ -109,7 +108,7 @@ export function IssueCard({
                 aria-describedby={inertId}
                 className="pp-inline-action"
                 size="touch"
-                variant="ghost"
+                variant="outline"
               >
                 Follow
               </Button>
@@ -120,7 +119,7 @@ export function IssueCard({
             </>
           ) : null}
         </div>
-      </div>
+      </footer>
     </article>
   )
 }

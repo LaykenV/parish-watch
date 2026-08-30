@@ -1,5 +1,5 @@
-/* Hallmark · macrostructure: local masthead + mixed evidence ledger · tone: evidence-first paper and ink · anchor hue: civic blue
- * Pre-emit critique: P5 H5 E4 S5 R5 V4
+/* Hallmark · macrostructure: local masthead + structured evidence ledger · tone: evidence-first paper and ink · anchor hue: civic blue
+ * Pre-emit critique: P5 H5 E5 S5 R5 V5
  * Genre: editorial civic utility · palette: existing semantic tokens
  */
 
@@ -34,28 +34,6 @@
   font-size: var(--pp-text-small);
   font-weight: 500;
   text-align: center;
-}
-
-.pp-fixture-banner {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.75rem;
-  align-items: baseline;
-  margin-bottom: 1.5rem;
-  padding: 0.65rem 0.9rem;
-  border: 1px dashed var(--info);
-  border-radius: var(--radius-md);
-  color: var(--info-foreground);
-  background: color-mix(in srgb, var(--info) 5%, var(--card));
-  font-size: var(--pp-text-small);
-}
-
-.pp-fixture-banner strong {
-  font-family: var(--font-mono);
-  font-size: var(--pp-text-caption);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 /* First-visit hero */
@@ -186,7 +164,7 @@
 }
 
 .pp-watching-title span {
-  color: var(--muted-foreground);
+  color: var(--foreground);
 }
 
 .pp-watching-areas {
@@ -266,7 +244,17 @@
 
 .pp-card-main,
 .pp-card-side {
-  display: contents;
+  min-width: 0;
+}
+
+.pp-card-main {
+  display: block;
+}
+
+.pp-card-side {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 
 .pp-card-reason {
@@ -282,8 +270,10 @@
 .pp-card-head {
   display: flex;
   gap: 0.75rem;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .pp-card-place {
@@ -297,35 +287,39 @@
 .pp-card-state {
   display: inline-flex;
   flex: none;
-  gap: 0.4rem;
   align-items: center;
   margin: 0;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--input);
+  border-radius: 999px;
+  color: var(--foreground);
+  background: var(--muted);
   font-size: var(--pp-text-caption);
   font-weight: 600;
   letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-.pp-dot {
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 50%;
-  background: var(--muted-foreground);
+.pp-card-state[data-tone='active'] {
+  border-color: color-mix(in srgb, var(--info) 30%, var(--card));
+  color: var(--info-foreground);
+  background: color-mix(in srgb, var(--info) 7%, var(--card));
 }
 
-.pp-card-state[data-tone='active'] .pp-dot {
-  background: var(--info);
+.pp-card-state[data-tone='settled'] {
+  border-color: var(--pp-border-control);
+  color: var(--foreground);
+  background: var(--accent);
 }
 
-.pp-card-state[data-tone='settled'] .pp-dot {
-  background: var(--foreground);
-}
-
-.pp-card-state[data-tone='muted'] .pp-dot {
-  background: color-mix(in srgb, var(--muted-foreground) 55%, transparent);
+.pp-card-state[data-tone='muted'] {
+  color: var(--muted-foreground);
+  background: var(--card);
 }
 
 .pp-card-title {
-  margin: 0.5rem 0 0;
+  margin: 0.9rem 0 0;
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -398,15 +392,21 @@
 }
 
 .pp-card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
   align-items: center;
   margin-top: 0.85rem;
 }
 
+.pp-card-actions > * {
+  width: 100%;
+  justify-content: center;
+}
+
 .pp-card-view {
   display: inline-flex;
+  grid-column: 1 / -1;
   align-items: center;
   text-decoration: none;
 }
@@ -415,11 +415,6 @@
   display: inline-flex;
   align-items: center;
   text-decoration: none;
-}
-
-.pp-inline-action:hover {
-  color: var(--foreground);
-  background: var(--accent);
 }
 
 .pp-inline-action[data-copied] {
@@ -1711,6 +1706,11 @@ button.pp-area-row:hover {
     align-items: start;
   }
 
+  .pp-card[data-variant='lead'] .pp-card-head,
+  .pp-card[data-variant='lead'] .pp-card-reason {
+    grid-column: 1 / -1;
+  }
+
   .pp-card[data-variant='lead'] .pp-card-main {
     display: block;
     min-width: 0;
@@ -1718,6 +1718,7 @@ button.pp-area-row:hover {
 
   .pp-card[data-variant='lead'] .pp-card-side {
     display: flex;
+    flex: initial;
     flex-direction: column;
     align-self: stretch;
     padding-top: 0.2rem;
@@ -1802,7 +1803,7 @@ button.pp-area-row:hover {
 
 @media (hover: hover) {
   .pp-card {
-    transition: border-color var(--dur-fast) ease;
+    transition: border-color var(--dur-fast) var(--ease-out);
   }
 
   .pp-card:hover {
@@ -1814,7 +1815,7 @@ button.pp-area-row:hover {
   }
 
   .pp-row {
-    transition: background var(--dur-instant) ease;
+    transition: background var(--dur-instant) var(--ease-out);
   }
 
   .pp-row:hover {

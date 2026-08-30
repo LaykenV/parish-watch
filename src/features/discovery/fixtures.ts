@@ -7,8 +7,8 @@ import type {
 } from './contracts'
 
 /*
-  Design fixtures for the discovery slices. Every record here is a labeled
-  design fixture, not a production civic claim. The surplus pickup issue
+  Design fixtures for the discovery slices. These records drive deterministic
+  QA scenarios and are not production civic claims. The surplus pickup issue
   mirrors the real development evidence (issue n57071y9n25rrs09yaanb1hz918dd1fs,
   records CO-022-2026 and CO-023-2026, meeting of April 21, 2026) and exists to
   stress long titles and sparse fields. Fixture data must never enter

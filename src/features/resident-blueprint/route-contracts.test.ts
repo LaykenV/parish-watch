@@ -38,13 +38,12 @@ describe('resident interface Slice 1 contracts', () => {
   })
 
   it.each(RESIDENT_BLUEPRINT_KEYS)(
-    'keeps the %s hierarchy, controls, fixture label, and state contract together',
+    'keeps the %s hierarchy, controls, and state contract together',
     (key) => {
       const blueprint = getResidentBlueprint(key)
 
       expect(blueprint.title).not.toBe('')
       expect(blueprint.description).not.toBe('')
-      expect(blueprint.fixture).toMatch(/fixture/i)
       expect(blueprint.actions.length).toBeGreaterThan(0)
       expect(blueprint.sections.length).toBeGreaterThan(0)
       expect(blueprint.states.length).toBeGreaterThan(0)

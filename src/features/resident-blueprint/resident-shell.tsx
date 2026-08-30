@@ -4,10 +4,8 @@ import {
   MapPinIcon,
   MessageCircleQuestionIcon,
   SearchIcon,
-  ShieldCheckIcon,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode, SVGProps } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 
 import { AreaSelector } from '../discovery/area-selector'
@@ -16,13 +14,14 @@ import { areaName } from '../discovery/contracts'
 import { useKeyboardOpen, useOnline, useOverlayOpen } from '../discovery/hooks'
 
 import { Spinner } from '../../components/ui/spinner'
+import { LOUISIANA_OUTLINE_PATH } from '../landing/louisiana-path'
 
 import './resident-blueprint.css'
 import '../discovery/discovery.css'
 
 type NavigationItem = {
   href: string
-  icon: LucideIcon
+  icon: ComponentType<SVGProps<SVGSVGElement>>
   label: string
 }
 
@@ -30,8 +29,21 @@ const PRIMARY_NAVIGATION: NavigationItem[] = [
   { href: '/for-you', icon: ListFilterIcon, label: 'For You' },
   { href: '/explore', icon: SearchIcon, label: 'Explore' },
   { href: '/ask', icon: MessageCircleQuestionIcon, label: 'Ask' },
-  { href: '/coverage', icon: ShieldCheckIcon, label: 'Coverage' },
+  { href: '/coverage', icon: LouisianaIcon, label: 'Coverage' },
 ]
+
+function LouisianaIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg fill="none" viewBox="0 0 260 240" {...props}>
+      <path
+        d={LOUISIANA_OUTLINE_PATH}
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="14"
+      />
+    </svg>
+  )
+}
 
 export function RouteLoadingRegion() {
   const isLoading = useRouterState({ select: (state) => state.isLoading })

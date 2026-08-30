@@ -22,10 +22,11 @@ the page system. Fixture-backed success is development proof only. A production
 build cannot present an action as working until its real backend path passes.
 
 Design Slices 1 and 2 now implement the route blueprint, responsive shell,
-Home, For You, and Explore with labeled fixtures. The later design slices still
-own issues and evidence, Ask, follows and accounts, coverage, cross-app QA, and
-the connected prototype. The existing discovery fixtures are not production
-feed data.
+Home, For You, and Explore with development-only typed QA fixtures and no
+resident-facing fixture banner. Production ignores fixture query parameters and
+shows honest empty states until the resident projection is connected. The later
+design slices still own issues and evidence, Ask, follows and accounts, coverage,
+cross-app QA, and the connected prototype.
 
 ### Start With Consequence
 

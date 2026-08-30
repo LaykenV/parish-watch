@@ -25,11 +25,6 @@ export function BlueprintPage({
           This control is placed for the low-fidelity prototype and is not
           connected.
         </span>
-        <div className="blueprint-fixture-notice" role="note">
-          <span>Low-fidelity prototype</span>
-          <p>{blueprint.fixture}</p>
-        </div>
-
         <header className="blueprint-page-header">
           <p className="blueprint-eyebrow">{blueprint.eyebrow}</p>
           <h1>{blueprint.title}</h1>
@@ -106,10 +101,6 @@ export function BlueprintNotFound() {
     <ResidentShell>
       <div className="blueprint-backdrop">
         <main className="blueprint-main blueprint-not-found" id="resident-main">
-          <div className="blueprint-fixture-notice" role="note">
-            <span>Required state</span>
-            <p>Route not found</p>
-          </div>
           <header className="blueprint-page-header">
             <p className="blueprint-eyebrow">Not found</p>
             <h1>This page does not exist.</h1>

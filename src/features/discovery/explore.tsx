@@ -1,6 +1,6 @@
 import { SearchIcon, SlidersHorizontalIcon, XIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
 import { AreaSelector } from './area-selector'
@@ -13,6 +13,7 @@ import {
   SOURCE_OPTIONS,
   TOPIC_OPTIONS,
   TYPE_OPTIONS,
+  getActiveDiscoveryFixture,
 } from './contracts'
 import type { ExploreSearch, IssueCardData, ResultRowData } from './contracts'
 import { EXPLORE_ROW_FIXTURES, ISSUE_FIXTURES } from './fixtures'
@@ -24,27 +25,23 @@ import {
   ShowResultsButton,
 } from './filter-pill'
 import { IssueCard } from './issue-card'
-import {
-  FixtureBanner,
-  getDiscoveryFixtureLabel,
-  SectionFailure,
-  UpdateRow,
-} from './notice'
+import { SectionFailure, UpdateRow } from './notice'
 import { ResultRow } from './result-row'
 import { useMediaQuery } from './hooks'
 import { Sheet } from './sheet'
 
-const SCENARIO_LABELS: Record<string, string> = {
-  'no-results':
-    'No search results scenario. The empty state offers a filter reset.',
-  'section-failure':
-    'Section failure scenario. Results fail while the page frame stays up.',
-  update: 'Live update scenario. Results change only after you accept it.',
-}
-
 export function ExplorePage({ search }: { search: ExploreSearch }) {
   const navigate = useNavigate()
   const desktop = useMediaQuery('(min-width: 64.0625rem)')
+  const activeFixture = getActiveDiscoveryFixture(search.fixture)
+  const fixturesEnabled = activeFixture !== undefined
+  const effectiveSearch = useMemo(
+    () =>
+      activeFixture === search.fixture
+        ? search
+        : { ...search, fixture: activeFixture },
+    [activeFixture, search],
+  )
 
   const [query, setQuery] = useState(search.q ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -86,14 +83,23 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
     search.type,
   ].filter(Boolean).length
 
-  const showUpdateRow = search.fixture === 'update' && !refreshed
+  const showUpdateRow = activeFixture === 'update' && !refreshed
 
   const entries = useMemo(
-    () => getExploreEntries(search, ISSUE_FIXTURES, EXPLORE_ROW_FIXTURES),
-    [search],
+    () =>
+      getExploreEntries(
+        effectiveSearch,
+        fixturesEnabled ? ISSUE_FIXTURES : [],
+        fixturesEnabled ? EXPLORE_ROW_FIXTURES : [],
+      ),
+    [effectiveSearch, fixturesEnabled],
   )
 
   const browse = useMemo(() => {
+    if (!fixturesEnabled) {
+      return { current: [], outcomes: [], routine: [], upcoming: [] }
+    }
+
     const current = ISSUE_FIXTURES.filter((issue) => issue.state !== 'Decided')
     const upcoming = EXPLORE_ROW_FIXTURES.filter(
       (row) => row.kind === 'Decision record' && row.state === 'Scheduled',
@@ -105,10 +111,10 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
       (row) => row.kind === 'Routine record',
     )
     return { current, outcomes, routine, upcoming }
-  }, [])
+  }, [fixturesEnabled])
 
-  const showFailure = search.fixture === 'section-failure' && !recovered
-  const viewMode = getExploreViewMode(search, entries.length)
+  const showFailure = activeFixture === 'section-failure' && !recovered
+  const viewMode = getExploreViewMode(effectiveSearch, entries.length)
 
   const moreFilters = (
     <MoreFiltersPanel activeCount={activeFilters} onClear={clearAll}>
@@ -165,12 +171,6 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
 
   return (
     <main className="pp-page" id="resident-main">
-      <FixtureBanner
-        label={getDiscoveryFixtureLabel(
-          search.fixture ? SCENARIO_LABELS[search.fixture] : undefined,
-        )}
-      />
-
       <header className="pp-page-head">
         <h1>Explore</h1>
         <p className="pp-page-lede">
@@ -312,6 +312,27 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   }
 
   function resultsBody() {
+    if (!fixturesEnabled) {
+      return (
+        <div className="pp-empty">
+          <p className="pp-empty-title">
+            No published records are connected to Explore yet.
+          </p>
+          <p className="pp-empty-text">
+            Explore will list records after they pass the publication and
+            coverage checks.
+          </p>
+          <Button
+            render={<Link to="/coverage" />}
+            size="touch"
+            variant="outline"
+          >
+            View coverage
+          </Button>
+        </div>
+      )
+    }
+
     if (viewMode === 'empty') {
       return (
         <div className="pp-empty">

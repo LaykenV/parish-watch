@@ -53,7 +53,7 @@ export function ShareButton({
       data-copied={copied || undefined}
       onClick={share}
       size="touch"
-      variant="ghost"
+      variant="outline"
     >
       {copied ? (
         <CheckIcon aria-hidden="true" />

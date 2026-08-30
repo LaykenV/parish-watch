@@ -16,9 +16,10 @@ Slice 2 owns its transition into the first-visit and returning resident Home.
 This slice records both Home frames so that work cannot change the application
 structure later.
 
-Every routed screen in this slice is a labeled design fixture. Controls without
-a real destination are intentionally inert. They cannot report a sent question,
-follow, email, request, or source problem.
+Every routed screen in this slice uses local design data. Controls without a
+real destination are intentionally inert. They cannot report a sent question,
+follow, email, request, or source problem. Resident pages do not show fixture or
+prototype banners.
 
 Internal navigation uses TanStack Router links, so route changes exercise the
 fixed loading region instead of reloading the document. The four-item bottom
@@ -28,11 +29,11 @@ Parish Home link and its scoped content. It does not render the application nav.
 
 ## Release boundary
 
-PR #14 deployed this slice as `6e46fd7`. It exposed only labeled prototype
-routes and made no working resident-action claim. Design Slice 2 has since
+PR #14 deployed this slice as `6e46fd7`. It exposed prototype routes and made no
+working resident-action claim. Design Slice 2 has since
 replaced the Home, For You, and Explore blueprints with their high-fidelity
-fixture-backed implementations. The remaining blueprint routes still label
-unfinished behavior and keep inert controls from reporting success.
+fixture-backed implementations. The remaining blueprint routes keep inert
+controls from reporting success without adding a page-top prototype banner.
 
 ## Design plan
 
@@ -55,7 +56,7 @@ reading order. It is not a government portal or a generic dashboard.
 | Muted ink      | `#686864` | Supporting copy                                 |
 
 Inter carries navigation, headings, copy, and controls. Geist Mono carries
-route parameters, fixture labels, dates, identifiers, and source metadata.
+route parameters, dates, identifiers, and source metadata.
 
 ### Layout
 

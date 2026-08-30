@@ -12,9 +12,48 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T15:09:04Z
+- **Last updated:** 2026-08-30T16:54:54Z
 
 ## Log
+
+### 2026-08-30 - 0eed59c
+
+Extended the production fixture gate to every scenario-derived state, including
+signed-in areas, update rows, degraded notices, empty scenarios, and section
+failures. A production preview at 390 pixels checked all 14 Home, For You, and
+Explore fixture scenarios. Each rendered zero fixture cards, update rows,
+failure states, fixture notices, and known fixture copy without horizontal
+overflow. Development checks still rendered the explicit update, signed-in, and
+section-failure scenarios. `npm run verify` passed typecheck, 163 tests across 19
+files, the production client and server builds, prerender, and lint. No
+deployment is claimed (`src/features/discovery/`).
+
+### 2026-08-30 - ee05d8d
+
+Closed a review finding that unlabeled fixtures could look like real civic
+records. Development builds now require an explicit `?fixture=` scenario before
+rendering fixture records. Production builds ignore fixture parameters and show
+an honest empty state until the resident projection is connected. A production
+preview at 390 pixels rendered zero fixture cards on Home, For You, and Explore,
+including URLs with `?fixture=update`. The same URLs still rendered the full QA
+states on the development server. `npm run verify` passed typecheck, 163 tests
+across 19 files, the production client and server builds, prerender, and lint.
+No deployment is claimed (`src/features/discovery/`).
+
+### 2026-08-30 - 6cd03da
+
+Refined the Slice 2 resident hierarchy after a phone review. Decision cards now
+use a ruled header, status pill, evidence footer, and the shared Coss primary
+and outline button treatments. "Watching" uses the main text color, and the
+Coverage navigation item uses the Louisiana outline instead of a shield.
+Resident pages no longer show fixture banners. The existing `?fixture=` query
+states remain silent QA controls and do not prove production data. Browser
+checks at 320, 375, 390, 414, 768, 1280, and 1440 pixels found no horizontal
+overflow. At 390 pixels, every tested standalone resident control measured 44
+pixels tall. `npm run verify` passed typecheck, 162 tests across 19 files, the
+production client and server builds, prerender, and lint. No backend, provider,
+production feed, or deployment is claimed
+(`src/features/discovery/`, `src/features/resident-blueprint/`).
 
 ### 2026-08-30 - 64e3f72
 

@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button'
 import { LouisianaRelief } from '../landing/louisiana-relief'
 import { AreaSelector } from './area-selector'
 import { useArea } from './area-store'
-import { areaName } from './contracts'
+import { areaName, getActiveDiscoveryFixture } from './contracts'
 import type { AreaSlug, HomeScenario } from './contracts'
 import {
   ISSUE_FIXTURES,
@@ -16,32 +16,15 @@ import {
 } from './fixtures'
 import { formatDate } from './format'
 import { IssueCard, UpcomingCard } from './issue-card'
-import {
-  FixtureBanner,
-  getDiscoveryFixtureLabel,
-  Notice,
-  SectionFailure,
-  UpdateRow,
-} from './notice'
+import { Notice, SectionFailure, UpdateRow } from './notice'
 import { Rail } from './rail'
 import { ResultRow } from './result-row'
 
-const SCENARIO_LABELS: Record<HomeScenario, string> = {
-  degraded:
-    'Coverage degraded scenario. The warning below is not a live source state.',
-  'no-issues':
-    'Empty feed scenario. No current decisions exist for the watched area.',
-  'section-failure':
-    'Section failure scenario. One section fails while the rest of the page loads.',
-  'signed-in':
-    'Signed-in scenario with several saved areas. Sign-in is not connected yet.',
-  update:
-    'Live update scenario. Content changes only after you accept the refresh.',
-}
-
 export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   const area = useArea()
-  const signedIn = scenario === 'signed-in'
+  const activeScenario = getActiveDiscoveryFixture(scenario)
+  const fixturesEnabled = activeScenario !== undefined
+  const signedIn = activeScenario === 'signed-in'
   const watching: AreaSlug[] = signedIn
     ? ['lafayette-parish', 'east-baton-rouge-parish']
     : area
@@ -54,16 +37,12 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   if (watching.length === 0) {
     return (
       <main className="pp-page" id="resident-main">
-        <FixtureBanner
-          label={getDiscoveryFixtureLabel(
-            scenario ? SCENARIO_LABELS[scenario] : undefined,
-          )}
-        />
         <FirstVisitHero />
         <HomeFeed
           onRefresh={onRefresh}
           refreshed={refreshed}
-          scenario={scenario}
+          scenario={activeScenario}
+          fixturesEnabled={fixturesEnabled}
           watching={[]}
         />
       </main>
@@ -72,11 +51,6 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
 
   return (
     <main className="pp-page" id="resident-main">
-      <FixtureBanner
-        label={getDiscoveryFixtureLabel(
-          scenario ? SCENARIO_LABELS[scenario] : undefined,
-        )}
-      />
       <header className="pp-watching">
         <div className="pp-watching-copy">
           <h1 className="pp-watching-title">
@@ -110,7 +84,8 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
       <HomeFeed
         onRefresh={onRefresh}
         refreshed={refreshed}
-        scenario={scenario}
+        scenario={activeScenario}
+        fixturesEnabled={fixturesEnabled}
         watching={watching}
       />
     </main>
@@ -170,14 +145,20 @@ function FirstVisitHero() {
 function HomeFeed({
   watching,
   scenario,
+  fixturesEnabled,
   refreshed,
   onRefresh,
 }: {
   watching: AreaSlug[]
   scenario?: HomeScenario
+  fixturesEnabled: boolean
   refreshed: boolean
   onRefresh: () => void
 }) {
+  if (!fixturesEnabled) {
+    return <UnconnectedHomeFeed watching={watching} />
+  }
+
   const degraded = scenario === 'degraded'
   const showUpdateRow = scenario === 'update' && !refreshed
 
@@ -217,6 +198,42 @@ function HomeFeed({
           </p>
         </Notice>
       ) : null}
+      <VoterStrip />
+    </div>
+  )
+}
+
+function UnconnectedHomeFeed({ watching }: { watching: AreaSlug[] }) {
+  const title =
+    watching.length === 0
+      ? 'Choose an area to see local decisions.'
+      : 'No published decisions are available in this feed yet.'
+
+  return (
+    <div className="pp-home-feed">
+      <section
+        aria-labelledby="major-decisions-title"
+        className="pp-section"
+        id="major-decisions"
+      >
+        <div className="pp-section-head">
+          <h2 id="major-decisions-title">Major local decisions</h2>
+        </div>
+        <div className="pp-empty">
+          <p className="pp-empty-title">{title}</p>
+          <p className="pp-empty-text">
+            Public Parish will list decisions here after their records pass the
+            publication and coverage checks.
+          </p>
+          <Button
+            render={<Link to="/coverage" />}
+            size="touch"
+            variant="outline"
+          >
+            View coverage
+          </Button>
+        </div>
+      </section>
       <VoterStrip />
     </div>
   )

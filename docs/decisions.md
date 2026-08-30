@@ -255,6 +255,9 @@ expand the promise.
   pages. Use typed local fixtures for unfinished integrations.
 - Fixture-backed success is development proof only. Production cannot present
   an action as working before its real backend path passes.
+- Keep fixture query scenarios as internal, development-only QA hooks. Do not put
+  a fixture or prototype banner at the top of resident pages. Production must
+  ignore fixture parameters and must not render fixture records.
 - Primary navigation is For You, Explore, Ask, and Coverage. The double-P mark
   and live-text name link to Home from every page, and the same shell appears on
   Home.

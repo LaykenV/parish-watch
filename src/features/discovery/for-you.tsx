@@ -5,31 +5,11 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '../../components/ui/button'
 import { AreaSelector } from './area-selector'
 import { useArea } from './area-store'
-import { areaName } from './contracts'
+import { areaName, getActiveDiscoveryFixture } from './contracts'
 import type { AreaSlug, ForYouScenario, IssueCardData } from './contracts'
 import { ISSUE_FIXTURES } from './fixtures'
 import { IssueCard } from './issue-card'
-import {
-  FixtureBanner,
-  getDiscoveryFixtureLabel,
-  Notice,
-  SectionFailure,
-  UpdateRow,
-} from './notice'
-
-const SCENARIO_LABELS: Record<ForYouScenario, string> = {
-  degraded:
-    'Coverage degraded scenario. Dated matches stay visible beside the warning.',
-  'no-area':
-    'Signed-out scenario with no area chosen. The setup block replaces the feed.',
-  'no-matches':
-    'No personalized matches scenario. The feed shows the honest empty state.',
-  'section-failure':
-    'Section failure scenario. The feed fails while the page frame stays up.',
-  'signed-in':
-    'Signed-in scenario with several saved areas. Sign-in is not connected yet.',
-  update: 'Live update scenario. Content changes only after you accept it.',
-}
+import { Notice, SectionFailure, UpdateRow } from './notice'
 
 const REASONS: Record<string, string> = {
   'br-short-term-rental-rules': 'In East Baton Rouge Parish · Saved area',
@@ -44,44 +24,42 @@ const REASONS: Record<string, string> = {
 
 export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
   const area = useArea()
-  const signedIn = scenario === 'signed-in'
-  const forcedNoArea = scenario === 'no-area'
+  const activeScenario = getActiveDiscoveryFixture(scenario)
+  const fixturesEnabled = activeScenario !== undefined
+  const signedIn = activeScenario === 'signed-in'
+  const forcedNoArea = activeScenario === 'no-area'
   const watching: AreaSlug[] = signedIn
     ? ['lafayette-parish', 'east-baton-rouge-parish']
     : area && !forcedNoArea
       ? [area]
-      : scenario === 'no-matches'
+      : activeScenario === 'no-matches'
         ? ['lafayette-parish']
         : []
 
   const [refreshed, setRefreshed] = useState(false)
   const [recovered, setRecovered] = useState(false)
-  const showUpdateRow = scenario === 'update' && !refreshed && !recovered
-  const showFailure = scenario === 'section-failure' && !recovered
+  const showUpdateRow = activeScenario === 'update' && !refreshed && !recovered
+  const showFailure = activeScenario === 'section-failure' && !recovered
 
-  let feed: IssueCardData[] = ISSUE_FIXTURES.filter((issue) =>
-    watching.includes(issue.placeSlug),
-  )
+  let feed: IssueCardData[] = fixturesEnabled
+    ? ISSUE_FIXTURES.filter((issue) => watching.includes(issue.placeSlug))
+    : []
   if (signedIn) {
-    feed = ISSUE_FIXTURES.filter(
-      (issue) => issue.slug !== 'courthouse-security-contract',
-    )
+    feed = fixturesEnabled
+      ? ISSUE_FIXTURES.filter(
+          (issue) => issue.slug !== 'courthouse-security-contract',
+        )
+      : []
   }
   if (refreshed || recovered) {
     feed = feed.filter((issue) => issue.slug !== 'downtown-late-night-permits')
   }
-  if (scenario === 'no-matches') {
+  if (activeScenario === 'no-matches') {
     feed = []
   }
 
   return (
     <main className="pp-page" id="resident-main">
-      <FixtureBanner
-        label={getDiscoveryFixtureLabel(
-          scenario ? SCENARIO_LABELS[scenario] : undefined,
-        )}
-      />
-
       <header className="pp-page-head">
         <h1>For You</h1>
         <p className="pp-page-lede">
@@ -91,7 +69,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
       </header>
 
       {watching.length === 0 ? (
-        <ForYouSetup />
+        <ForYouSetup showPreview={fixturesEnabled} />
       ) : (
         <>
           <div className="pp-foryou-bar">
@@ -125,7 +103,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
             </Button>
           </div>
 
-          {scenario === 'degraded' ? (
+          {activeScenario === 'degraded' ? (
             <Notice title="Source delayed" tone="warning">
               <p>
                 Agenda packets from the Lafayette City-Parish Council are
@@ -192,7 +170,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
   )
 }
 
-function ForYouSetup() {
+function ForYouSetup({ showPreview }: { showPreview: boolean }) {
   const preview = ISSUE_FIXTURES.slice(0, 3)
 
   return (
@@ -216,14 +194,16 @@ function ForYouSetup() {
           )}
         />
       </div>
-      <div className="pp-setup-preview">
-        <h2>Major decisions across launch areas</h2>
-        <div className="pp-foryou-feed">
-          {preview.map((issue) => (
-            <IssueCard issue={issue} key={issue.slug} />
-          ))}
+      {showPreview ? (
+        <div className="pp-setup-preview">
+          <h2>Major decisions across launch areas</h2>
+          <div className="pp-foryou-feed">
+            {preview.map((issue) => (
+              <IssueCard issue={issue} key={issue.slug} />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
     </section>
   )
 }
