@@ -213,9 +213,10 @@ the final verification passed 146 tests, typecheck, builds, prerender, and lint.
 The exact production workflow and independent smoke passed after every merge.
 
 Production still has no issue build, issue-decision link, or importance
-assessment. These atomic records cannot enter a main feed until the ranking and
-resident-query work is complete. Any later bulk run needs a cost estimate and
-separate approval.
+assessment. Accepted atomic records may appear in the unranked "Published
+decision records" verification view. They cannot enter "Major local decisions"
+or another promoted issue feed until issue ranking passes. Any later bulk run
+needs a cost estimate and separate approval.
 
 ### Slice 5: Complete Resident Interface
 
@@ -230,7 +231,10 @@ Production workflow `33324166404` and the independent production smoke passed
 for `b22e321`. Explicit fixture URL scenarios remain available only in
 development builds, and resident pages do not reserve a visible banner for them.
 Production ignores every fixture scenario before deriving page state and shows
-honest empty states until the resident projection is connected.
+current accepted atomic publications through a bounded realtime query. Home,
+For You, and Explore identify these as decision records and open the official
+source. The integration does not create issues, scores, or complete coverage
+claims.
 
 Do not design or build resident pages one at a time during backend slices.
 Slice 4 must first settle the issue, importance, timeline, and change contracts.

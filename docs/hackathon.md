@@ -159,9 +159,11 @@ prerender, and lint. Production workflow `33324166404` and the independent
 production smoke passed the direct Convex host, canonical domain, apex redirect,
 and readiness query.
 
-No production issue build, importance assessment, or feed projection has run.
-The live discovery pages show honest empty states until the real resident
-projection is connected. Real issue and evidence views, Ask, follows, AgentMail,
+No production issue build, importance assessment, or ranked issue projection
+has run. The resident integration reads current full and limited atomic
+publications through a bounded public Convex query, labels them as decision
+records, and opens the official source. Withheld publications stay hidden. Real
+issue and citation-level evidence views, Ask, follows, AgentMail,
 authentication, coverage integration, and the vibeapps.dev submission remain
 pending.
 

@@ -262,8 +262,10 @@ their QA-only boundary in source. The area store persists one signed-out area
 under `public-parish.area.v1`. No fixture reaches Convex tables or production
 data. `FIXTURE_TODAY` anchors relative date filters so fixture scenarios stay
 stable. Resident pages do not show a fixture banner. Production builds ignore
-fixture parameters and render an honest empty state until the real projection is
-connected.
+fixture parameters and read current accepted atomic publications through the
+resident decision query. The live path labels these as published decision
+records and opens their official sources. It does not reuse fixture importance,
+topics, consequences, or ranking.
 
 ## URL contracts
 

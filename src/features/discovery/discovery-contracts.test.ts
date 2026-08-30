@@ -94,4 +94,28 @@ describe('resident interface Slice 2 discovery contracts', () => {
       ),
     ).toBe(true)
   })
+
+  it('lets accepted decision rows participate in source-status filters', () => {
+    const entries = getExploreEntries(
+      { source: 'Limited information' },
+      [],
+      [
+        {
+          href: 'https://example.gov/record',
+          kind: 'Decision record',
+          sourceStatus: 'Limited information',
+          title: 'Limited record',
+        },
+        {
+          href: 'https://example.gov/full-record',
+          kind: 'Decision record',
+          sourceStatus: 'Evidence available',
+          title: 'Full record',
+        },
+      ],
+    )
+
+    expect(entries).toHaveLength(1)
+    expect(entries[0]?.kind).toBe('Decision record')
+  })
 })

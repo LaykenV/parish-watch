@@ -24,9 +24,12 @@ build cannot present an action as working until its real backend path passes.
 Design Slices 1 and 2 now implement the route blueprint, responsive shell,
 Home, For You, and Explore with development-only typed QA fixtures and no
 resident-facing fixture banner. Production ignores fixture query parameters and
-shows honest empty states until the resident projection is connected. The later
-design slices still own issues and evidence, Ask, follows and accounts, coverage,
-cross-app QA, and the connected prototype.
+uses a bounded Convex query to show current full and limited atomic
+publications. These views call them published decision records, open the
+accepted official source, and do not imply issue ranking or complete place
+coverage. Withheld versions remain private. The later design slices still own
+issues and citation-level evidence views, Ask, follows and accounts, coverage,
+and cross-app QA.
 
 ### Start With Consequence
 

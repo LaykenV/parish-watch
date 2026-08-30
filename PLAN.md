@@ -13,7 +13,11 @@ deployed Slice 4 as `c162543`; production workflow `33273984552` and the
 independent production smoke passed. A controlled production onboarding then
 published cited atomic records for `CO-062-2026`, `CO-069-2026`, and
 `CO-072-2026` after Terra extraction, Luna review, and deterministic policy.
-No production issue build, importance assessment, or feed projection has run.
+The resident integration now reads current full and limited atomic publications
+through one bounded public query. Home, For You, and Explore label them as
+published decision records and open the accepted official source. Withheld
+versions stay hidden. No production issue build, importance assessment, or
+ranked issue feed has run.
 
 Resident-interface Design Slice 1 established the complete route blueprint.
 Design Slice 2 then shipped the responsive shell plus fixture-backed Home, For
@@ -24,8 +28,10 @@ parameters instead of presenting fixture records. PR #25 deployed the owner
 phone-review refinements as `b22e321`, including structured card headers and
 status pills, Coss action treatments, one-color Watching text, and a Louisiana
 Coverage icon. Production workflow `33324166404` and the independent smoke
-passed. Issues, evidence, Ask, following, accounts, email, and coverage remain
-in later design and integration slices.
+passed. The current integration replaces the production discovery empty states
+with accepted atomic records. Issues, citation-level evidence views, Ask,
+following, accounts, email, and coverage remain in later design and integration
+slices.
 
 ## Executive Decision
 

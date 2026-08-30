@@ -52,7 +52,7 @@ function AreaSelectorDialog({
   return (
     <Sheet
       className="pp-area-sheet"
-      description="Public Parish shows decisions from places whose official sources pass the same evidence gate."
+      description="Public Parish shows only decision records that pass the publication gate. Area coverage can still be incomplete."
       footer={
         <Link
           className="pp-area-request"
@@ -104,7 +104,7 @@ function AreaSelectorDialog({
               <button
                 aria-pressed={selected}
                 className="pp-area-row"
-                data-status="supported"
+                data-status="available"
                 data-selected={selected || undefined}
                 onClick={() => {
                   setArea(place.slug)
@@ -114,16 +114,14 @@ function AreaSelectorDialog({
               >
                 <span className="pp-area-name">{place.name}</span>
                 <span className="pp-area-status">
-                  {selected ? 'Watching' : 'Supported'}
+                  {selected ? 'Watching' : 'Records available'}
                 </span>
               </button>
             </li>
           )
         })}
         {places.length === 0 ? (
-          <li className="pp-area-empty">
-            No supported place matches “{query}”.
-          </li>
+          <li className="pp-area-empty">No listed place matches “{query}”.</li>
         ) : null}
       </ul>
     </Sheet>

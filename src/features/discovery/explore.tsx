@@ -28,6 +28,7 @@ import { IssueCard } from './issue-card'
 import { SectionFailure, UpdateRow } from './notice'
 import { ResultRow } from './result-row'
 import { useMediaQuery } from './hooks'
+import { toDecisionRow, usePublishedDecisions } from './live-publications'
 import { Sheet } from './sheet'
 
 export function ExplorePage({ search }: { search: ExploreSearch }) {
@@ -35,6 +36,11 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   const desktop = useMediaQuery('(min-width: 64.0625rem)')
   const activeFixture = getActiveDiscoveryFixture(search.fixture)
   const fixturesEnabled = activeFixture !== undefined
+  const publishedDecisions = usePublishedDecisions(!fixturesEnabled)
+  const publishedRows = useMemo(
+    () => (publishedDecisions ?? []).map(toDecisionRow),
+    [publishedDecisions],
+  )
   const effectiveSearch = useMemo(
     () =>
       activeFixture === search.fixture
@@ -90,9 +96,10 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
       getExploreEntries(
         effectiveSearch,
         fixturesEnabled ? ISSUE_FIXTURES : [],
-        fixturesEnabled ? EXPLORE_ROW_FIXTURES : [],
+        fixturesEnabled ? EXPLORE_ROW_FIXTURES : publishedRows,
+        { includeUnfiltered: !fixturesEnabled },
       ),
-    [effectiveSearch, fixturesEnabled],
+    [effectiveSearch, fixturesEnabled, publishedRows],
   )
 
   const browse = useMemo(() => {
@@ -114,7 +121,11 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   }, [fixturesEnabled])
 
   const showFailure = activeFixture === 'section-failure' && !recovered
-  const viewMode = getExploreViewMode(effectiveSearch, entries.length)
+  const viewMode = fixturesEnabled
+    ? getExploreViewMode(effectiveSearch, entries.length)
+    : entries.length === 0
+      ? 'empty'
+      : 'results'
 
   const moreFilters = (
     <MoreFiltersPanel activeCount={activeFilters} onClear={clearAll}>
@@ -174,7 +185,8 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
       <header className="pp-page-head">
         <h1>Explore</h1>
         <p className="pp-page-lede">
-          Search current issues and official records from supported places.
+          Search published decision records from the official sources Public
+          Parish has checked.
         </p>
       </header>
 
@@ -312,28 +324,36 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   }
 
   function resultsBody() {
-    if (!fixturesEnabled) {
+    if (!fixturesEnabled && publishedDecisions === undefined) {
       return (
-        <div className="pp-empty">
-          <p className="pp-empty-title">
-            No published records are connected to Explore yet.
-          </p>
-          <p className="pp-empty-text">
-            Explore will list records after they pass the publication and
-            coverage checks.
-          </p>
-          <Button
-            render={<Link to="/coverage" />}
-            size="touch"
-            variant="outline"
-          >
-            View coverage
-          </Button>
+        <div className="pp-empty" role="status">
+          <p className="pp-empty-title">Loading published records...</p>
         </div>
       )
     }
 
     if (viewMode === 'empty') {
+      if (!fixturesEnabled && publishedRows.length === 0) {
+        return (
+          <div className="pp-empty">
+            <p className="pp-empty-title">
+              No published decision records are available yet.
+            </p>
+            <p className="pp-empty-text">
+              Explore lists records after their official evidence passes the
+              publication checks.
+            </p>
+            <Button
+              render={<Link to="/coverage" />}
+              size="touch"
+              variant="outline"
+            >
+              View coverage
+            </Button>
+          </div>
+        )
+      }
+
       return (
         <div className="pp-empty">
           <p className="pp-empty-title">

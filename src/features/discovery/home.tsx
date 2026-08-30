@@ -16,6 +16,8 @@ import {
 } from './fixtures'
 import { formatDate } from './format'
 import { IssueCard, UpcomingCard } from './issue-card'
+import { toDecisionCard, usePublishedDecisions } from './live-publications'
+import type { PublishedDecision } from './live-publications'
 import { Notice, SectionFailure, UpdateRow } from './notice'
 import { Rail } from './rail'
 import { ResultRow } from './result-row'
@@ -24,6 +26,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   const area = useArea()
   const activeScenario = getActiveDiscoveryFixture(scenario)
   const fixturesEnabled = activeScenario !== undefined
+  const publishedDecisions = usePublishedDecisions(!fixturesEnabled)
   const signedIn = activeScenario === 'signed-in'
   const watching: AreaSlug[] = signedIn
     ? ['lafayette-parish', 'east-baton-rouge-parish']
@@ -43,6 +46,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
           refreshed={refreshed}
           scenario={activeScenario}
           fixturesEnabled={fixturesEnabled}
+          publishedDecisions={publishedDecisions}
           watching={[]}
         />
       </main>
@@ -86,6 +90,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
         refreshed={refreshed}
         scenario={activeScenario}
         fixturesEnabled={fixturesEnabled}
+        publishedDecisions={publishedDecisions}
         watching={watching}
       />
     </main>
@@ -127,7 +132,7 @@ function FirstVisitHero() {
               size="touch"
               variant="link"
             >
-              Browse major decisions
+              Browse published records
             </Button>
             <p className="pp-hero-note">
               Free. Open source. No account needed to read.
@@ -146,17 +151,21 @@ function HomeFeed({
   watching,
   scenario,
   fixturesEnabled,
+  publishedDecisions,
   refreshed,
   onRefresh,
 }: {
   watching: AreaSlug[]
   scenario?: HomeScenario
   fixturesEnabled: boolean
+  publishedDecisions: PublishedDecision[] | undefined
   refreshed: boolean
   onRefresh: () => void
 }) {
   if (!fixturesEnabled) {
-    return <UnconnectedHomeFeed watching={watching} />
+    return (
+      <PublishedHomeFeed decisions={publishedDecisions} watching={watching} />
+    )
   }
 
   const degraded = scenario === 'degraded'
@@ -203,11 +212,20 @@ function HomeFeed({
   )
 }
 
-function UnconnectedHomeFeed({ watching }: { watching: AreaSlug[] }) {
-  const title =
-    watching.length === 0
-      ? 'Choose an area to see local decisions.'
-      : 'No published decisions are available in this feed yet.'
+function PublishedHomeFeed({
+  decisions,
+  watching,
+}: {
+  decisions: PublishedDecision[] | undefined
+  watching: AreaSlug[]
+}) {
+  const cards = (decisions ?? [])
+    .map(toDecisionCard)
+    .filter((card): card is NonNullable<typeof card> => card !== null)
+    .filter(
+      (card) => watching.length === 0 || watching.includes(card.placeSlug),
+    )
+  const rest = cards.slice(1, 6)
 
   return (
     <div className="pp-home-feed">
@@ -217,22 +235,50 @@ function UnconnectedHomeFeed({ watching }: { watching: AreaSlug[] }) {
         id="major-decisions"
       >
         <div className="pp-section-head">
-          <h2 id="major-decisions-title">Major local decisions</h2>
-        </div>
-        <div className="pp-empty">
-          <p className="pp-empty-title">{title}</p>
-          <p className="pp-empty-text">
-            Public Parish will list decisions here after their records pass the
-            publication and coverage checks.
-          </p>
+          <h2 id="major-decisions-title">Published decision records</h2>
           <Button
-            render={<Link to="/coverage" />}
+            className="pp-section-link"
+            render={<Link to="/explore" />}
             size="touch"
-            variant="outline"
+            variant="ghost"
           >
-            View coverage
+            Explore all
+            <ArrowUpRightIcon aria-hidden="true" />
           </Button>
         </div>
+        {decisions === undefined ? (
+          <div className="pp-empty" role="status">
+            <p className="pp-empty-title">Loading published records...</p>
+          </div>
+        ) : cards.length > 0 ? (
+          <>
+            <IssueCard issue={cards[0]} variant="lead" />
+            {rest.length > 0 ? (
+              <Rail ariaLabel="More published decision records">
+                {rest.map((card) => (
+                  <IssueCard issue={card} key={card.slug} variant="rail" />
+                ))}
+              </Rail>
+            ) : null}
+          </>
+        ) : (
+          <div className="pp-empty">
+            <p className="pp-empty-title">
+              No published decision records are available for this area.
+            </p>
+            <p className="pp-empty-text">
+              New records appear after their official evidence passes the
+              publication checks.
+            </p>
+            <Button
+              render={<Link to="/coverage" />}
+              size="touch"
+              variant="outline"
+            >
+              View coverage
+            </Button>
+          </div>
+        )}
       </section>
       <VoterStrip />
     </div>

@@ -25,8 +25,10 @@ amount remains stored but does not replace the supported agenda amount.
 
 This proof covers the selected Lafayette City Council PDF source family. It
 does not mark Lafayette planning and zoning, Youngsville, Rapides, or East Baton
-Rouge bodies supported. The public interface also must expose working source
-links before the City Council passes the complete coverage gate below.
+Rouge bodies supported. The resident decision-record views now open each
+accepted publication's official source. That satisfies the source-link
+requirement only. The City Council still must pass every other coverage gate
+below before Public Parish calls the body supported.
 
 ## Source Policy
 

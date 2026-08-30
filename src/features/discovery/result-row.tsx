@@ -34,8 +34,8 @@ export function ResultRow({ row }: { row: ResultRowData }) {
     )
   }
 
-  return (
-    <Link className="pp-row" data-kind={row.kind} to={row.href}>
+  const content = (
+    <>
       <span className="pp-row-type">{row.kind}</span>
       <span className="pp-row-main">
         <span className="pp-row-title">{row.title}</span>
@@ -44,6 +44,22 @@ export function ResultRow({ row }: { row: ResultRowData }) {
         ) : null}
       </span>
       <ChevronRightIcon aria-hidden="true" className="pp-row-chevron" />
+    </>
+  )
+
+  return row.href.startsWith('https://') || row.href.startsWith('http://') ? (
+    <a
+      className="pp-row"
+      data-kind={row.kind}
+      href={row.href}
+      rel="noreferrer"
+      target="_blank"
+    >
+      {content}
+    </a>
+  ) : (
+    <Link className="pp-row" data-kind={row.kind} to={row.href}>
+      {content}
     </Link>
   )
 }

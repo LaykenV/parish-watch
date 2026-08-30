@@ -43,6 +43,7 @@ import type * as publication_evidenceRulesV1 from "../publication/evidenceRulesV
 import type * as publication_ledger from "../publication/ledger.js";
 import type * as publication_policyV1 from "../publication/policyV1.js";
 import type * as publication_workflow from "../publication/workflow.js";
+import type * as resident_discovery from "../resident/discovery.js";
 import type * as review_contractV1 from "../review/contractV1.js";
 import type * as review_ledger from "../review/ledger.js";
 import type * as review_prepare from "../review/prepare.js";
@@ -101,6 +102,7 @@ declare const fullApi: ApiFromModules<{
   "publication/ledger": typeof publication_ledger;
   "publication/policyV1": typeof publication_policyV1;
   "publication/workflow": typeof publication_workflow;
+  "resident/discovery": typeof resident_discovery;
   "review/contractV1": typeof review_contractV1;
   "review/ledger": typeof review_ledger;
   "review/prepare": typeof review_prepare;

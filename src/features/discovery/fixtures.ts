@@ -21,12 +21,13 @@ export const AREA_FIXTURES: AreaRecord[] = [
   {
     name: 'Lafayette Parish',
     slug: 'lafayette-parish',
-    status: 'supported',
+    status: 'available',
   },
   {
     name: 'East Baton Rouge Parish',
     slug: 'east-baton-rouge-parish',
-    status: 'supported',
+    status: 'validating',
+    note: 'Sources are being validated. This area opens after accepted decision records are available.',
   },
   {
     name: 'Rapides Parish',
