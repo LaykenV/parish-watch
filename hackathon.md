@@ -12,9 +12,21 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T05:59:00Z
+- **Last updated:** 2026-08-30T06:24:57Z
 
 ## Log
+
+### 2026-08-30 - 64e3f72
+
+Completed a controlled Lafayette City Council production onboarding from eight
+official PDFs. Production now has full current publications for CO-062 as
+postponed, CO-069 as decided, and CO-072 as scheduled. Every published material
+field has an exact citation into an immutable snapshot. The board-vacancy item
+remains a limited source-only publication because the agenda does not support
+the required timezone offset for its deadline. PRs #15 through #23 deployed the
+retrieval, lifecycle, review, and Firecrawl formatting fixes that the batch
+exposed. No production issue build, importance assessment, or resident feed
+projection ran.
 
 ### 2026-08-30 - working tree
 

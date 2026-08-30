@@ -137,10 +137,20 @@ the personal development deployment while linking into issue
 counterparty. Independent review accepted one public-assets consequence factor,
 and code assigned 5 of 100 points. The issue keeps an earlier withheld version
 whose weak importance rationale failed review. Replaying the accepted inputs
-returned the same build without another model call or version. The full suite
-passes 110 tests. No production extraction, model review, or issue build has
-run. The resident evidence interface and vibeapps.dev submission remain
-pending. No AgentMail integration or authentication flow exists yet.
+returned the same build without another model call or version.
+
+On August 30, a controlled production onboarding stored eight current Lafayette
+City Council PDFs without truncation. Terra extraction, deterministic
+validation, independent Luna review, and publication produced full current
+records for `CO-062-2026`, `CO-069-2026`, and `CO-072-2026`. The
+board-vacancy announcement remained limited, and its unsupported zoned deadline
+remained withheld. PRs #15 through #23 deployed the fixes found during the run.
+The final suite passed 146 tests, typecheck, builds, prerender, and lint, and the
+production workflow and independent smoke passed.
+
+No production issue build, importance assessment, or feed projection has run.
+The resident evidence interface and vibeapps.dev submission remain pending. No
+AgentMail integration or authentication flow exists yet.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

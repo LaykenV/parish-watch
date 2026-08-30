@@ -193,7 +193,7 @@ The accepted build used two AI Gateway calls at an estimated combined cost of
 $0.042153. `npm run verify` passes 110 tests, typecheck, build, prerender, and
 lint. PR #13 merged as `c162543`; production workflow `33273984552` and the
 independent production smoke passed. Production now includes the Slice 4
-backend. No production extraction, model review, or issue build has run.
+backend.
 
 Post-proof review found three correctness gaps. Lifecycle labels were reading
 the current state instead of the transition, lost meeting-time precision could
@@ -201,13 +201,21 @@ look like an amendment, and a failed issue build reserved its idempotency key.
 The final release tests the corrected transition rules, permits a new attempt
 after a terminal failure, and rejects the government's own name or home
 jurisdiction as the only shared signal. Issue-link prompt v1.3 tells Terra the
-same rule. These fixes have local automated proof but have not made a new live
-model call.
+same rule.
 
-Promotion note: the production deployment did not call a model. The extraction
-processor and prompt version changes mean a later extraction request will not
-reuse Slice 3 runs. A bulk production rerun would call `MODEL_STRONG` for the
-existing corpus and needs a cost estimate and separate approval.
+On August 30, a controlled production onboarding processed eight official
+Lafayette City Council PDFs. The current production publications are
+`CO-062-2026` as postponed, `CO-069-2026` as decided, and
+`CO-072-2026` as scheduled. The board-vacancy announcement is limited to its
+supported title, body, and source. Its unsupported zoned deadline remains
+withheld. PRs #15 through #23 deployed each correction exposed by the batch, and
+the final verification passed 146 tests, typecheck, builds, prerender, and lint.
+The exact production workflow and independent smoke passed after every merge.
+
+Production still has no issue build, issue-decision link, or importance
+assessment. These atomic records cannot enter a main feed until the ranking and
+resident-query work is complete. Any later bulk run needs a cost estimate and
+separate approval.
 
 ### Slice 5: Complete Resident Interface
 

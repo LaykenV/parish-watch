@@ -1,7 +1,7 @@
 # Official-Source Plan
 
-Status: Lafayette council registry and representative snapshots implemented; remaining launch sources are candidates
-Last verified: August 28, 2026
+Status: Lafayette City Council registry, checked gold set, and controlled production onboarding implemented; remaining launch sources are candidates
+Last verified: August 30, 2026
 
 This document supplies starting points, not a claim of complete coverage. Every
 URL must be checked during the Firecrawl source spike, and every public body must
@@ -11,13 +11,22 @@ supported.
 ## Implemented checkpoint
 
 Slice 1 seeded the Lafayette City Council registry with the council hub,
-document search, and schedule/research URLs. The personal development deployment
-ingested one real agenda PDF and its corresponding minutes PDF as immutable raw
-artifacts with separate normalized Markdown hashes. Repeat retrievals reused
-the version 2 snapshots. Slice 2 extracted and deterministically validated
-`CO-029-2026` from the agenda snapshot. This proof does not mark Lafayette or
-any other body publicly supported. Every remaining source and region stays
-behind the coverage gate below.
+document search, and schedule/research URLs. The checked gold set now covers
+four agendas, three corresponding minutes, and one ordinance packet.
+
+A controlled production run stored all eight PDFs as immutable raw artifacts
+with separate normalized Markdown hashes. None of the current snapshots is
+marked truncated. The publication workflow produced full current records for
+`CO-062-2026` as postponed, `CO-069-2026` as decided, and `CO-072-2026`
+as scheduled. The board-vacancy announcement produced a limited source-only
+record. Its deadline stayed unpublished because the source does not state the
+timezone offset required by the deadline contract. A conflicting CO-072 packet
+amount remains stored but does not replace the supported agenda amount.
+
+This proof covers the selected Lafayette City Council PDF source family. It
+does not mark Lafayette planning and zoning, Youngsville, Rapides, or East Baton
+Rouge bodies supported. The public interface also must expose working source
+links before the City Council passes the complete coverage gate below.
 
 ## Source Policy
 
