@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T04:15:10Z
+- **Last updated:** 2026-08-30T04:37:05Z
 
 ## Log
 
@@ -69,6 +69,16 @@ immutable agenda snapshot. Terra cost an estimated $0.024469 and Luna cost
 $0.003019. Replaying the same extraction start returned the original run with
 `reused: true`, so it made no second model call. These fixes are not deployed to
 production.
+
+Production extraction run `jd7exmg7z2m9p4m2n615vm1yyd8de9yq` sent the July
+21 CO-062 agenda record to Terra successfully, then deterministic validation
+failed closed on `/sourceRecordId`, `/title`, and `/plainLanguageSummary`.
+Firecrawl preserved underline markup around `CO-062-2026`, while Terra returned
+the same cited text without formatting tags. Citation normalization now ignores
+only `<u>` tags, including underline tags with attributes, and preserves their
+text. Extraction processor `v1.10` makes the corrected run distinct from the
+failed attempt. A focused regression covers the exact council-agenda shape.
+The hotfix is not deployed to production.
 
 Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
 horizontal overflow. A later computed-style check measured 125 pixels of
