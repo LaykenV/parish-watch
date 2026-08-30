@@ -114,6 +114,7 @@ auth, webhook, routing, or schema work genuinely needs isolation.
 - [Resident interface master plan](docs/resident-interface-plan.md)
 - [Resident interface Design Slice 1](docs/resident-interface-slice-1.md)
 - [Resident interface Design Slice 2](docs/resident-interface-slice-2.md)
+- [Resident interface Design Slice 3](docs/resident-interface-slice-3.md)
 - [Public build log](hackathon.md)
 
 ## Implemented setup and intended stack

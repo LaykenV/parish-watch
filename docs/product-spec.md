@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4 and resident-interface Design Slices 1 and 2 are deployed
+Status: approved product plan; evidence Slices 1 through 4 and resident-interface Design Slices 1 and 2 are deployed; Design Slice 3 is complete locally and not deployed
 
 ## Product Sentence
 
@@ -21,15 +21,21 @@ the full frontend against typed local fixtures so later API work does not reopen
 the page system. Fixture-backed success is development proof only. A production
 build cannot present an action as working until its real backend path passes.
 
-Design Slices 1 and 2 now implement the route blueprint, responsive shell,
-Home, For You, and Explore with development-only typed QA fixtures and no
+Design Slices 1 and 2 implement the route blueprint, responsive shell, Home,
+For You, and Explore with development-only typed QA fixtures and no
 resident-facing fixture banner. Production ignores fixture query parameters and
 uses a bounded Convex query to show current full and limited atomic
 publications. These views call them published decision records, open the
 accepted official source, and do not imply issue ranking or complete place
-coverage. Withheld versions remain private. The later design slices still own
-issues and citation-level evidence views, Ask, follows and accounts, coverage,
-and cross-app QA.
+coverage. Withheld versions remain private.
+
+Design Slice 3 implements the issue, atomic decision, meeting, and
+citation-level evidence pages on a local feature branch. Source controls keep
+citation selection in the URL, open a Coss drawer on mobile or a docked rail on
+desktop, and return focus when closed. Its typed records remain explicit
+development fixtures. Production ignores them and shows recovery pages until
+real detail queries exist. The later design slices still own Ask answers,
+follows and accounts, coverage, and cross-app QA.
 
 ### Start With Consequence
 

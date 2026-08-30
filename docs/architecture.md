@@ -93,6 +93,15 @@ scenario before Home, For You, or Explore derives page state, so fixture records
 signed-in areas, update rows, degraded notices, and failure states remain
 development-only.
 
+Design Slice 3 is complete on a local feature branch and is not deployed. It
+adds route-local typed adapters for issue, decision, meeting, and citation
+views. Explicit `preview` and `update` fixture values are accepted only when
+`import.meta.env.DEV` is true. Production builds resolve no fixture detail and
+render the route recovery state. Citation selection lives in the `source` URL
+parameter. The shared Coss drawer handles mobile citations, while desktop keeps
+the selected excerpt in the evidence rail. No Convex schema, query, publication,
+or ranking contract changes in this design slice.
+
 ## System Boundaries
 
 Public Parish owns:

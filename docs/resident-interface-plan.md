@@ -1,14 +1,16 @@
 # Public Parish resident interface plan
 
-Status: approved Slice 5 design; Design Slices 1 and 2 are deployed
+Status: approved Slice 5 design; Design Slices 1 and 2 are deployed; Design Slice 3 is complete locally and not deployed
 
 Decision grill completed: August 29, 2026
 
 Implementation checkpoint: Design Slice 1 deployed through PR #14 as
 `6e46fd7`. Design Slice 2 deployed through PR #24 as `4e2ac67` with the
 responsive shell plus fixture-backed Home, For You, and Explore. PR #25 deployed
-the owner phone-review refinements as `b22e321`. The remaining six design slices
-and the resident API connections are not complete.
+the owner phone-review refinements as `b22e321`. Design Slice 3 implements the
+issue, decision, meeting, and citation surfaces on a local feature branch. The
+remaining five design slices and the resident detail API connections are not
+complete.
 
 ## Purpose
 
@@ -941,6 +943,11 @@ cards, result rows, filters, and feed update behavior.
 - Route and action spinners never change layout.
 
 ### Design slice 3: Issues and evidence
+
+Implementation checkpoint: complete locally on
+`feat/resident-evidence-slice-3`; not deployed. The implementation and fixture
+boundary are recorded in
+[`resident-interface-slice-3.md`](./resident-interface-slice-3.md).
 
 #### Objective
 

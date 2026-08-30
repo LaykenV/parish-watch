@@ -1,0 +1,128 @@
+import { ISSUE_FIXTURES } from '../discovery/fixtures'
+import { ISSUE_DETAIL_FIXTURES, ISSUE_LIVE_UPDATE } from './fixtures'
+import {
+  DECISION_DETAIL_FIXTURES,
+  MEETING_DETAIL_FIXTURES,
+} from './record-fixtures'
+import type { IssueCardData } from '../discovery/contracts'
+import type {
+  ArtifactStatus,
+  CitationData,
+  DecisionDetailFixture,
+  IssueDetailFixture,
+  MeetingDetailFixture,
+  EvidenceScenario,
+} from './contracts'
+
+export function getIssueDetail(slug: string): IssueDetailFixture | null {
+  return ISSUE_DETAIL_FIXTURES[slug] ?? null
+}
+
+export function getDecisionDetail(
+  recordKey: string,
+): DecisionDetailFixture | null {
+  return DECISION_DETAIL_FIXTURES[recordKey] ?? null
+}
+
+export function getMeetingDetail(id: string): MeetingDetailFixture | null {
+  return MEETING_DETAIL_FIXTURES[id] ?? null
+}
+
+export function getIssueCards(
+  slugs: string[],
+  fixture: EvidenceScenario | undefined,
+): IssueCardData[] {
+  return slugs
+    .map((slug) => ISSUE_FIXTURES.find((issue) => issue.slug === slug))
+    .filter((issue): issue is IssueCardData => Boolean(issue))
+    .map((issue) => ({
+      ...issue,
+      href: `/issues/${issue.slug}${fixture ? `?fixture=${fixture}` : ''}`,
+    }))
+}
+
+/*
+  The live update replaces the accepted version in place. Only the drainage
+  issue carries one, so every other page keeps a single stable version.
+*/
+export function supportsLiveUpdate(slug: string): boolean {
+  return slug === 'drainage-fee-credit-cap'
+}
+
+export function applyLiveUpdate(
+  fixture: IssueDetailFixture,
+): IssueDetailFixture {
+  if (!supportsLiveUpdate(fixture.issue.slug)) return fixture
+
+  const previousNext = fixture.issue.next?.date
+
+  return {
+    ...fixture,
+    issue: {
+      ...fixture.issue,
+      changes: [ISSUE_LIVE_UPDATE.change, ...fixture.issue.changes],
+      next: ISSUE_LIVE_UPDATE.next,
+      timeline: fixture.issue.timeline.map((entry) =>
+        entry.date === previousNext
+          ? {
+              ...entry,
+              date: ISSUE_LIVE_UPDATE.next.date,
+              meaningfulChange:
+                'The Clerk moved final adoption from September 15 to October 6.',
+            }
+          : entry,
+      ),
+      versions: [ISSUE_LIVE_UPDATE.version, ...fixture.issue.versions],
+    },
+  }
+}
+
+/*
+  A limited issue omits unsupported sections rather than filling them, so the
+  page decides section visibility from the accepted evidence alone.
+*/
+export function issueSections(fixture: IssueDetailFixture) {
+  const { issue } = fixture
+  return {
+    changes: issue.changes.length > 0,
+    factors: issue.factors.length > 0,
+    happening: issue.happening.length > 0,
+    publicActions: issue.publicActions.length > 0,
+    timeline: issue.timeline.length > 0,
+    uncertain: issue.uncertain.length > 0,
+  }
+}
+
+export function artifactTone(
+  status: ArtifactStatus,
+): 'ok' | 'muted' | 'warning' {
+  if (status === 'Available') return 'ok'
+  if (status === 'Delayed') return 'warning'
+  return 'muted'
+}
+
+/*
+  A long excerpt, a retrieval warning, or a section reference needs the full
+  sheet height on a phone. Everything else opens at medium height.
+*/
+export function evidenceSheetSize(citation: CitationData): 'full' | 'medium' {
+  const length =
+    citation.excerpt.quote.length +
+    (citation.excerpt.before?.length ?? 0) +
+    (citation.excerpt.after?.length ?? 0)
+  return citation.warning || length > 320 ? 'full' : 'medium'
+}
+
+export function documentHost(url: string): string {
+  try {
+    return new URL(url).host
+  } catch {
+    return url
+  }
+}
+
+export function citationSummary(citation: CitationData): string {
+  const place =
+    citation.section ?? (citation.page ? `page ${citation.page}` : '')
+  return [citation.documentTitle, place].filter(Boolean).join(', ')
+}

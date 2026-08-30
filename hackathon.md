@@ -12,11 +12,36 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T17:31:37Z
+- **Last updated:** 2026-08-30T19:06:32Z
 
 ## Log
 
 ### 2026-08-30 - working tree
+
+Implemented resident issue, atomic decision, meeting, and citation-level
+evidence pages against explicit development fixtures. Material claims open an
+exact official excerpt in a mobile Coss drawer or desktop evidence rail, keep
+the selected citation in the URL, and return focus to the opening Source
+control. Full, limited, delayed, historical, uncertain, before-minutes,
+after-minutes, and live-update states are covered. Production builds ignore the
+fixture parameters and render recovery pages because real detail queries are
+not connected. Runtime checks at 320, 390, and 1,440 pixels found no horizontal
+overflow. `npm run verify` passed typecheck, 194 tests across 23 files, the
+production builds, prerender, and lint. No deployment is claimed
+(`src/features/evidence/`, `docs/resident-interface-slice-3.md`).
+
+A review pass then hardened the evidence viewer. Closing the desktop panel
+returns focus to the opening Source control in an effect after the commit
+instead of inside a requestAnimationFrame, so the restore no longer depends on
+the browser painting a frame. Escape closes the panel, the Source controls
+aria-controls target exists while nothing is selected, and the live-update
+fixture matches the timeline entry it moves by its date instead of a
+hard-coded string. The open, close, Escape, focus-return, and deep-link paths
+were checked in the local browser. Suite re-validation is deferred to the pull
+request checks (`src/features/evidence/evidence-surface.tsx`,
+`src/features/evidence/evidence-model.ts`).
+
+### 2026-08-30 - 409a3e1
 
 Connected Home, For You, and Explore to current full and limited atomic
 publications through a bounded public Convex query. The query returns only
@@ -28,8 +53,9 @@ development QA and remain disabled in production. The development deployment
 returned four accepted records. `npm run verify` passed typecheck, 169 tests
 across 21 files, the production builds, prerender, and lint. Production-preview
 checks at 390 and 1,440 pixels found no horizontal overflow, rendered four
-official-source links, and ignored fixture parameters. No production deployment
-is claimed (`convex/resident/discovery.ts`, `src/features/discovery/`).
+official-source links, and ignored fixture parameters. PR #26 merged this exact
+commit and the production release passed its workflow and independent smoke
+(`convex/resident/discovery.ts`, `src/features/discovery/`).
 
 ### 2026-08-30 - b22e321
 

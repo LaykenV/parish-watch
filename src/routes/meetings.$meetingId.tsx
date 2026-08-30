@@ -1,18 +1,31 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
-import { BlueprintPage } from '../features/resident-blueprint/blueprint-page'
+import { parseEvidenceSearch } from '../features/evidence/contracts'
+import { MeetingPage } from '../features/evidence/meeting-page'
+import { ResidentShell } from '../features/resident-blueprint/resident-shell'
 
 export const Route = createFileRoute('/meetings/$meetingId')({
-  component: MeetingBlueprintRoute,
+  component: ResidentMeeting,
+  validateSearch: parseEvidenceSearch,
 })
 
-function MeetingBlueprintRoute() {
+function ResidentMeeting() {
   const { meetingId } = Route.useParams()
+  const search = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
 
   return (
-    <BlueprintPage
-      contractKey="meeting"
-      routeDetail={<>Route meeting: {meetingId}</>}
-    />
+    <ResidentShell>
+      <MeetingPage
+        meetingId={meetingId}
+        onSelectSource={(source) =>
+          navigate({
+            replace: true,
+            search: (prev) => ({ ...prev, source: source ?? undefined }),
+          })
+        }
+        search={search}
+      />
+    </ResidentShell>
   )
 }

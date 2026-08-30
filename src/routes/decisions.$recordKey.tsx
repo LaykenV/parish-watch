@@ -1,18 +1,31 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
-import { BlueprintPage } from '../features/resident-blueprint/blueprint-page'
+import { parseEvidenceSearch } from '../features/evidence/contracts'
+import { DecisionPage } from '../features/evidence/decision-page'
+import { ResidentShell } from '../features/resident-blueprint/resident-shell'
 
 export const Route = createFileRoute('/decisions/$recordKey')({
-  component: DecisionBlueprintRoute,
+  component: ResidentDecision,
+  validateSearch: parseEvidenceSearch,
 })
 
-function DecisionBlueprintRoute() {
+function ResidentDecision() {
   const { recordKey } = Route.useParams()
+  const search = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
 
   return (
-    <BlueprintPage
-      contractKey="decision"
-      routeDetail={<>Route record: {recordKey}</>}
-    />
+    <ResidentShell>
+      <DecisionPage
+        onSelectSource={(source) =>
+          navigate({
+            replace: true,
+            search: (prev) => ({ ...prev, source: source ?? undefined }),
+          })
+        }
+        recordKey={recordKey}
+        search={search}
+      />
+    </ResidentShell>
   )
 }
