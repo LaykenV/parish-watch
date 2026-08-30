@@ -13,7 +13,7 @@ export const Route = createFileRoute('/decisions/$recordKey')({
   loader: ({ deps, params }) =>
     loadDecisionPageData(params.recordKey, deps.fixture),
   loaderDeps: ({ search }) => ({
-    fixture: getActiveEvidenceFixture(search.fixture),
+    fixture: getActiveEvidenceFixture(parseEvidenceSearch(search).fixture),
   }),
   validateSearch: parseEvidenceSearch,
 })

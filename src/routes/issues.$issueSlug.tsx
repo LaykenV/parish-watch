@@ -13,7 +13,7 @@ export const Route = createFileRoute('/issues/$issueSlug')({
   loader: ({ deps, params }) =>
     loadIssuePageData(params.issueSlug, deps.fixture),
   loaderDeps: ({ search }) => ({
-    fixture: getActiveEvidenceFixture(search.fixture),
+    fixture: getActiveEvidenceFixture(parseEvidenceSearch(search).fixture),
   }),
   validateSearch: parseEvidenceSearch,
 })

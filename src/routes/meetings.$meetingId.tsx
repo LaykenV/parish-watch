@@ -13,7 +13,7 @@ export const Route = createFileRoute('/meetings/$meetingId')({
   loader: ({ deps, params }) =>
     loadMeetingPageData(params.meetingId, deps.fixture),
   loaderDeps: ({ search }) => ({
-    fixture: getActiveEvidenceFixture(search.fixture),
+    fixture: getActiveEvidenceFixture(parseEvidenceSearch(search).fixture),
   }),
   validateSearch: parseEvidenceSearch,
 })

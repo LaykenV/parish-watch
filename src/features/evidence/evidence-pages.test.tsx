@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactNode } from 'react'
 
+import { ISSUE_FIXTURES } from '../discovery/fixtures'
 import type { EvidenceSearch } from './contracts'
+import { ISSUE_DETAIL_FIXTURES, ISSUE_LIVE_UPDATE } from './fixtures'
+import {
+  DECISION_DETAIL_FIXTURES,
+  MEETING_DETAIL_FIXTURES,
+} from './record-fixtures'
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: ReactNode }) => <a href="#">{children}</a>,
@@ -16,8 +22,22 @@ const { MeetingPage } = await import('./meeting-page')
 const noop = () => {}
 
 function issue(slug: string, search: EvidenceSearch = { fixture: 'preview' }) {
+  const fixture = search.fixture ? ISSUE_DETAIL_FIXTURES[slug] : undefined
   return renderToStaticMarkup(
-    <IssuePage onSelectSource={noop} search={search} slug={slug} />,
+    <IssuePage
+      data={
+        fixture
+          ? {
+              fixture,
+              liveUpdate:
+                search.fixture === 'update' ? ISSUE_LIVE_UPDATE : null,
+            }
+          : null
+      }
+      onSelectSource={noop}
+      search={search}
+      slug={slug}
+    />,
   )
 }
 
@@ -25,8 +45,12 @@ function decision(
   recordKey: string,
   search: EvidenceSearch = { fixture: 'preview' },
 ) {
+  const fixture = search.fixture
+    ? DECISION_DETAIL_FIXTURES[recordKey]
+    : undefined
   return renderToStaticMarkup(
     <DecisionPage
+      fixture={fixture ?? null}
       onSelectSource={noop}
       recordKey={recordKey}
       search={search}
@@ -38,8 +62,21 @@ function meeting(
   meetingId: string,
   search: EvidenceSearch = { fixture: 'preview' },
 ) {
+  const fixture = search.fixture
+    ? MEETING_DETAIL_FIXTURES[meetingId]
+    : undefined
+  const issues = fixture
+    ? fixture.meeting.issueSlugs
+        .map((slug) => ISSUE_FIXTURES.find((entry) => entry.slug === slug))
+        .filter((entry) => entry !== undefined)
+    : []
   return renderToStaticMarkup(
-    <MeetingPage meetingId={meetingId} onSelectSource={noop} search={search} />,
+    <MeetingPage
+      data={fixture ? { fixture, issues } : null}
+      meetingId={meetingId}
+      onSelectSource={noop}
+      search={search}
+    />,
   )
 }
 
