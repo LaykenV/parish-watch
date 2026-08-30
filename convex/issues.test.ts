@@ -207,7 +207,7 @@ async function seedIssueInput(t: TestConvex): Promise<SeededIssueInput> {
           modelRole: 'MODEL_FAST',
           modelId: LUNA_MODEL,
           route: 'ai_gateway',
-          promptVersion: 'v1.1',
+          promptVersion: 'v1.2',
           schemaVersion: 'v1',
           processorVersion: 'v1',
           createdAt: 1_788_000_000_350 + versionNumber,
