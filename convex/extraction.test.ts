@@ -290,6 +290,18 @@ function setFactValue(
   )
 }
 
+function setFactExcerpt(
+  decision: ReturnType<typeof goldDecision>['decision'],
+  fieldPath: string,
+  excerpt: string,
+) {
+  decision.facts = decision.facts.map((fact) =>
+    fact.fieldPath === fieldPath
+      ? { ...fact, citation: { ...fact.citation, excerpt } }
+      : fact,
+  )
+}
+
 function goldContent(snapshotId: string): string {
   return JSON.stringify(goldDecision(snapshotId))
 }
@@ -545,7 +557,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     ['validate', 'succeeded'],
   ])
   expect(stages[0].attempt).toBe(1)
-  expect(stages[0].promptVersion).toBe('v1.4')
+  expect(stages[0].promptVersion).toBe('v1.5')
   expect(stages[0].schemaVersion).toBe('v1')
 
   const extraction = await extractionByRun(t, start.runId)
@@ -555,7 +567,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     modelRole: 'MODEL_STRONG',
     modelId: MODEL_ID,
     route: 'ai_gateway',
-    promptVersion: 'v1.4',
+    promptVersion: 'v1.5',
     schemaVersion: 'v1',
     processorVersion: 'v1.10',
   })
@@ -657,6 +669,9 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
   )
   expect(messages[0].content).toContain(
     'When minutes record a motion and vote, use vote',
+  )
+  expect(messages[0].content).toContain(
+    'An approved introduction keeps the item proposed',
   )
   expect(messages[1].content).toContain(`Source snapshot ID: ${snapshotId}`)
   expect(messages[1].content).toContain('SOURCE BEGIN')
@@ -874,7 +889,7 @@ test('an old processor run cannot persist under the new processor label', async 
       sourceKind: 'agenda',
       targetRecordId: TARGET_RECORD_ID,
       modelRole: 'MODEL_STRONG',
-      promptVersion: 'v1.4',
+      promptVersion: 'v1.5',
       schemaVersion: 'v1',
       errorClass: 'forced',
       errorDetail: 'must reject mixed processor versions',
@@ -1387,6 +1402,81 @@ test.each([
   expect(
     (await findingsByRun(t, start.runId)).map((finding) => finding.code),
   ).toEqual([expectedCode])
+})
+
+test.each([
+  {
+    name: 'an approved introduction mislabeled decided',
+    excerpt: 'Motion to introduce, in globo, was approved.',
+    lifecycleState: 'decided',
+    expectedCode: 'procedural_lifecycle_mismatch',
+  },
+  {
+    name: 'an approved introduction labeled proposed',
+    excerpt: 'Motion to introduce, in globo, was approved.',
+    lifecycleState: 'proposed',
+    expectedCode: null,
+  },
+  {
+    name: 'an approved deferral mislabeled decided',
+    excerpt: 'Motion to defer indefinitely was approved.',
+    lifecycleState: 'decided',
+    expectedCode: 'procedural_lifecycle_mismatch',
+  },
+  {
+    name: 'an approved deferral labeled postponed',
+    excerpt: 'Motion to defer indefinitely was approved.',
+    lifecycleState: 'postponed',
+    expectedCode: null,
+  },
+  {
+    name: 'a failed deferral does not impose postponed',
+    excerpt: 'Motion to defer indefinitely failed.',
+    lifecycleState: 'decided',
+    expectedCode: null,
+  },
+  {
+    name: 'a paragraph with introduction and deferral stays reviewable',
+    excerpt:
+      'Motion to introduce, in globo, was approved. Motion to defer indefinitely was approved.',
+    lifecycleState: 'postponed',
+    expectedCode: null,
+  },
+])('$name', async ({ excerpt, lifecycleState, expectedCode }) => {
+  const t = initTest()
+  const modelResponses: ModelResponseSpec[] = []
+  stubFetch({ modelResponses, markdown: `${AGENDA_MARKDOWN}\n${excerpt}` })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  modelResponses.push(
+    contentWith(snapshotId, (decision) => {
+      decision.recordType = 'vote'
+      decision.lifecycleState = lifecycleState
+      setFactValue(decision, '/recordType', 'vote')
+      setFactValue(decision, '/lifecycleState', lifecycleState)
+      setFactExcerpt(decision, '/lifecycleState', excerpt)
+    }),
+  )
+
+  const start = await t.mutation(
+    internal.operations.extract.startSnapshotExtraction,
+    {
+      registryId,
+      snapshotId,
+      sourceKind: 'minutes',
+      targetRecordId: TARGET_RECORD_ID,
+    },
+  )
+  await drainWorkflows(t)
+
+  const proceduralFindings = (await findingsByRun(t, start.runId)).filter(
+    (finding) => finding.code === 'procedural_lifecycle_mismatch',
+  )
+  expect(proceduralFindings.map((finding) => finding.code)).toEqual(
+    expectedCode === null ? [] : [expectedCode],
+  )
+  expect((await runByRun(t, start.runId))?.state).toBe(
+    expectedCode === null ? 'succeeded' : 'failed_terminal',
+  )
 })
 
 test('a cited public-action deadline requires the exact date and time', async () => {

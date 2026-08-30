@@ -26,6 +26,20 @@ type Finding = {
 
 const MAX_FINDINGS = 100
 
+function requiredLifecycleForProceduralMotion(
+  excerpt: string,
+): 'proposed' | 'postponed' | null {
+  const normalized = normalizeForMatch(excerpt).toLowerCase()
+  const requiresProposed =
+    /\bmotion to introduce\b[^.;!?]{0,160}\bwas approved\b/.test(normalized)
+  const requiresPostponed =
+    /\bmotion to (?:defer|postpone)\b[^.;!?]{0,160}\bwas approved\b/.test(
+      normalized,
+    )
+  if (requiresProposed === requiresPostponed) return null
+  return requiresProposed ? 'proposed' : 'postponed'
+}
+
 const validationOutcomeValidator = v.union(
   v.object({
     outcome: v.literal('validated'),
@@ -268,6 +282,21 @@ export const runValidation = internalAction({
           detail: `The cited excerpt for ${fact.fieldPath} does not appear in the snapshot text`,
         })
         continue
+      }
+      if (fact.fieldPath === MATERIAL_FIELD_PATHS.lifecycleState) {
+        const requiredLifecycle = requiredLifecycleForProceduralMotion(
+          fact.excerpt,
+        )
+        if (
+          requiredLifecycle !== null &&
+          candidate.lifecycleState !== requiredLifecycle
+        ) {
+          addFinding({
+            code: 'procedural_lifecycle_mismatch',
+            fieldPath: fact.fieldPath,
+            detail: `The cited procedural motion requires lifecycleState ${requiredLifecycle}, not ${candidate.lifecycleState}`,
+          })
+        }
       }
       if (fact.page !== undefined) {
         const proved = (snapshot.pageMap ?? []).some((entry) => {

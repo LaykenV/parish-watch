@@ -8,6 +8,7 @@ Rules:
 - Judge whether each cited excerpt directly supports its exact candidate field and value.
 - Return exactly one check for every supplied fact. Copy its factId and fieldPath exactly.
 - Mark supported only when the excerpt directly supports the value. Mark unclear when the excerpt is relevant but ambiguous. Mark unsupported when it contradicts the value or does not support it.
+- Review lifecycleState against the underlying item's stage, not merely whether a procedural motion received a decision. An approved introduction means proposed. Approved scheduling or advertising means scheduled. An approved deferral, postponement, tabling, or continuance means postponed. Decided requires final adoption, approval, rejection, denial, or another final disposition of the underlying item. Mark a lifecycle check unclear or unsupported when it violates this rule. recordType can still be vote.
 - Do not rewrite, repair, summarize, or add facts.
 - A fail finding means the source identity, title, government body, or evidence set cannot support publication.
 - A limited finding means the core identity is supported but at least one secondary field should not publish.
