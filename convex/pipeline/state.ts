@@ -55,7 +55,7 @@ export const RETRIEVAL_RETRY_DELAY_MS = 15 * 60 * 1000
 
 export const EXTRACTION_PROCESSOR_VERSION = 'v1.10'
 
-export const EXTRACTION_PROMPT_VERSION = 'v1.4'
+export const EXTRACTION_PROMPT_VERSION = 'v1.5'
 
 export const EXTRACTION_SCHEMA_VERSION = 'v1'
 
@@ -63,7 +63,7 @@ export const EXTRACTION_WORKFLOW_NAME = 'extractSnapshotV1'
 
 export const PUBLICATION_PROCESSOR_VERSION = 'v1'
 
-export const REVIEW_PROMPT_VERSION = 'v1'
+export const REVIEW_PROMPT_VERSION = 'v1.1'
 
 export const REVIEW_SCHEMA_VERSION = 'v1'
 

@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T04:37:05Z
+- **Last updated:** 2026-08-30T04:51:55Z
 
 ## Log
 
@@ -79,6 +79,17 @@ only `<u>` tags, including underline tags with attributes, and preserves their
 text. Extraction processor `v1.10` makes the corrected run distinct from the
 failed attempt. A focused regression covers the exact council-agenda shape.
 The hotfix is not deployed to production.
+
+Extraction prompt `v1.4` and review prompt `v1` published the CO-062 source
+and version history, but the August 4 minutes record exposed a lifecycle error.
+Its cited text says the council approved a motion to defer indefinitely, while
+publication version 3 labels the ordinance `decided` instead of `postponed`.
+The July 21 introduction minutes used `decided` for an approved motion to
+introduce, even though the ordinance remained proposed. The onboarding batch
+stopped after CO-062, and no other decisions advanced. A new defense-in-depth
+hotfix defines the underlying-item rule in extraction and independent review,
+then rejects the two observed successful-motion mismatches deterministically.
+No production correction is claimed.
 
 Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
 horizontal overflow. A later computed-style check measured 125 pixels of

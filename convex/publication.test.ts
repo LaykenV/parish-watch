@@ -128,7 +128,7 @@ async function seedValidatedCandidate(
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
-      promptVersion: 'v1.4',
+      promptVersion: 'v1.5',
       schemaVersion: 'v1',
       processorVersion: 'v1.10',
       modelRole: 'MODEL_STRONG',
@@ -156,7 +156,7 @@ async function seedValidatedCandidate(
       amounts: [],
       publicActions: [],
       state: 'deterministically_validated',
-      promptVersion: 'v1.4',
+      promptVersion: 'v1.5',
       schemaVersion: 'v1',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
@@ -455,7 +455,7 @@ test('a second model review publishes one full immutable version with exact cita
     verdict: 'pass',
     modelRole: 'MODEL_FAST',
     modelId: LUNA_MODEL,
-    promptVersion: 'v1',
+    promptVersion: 'v1.1',
     schemaVersion: 'v1',
   })
   expect(evidence.version).toMatchObject({
@@ -506,6 +506,7 @@ test('a second model review publishes one full immutable version with exact cita
   })
   const prompt = JSON.stringify(requests[0].messages)
   expect(prompt).toContain('CANDIDATE AND CITATIONS BEGIN')
+  expect(prompt).toContain('An approved introduction means proposed')
   expect(prompt).not.toContain('SOURCE BEGIN')
 
   const replay = await t.mutation(
@@ -777,7 +778,7 @@ test('replaying a succeeded extraction repairs a missing publication run', async
     snapshotId: seeded.snapshotId,
     sourceKind: 'agenda',
     targetRecordId: 'CO-029-2026',
-    promptVersion: 'v1.4',
+    promptVersion: 'v1.5',
     schemaVersion: 'v1',
     processorVersion: 'v1.10',
   })
@@ -791,7 +792,7 @@ test('replaying a succeeded extraction repairs a missing publication run', async
       attempt: 1,
       inputSnapshotId: seeded.snapshotId,
       outputExtractionId: seeded.extractionId,
-      promptVersion: 'v1.4',
+      promptVersion: 'v1.5',
       schemaVersion: 'v1',
     })
     await ctx.db.insert('pipelineStages', {
@@ -910,7 +911,7 @@ test('publication finalization rejects persisted duplicate fact checks', async (
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1',
+      promptVersion: 'v1.1',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
@@ -971,7 +972,7 @@ test('a late failure cannot reuse a succeeded review', async () => {
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1',
+      promptVersion: 'v1.1',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
