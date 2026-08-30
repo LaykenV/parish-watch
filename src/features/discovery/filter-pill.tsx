@@ -65,21 +65,21 @@ export function FilterPill({
 }
 
 export function FilterGroup({
+  allLabel,
   label,
   onChange,
   options,
   value,
   name,
 }: {
+  allLabel: string
   label: string
   name: string
   onChange: (value: string) => void
   options: readonly (PillOption | string)[]
   value: string
 }) {
-  const normalized = options.map((option) =>
-    typeof option === 'string' ? { label: option, value: option } : option,
-  )
+  const normalized = withAllFilterOption(options, allLabel)
 
   return (
     <fieldset className="pp-filter-group">
@@ -99,6 +99,18 @@ export function FilterGroup({
       </div>
     </fieldset>
   )
+}
+
+export function withAllFilterOption(
+  options: readonly (PillOption | string)[],
+  allLabel: string,
+): PillOption[] {
+  return [
+    { label: allLabel, value: '' },
+    ...options.map((option) =>
+      typeof option === 'string' ? { label: option, value: option } : option,
+    ),
+  ]
 }
 
 export function MoreFiltersPanel({

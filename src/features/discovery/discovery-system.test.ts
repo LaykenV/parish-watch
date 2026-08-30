@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { buttonVariants } from '../../components/ui/button'
+import { withAllFilterOption } from './filter-pill'
 
 const css = readFileSync(new URL('./discovery.css', import.meta.url), 'utf8')
 const home = readFileSync(new URL('./home.tsx', import.meta.url), 'utf8')
@@ -33,5 +34,15 @@ describe('resident interface control system', () => {
   it('offers one area-selection trigger in first-visit setup', () => {
     expect(home).not.toContain('Show local decisions')
     expect(forYou).not.toContain('Show local decisions')
+  })
+
+  it('lets residents clear one More filters group', () => {
+    expect(withAllFilterOption(['Scheduled', 'Decided'], 'All states')).toEqual(
+      [
+        { label: 'All states', value: '' },
+        { label: 'Scheduled', value: 'Scheduled' },
+        { label: 'Decided', value: 'Decided' },
+      ],
+    )
   })
 })

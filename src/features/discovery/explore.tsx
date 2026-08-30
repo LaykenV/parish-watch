@@ -113,6 +113,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   const moreFilters = (
     <MoreFiltersPanel activeCount={activeFilters} onClear={clearAll}>
       <FilterGroup
+        allLabel="All bodies"
         label="Body"
         name="filter-body"
         onChange={(value) => patch({ body: value || undefined })}
@@ -120,6 +121,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
         value={search.body ?? ''}
       />
       <FilterGroup
+        allLabel="All lifecycle states"
         label="Lifecycle"
         name="filter-lifecycle"
         onChange={(value) => patch({ lifecycle: value || undefined })}
@@ -127,6 +129,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
         value={search.lifecycle ?? ''}
       />
       <FilterGroup
+        allLabel="All record types"
         label="Record type"
         name="filter-type"
         onChange={(value) => patch({ type: value || undefined })}
@@ -134,6 +137,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
         value={search.type ?? ''}
       />
       <FilterGroup
+        allLabel="All source statuses"
         label="Source status"
         name="filter-source"
         onChange={(value) => patch({ source: value || undefined })}

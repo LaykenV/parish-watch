@@ -305,11 +305,13 @@ filters so fixture scenarios stay stable.
 
 ## Repair verification
 
-`npm run verify` passes 158 tests across 19 files, typecheck, production client
+`npm run verify` passes 159 tests across 19 files, typecheck, production client
 and server builds, prerender, and lint. Discovery typography uses four shared
 size tokens, control borders and shadows use semantic tokens, and the shared
 responsive media hook no longer imports through the resident shell. Date-only
 records keep their Chicago calendar day regardless of the visitor's timezone.
+Each More filters group has its own `All` option, so residents can remove one
+filter without clearing the query or unrelated filters.
 
 ## Approval gate
 
