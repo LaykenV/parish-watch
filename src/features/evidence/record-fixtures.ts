@@ -804,6 +804,26 @@ function routineRecord(input: {
 export const DECISION_DETAIL_FIXTURES: Record<string, DecisionDetailFixture> = {
   'CO-022-2026': CO_022,
   'CO-023-2026': CO_023,
+  'disbursement-report-2026-03': routineRecord({
+    body: LCPC,
+    citationId: 'march-disbursement.title',
+    date: 'April 21, 2026',
+    documentKind: 'Minutes',
+    documentTitle: 'City-Parish Council minutes, April 21, 2026',
+    excerpt:
+      'Receipt and filing of the disbursement report for the month of March 2026 as submitted by the Chief Financial Officer.',
+    locator: 'Minutes p.1',
+    officialTitle:
+      'RECEIPT AND FILING OF THE DISBURSEMENT REPORT FOR THE MONTH OF MARCH 2026.',
+    officialUrl: LAFAYETTE_RECORDS,
+    place: 'Lafayette Parish',
+    recordKey: 'disbursement-report-2026-03',
+    recordType: 'Routine filing',
+    retrievedAt: '2026-08-25',
+    summary:
+      'The Council received and filed the monthly disbursement report for March 2026.',
+    title: 'Receipt and filing of the March 2026 disbursement report',
+  }),
   'disbursement-report-2026-07': routineRecord({
     body: LCPC,
     citationId: 'disbursement.title',
@@ -843,6 +863,26 @@ export const DECISION_DETAIL_FIXTURES: Record<string, DecisionDetailFixture> = {
     summary:
       'The Council adopted the minutes of its August 4 meeting as written.',
     title: 'Adopt the Aug 18 City Council meeting minutes',
+  }),
+  'min-lafayette-city-parish-council-2026-04-07': routineRecord({
+    body: LCPC,
+    citationId: 'april-minutes.title',
+    date: 'April 21, 2026',
+    documentKind: 'Minutes',
+    documentTitle: 'City-Parish Council minutes, April 21, 2026',
+    excerpt:
+      'On motion duly made and seconded, the minutes of the regular meeting of April 7, 2026 were adopted as written.',
+    locator: 'Minutes p.1',
+    officialTitle:
+      'ADOPTION OF THE MINUTES OF THE REGULAR MEETING OF APRIL 7, 2026.',
+    officialUrl: LAFAYETTE_RECORDS,
+    place: 'Lafayette Parish',
+    recordKey: 'min-lafayette-city-parish-council-2026-04-07',
+    recordType: 'Routine filing',
+    retrievedAt: '2026-08-25',
+    summary:
+      'The Council adopted the minutes of its April 7 meeting as written.',
+    title: 'Adopt the minutes of the April 7 meeting',
   }),
   'ord-drainage-fee-credit-2027': ORD_DRAINAGE,
   'ord-short-term-rental-update': ORD_RENTALS,
@@ -972,14 +1012,14 @@ const APRIL_MEETING: MeetingDetailFixture = {
     routine: [
       {
         citationId: 'april.location',
-        recordKey: 'min-lafayette-city-council-2026-08-18',
+        recordKey: 'min-lafayette-city-parish-council-2026-04-07',
         state: 'Completed',
         summary: 'Adopted as written.',
         title: 'Adopt the minutes of the April 7 meeting',
       },
       {
         citationId: 'april.location',
-        recordKey: 'disbursement-report-2026-07',
+        recordKey: 'disbursement-report-2026-03',
         state: 'Completed',
         summary: 'Received and filed.',
         title: 'Receipt and filing of the March 2026 disbursement report',

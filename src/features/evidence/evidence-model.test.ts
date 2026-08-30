@@ -55,6 +55,7 @@ describe('resident interface Slice 3 evidence contracts', () => {
       'drainage.next',
     )
     expect(resolveCitationId(fixture!.citations, 'surplus.outcome')).toBeNull()
+    expect(resolveCitationId(fixture!.citations, 'toString')).toBeNull()
     expect(resolveCitationId(fixture!.citations, undefined)).toBeNull()
   })
 
@@ -182,6 +183,9 @@ describe('resident interface Slice 3 evidence contracts', () => {
         ...fixture.meeting.routine,
       ]) {
         expect(decisions).toContain(row.recordKey)
+        expect(DECISION_DETAIL_FIXTURES[row.recordKey]?.decision.title).toBe(
+          row.title,
+        )
       }
     }
   })

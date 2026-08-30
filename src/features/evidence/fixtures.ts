@@ -909,7 +909,7 @@ function leanIssue(input: {
   officialUrl: string
   place: string
   placeSlug: AreaSlug
-  recordKey: string
+  recordKey?: string
   scenarioLabel: string
   slug: string
   state: LifecycleState
@@ -1018,7 +1018,6 @@ const WATER_METER_ISSUE = leanIssue({
   officialUrl: BATON_ROUGE_AGENDAS,
   place: 'East Baton Rouge Parish',
   placeSlug: 'east-baton-rouge-parish',
-  recordKey: 'ord-short-term-rental-update',
   scenarioLabel: 'Upcoming vote in the second launch parish.',
   slug: 'water-meter-replacement',
   state: 'In progress',

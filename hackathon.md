@@ -12,11 +12,21 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T19:06:32Z
+- **Last updated:** 2026-08-30T19:21:35Z
 
 ## Log
 
 ### 2026-08-30 - working tree
+
+PR #27 passed its first GitHub verification run. PR-Agent found an inherited-key
+crash in citation URL validation and three fixture rows whose destination did
+not match their displayed record. Citation lookup now requires an own property.
+The unsupported water-meter record link is gone, and the April meeting rows
+open matching routine records. New invariants cover inherited citation ids and
+meeting-row title mismatches. Revalidation is deferred to the next PR checks
+(`src/features/evidence/contracts.ts`, `src/features/evidence/record-fixtures.ts`).
+
+### 2026-08-30 - ac0cc55
 
 Implemented resident issue, atomic decision, meeting, and citation-level
 evidence pages against explicit development fixtures. Material claims open an

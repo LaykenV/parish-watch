@@ -264,5 +264,5 @@ export function resolveCitationId(
   candidate: string | undefined,
 ): string | null {
   if (!candidate) return null
-  return candidate in citations ? candidate : null
+  return Object.hasOwn(citations, candidate) ? candidate : null
 }
