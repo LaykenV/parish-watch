@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { isDiscoveryFixtureEnabled, parseExploreSearch } from './contracts'
+import { getActiveDiscoveryFixture, parseExploreSearch } from './contracts'
 import {
   compareExploreDates,
   getExploreEntries,
@@ -10,8 +10,8 @@ import { EXPLORE_ROW_FIXTURES, ISSUE_FIXTURES } from './fixtures'
 
 describe('resident interface Slice 2 discovery contracts', () => {
   it('requires an explicit scenario before development fixtures can render', () => {
-    expect(isDiscoveryFixtureEnabled(undefined)).toBe(false)
-    expect(isDiscoveryFixtureEnabled('update')).toBe(true)
+    expect(getActiveDiscoveryFixture(undefined)).toBeUndefined()
+    expect(getActiveDiscoveryFixture('update')).toBe('update')
   })
 
   it('drops URL filter values that the interface cannot display', () => {

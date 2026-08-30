@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '../../components/ui/button'
 import { AreaSelector } from './area-selector'
 import { useArea } from './area-store'
-import { areaName, isDiscoveryFixtureEnabled } from './contracts'
+import { areaName, getActiveDiscoveryFixture } from './contracts'
 import type { AreaSlug, ForYouScenario, IssueCardData } from './contracts'
 import { ISSUE_FIXTURES } from './fixtures'
 import { IssueCard } from './issue-card'
@@ -24,21 +24,22 @@ const REASONS: Record<string, string> = {
 
 export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
   const area = useArea()
-  const fixturesEnabled = isDiscoveryFixtureEnabled(scenario)
-  const signedIn = scenario === 'signed-in'
-  const forcedNoArea = scenario === 'no-area'
+  const activeScenario = getActiveDiscoveryFixture(scenario)
+  const fixturesEnabled = activeScenario !== undefined
+  const signedIn = activeScenario === 'signed-in'
+  const forcedNoArea = activeScenario === 'no-area'
   const watching: AreaSlug[] = signedIn
     ? ['lafayette-parish', 'east-baton-rouge-parish']
     : area && !forcedNoArea
       ? [area]
-      : scenario === 'no-matches'
+      : activeScenario === 'no-matches'
         ? ['lafayette-parish']
         : []
 
   const [refreshed, setRefreshed] = useState(false)
   const [recovered, setRecovered] = useState(false)
-  const showUpdateRow = scenario === 'update' && !refreshed && !recovered
-  const showFailure = scenario === 'section-failure' && !recovered
+  const showUpdateRow = activeScenario === 'update' && !refreshed && !recovered
+  const showFailure = activeScenario === 'section-failure' && !recovered
 
   let feed: IssueCardData[] = fixturesEnabled
     ? ISSUE_FIXTURES.filter((issue) => watching.includes(issue.placeSlug))
@@ -53,7 +54,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
   if (refreshed || recovered) {
     feed = feed.filter((issue) => issue.slug !== 'downtown-late-night-permits')
   }
-  if (scenario === 'no-matches') {
+  if (activeScenario === 'no-matches') {
     feed = []
   }
 
@@ -102,7 +103,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
             </Button>
           </div>
 
-          {scenario === 'degraded' ? (
+          {activeScenario === 'degraded' ? (
             <Notice title="Source delayed" tone="warning">
               <p>
                 Agenda packets from the Lafayette City-Parish Council are

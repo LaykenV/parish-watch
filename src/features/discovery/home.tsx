@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button'
 import { LouisianaRelief } from '../landing/louisiana-relief'
 import { AreaSelector } from './area-selector'
 import { useArea } from './area-store'
-import { areaName, isDiscoveryFixtureEnabled } from './contracts'
+import { areaName, getActiveDiscoveryFixture } from './contracts'
 import type { AreaSlug, HomeScenario } from './contracts'
 import {
   ISSUE_FIXTURES,
@@ -22,8 +22,9 @@ import { ResultRow } from './result-row'
 
 export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   const area = useArea()
-  const fixturesEnabled = isDiscoveryFixtureEnabled(scenario)
-  const signedIn = scenario === 'signed-in'
+  const activeScenario = getActiveDiscoveryFixture(scenario)
+  const fixturesEnabled = activeScenario !== undefined
+  const signedIn = activeScenario === 'signed-in'
   const watching: AreaSlug[] = signedIn
     ? ['lafayette-parish', 'east-baton-rouge-parish']
     : area
@@ -40,7 +41,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
         <HomeFeed
           onRefresh={onRefresh}
           refreshed={refreshed}
-          scenario={scenario}
+          scenario={activeScenario}
           fixturesEnabled={fixturesEnabled}
           watching={[]}
         />
@@ -83,7 +84,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
       <HomeFeed
         onRefresh={onRefresh}
         refreshed={refreshed}
-        scenario={scenario}
+        scenario={activeScenario}
         fixturesEnabled={fixturesEnabled}
         watching={watching}
       />

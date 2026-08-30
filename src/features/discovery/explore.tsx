@@ -13,7 +13,7 @@ import {
   SOURCE_OPTIONS,
   TOPIC_OPTIONS,
   TYPE_OPTIONS,
-  isDiscoveryFixtureEnabled,
+  getActiveDiscoveryFixture,
 } from './contracts'
 import type { ExploreSearch, IssueCardData, ResultRowData } from './contracts'
 import { EXPLORE_ROW_FIXTURES, ISSUE_FIXTURES } from './fixtures'
@@ -33,7 +33,15 @@ import { Sheet } from './sheet'
 export function ExplorePage({ search }: { search: ExploreSearch }) {
   const navigate = useNavigate()
   const desktop = useMediaQuery('(min-width: 64.0625rem)')
-  const fixturesEnabled = isDiscoveryFixtureEnabled(search.fixture)
+  const activeFixture = getActiveDiscoveryFixture(search.fixture)
+  const fixturesEnabled = activeFixture !== undefined
+  const effectiveSearch = useMemo(
+    () =>
+      activeFixture === search.fixture
+        ? search
+        : { ...search, fixture: activeFixture },
+    [activeFixture, search],
+  )
 
   const [query, setQuery] = useState(search.q ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -75,16 +83,16 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
     search.type,
   ].filter(Boolean).length
 
-  const showUpdateRow = search.fixture === 'update' && !refreshed
+  const showUpdateRow = activeFixture === 'update' && !refreshed
 
   const entries = useMemo(
     () =>
       getExploreEntries(
-        search,
+        effectiveSearch,
         fixturesEnabled ? ISSUE_FIXTURES : [],
         fixturesEnabled ? EXPLORE_ROW_FIXTURES : [],
       ),
-    [fixturesEnabled, search],
+    [effectiveSearch, fixturesEnabled],
   )
 
   const browse = useMemo(() => {
@@ -105,8 +113,8 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
     return { current, outcomes, routine, upcoming }
   }, [fixturesEnabled])
 
-  const showFailure = search.fixture === 'section-failure' && !recovered
-  const viewMode = getExploreViewMode(search, entries.length)
+  const showFailure = activeFixture === 'section-failure' && !recovered
+  const viewMode = getExploreViewMode(effectiveSearch, entries.length)
 
   const moreFilters = (
     <MoreFiltersPanel activeCount={activeFilters} onClear={clearAll}>

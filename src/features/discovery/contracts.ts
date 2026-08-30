@@ -203,6 +203,12 @@ export function isDiscoveryFixtureEnabled(
   return import.meta.env.DEV && scenario !== undefined
 }
 
+export function getActiveDiscoveryFixture<T extends string>(
+  scenario: T | undefined,
+): T | undefined {
+  return isDiscoveryFixtureEnabled(scenario) ? scenario : undefined
+}
+
 function pick<T extends string>(
   value: unknown,
   allowed: readonly T[],
