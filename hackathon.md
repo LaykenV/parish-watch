@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T04:51:55Z
+- **Last updated:** 2026-08-30T05:14:49Z
 
 ## Log
 
@@ -91,10 +91,21 @@ hotfix defines the underlying-item rule in extraction and independent review,
 then rejects the two observed successful-motion mismatches deterministically.
 No production correction is claimed.
 
+The next controlled production extraction for the August 18 CO-069 minutes
+failed closed after Terra returned its structured response. The `/title` fact's
+citation exceeded the 600-character excerpt bound, even though Lafayette's
+official item combines a long ordinance caption with the procedural clause in
+one contiguous minutes span. The checked public-record shape is 664 characters.
+The contract now permits at most 1,000 characters for any citation excerpt,
+matching the existing bounded official-title limit, and processor `v1.11` keeps
+the corrected attempt distinct from the failed run. A focused regression covers
+the CO-069 shape and rejects a 1,001-character excerpt. No production retry or
+publication is claimed.
+
 Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
 horizontal overflow. A later computed-style check measured 125 pixels of
 combined app chrome at 390 pixels wide, below the 8-rem budget, and confirmed
-the sticky desktop header at 1280 pixels. `npm run verify` passed 124 tests,
+the sticky desktop header at 1280 pixels. `npm run verify` passed 136 tests,
 typecheck, production client and server builds, prerender, and lint. Every
 unfinished action remains inert and labeled. No API, resident data, provider
 call, deployment, or working production feature is claimed

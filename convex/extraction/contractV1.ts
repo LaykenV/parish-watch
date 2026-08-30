@@ -107,7 +107,9 @@ export const MATERIAL_STRING_LIMITS = {
   affectedPlace: 200,
   factFieldPath: 100,
   factValue: 2000,
-  excerpt: 600,
+  // A title citation can include an official agenda-item prefix and the
+  // procedural clause that follows a long ordinance caption.
+  excerpt: 1000,
   section: 200,
   reason: 500,
 } as const

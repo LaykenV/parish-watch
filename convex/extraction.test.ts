@@ -253,6 +253,28 @@ test('the extraction contract preserves the 549-character CO-072-2026 title', ()
   )
 })
 
+test('the extraction contract preserves the complete CO-069-2026 minutes title citation', () => {
+  const response = goldDecision('snapshot-id')
+  const officialTitle =
+    'CO-069-2026 An ordinance of the Lafayette City Council amending the FY 25/26 operating budget and capital budget of the Lafayette City-Parish Consolidated Government by increasing revenues in the amount of $7,986,192 in Safe Streets and Roads for all grant funds received from the U.S. Department of Transportation, as well as transferring $2,001,498 in Capital Outlay Funds to serve as a local match, and appropriating within the Community Development and Planning Department for safety improvements along Johnston Street between Bertrand Drive and Churchill Drive'
+  const officialExcerpt = `AGENDA ITEM NO. 7: ${officialTitle}, motion to adopt by Hebert, seconded by Broussard, and the vote was as follows:`
+  response.decision.title = officialTitle
+  const titleFact = response.decision.facts.find(
+    (fact) => fact.fieldPath === '/title',
+  )
+  if (!titleFact) throw new Error('Gold title fact is missing')
+  titleFact.value = officialTitle
+  titleFact.citation.excerpt = officialExcerpt
+
+  expect(officialExcerpt.length).toBe(664)
+  expect(checkExtractionContractV1(response)).toBeNull()
+
+  titleFact.citation.excerpt = 'x'.repeat(1001)
+  expect(checkExtractionContractV1(response)).toBe(
+    'fact /title excerpt exceeds the 1000 character limit',
+  )
+})
+
 test('citation matching joins a hyphenated PDF line break', () => {
   const source = normalizeForMatch(
     'awarded through a federal Sub-\nAward Grant Agreement',
@@ -569,7 +591,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.5',
     schemaVersion: 'v1',
-    processorVersion: 'v1.10',
+    processorVersion: 'v1.11',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
