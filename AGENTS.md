@@ -81,6 +81,19 @@ not replace the first-dollar plan.
 - Never commit, push, deploy, publish, or submit unless the user asks for that
   action.
 
+## Local validation
+
+- Do not run automated validation locally during agent work. This includes test
+  runners, focused tests, watch mode, `npm run verify`, typechecks, builds, and
+  linters. GitHub Actions runs these checks on the pull request.
+- Review code and diffs statically. Cheap checks such as `git diff --check` are
+  allowed. Report automated validation as deferred to PR checks, never as
+  locally passed.
+- Only run a local validation command when the user explicitly authorizes that
+  exact command for the current task.
+- After an authorized production merge, `npm run smoke:production` remains
+  required. It checks the live deployment and does not run the local test suite.
+
 ## Pull requests
 
 - One concern per PR. If the description needs "also", split it into another PR.

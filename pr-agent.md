@@ -119,9 +119,11 @@ Two local skills (in `.agents/skills/`, mirrored into `.claude/skills/`) turn
 the bot into Theo's T3-style PR flow. The human prompt collapses to
 "diagnose and fix, file and babysit".
 
-- `file-pr` runs the pre-flight (clean tree, existing-PR check, `npm run verify`,
-  diff read), writes the title and problem-first body, and opens a real PR. The
-  body survives `/describe` because PR-Agent keeps user content above its
+- `file-pr` runs the pre-flight (clean tree, existing-PR check,
+  `git diff --check`, diff read), writes the title and problem-first body, and
+  opens a real PR. It leaves tests, typechecks, builds, and lint to GitHub
+  Actions so parallel local reviewers do not compete for the developer's CPU.
+  The body survives `/describe` because PR-Agent keeps user content above its
   generated section (`add_original_user_description`, default true) and only
   rewrites the title when `generate_ai_title` is on (default false). Editing the
   body while the bot runs can race and lose text, so the skill files the final
