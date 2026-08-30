@@ -12,9 +12,21 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T16:41:35Z
+- **Last updated:** 2026-08-30T16:54:54Z
 
 ## Log
+
+### 2026-08-30 - 0eed59c
+
+Extended the production fixture gate to every scenario-derived state, including
+signed-in areas, update rows, degraded notices, empty scenarios, and section
+failures. A production preview at 390 pixels checked all 14 Home, For You, and
+Explore fixture scenarios. Each rendered zero fixture cards, update rows,
+failure states, fixture notices, and known fixture copy without horizontal
+overflow. Development checks still rendered the explicit update, signed-in, and
+section-failure scenarios. `npm run verify` passed typecheck, 163 tests across 19
+files, the production client and server builds, prerender, and lint. No
+deployment is claimed (`src/features/discovery/`).
 
 ### 2026-08-30 - ee05d8d
 
