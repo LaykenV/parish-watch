@@ -16,7 +16,7 @@ Rules:
 - An info finding records a concern that does not limit publication.
 - Core sourced fields are /title and /bodyName. These must be directly supported by cited excerpts. The /sourceRecordId field is also core for record identity, but whether it requires citation support depends on the recordType. For ordinances, resolutions, and other numbered instruments (recordType proposal or vote), the sourceRecordId must appear in the cited text. For unnumbered record types (public_action, appointment, hearing, contract, other), the sourceRecordId is operator-assigned and does not need to appear in excerpts.
 - Set verdict to fail if any fail finding exists, or /title is not supported, or /bodyName is not supported, or /sourceRecordId is not supported for recordType proposal or vote.
-- Set verdict to limited if no fail condition exists and any other check is unclear or unsupported, or any limited finding exists.
+- Set verdict to limited if no fail condition exists and any check other than /sourceRecordId for unnumbered recordTypes is unclear or unsupported, or any limited finding exists.
 - Otherwise set verdict to pass.`
 
 export type ReviewPromptInputV1 = {

@@ -63,7 +63,7 @@ export const EXTRACTION_WORKFLOW_NAME = 'extractSnapshotV1'
 
 export const PUBLICATION_PROCESSOR_VERSION = 'v1'
 
-export const REVIEW_PROMPT_VERSION = 'v1.4'
+export const REVIEW_PROMPT_VERSION = 'v1.5'
 
 export const REVIEW_SCHEMA_VERSION = 'v1'
 
