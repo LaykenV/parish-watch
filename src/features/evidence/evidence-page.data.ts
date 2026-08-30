@@ -26,8 +26,8 @@ export async function loadIssuePageData(
   const { ISSUE_DETAIL_FIXTURES, ISSUE_LIVE_UPDATE } = await import(
     './fixtures'
   )
+  if (!Object.hasOwn(ISSUE_DETAIL_FIXTURES, slug)) return null
   const fixture = ISSUE_DETAIL_FIXTURES[slug]
-  if (!fixture) return null
 
   return {
     fixture,
@@ -45,7 +45,8 @@ export async function loadDecisionPageData(
   if (!import.meta.env.DEV || !scenario) return null
 
   const { DECISION_DETAIL_FIXTURES } = await import('./record-fixtures')
-  return DECISION_DETAIL_FIXTURES[recordKey] ?? null
+  if (!Object.hasOwn(DECISION_DETAIL_FIXTURES, recordKey)) return null
+  return DECISION_DETAIL_FIXTURES[recordKey]
 }
 
 export async function loadMeetingPageData(
@@ -58,8 +59,8 @@ export async function loadMeetingPageData(
     import('../discovery/fixtures'),
     import('./record-fixtures'),
   ])
+  if (!Object.hasOwn(MEETING_DETAIL_FIXTURES, meetingId)) return null
   const fixture = MEETING_DETAIL_FIXTURES[meetingId]
-  if (!fixture) return null
 
   const issues = fixture.meeting.issueSlugs
     .map((slug) => ISSUE_FIXTURES.find((issue) => issue.slug === slug))
