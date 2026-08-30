@@ -30,19 +30,14 @@ function requiredLifecycleForProceduralMotion(
   excerpt: string,
 ): 'proposed' | 'postponed' | null {
   const normalized = normalizeForMatch(excerpt).toLowerCase()
-  if (
+  const requiresProposed =
     /\bmotion to introduce\b[^.;!?]{0,160}\bwas approved\b/.test(normalized)
-  ) {
-    return 'proposed'
-  }
-  if (
+  const requiresPostponed =
     /\bmotion to (?:defer|postpone)\b[^.;!?]{0,160}\bwas approved\b/.test(
       normalized,
     )
-  ) {
-    return 'postponed'
-  }
-  return null
+  if (requiresProposed === requiresPostponed) return null
+  return requiresProposed ? 'proposed' : 'postponed'
 }
 
 const validationOutcomeValidator = v.union(

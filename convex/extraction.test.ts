@@ -1435,6 +1435,13 @@ test.each([
     lifecycleState: 'decided',
     expectedCode: null,
   },
+  {
+    name: 'a paragraph with introduction and deferral stays reviewable',
+    excerpt:
+      'Motion to introduce, in globo, was approved. Motion to defer indefinitely was approved.',
+    lifecycleState: 'postponed',
+    expectedCode: null,
+  },
 ])('$name', async ({ excerpt, lifecycleState, expectedCode }) => {
   const t = initTest()
   const modelResponses: ModelResponseSpec[] = []
