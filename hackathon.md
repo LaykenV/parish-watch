@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T14:14:53Z
+- **Last updated:** 2026-08-30T14:35:09Z
 
 ## Log
 
@@ -162,8 +162,9 @@ downward-swipe Base UI drawer, while desktop uses a dialog. One Coss UI Button
 size now gives standalone discovery actions a measured 44-pixel height.
 The area setup has one trigger, rail-card actions align, and the lead issue
 action has clear priority. Computed DOM checks passed at 320, 375, 390, 414,
-768, and 1280 pixels without horizontal overflow. `npm run verify` passed 157
-tests across 18 files, typecheck, production client and server builds,
+768, and 1280 pixels without horizontal overflow. Date-only records now keep
+their Chicago calendar day in other visitor timezones. `npm run verify` passed
+158 tests across 19 files, typecheck, production client and server builds,
 prerender, and lint. No API, provider call, deployment, or production feature
 is claimed
 (`docs/resident-interface-slice-2.md`, `src/features/discovery/`).

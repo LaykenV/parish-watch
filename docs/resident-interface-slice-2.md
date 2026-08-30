@@ -305,10 +305,11 @@ filters so fixture scenarios stay stable.
 
 ## Repair verification
 
-`npm run verify` passes 157 tests across 18 files, typecheck, production client
+`npm run verify` passes 158 tests across 19 files, typecheck, production client
 and server builds, prerender, and lint. Discovery typography uses four shared
 size tokens, control borders and shadows use semantic tokens, and the shared
-responsive media hook no longer imports through the resident shell.
+responsive media hook no longer imports through the resident shell. Date-only
+records keep their Chicago calendar day regardless of the visitor's timezone.
 
 ## Approval gate
 

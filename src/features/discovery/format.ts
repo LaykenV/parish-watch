@@ -19,7 +19,7 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
 })
 
 function parseDate(iso: string): Date {
-  const withTime = iso.includes('T') ? iso : `${iso}T12:00:00`
+  const withTime = iso.includes('T') ? iso : `${iso}T12:00:00-06:00`
   return new Date(withTime)
 }
 
