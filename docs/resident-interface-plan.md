@@ -142,6 +142,10 @@ Global requirements:
 
 - no page-level horizontal overflow;
 - 44 by 44 CSS pixel minimum touch targets;
+- no more than 8 rem of combined app-owned top and bottom chrome on a
+  375-by-667-pixel viewport before safe-area insets;
+- only the bottom navigation remains fixed on mobile after the top bar scrolls
+  away;
 - no essential hover-only interaction;
 - no drag-only control;
 - visible focus and logical keyboard order;
@@ -153,20 +157,83 @@ Global requirements:
 
 ### Desktop
 
-The desktop header contains the double-P mark and live-text name, Home, For You,
-Explore, Ask, Coverage, the current area control, and the account control. Keep
-the header available while scrolling, but do not let it cover anchored claims
-or headings.
+The desktop header contains the double-P mark and live-text name, For You,
+Explore, Ask, Coverage, the current area control, and the account control. The
+mark and name link to Home from every route, including Home itself. Keep the
+header available while scrolling, but do not let it cover anchored claims or
+headings.
 
 ### Mobile
 
 The mobile top bar contains the compact mark and name, current area control, and
-account control. A persistent bottom bar contains Home, For You, Explore, Ask,
-and Coverage. Hide the bottom bar while the keyboard is open and while a
-full-screen sheet or dialog owns focus.
+account control. The mark and name link to Home. A persistent bottom bar
+contains For You, Explore, Ask, and Coverage. Hide the bottom bar while the
+keyboard is open and while a full-screen sheet or dialog owns focus.
+
+The top bar scrolls with the page. Do not pin both bars around a narrow reading
+window. Keep the top bar at or below 3.5 rem and the bottom navigation at or
+below 4.25 rem before safe-area padding. The controls inside both bars retain
+their 44-by-44-pixel targets.
 
 Detail-page Back links sit inside page content. They do not replace the global
 header.
+
+### Top-level navigation behavior
+
+Treat For You, Explore, Ask, and Coverage as stable top-level destinations.
+Preserve each destination's nested route and scroll position while the resident
+moves among them. Tapping the active destination again scrolls its current page
+to the top. Keep icon labels visible, and never put contextual actions such as
+Follow or Share in the bottom navigation.
+
+The browser owns the screen-edge Back gesture. Do not add horizontal swipe
+navigation between top-level destinations.
+
+### Mobile sheets
+
+A written control opens every sheet. Source, More filters, Follow, Choose area,
+and Report a source problem remain discoverable without a gesture. A visible
+grabber appears after the sheet opens and signals drag support. It is not an
+opener or the only way to operate the sheet.
+
+Every sheet provides an explicit Close control, backdrop dismissal when safe,
+and downward drag dismissal. Closing returns focus and scroll position to the
+exact opener. Long content scrolls inside the sheet without fighting the
+dismiss gesture. Reduced motion preserves the same open, expanded, and closed
+states.
+
+Use these starting heights:
+
+- Evidence opens at a medium height and expands to full height for a long
+  excerpt, warning, or document metadata.
+- More filters opens tall with Clear and Show results above the safe area.
+- Follow opens at a medium height and expands in place for email verification.
+  Never nest a second sheet inside it.
+- Area selection opens tall and becomes full height when search opens the
+  keyboard or the available height is short.
+- Report a source problem uses a full-height sheet on mobile when its form opens
+  the keyboard.
+- Unfollow all uses a focused confirmation dialog rather than a draggable
+  sheet.
+
+Hide the bottom navigation when a sheet reaches full height. Medium sheets may
+cover it instead of leaving two competing control bars visible. Apply top,
+right, bottom, and left safe-area insets to fixed controls and sheet actions.
+
+### Gestures, rails, and sharing
+
+The initial gesture vocabulary is horizontal rail scrolling, sheet resizing or
+dismissal, and the browser's native Back gesture. Do not make swipe the only way
+to reveal Mute, Unfollow, filters, evidence, or another action. Do not add
+vertical page snapping.
+
+Issue rails use native momentum, proximity snapping, the page gutter as scroll
+padding, and a visible part of the next card. A vertical gesture that begins on
+a rail must still scroll the page. Desktop arrows duplicate horizontal scrolling
+only when overflow exists.
+
+On supported devices, Share opens the system share sheet. Copy link remains the
+fallback and reports success inline.
 
 ### Route loading
 
@@ -830,7 +897,7 @@ cards, result rows, filters, and feed update behavior.
 - Design one continuous For You feed with match reasons.
 - Design Explore before search, during search, mixed results, filters, and URL
   restoration.
-- Design desktop header, mobile header, and five-item bottom navigation.
+- Design desktop header, mobile header, and four-item bottom navigation.
 - Design the immediate stable route spinner and inline action spinner.
 - Design the simple Update available row.
 
@@ -1184,11 +1251,56 @@ fixtures without reopening the approved page hierarchy or interaction design.
 
 ## Verification gates
 
+### Founder iPhone Safari review after each deployed design slice
+
+After a design-slice pull request merges and the exact production workflow and
+independent smoke pass, the founder tests that slice on an actual iPhone in
+Safari. This review is required before the next slice changes the same shared
+pattern. It adds touch and viewport evidence. It does not replace automated
+accessibility, keyboard, or production checks.
+
+Use the canonical production origin first, then repeat the slice's direct route
+on the public `convex.site` origin. Record the pull request, merge commit, iPhone
+model, iOS version, tested URL, and whether Safari used its top or bottom tab
+layout.
+
+For every deployed slice:
+
+1. Open a new Private Browsing tab and load the direct route without visiting
+   Home first. This is the signed-out check.
+2. Test portrait with Safari controls expanded, scroll until they collapse,
+   then return to the top.
+3. Rotate to landscape and back. Confirm that no control, title, or sheet action
+   enters a sensor, corner, browser-control, or Home-indicator area.
+4. Use one thumb to reach primary actions. Confirm that the mobile top bar
+   scrolls away, the bottom navigation stays usable, and content is not trapped
+   between app chrome and Safari chrome.
+5. Switch among all available top-level destinations. Confirm active state,
+   scroll restoration, direct Back behavior, and active-tab scroll to top.
+6. Exercise the slice's available sheets through their written openers. Test the
+   grabber, medium and full heights, long content, Close, backdrop, and downward
+   dismissal. Confirm the opener remains in the same place afterward.
+7. Swipe each available horizontal rail, then begin a vertical page scroll on a
+   card. Confirm proximity snapping without a trapped gesture.
+8. Open every available text field. Confirm the focused control remains visible,
+   the bottom navigation hides when required, fixed actions stay above the
+   keyboard, and closing the keyboard restores the viewport.
+9. Repeat the primary flow at 125 percent Safari page zoom and with Reduce
+   Motion enabled.
+10. Test Share through the system sheet when the slice includes it, then test
+    Copy link.
+
+Save a short screen recording for motion, sheet, keyboard, or scroll defects.
+Record each defect with route, action, expected result, actual result, and
+orientation. Do not describe an inert fixture control as a working production
+feature.
+
 ### Design approval
 
 - every sitemap destination has an approved page and state contract;
 - every primary flow works at 375 pixels;
 - 320-pixel layouts keep text and actions intact;
+- the initial mobile chrome stays within the 8-rem budget before safe areas;
 - desktop expands the mobile hierarchy without becoming a dashboard;
 - every material claim can reach its exact Source;
 - the spinner stays fixed through redirects and action loading;
@@ -1203,6 +1315,7 @@ fixtures without reopening the approved page hierarchy or interaction design.
 - direct route refresh works for every public route;
 - keyboard, focus, reduced-motion, and screen-reader behavior match this plan;
 - no avoidable toast, nested interactive card, or page-level spinner remains;
+- top-level destinations preserve route and scroll state;
 - loading, empty, limited, error, offline, and live states render from the same
   component contracts as real data.
 
@@ -1214,6 +1327,7 @@ fixtures without reopening the approved page hierarchy or interaction design.
 - a published change updates the open issue without refresh;
 - official document links work from the deployed host;
 - signed-out mobile use completes the available resident loop;
+- the founder's real-iPhone Safari review passes for every enabled design slice;
 - production promotion follows the repository's explicit merge approval and
   independent smoke-test rules.
 

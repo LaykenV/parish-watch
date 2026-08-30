@@ -58,15 +58,22 @@ Facebook and TikTok distribution will send many residents to a mobile browser.
 The issue title, current state, next date, "Why this may matter," ask box, and
 follow action must work in one narrow column.
 
+Protect the reading window from app chrome. The mobile top bar scrolls away,
+only the four-item bottom navigation remains fixed, and the initial top and
+bottom bars consume no more than 8 rem before safe-area padding on a
+375-by-667-pixel viewport. No action depends on a hidden swipe or drag.
+
 ## Information Architecture
 
 Primary navigation:
 
-- Home
 - For You
 - Explore
 - Ask
 - Coverage
+
+The double-P mark and live-text name link to Home from every page. Home uses the
+same application shell as the rest of the resident interface.
 
 Account area:
 
@@ -417,6 +424,9 @@ preview image. The metadata comes from the published issue projection. It does
 not generate new claims or political framing. Human visitors continue to the
 canonical issue page.
 
+On supported mobile browsers, Share opens the system share sheet. Copy link is
+the fallback and reports success inline.
+
 Test the preview and destination on Facebook, LinkedIn, X, and a normal browser.
 
 ## Coverage
@@ -537,8 +547,15 @@ The mobile issue page gets design priority over a desktop dashboard.
 - reduced-motion behavior;
 - screen-reader announcement for live material changes;
 - citation drawers return focus correctly;
+- mobile sheets have written openers and explicit close controls in addition to
+  any grabber or drag gesture;
 - dates use readable local time plus machine-readable timestamps;
 - links identify the official source destination.
+
+After each deployed design slice passes automated production checks, the
+founder tests its direct route on an actual iPhone in Safari. The review covers
+safe areas, Safari chrome, sheet heights, horizontal and vertical gestures,
+keyboard behavior, rotation, page zoom, and reduced motion.
 
 ## Product Analytics
 

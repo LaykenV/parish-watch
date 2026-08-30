@@ -255,7 +255,9 @@ expand the promise.
   pages. Use typed local fixtures for unfinished integrations.
 - Fixture-backed success is development proof only. Production cannot present
   an action as working before its real backend path passes.
-- Primary navigation is Home, For You, Explore, Ask, and Coverage.
+- Primary navigation is For You, Explore, Ask, and Coverage. The double-P mark
+  and live-text name link to Home from every page, and the same shell appears on
+  Home.
 - Keep the existing first-visit hero and place area selection inside it. Return
   visits use a compact area header.
 - Use the issue as the main resident object. Call an atomic record a Decision
@@ -263,10 +265,23 @@ expand the promise.
 - Use "Why this may matter" for accepted consequence factors.
 - The evidence gutter is the app's distinctive interaction. It connects a claim
   to the exact official excerpt in a mobile sheet or desktop panel.
+- The mobile top bar scrolls away. A persistent four-item bottom navigation is
+  the only fixed app chrome after scrolling, and combined initial mobile chrome
+  stays within 8 rem before safe-area padding.
+- Written controls open mobile sheets. An open sheet may use a grabber, medium
+  and full heights, and downward dismissal, but no action depends on a gesture.
+- Horizontal swipe belongs to finite issue rails and sheet movement. Safari owns
+  the screen-edge Back gesture. The app does not swipe between top-level routes,
+  add vertical page snapping, or hide destructive actions behind swipe alone.
+- Top-level destinations preserve nested routes and scroll positions. Share
+  uses the system share sheet where available and keeps Copy link as a fallback.
 - Route loading shows an immediate spinner in one fixed region through redirect
   chains. Action labels stay fixed while a spinner occupies a stable icon slot.
 - Keep success feedback inline. Use pills for useful filters, topics,
   selections, and compact statuses.
+- After each deployed design slice passes the exact production workflow and
+  smoke, the founder tests its direct route on an actual iPhone in Safari before
+  the next slice changes the same shared patterns.
 - Divide design work into the eight assignments in the resident interface plan.
   Each assignment works from the complete app and one shared component registry.
 

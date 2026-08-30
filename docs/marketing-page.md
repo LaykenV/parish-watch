@@ -111,9 +111,8 @@ Use this exact working copy:
 
 The selected double-P mark lives at
 [`../public/brand-mark.svg`](../public/brand-mark.svg). Render the product name as
-live text. The marketing-page header uses the name without the mark. Keep the
-mark for favicons and compact app contexts. Do not generate a raster lockup
-containing the name.
+live text. The resident application shell appears on Home, and its mark and name
+link to Home. Do not generate a raster lockup containing the name.
 
 The hero is the page thesis. It should show something specific to Public Parish,
 not a generic gradient, abstract orb, device mockup, fake dashboard, or Louisiana

@@ -10,33 +10,206 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AskRouteImport } from './routes/ask'
+import { Route as CoverageRouteImport } from './routes/coverage'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as FollowingRouteImport } from './routes/following'
+import { Route as ForYouRouteImport } from './routes/for-you'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as CoverageRequestRouteImport } from './routes/coverage_.request'
+import { Route as DecisionsRecordKeyRouteImport } from './routes/decisions.$recordKey'
+import { Route as FollowingAreasAndTopicsRouteImport } from './routes/following_.areas-and-topics'
+import { Route as FollowingNotificationsRouteImport } from './routes/following_.notifications'
+import { Route as IssuesIssueSlugRouteImport } from './routes/issues.$issueSlug'
+import { Route as MeetingsMeetingIdRouteImport } from './routes/meetings.$meetingId'
+import { Route as EmailManageTokenRouteImport } from './routes/email.manage.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AskRoute = AskRouteImport.update({
+  id: '/ask',
+  path: '/ask',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoverageRoute = CoverageRouteImport.update({
+  id: '/coverage',
+  path: '/coverage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FollowingRoute = FollowingRouteImport.update({
+  id: '/following',
+  path: '/following',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForYouRoute = ForYouRouteImport.update({
+  id: '/for-you',
+  path: '/for-you',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoverageRequestRoute = CoverageRequestRouteImport.update({
+  id: '/coverage_/request',
+  path: '/coverage/request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionsRecordKeyRoute = DecisionsRecordKeyRouteImport.update({
+  id: '/decisions/$recordKey',
+  path: '/decisions/$recordKey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FollowingAreasAndTopicsRoute = FollowingAreasAndTopicsRouteImport.update({
+  id: '/following_/areas-and-topics',
+  path: '/following/areas-and-topics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FollowingNotificationsRoute = FollowingNotificationsRouteImport.update({
+  id: '/following_/notifications',
+  path: '/following/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IssuesIssueSlugRoute = IssuesIssueSlugRouteImport.update({
+  id: '/issues/$issueSlug',
+  path: '/issues/$issueSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeetingsMeetingIdRoute = MeetingsMeetingIdRouteImport.update({
+  id: '/meetings/$meetingId',
+  path: '/meetings/$meetingId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailManageTokenRoute = EmailManageTokenRouteImport.update({
+  id: '/email/manage/$token',
+  path: '/email/manage/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ask': typeof AskRoute
+  '/coverage': typeof CoverageRoute
+  '/explore': typeof ExploreRoute
+  '/following': typeof FollowingRoute
+  '/for-you': typeof ForYouRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/coverage/request': typeof CoverageRequestRoute
+  '/decisions/$recordKey': typeof DecisionsRecordKeyRoute
+  '/following/areas-and-topics': typeof FollowingAreasAndTopicsRoute
+  '/following/notifications': typeof FollowingNotificationsRoute
+  '/issues/$issueSlug': typeof IssuesIssueSlugRoute
+  '/meetings/$meetingId': typeof MeetingsMeetingIdRoute
+  '/email/manage/$token': typeof EmailManageTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ask': typeof AskRoute
+  '/coverage': typeof CoverageRoute
+  '/explore': typeof ExploreRoute
+  '/following': typeof FollowingRoute
+  '/for-you': typeof ForYouRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/coverage/request': typeof CoverageRequestRoute
+  '/decisions/$recordKey': typeof DecisionsRecordKeyRoute
+  '/following/areas-and-topics': typeof FollowingAreasAndTopicsRoute
+  '/following/notifications': typeof FollowingNotificationsRoute
+  '/issues/$issueSlug': typeof IssuesIssueSlugRoute
+  '/meetings/$meetingId': typeof MeetingsMeetingIdRoute
+  '/email/manage/$token': typeof EmailManageTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ask': typeof AskRoute
+  '/coverage': typeof CoverageRoute
+  '/explore': typeof ExploreRoute
+  '/following': typeof FollowingRoute
+  '/for-you': typeof ForYouRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/coverage_/request': typeof CoverageRequestRoute
+  '/decisions/$recordKey': typeof DecisionsRecordKeyRoute
+  '/following_/areas-and-topics': typeof FollowingAreasAndTopicsRoute
+  '/following_/notifications': typeof FollowingNotificationsRoute
+  '/issues/$issueSlug': typeof IssuesIssueSlugRoute
+  '/meetings/$meetingId': typeof MeetingsMeetingIdRoute
+  '/email/manage/$token': typeof EmailManageTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/ask'
+    | '/coverage'
+    | '/explore'
+    | '/following'
+    | '/for-you'
+    | '/how-it-works'
+    | '/coverage/request'
+    | '/decisions/$recordKey'
+    | '/following/areas-and-topics'
+    | '/following/notifications'
+    | '/issues/$issueSlug'
+    | '/meetings/$meetingId'
+    | '/email/manage/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/ask'
+    | '/coverage'
+    | '/explore'
+    | '/following'
+    | '/for-you'
+    | '/how-it-works'
+    | '/coverage/request'
+    | '/decisions/$recordKey'
+    | '/following/areas-and-topics'
+    | '/following/notifications'
+    | '/issues/$issueSlug'
+    | '/meetings/$meetingId'
+    | '/email/manage/$token'
+  id:
+    | '__root__'
+    | '/'
+    | '/ask'
+    | '/coverage'
+    | '/explore'
+    | '/following'
+    | '/for-you'
+    | '/how-it-works'
+    | '/coverage_/request'
+    | '/decisions/$recordKey'
+    | '/following_/areas-and-topics'
+    | '/following_/notifications'
+    | '/issues/$issueSlug'
+    | '/meetings/$meetingId'
+    | '/email/manage/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AskRoute: typeof AskRoute
+  CoverageRoute: typeof CoverageRoute
+  ExploreRoute: typeof ExploreRoute
+  FollowingRoute: typeof FollowingRoute
+  ForYouRoute: typeof ForYouRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  CoverageRequestRoute: typeof CoverageRequestRoute
+  DecisionsRecordKeyRoute: typeof DecisionsRecordKeyRoute
+  FollowingAreasAndTopicsRoute: typeof FollowingAreasAndTopicsRoute
+  FollowingNotificationsRoute: typeof FollowingNotificationsRoute
+  IssuesIssueSlugRoute: typeof IssuesIssueSlugRoute
+  MeetingsMeetingIdRoute: typeof MeetingsMeetingIdRoute
+  EmailManageTokenRoute: typeof EmailManageTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +221,115 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ask': {
+      id: '/ask'
+      path: '/ask'
+      fullPath: '/ask'
+      preLoaderRoute: typeof AskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coverage': {
+      id: '/coverage'
+      path: '/coverage'
+      fullPath: '/coverage'
+      preLoaderRoute: typeof CoverageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/following': {
+      id: '/following'
+      path: '/following'
+      fullPath: '/following'
+      preLoaderRoute: typeof FollowingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-you': {
+      id: '/for-you'
+      path: '/for-you'
+      fullPath: '/for-you'
+      preLoaderRoute: typeof ForYouRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coverage_/request': {
+      id: '/coverage_/request'
+      path: '/coverage/request'
+      fullPath: '/coverage/request'
+      preLoaderRoute: typeof CoverageRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decisions/$recordKey': {
+      id: '/decisions/$recordKey'
+      path: '/decisions/$recordKey'
+      fullPath: '/decisions/$recordKey'
+      preLoaderRoute: typeof DecisionsRecordKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/following_/areas-and-topics': {
+      id: '/following_/areas-and-topics'
+      path: '/following/areas-and-topics'
+      fullPath: '/following/areas-and-topics'
+      preLoaderRoute: typeof FollowingAreasAndTopicsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/following_/notifications': {
+      id: '/following_/notifications'
+      path: '/following/notifications'
+      fullPath: '/following/notifications'
+      preLoaderRoute: typeof FollowingNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/issues/$issueSlug': {
+      id: '/issues/$issueSlug'
+      path: '/issues/$issueSlug'
+      fullPath: '/issues/$issueSlug'
+      preLoaderRoute: typeof IssuesIssueSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meetings/$meetingId': {
+      id: '/meetings/$meetingId'
+      path: '/meetings/$meetingId'
+      fullPath: '/meetings/$meetingId'
+      preLoaderRoute: typeof MeetingsMeetingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email/manage/$token': {
+      id: '/email/manage/$token'
+      path: '/email/manage/$token'
+      fullPath: '/email/manage/$token'
+      preLoaderRoute: typeof EmailManageTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AskRoute: AskRoute,
+  CoverageRoute: CoverageRoute,
+  ExploreRoute: ExploreRoute,
+  FollowingRoute: FollowingRoute,
+  ForYouRoute: ForYouRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  CoverageRequestRoute: CoverageRequestRoute,
+  DecisionsRecordKeyRoute: DecisionsRecordKeyRoute,
+  FollowingAreasAndTopicsRoute: FollowingAreasAndTopicsRoute,
+  FollowingNotificationsRoute: FollowingNotificationsRoute,
+  IssuesIssueSlugRoute: IssuesIssueSlugRoute,
+  MeetingsMeetingIdRoute: MeetingsMeetingIdRoute,
+  EmailManageTokenRoute: EmailManageTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

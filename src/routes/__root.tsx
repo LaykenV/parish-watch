@@ -3,6 +3,8 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import ConvexProvider from '../integrations/convex/provider'
+import { BlueprintNotFound } from '../features/resident-blueprint/blueprint-page'
+import { RouteLoadingRegion } from '../features/resident-blueprint/resident-shell'
 
 import appCss from '../styles.css?url'
 
@@ -59,15 +61,7 @@ export const Route = createRootRoute({
 })
 
 function NotFound() {
-  return (
-    <main className="configuration-error">
-      <p className="eyebrow">Not found</p>
-      <h1>This page does not exist.</h1>
-      <p>
-        Return to <a href="/">Public Parish</a>.
-      </p>
-    </main>
-  )
+  return <BlueprintNotFound />
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -78,6 +72,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ConvexProvider>
+          <RouteLoadingRegion />
           {children}
           <TanStackDevtools
             config={{

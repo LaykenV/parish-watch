@@ -558,7 +558,8 @@
               <li>Keep the mark legible at 16, 32, 64, and 180 pixels.</li>
               <li>Use the symbol alone for favicons and compact app chrome.</li>
               <li>
-                The marketing header uses the live-text name without the mark.
+                The resident shell uses the mark and live-text name as the Home
+                control on every route, including Home.
               </li>
               <li>
                 Use the name as live text beside the mark in compact app
@@ -687,6 +688,43 @@
               <li>Do not require drag as the only input method.</li>
             </ul>
           </article>
+          <article class="panel">
+            <h3>Vertical space contract</h3>
+            <ul>
+              <li>The mobile top bar scrolls away with the page.</li>
+              <li>Only the four-item bottom navigation remains fixed.</li>
+              <li>
+                Before safe-area padding, top and bottom app chrome use no more
+                than 8 rem on a 375-by-667-pixel viewport.
+              </li>
+              <li>
+                Hide bottom navigation for the keyboard and full-height sheets.
+              </li>
+              <li>
+                Do not stack a fixed notice, composer, and navigation bar over
+                the same reading window.
+              </li>
+            </ul>
+          </article>
+          <article class="panel">
+            <h3>Sheet and gesture contract</h3>
+            <ul>
+              <li>A written control opens every sheet.</li>
+              <li>
+                An open sheet may use a grabber, medium and full heights, and
+                downward dismissal.
+              </li>
+              <li>
+                Keep explicit Close and safe backdrop controls. Return to the
+                exact opener.
+              </li>
+              <li>Safari owns the screen-edge Back gesture.</li>
+              <li>
+                Do not swipe between top-level routes, snap the vertical page,
+                or hide destructive actions behind swipe alone.
+              </li>
+            </ul>
+          </article>
         </div>
       </section>
 
@@ -786,11 +824,21 @@
             <tr>
               <td>Header</td>
               <td>
-                Prelaunch shows the live-text name and Follow the build. The
-                mark stays out of the marketing header. Future navigation
-                appears only when destinations work.
+                The mark and live-text name link to Home. For You, Explore, Ask,
+                and Coverage appear only when their destinations work. The
+                mobile top bar scrolls away while the bottom navigation stays
+                fixed.
               </td>
               <td>Coss border, spacing, and button treatment selected</td>
+            </tr>
+            <tr>
+              <td>Mobile sheet</td>
+              <td>
+                Written opener, visible grabber after opening, medium and full
+                heights, explicit Close, safe backdrop and downward dismissal,
+                safe-area actions, scroll containment, and focus return.
+              </td>
+              <td>Open until Slice 3 evidence behavior is approved</td>
             </tr>
           </tbody>
         </table>
@@ -902,7 +950,7 @@
           "status": "selected",
           "path": "public/brand-mark.svg",
           "background": "rounded neutral tile",
-          "headerUsage": "live text only",
+          "headerUsage": "mark and live text link to Home",
           "wordmarkInAsset": false
         },
         "typography": {
@@ -915,6 +963,30 @@
         },
         "mobileWidths": [320, 375, 414, 768],
         "minimumTouchTargetPx": 44,
+        "mobileChrome": {
+          "maximumInitialRemBeforeSafeAreas": 8,
+          "topBar": "scrolls with page, maximum 3.5rem",
+          "bottomNavigation": "fixed four-item navigation, maximum 4.25rem before safe area"
+        },
+        "mobileSheets": {
+          "opener": "written control",
+          "grabber": "visible after opening",
+          "heights": ["medium", "full"],
+          "dismissal": ["close control", "safe backdrop", "downward drag"],
+          "focusReturn": true
+        },
+        "gestures": {
+          "allowed": [
+            "horizontal issue rail",
+            "sheet movement",
+            "browser back"
+          ],
+          "rejected": [
+            "top-level route swipe",
+            "vertical page snap",
+            "swipe-only destructive action"
+          ]
+        },
         "motion": {
           "marketingMajorMoments": 2,
           "properties": ["transform", "opacity"],
