@@ -115,7 +115,8 @@ Phase 0 was completed on August 27:
   and mobile layouts were tested signed out.
 
 The evidence backend through Slice 4 and resident-interface Design Slices 1 and
-2 are live in production.
+2 are live in production. Design Slice 3 is complete on a local feature branch
+and is not deployed.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -159,13 +160,17 @@ prerender, and lint. Production workflow `33324166404` and the independent
 production smoke passed the direct Convex host, canonical domain, apex redirect,
 and readiness query.
 
-No production issue build, importance assessment, or ranked issue projection
-has run. The resident integration reads current full and limited atomic
-publications through a bounded public Convex query, labels them as decision
-records, and opens the official source. Withheld publications stay hidden. Real
-issue and citation-level evidence views, Ask, follows, AgentMail,
-authentication, coverage integration, and the vibeapps.dev submission remain
-pending.
+PR #26 deployed the bounded resident publication query and discovery
+integration as `409a3e1`. No production issue build, importance assessment, or
+ranked issue projection has run. Home, For You, and Explore read current full
+and limited atomic publications, label them as decision records, and open the
+official source. Withheld publications stay hidden.
+
+The local Design Slice 3 branch implements issue, atomic decision, meeting, and
+citation-level evidence views against explicit development fixtures. Production
+builds ignore those fixture parameters and show recovery pages until the real
+detail queries are connected. Ask answers, follows, AgentMail, authentication,
+coverage integration, and the vibeapps.dev submission remain pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

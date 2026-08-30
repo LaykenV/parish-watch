@@ -12,20 +12,26 @@ type SheetProps = {
   description?: string
   footer?: ReactNode
   onOpenChange: (open: boolean) => void
+  onOpenChangeComplete?: (open: boolean) => void
   open: boolean
+  popupId?: string
   size?: 'medium' | 'tall' | 'full'
   title: string
+  triggerId?: string | null
   trigger?: (props: React.ComponentProps<'button'>) => ReactElement
 }
 
 export function Sheet({
   open,
   onOpenChange,
+  onOpenChangeComplete,
   title,
+  triggerId,
   description,
   children,
   className,
   footer,
+  popupId,
   size = 'tall',
   trigger,
 }: SheetProps) {
@@ -39,8 +45,10 @@ export function Sheet({
     return (
       <Drawer.Root
         onOpenChange={onOpenChange}
+        onOpenChangeComplete={onOpenChangeComplete}
         open={open}
         swipeDirection="down"
+        triggerId={triggerId}
       >
         {trigger ? <Drawer.Trigger render={trigger} /> : null}
         <Drawer.Portal>
@@ -50,6 +58,7 @@ export function Sheet({
               className={['pp-sheet', className].filter(Boolean).join(' ')}
               data-modal-kind="drawer"
               data-size={size}
+              id={popupId}
             >
               <span aria-hidden="true" className="pp-sheet-grabber" />
               <header className="pp-sheet-head">
@@ -79,7 +88,12 @@ export function Sheet({
   }
 
   return (
-    <Dialog.Root onOpenChange={onOpenChange} open={open}>
+    <Dialog.Root
+      onOpenChange={onOpenChange}
+      onOpenChangeComplete={onOpenChangeComplete}
+      open={open}
+      triggerId={triggerId}
+    >
       {trigger ? <Dialog.Trigger render={trigger} /> : null}
       <Dialog.Portal>
         <Dialog.Backdrop className="pp-backdrop" />
@@ -87,6 +101,7 @@ export function Sheet({
           className={['pp-sheet', className].filter(Boolean).join(' ')}
           data-modal-kind="dialog"
           data-size={size}
+          id={popupId}
         >
           <header className="pp-sheet-head">
             <Dialog.Title className="pp-sheet-title">{title}</Dialog.Title>

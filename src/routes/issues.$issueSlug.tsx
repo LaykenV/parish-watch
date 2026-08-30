@@ -1,18 +1,42 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
-import { BlueprintPage } from '../features/resident-blueprint/blueprint-page'
+import {
+  getActiveEvidenceFixture,
+  parseEvidenceSearch,
+} from '../features/evidence/contracts'
+import { loadIssuePageData } from '../features/evidence/evidence-page.data'
+import { IssuePage } from '../features/evidence/issue-page'
+import { ResidentShell } from '../features/resident-blueprint/resident-shell'
 
 export const Route = createFileRoute('/issues/$issueSlug')({
-  component: IssueBlueprintRoute,
+  component: ResidentIssue,
+  loaderDeps: ({ search }) => ({
+    fixture: getActiveEvidenceFixture(parseEvidenceSearch(search).fixture),
+  }),
+  loader: ({ deps, params }) =>
+    loadIssuePageData(params.issueSlug, deps.fixture),
+  validateSearch: parseEvidenceSearch,
 })
 
-function IssueBlueprintRoute() {
+function ResidentIssue() {
   const { issueSlug } = Route.useParams()
+  const data = Route.useLoaderData()
+  const search = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
 
   return (
-    <BlueprintPage
-      contractKey="issue"
-      routeDetail={<>Route issue: {issueSlug}</>}
-    />
+    <ResidentShell>
+      <IssuePage
+        data={data}
+        onSelectSource={(source) =>
+          navigate({
+            replace: true,
+            search: (prev) => ({ ...prev, source: source ?? undefined }),
+          })
+        }
+        search={search}
+        slug={issueSlug}
+      />
+    </ResidentShell>
   )
 }
