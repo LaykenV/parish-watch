@@ -78,7 +78,7 @@ It tells residents what a supported local body is considering, why a decision
 may matter, when action is expected, how to inspect the original record, and
 what happened next.
 
-It does not tell residents what political position to take. “Why this matters”
+It does not tell residents what political position to take. "Why this may matter"
 describes cited effects on public money, public assets, land use, health and
 safety, rights and access, service delivery, and public deadlines. It does not
 use outrage, popularity, or the founder's opinion as a ranking signal.
@@ -133,7 +133,7 @@ vote, contract, and outcome when the official record supports that relationship.
 It shows:
 
 - a plain-language explanation;
-- “Why this matters” factors with citations;
+- "Why this may matter" factors with citations;
 - current stage and next known date;
 - remaining public actions and deadlines;
 - a chronological decision timeline;

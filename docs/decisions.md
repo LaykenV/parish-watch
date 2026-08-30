@@ -5,6 +5,7 @@ Stack amendment completed: August 27, 2026
 Environment and checkpoint amendment completed: August 27, 2026
 Brand and domain amendment completed: August 27, 2026
 Issue and importance contract amendment completed: August 29, 2026
+Resident interface amendment completed: August 29, 2026
 Product name: Public Parish
 
 This file records the settled product decisions from the planning grill. It
@@ -236,6 +237,29 @@ expand the promise.
   work that needs isolation.
 - Build the production frontend with the production Convex URL during the same
   promotion; never publish a stale local `dist/` artifact.
+
+## Resident Interface
+
+- [`resident-interface-plan.md`](./resident-interface-plan.md) is the approved
+  Slice 5 page, interaction, state, and design-agent contract.
+- Build the complete frontend now so later API integration does not reorganize
+  pages. Use typed local fixtures for unfinished integrations.
+- Fixture-backed success is development proof only. Production cannot present
+  an action as working before its real backend path passes.
+- Primary navigation is Home, For You, Explore, Ask, and Coverage.
+- Keep the existing first-visit hero and place area selection inside it. Return
+  visits use a compact area header.
+- Use the issue as the main resident object. Call an atomic record a Decision
+  record and call citation controls Source.
+- Use "Why this may matter" for accepted consequence factors.
+- The evidence gutter is the app's distinctive interaction. It connects a claim
+  to the exact official excerpt in a mobile sheet or desktop panel.
+- Route loading shows an immediate spinner in one fixed region through redirect
+  chains. Action labels stay fixed while a spinner occupies a stable icon slot.
+- Keep success feedback inline. Use pills for useful filters, topics,
+  selections, and compact statuses.
+- Divide design work into the eight assignments in the resident interface plan.
+  Each assignment works from the complete app and one shared component registry.
 
 ## Trust and Privacy
 

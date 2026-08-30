@@ -12,14 +12,14 @@ and alerts followers when the issue changes or reaches an outcome.
 
 ### Design The Resident Interface As One System
 
-Do not design or implement resident pages incrementally during backend work.
-Slice 4 settled the issue, importance, timeline, and change contracts. Define
-the complete page inventory and every page's content, actions,
-navigation, mobile priority, and system states. The founder then creates and
-approves the complete interface in the selected design tool. Implement that
-approved frontend as one cohesive pass. Later backend slices connect chat,
-follows, email, and coverage behavior without reopening the visual system.
-Hide any action that does not work yet.
+Do not design resident pages incrementally during backend work. Slice 4 settled
+the issue, importance, timeline, and change contracts. The complete page
+inventory, content, actions, navigation, mobile priority, system states, and
+design-agent assignments live in
+[`resident-interface-plan.md`](./resident-interface-plan.md). Design and build
+the full frontend against typed local fixtures so later API work does not reopen
+the page system. Fixture-backed success is development proof only. A production
+build cannot present an action as working until its real backend path passes.
 
 ### Start With Consequence
 
@@ -30,7 +30,7 @@ title as supporting context.
 ### Put Receipts Beside Claims
 
 A source link hidden at the bottom is not enough. Dates, amounts, votes,
-deadlines, and “Why this matters” factors should open their supporting excerpt
+deadlines, and "Why this may matter" factors should open their supporting excerpt
 or page directly.
 
 ### Make Uncertainty Useful
@@ -55,7 +55,7 @@ email-only alert without signing in.
 ### Design for a Phone
 
 Facebook and TikTok distribution will send many residents to a mobile browser.
-The issue title, current state, next date, “Why this matters,” ask box, and
+The issue title, current state, next date, "Why this may matter," ask box, and
 follow action must work in one narrow column.
 
 ## Information Architecture
@@ -64,7 +64,7 @@ Primary navigation:
 
 - Home
 - For You
-- Decisions
+- Explore
 - Ask
 - Coverage
 
@@ -122,7 +122,7 @@ Every promoted card contains:
 - body and place;
 - current lifecycle state;
 - next date or latest outcome;
-- one-sentence “Why this matters” reason;
+- one-sentence "Why this may matter" reason;
 - one or two consequence markers, such as public money or public deadline;
 - last checked;
 - evidence status;
@@ -130,7 +130,7 @@ Every promoted card contains:
 - clear open action.
 
 Do not show a model confidence percentage as a substitute for plain language.
-Use statuses such as “Source complete,” “Limited source,” or “Source delayed,”
+Use statuses such as "Evidence available," "Limited information," or "Source delayed,"
 with an explanation.
 
 Routine valid items can use a compact searchable row instead of a promoted card.
@@ -229,7 +229,7 @@ Answer:
 
 Every material answer carries a citation affordance.
 
-### Why This Matters
+### Why This May Matter
 
 Show only accepted consequence factors:
 

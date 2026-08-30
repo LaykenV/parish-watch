@@ -171,7 +171,7 @@ deployed to production through PR #13 on August 29, 2026.
 - Use a real prior/current document pair or a clearly labeled replay to produce
   an amendment, vote, or outcome.
 
-Exit gate: one issue shows a correct timeline, “Why this matters,” and a visible
+Exit gate: one issue shows a correct timeline, "Why this may matter," and a visible
 change with citations.
 
 Proof: the internal `buildIssueV1` workflow runs Terra issue linking, separate
@@ -220,14 +220,16 @@ Then pause implementation and complete this design handoff:
   loading, empty, limited, error, signed-out, and signed-in states;
 - prepare one reusable design context pack from the product specification,
   architecture, data contracts, copy constraints, and existing visual system;
+- use [`resident-interface-plan.md`](./resident-interface-plan.md) as the master
+  page contract and the source for the eight design-agent assignments;
 - have the founder create and approve the complete interface in the selected
   design tool;
-- implement the approved page system in one cohesive frontend pass instead of
-  growing it route by route;
+- design and build the approved page system in one cohesive frontend pass,
+  including the final Ask, Follow, account, email, and coverage positions;
+- use typed fixtures and local design adapters until each real API is ready;
 - connect the issue, decision, citation, coverage, and realtime publication
   paths that already work;
-- keep chat, follow, email, and coverage actions hidden until their backend
-  behavior is complete and proven.
+- never promote fixture-backed success as working production behavior.
 
 Exit gate: the approved resident interface is implemented as one responsive
 system, one real issue and its citations are live, and a published change
@@ -494,7 +496,8 @@ Never cut:
   stage still misses, it withholds or publishes a limited source-only card.
 - If an integration is only visible in code, expose its resident effect in the
   demo.
-- If real testers do not understand “decision,” “issue,” or “why this matters,”
+- If real testers do not understand "issue," "decision record," "Source," or
+  "Why this may matter,"
   fix product language before adding scope.
 - If sales work is being skipped, reduce hackathon scope that day rather than
   redefining the business plan.

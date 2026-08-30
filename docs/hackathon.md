@@ -270,7 +270,7 @@ local decisions are public, but spread across packets, portals, and updates.
 ### 0:15 to 0:45: Find What Matters
 
 Show “For You” and “Major local decisions.” Open one real, current consequential
-issue. Point to “Why this matters,” the next date, and remaining public action.
+issue. Point to "Why this may matter," the next date, and remaining public action.
 
 ### 0:45 to 1:15: Inspect the Receipts
 

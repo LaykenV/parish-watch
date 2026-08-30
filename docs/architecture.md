@@ -190,23 +190,29 @@ deployment.
 
 TanStack Start runs as a client application with static output and selected
 prerendered routes. Do not design around request-time server rendering.
+[`resident-interface-plan.md`](./resident-interface-plan.md) defines the final
+page hierarchy, state matrix, and design-agent assignments. The complete
+frontend may use typed local fixtures while APIs are unfinished. Public builds
+must never simulate a successful integration.
 
 ### Public Routes
 
-| Route                  | Purpose                                            |
-| ---------------------- | -------------------------------------------------- |
-| `/`                    | Location/topic setup and major decisions           |
-| `/for-you`             | Personalized decision feed                         |
-| `/decisions`           | Searchable decision index                          |
-| `/issues/$issueSlug`   | Cited issue timeline                               |
-| `/meetings/$meetingId` | Meeting and source records                         |
-| `/ask`                 | Corpus-wide anonymous chat                         |
-| `/coverage`            | Public body and source health                      |
-| `/coverage/request`    | Record demand for a new place                      |
-| `/following`           | Signed-in follows and preferences                  |
-| `/about`               | Method, neutrality, revision, and reporting policy |
+| Route                   | Purpose                                            |
+| ----------------------- | -------------------------------------------------- |
+| `/`                     | Area setup and major issues                        |
+| `/for-you`              | Personalized issue feed                            |
+| `/explore`              | Browse and search published resident evidence      |
+| `/issues/$issueSlug`    | Cited issue timeline                               |
+| `/decisions/$recordKey` | Atomic decision record and publication history     |
+| `/meetings/$meetingId`  | Meeting and source records                         |
+| `/ask`                  | Corpus-wide and scoped anonymous Ask               |
+| `/coverage`             | Public body and source health                      |
+| `/coverage/request`     | Record demand for a new place                      |
+| `/following`            | Follows, saved interests, and preferences          |
+| `/email/manage/$token`  | Scoped email-only subscription management          |
+| `/how-it-works`         | Method, neutrality, revision, and reporting policy |
 
-Stable routes such as home, about, and coverage should be prerendered when
+Stable routes such as home, How it works, and coverage should be prerendered when
 possible. Direct refreshes to dynamic routes must be tested on the final
 `convex.site` host.
 
@@ -899,7 +905,7 @@ reducing another accepted factor. Completeness is the percentage of factors
 with accepted evidence and never multiplies the score down. A cited public
 deadline within seven days sets a separate hard trigger without adding points.
 
-The user-facing “Why this matters” text is generated from the accepted factor
+The user-facing "Why this may matter" text is generated from the accepted factor
 record. Popularity, clicks, partisan valence, and social engagement do not
 affect ranking.
 

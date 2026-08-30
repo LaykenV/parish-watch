@@ -67,7 +67,7 @@ When real resident data is public:
 - the product-proof slot becomes a horizontal rail of real major decisions;
 - `Building first for` changes to `Available in` only for regions that passed
   the common coverage gate;
-- longer method and build material moves to `/about`;
+- longer method and build material moves to `/how-it-works`;
 - application navigation appears only when its destinations work.
 
 The layout should make these substitutions possible without a visual rebuild.
