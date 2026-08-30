@@ -12,9 +12,21 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T16:26:14Z
+- **Last updated:** 2026-08-30T16:41:35Z
 
 ## Log
+
+### 2026-08-30 - ee05d8d
+
+Closed a review finding that unlabeled fixtures could look like real civic
+records. Development builds now require an explicit `?fixture=` scenario before
+rendering fixture records. Production builds ignore fixture parameters and show
+an honest empty state until the resident projection is connected. A production
+preview at 390 pixels rendered zero fixture cards on Home, For You, and Explore,
+including URLs with `?fixture=update`. The same URLs still rendered the full QA
+states on the development server. `npm run verify` passed typecheck, 163 tests
+across 19 files, the production client and server builds, prerender, and lint.
+No deployment is claimed (`src/features/discovery/`).
 
 ### 2026-08-30 - 6cd03da
 
