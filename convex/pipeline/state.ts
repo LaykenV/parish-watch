@@ -49,11 +49,11 @@ export const sourceKindUnion = v.union(
 
 export type SourceKind = typeof sourceKindUnion.type
 
-export const RETRIEVAL_PROCESSOR_VERSION = 'v2'
+export const RETRIEVAL_PROCESSOR_VERSION = 'v3'
 
 export const RETRIEVAL_RETRY_DELAY_MS = 15 * 60 * 1000
 
-export const EXTRACTION_PROCESSOR_VERSION = 'v1.7'
+export const EXTRACTION_PROCESSOR_VERSION = 'v1.9'
 
 export const EXTRACTION_PROMPT_VERSION = 'v1.4'
 
