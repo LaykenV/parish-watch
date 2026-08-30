@@ -183,7 +183,7 @@ describe('resident interface Slice 3 evidence contracts', () => {
         ...fixture.meeting.routine,
       ]) {
         expect(decisions).toContain(row.recordKey)
-        expect(DECISION_DETAIL_FIXTURES[row.recordKey]?.decision.title).toBe(
+        expect(DECISION_DETAIL_FIXTURES[row.recordKey].decision.title).toBe(
           row.title,
         )
       }
