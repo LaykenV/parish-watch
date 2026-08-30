@@ -539,7 +539,7 @@ test('a second model review publishes one full immutable version with exact cita
     mode: 'full',
     reasonCode: 'all_evidence_supported',
     version: 1,
-    policyVersion: 'v1',
+    policyVersion: 'v1.1',
     payloadVersion: 'v1',
     payload: {
       kind: 'full',
