@@ -37,6 +37,7 @@ export function normalizeForMatch(text: string): string {
     .replace(/\u00a0/g, ' ')
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201c\u201d]/g, '"')
+    .replace(/<u(?:\s+[^<>]*?)?\s*>|<\/u\s*>/gi, '')
     .replace(/([A-Za-z0-9])-[ \t]*\r?\n[ \t]*(?=[A-Za-z0-9])/g, '$1-')
     .replace(/\s+/g, ' ')
     .trim()

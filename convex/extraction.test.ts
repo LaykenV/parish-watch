@@ -264,6 +264,22 @@ test('citation matching joins a hyphenated PDF line break', () => {
   ).toBeGreaterThanOrEqual(0)
 })
 
+test('citation matching ignores Firecrawl underline tags around a record ID', () => {
+  const source = normalizeForMatch(
+    '6. <u>CO-062-2026</u> An ordinance authorizing a utility agreement.',
+  )
+
+  expect(source).toBe(
+    '6. CO-062-2026 An ordinance authorizing a utility agreement.',
+  )
+  expect(
+    locateExcerpt(
+      source,
+      'CO-062-2026 An ordinance authorizing a utility agreement.',
+    ),
+  ).toBeGreaterThanOrEqual(0)
+})
+
 function setFactValue(
   decision: ReturnType<typeof goldDecision>['decision'],
   fieldPath: string,
@@ -541,7 +557,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.4',
     schemaVersion: 'v1',
-    processorVersion: 'v1.9',
+    processorVersion: 'v1.10',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
