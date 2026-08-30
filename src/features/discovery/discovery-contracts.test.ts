@@ -58,6 +58,7 @@ describe('resident interface Slice 2 discovery contracts', () => {
   it('shows the forced no-results state before the default browse view', () => {
     expect(getExploreViewMode({ fixture: 'no-results' }, 0)).toBe('empty')
     expect(getExploreViewMode({}, 0)).toBe('browse')
+    expect(getExploreViewMode({ sort: 'oldest' }, 0)).toBe('browse')
   })
 
   it('sorts dated results in the requested direction and leaves undated rows last', () => {

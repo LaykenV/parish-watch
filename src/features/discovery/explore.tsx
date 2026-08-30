@@ -243,15 +243,17 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
           options={DATE_OPTIONS.map((option) => ({ ...option }))}
           value={search.date ?? ''}
         />
-        <FilterPill
-          defaultValue="newest"
-          label="Sort"
-          onChange={(value) =>
-            patch({ sort: (value || 'newest') as 'newest' | 'oldest' })
-          }
-          options={SORT_OPTIONS}
-          value={search.sort ?? 'newest'}
-        />
+        {viewMode === 'results' ? (
+          <FilterPill
+            defaultValue="newest"
+            label="Sort"
+            onChange={(value) =>
+              patch({ sort: (value || 'newest') as 'newest' | 'oldest' })
+            }
+            options={SORT_OPTIONS}
+            value={search.sort ?? 'newest'}
+          />
+        ) : null}
       </div>
 
       {desktop && filtersOpen ? (

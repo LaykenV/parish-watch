@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T14:52:30Z
+- **Last updated:** 2026-08-30T14:59:05Z
 
 ## Log
 
@@ -164,10 +164,11 @@ The area setup has one trigger, rail-card actions align, and the lead issue
 action has clear priority. Computed DOM checks passed at 320, 375, 390, 414,
 768, and 1280 pixels without horizontal overflow. Date-only records now keep
 their Chicago calendar day in other visitor timezones. Each More filters group
-can be cleared without removing the query or unrelated filters. `npm run verify`
-passed 159 tests across 19 files, typecheck, production client and server
-builds, prerender, and lint. No API, provider call, deployment, or production
-feature is claimed
+can be cleared without removing the query or unrelated filters. Sort appears
+only when Explore shows a sortable result sequence. `npm run verify` passed 160
+tests across 19 files, typecheck, production client and server builds,
+prerender, and lint. No API, provider call, deployment, or production feature
+is claimed
 (`docs/resident-interface-slice-2.md`, `src/features/discovery/`).
 
 ### 2026-08-30 - 3996bfc

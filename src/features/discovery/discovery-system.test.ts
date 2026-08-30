@@ -8,6 +8,7 @@ import { withAllFilterOption } from './filter-pill'
 const css = readFileSync(new URL('./discovery.css', import.meta.url), 'utf8')
 const home = readFileSync(new URL('./home.tsx', import.meta.url), 'utf8')
 const forYou = readFileSync(new URL('./for-you.tsx', import.meta.url), 'utf8')
+const explore = readFileSync(new URL('./explore.tsx', import.meta.url), 'utf8')
 const sheet = readFileSync(new URL('./sheet.tsx', import.meta.url), 'utf8')
 
 describe('resident interface control system', () => {
@@ -44,5 +45,10 @@ describe('resident interface control system', () => {
         { label: 'Decided', value: 'Decided' },
       ],
     )
+  })
+
+  it('shows Sort only when Explore renders a sortable result sequence', () => {
+    expect(explore).toContain("viewMode === 'results'")
+    expect(explore).toContain('label="Sort"')
   })
 })
