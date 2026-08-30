@@ -1,0 +1,144 @@
+import { CircleAlertIcon, CircleCheckIcon, Clock3Icon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { useId } from 'react'
+import { Link } from '@tanstack/react-router'
+
+import { Button } from '../../components/ui/button'
+import { formatDate, formatDay, formatTime } from './format'
+import type {
+  EvidenceStatus,
+  IssueCardData,
+  LifecycleState,
+  UpcomingItemData,
+} from './contracts'
+import { ShareButton } from './share'
+
+function stateTone(state: LifecycleState): 'active' | 'settled' | 'muted' {
+  if (
+    state === 'Scheduled' ||
+    state === 'In progress' ||
+    state === 'Developing'
+  ) {
+    return 'active'
+  }
+  if (state === 'Decided' || state === 'Completed') return 'settled'
+  return 'muted'
+}
+
+function evidenceTone(status: EvidenceStatus): 'ok' | 'warning' {
+  return status === 'Evidence available' ? 'ok' : 'warning'
+}
+
+function EvidenceIcon({ status }: { status: EvidenceStatus }) {
+  const icons: Record<EvidenceStatus, LucideIcon> = {
+    'Evidence available': CircleCheckIcon,
+    'Limited information': CircleAlertIcon,
+    'Source delayed': Clock3Icon,
+    'Outcome not posted': CircleAlertIcon,
+  }
+  const Icon = icons[status]
+  return <Icon aria-hidden="true" />
+}
+
+type IssueCardProps = {
+  issue: IssueCardData
+  reason?: string
+  variant?: 'lead' | 'standard' | 'rail'
+}
+
+export function IssueCard({
+  issue,
+  reason,
+  variant = 'standard',
+}: IssueCardProps) {
+  const inertId = useId()
+
+  const dateLine = issue.nextDate
+    ? `${issue.nextDate.label} · ${formatDate(issue.nextDate.date)}`
+    : issue.latestOutcome
+      ? `${issue.latestOutcome.label} · ${formatDate(issue.latestOutcome.date)}`
+      : 'No next date posted'
+
+  return (
+    <article className="pp-card" data-variant={variant}>
+      {reason ? <p className="pp-card-reason">{reason}</p> : null}
+      <div className="pp-card-main">
+        <div className="pp-card-head">
+          <p className="pp-card-place">
+            {issue.place} · {issue.body}
+          </p>
+          <p className="pp-card-state" data-tone={stateTone(issue.state)}>
+            <span aria-hidden="true" className="pp-dot" />
+            {issue.state}
+          </p>
+        </div>
+        <h3 className="pp-card-title">
+          <Link to={'/issues/' + issue.slug}>{issue.title}</Link>
+        </h3>
+        <p className="pp-card-date">{dateLine}</p>
+        {issue.whyMatter ? (
+          <p className="pp-card-why">{issue.whyMatter}</p>
+        ) : null}
+      </div>
+      <div className="pp-card-side">
+        <p
+          className="pp-card-evidence"
+          data-tone={evidenceTone(issue.evidence.status)}
+        >
+          <EvidenceIcon status={issue.evidence.status} />
+          <span>
+            {issue.evidence.status} · Checked{' '}
+            {formatDate(issue.evidence.checked)}
+          </span>
+        </p>
+        {issue.evidence.note ? (
+          <p className="pp-card-evidence-note">{issue.evidence.note}</p>
+        ) : null}
+        <div className="pp-card-actions">
+          <Button
+            className="pp-card-view"
+            render={<Link to={'/issues/' + issue.slug} />}
+            size="touch"
+            variant={variant === 'lead' ? 'default' : 'outline'}
+          >
+            View issue
+          </Button>
+          {variant !== 'rail' ? (
+            <>
+              <Button
+                aria-describedby={inertId}
+                className="pp-inline-action"
+                size="touch"
+                variant="ghost"
+              >
+                Follow
+              </Button>
+              <ShareButton path={'/issues/' + issue.slug} title={issue.title} />
+              <span className="visually-hidden" id={inertId}>
+                Prototype control. Following is not connected yet.
+              </span>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  )
+}
+
+export function UpcomingCard({ item }: { item: UpcomingItemData }) {
+  return (
+    <article className="pp-upcoming">
+      <p className="pp-upcoming-date">
+        <span className="pp-upcoming-day">{formatDay(item.date)}</span>
+        <span className="pp-upcoming-time">{formatTime(item.date)}</span>
+      </p>
+      <div className="pp-upcoming-main">
+        <p className="pp-upcoming-body">{item.body}</p>
+        <h3 className="pp-upcoming-title">
+          <Link to={item.href}>{item.title}</Link>
+        </h3>
+        <p className="pp-upcoming-detail">{item.detail}</p>
+      </div>
+    </article>
+  )
+}

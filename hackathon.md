@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T06:24:57Z
+- **Last updated:** 2026-08-30T14:59:05Z
 
 ## Log
 
@@ -152,6 +152,24 @@ unfinished action remains inert and labeled. No API, resident data, provider
 call, deployment, or working production feature is claimed
 (`docs/resident-interface-plan.md`, `docs/resident-interface-slice-1.md`,
 `src/features/resident-blueprint/`, `src/routes/`).
+
+Completed Slice 2 repair work after code and responsive-layout review. Every
+fixture view now identifies its data as design-only. Explore restores only
+supported URL filters, applies topic and evidence filters to matching record
+types, sorts dated and undated results correctly, and lets the forced empty
+fixture override the browse catalog. Mobile filters and area selection use a
+downward-swipe Base UI drawer, while desktop uses a dialog. One Coss UI Button
+size now gives standalone discovery actions a measured 44-pixel height.
+The area setup has one trigger, rail-card actions align, and the lead issue
+action has clear priority. Computed DOM checks passed at 320, 375, 390, 414,
+768, and 1280 pixels without horizontal overflow. Date-only records now keep
+their Chicago calendar day in other visitor timezones. Each More filters group
+can be cleared without removing the query or unrelated filters. Sort appears
+only when Explore shows a sortable result sequence. `npm run verify` passed 160
+tests across 19 files, typecheck, production client and server builds,
+prerender, and lint. No API, provider call, deployment, or production feature
+is claimed
+(`docs/resident-interface-slice-2.md`, `src/features/discovery/`).
 
 ### 2026-08-30 - 3996bfc
 

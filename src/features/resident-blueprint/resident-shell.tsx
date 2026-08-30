@@ -10,9 +10,15 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 
+import { AreaSelector } from '../discovery/area-selector'
+import { useArea } from '../discovery/area-store'
+import { areaName } from '../discovery/contracts'
+import { useKeyboardOpen, useOnline, useOverlayOpen } from '../discovery/hooks'
+
 import { Spinner } from '../../components/ui/spinner'
 
 import './resident-blueprint.css'
+import '../discovery/discovery.css'
 
 type NavigationItem = {
   href: string
@@ -46,16 +52,21 @@ export function ResidentShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
+  const area = useArea()
+  const keyboardOpen = useKeyboardOpen()
+  const overlayOpen = useOverlayOpen()
+  const online = useOnline()
 
   return (
-    <div className="resident-blueprint">
+    <div
+      className="resident-blueprint"
+      data-keyboard-open={keyboardOpen ? '' : undefined}
+      data-offline={online ? undefined : ''}
+      data-overlay-open={overlayOpen ? '' : undefined}
+    >
       <a className="resident-skip-link" href="#resident-main">
         Skip to content
       </a>
-      <span className="visually-hidden" id="resident-shell-inert-note">
-        This control is placed for the low-fidelity prototype and is not
-        connected.
-      </span>
 
       <header className="resident-header">
         <div className="resident-header-inner">
@@ -80,16 +91,20 @@ export function ResidentShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="resident-context-controls">
-            <button
-              aria-describedby="resident-shell-inert-note"
-              type="button"
-              className="resident-context-control"
-            >
-              <MapPinIcon aria-hidden="true" />
-              <span className="resident-context-label">
-                {pathname === '/' ? 'Choose area' : 'Lafayette Parish'}
-              </span>
-            </button>
+            <AreaSelector
+              trigger={(props) => (
+                <button
+                  {...props}
+                  className="resident-context-control"
+                  type="button"
+                >
+                  <MapPinIcon aria-hidden="true" />
+                  <span className="resident-context-label">
+                    {area ? areaName(area) : 'Choose area'}
+                  </span>
+                </button>
+              )}
+            />
             <Link
               className="resident-account-control"
               to="/following"
@@ -100,6 +115,12 @@ export function ResidentShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
+
+      {online ? null : (
+        <div className="pp-offline-bar" role="status">
+          You are offline. Showing the information already loaded.
+        </div>
+      )}
 
       {children}
 
@@ -133,6 +154,14 @@ function ResidentNavigationLink({
       className="resident-nav-link"
       data-active={isActive ? '' : undefined}
       to={item.href}
+      onClick={(event) => {
+        if (!isActive) return
+        event.preventDefault()
+        const reduced = window.matchMedia(
+          '(prefers-reduced-motion: reduce)',
+        ).matches
+        window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
+      }}
     >
       <Icon aria-hidden="true" />
       <span>{item.label}</span>

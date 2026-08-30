@@ -1,0 +1,173 @@
+/* Louisiana relief. Structural styles for the WebGPU canvas, map labels,
+   SVG fallback, and render-state transitions. The parent wrapper owns size. */
+
+.relief-viewport {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.relief-canvas,
+.relief-fallback {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.relief-canvas {
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-standard) ease;
+}
+
+.relief-viewport[data-render-state='ready'] .relief-canvas {
+  opacity: 1;
+}
+
+.relief-map-labels {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-standard) ease;
+}
+
+.relief-viewport[data-render-state='ready'] .relief-map-labels,
+.relief-viewport[data-render-state='fallback'] .relief-map-labels {
+  opacity: 1;
+}
+
+.relief-map-label {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.35rem;
+  padding-inline: 0.45rem;
+  border: 1px solid rgb(49 91 234 / 22%);
+  border-radius: 0.35rem;
+  color: #26335f;
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 2px 8px rgb(31 48 95 / 9%);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.relief-map-label::after {
+  position: absolute;
+  content: '';
+  background: rgb(49 91 234 / 38%);
+}
+
+.relief-map-label-rapides {
+  top: 28%;
+  left: 37%;
+  transform: translateX(-50%);
+}
+
+.relief-map-label-rapides::after {
+  top: 100%;
+  left: 50%;
+  width: 1px;
+  height: 1.6rem;
+}
+
+.relief-map-label-lafayette {
+  top: 55%;
+  left: 11%;
+}
+
+.relief-map-label-lafayette::after {
+  top: 50%;
+  left: 100%;
+  width: clamp(2.25rem, 7vw, 5.4rem);
+  height: 1px;
+}
+
+.relief-map-label-baton-rouge {
+  top: 48%;
+  left: 58%;
+}
+
+.relief-map-label-baton-rouge::after {
+  top: 70%;
+  right: 100%;
+  width: 1.45rem;
+  height: 1px;
+  transform: rotate(-18deg);
+  transform-origin: right center;
+}
+
+.relief-fallback {
+  z-index: 1;
+  box-sizing: border-box;
+  padding: 2.25rem 3.5rem;
+  transition: opacity var(--dur-standard) ease;
+}
+
+.relief-fallback-state {
+  fill: #1b2130;
+  stroke: #080b11;
+  stroke-linejoin: round;
+  stroke-width: 1.2;
+}
+
+.relief-fallback-pins path {
+  fill: #315bea;
+  stroke: #fff;
+  stroke-width: 1;
+}
+
+.relief-fallback-pins circle {
+  fill: #fff;
+}
+
+.relief-viewport[data-render-state='loading'] .relief-fallback {
+  opacity: 0.22;
+}
+
+.relief-viewport[data-render-state='ready'] .relief-fallback {
+  opacity: 0;
+}
+
+.relief-fallback-note {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.9rem;
+  z-index: 3;
+  display: none;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+.relief-viewport[data-render-state='fallback'] .relief-fallback-note {
+  display: block;
+}
+
+@media (max-width: 40rem) {
+  .relief-map-label {
+    min-height: 1.2rem;
+    padding-inline: 0.38rem;
+    font-size: 0.52rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .relief-canvas,
+  .relief-fallback,
+  .relief-map-labels {
+    transition-duration: 1ms !important;
+  }
+}
