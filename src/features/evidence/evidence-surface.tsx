@@ -229,6 +229,13 @@ export function EvidencePanel() {
 function EvidenceSheet() {
   const { citations, restoreFocus, select, selected, triggerId } = useEvidence()
   const citation = selected ? citations[selected] : undefined
+  const lastCitationRef = useRef<CitationData | undefined>(citation)
+
+  useEffect(() => {
+    if (citation) lastCitationRef.current = citation
+  }, [citation])
+
+  const renderedCitation = citation ?? lastCitationRef.current
 
   return (
     <Sheet
@@ -237,15 +244,18 @@ function EvidenceSheet() {
         if (!open) select(null)
       }}
       onOpenChangeComplete={(open) => {
-        if (!open) restoreFocus()
+        if (!open) {
+          restoreFocus()
+          lastCitationRef.current = undefined
+        }
       }}
       open={Boolean(citation)}
       popupId={PANEL_ID}
-      size={citation ? evidenceSheetSize(citation) : 'medium'}
+      size={renderedCitation ? evidenceSheetSize(renderedCitation) : 'medium'}
       title="Official source"
       triggerId={triggerId}
     >
-      {citation ? <EvidenceBody citation={citation} /> : null}
+      {renderedCitation ? <EvidenceBody citation={renderedCitation} /> : null}
     </Sheet>
   )
 }

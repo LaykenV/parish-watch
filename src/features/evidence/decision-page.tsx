@@ -124,11 +124,7 @@ export function DecisionPage({
             <Section id="fields" title="Accepted details">
               <dl className="ev-fields">
                 {decision.fields.map((field) => (
-                  <Claim
-                    citationId={field.citationId}
-                    key={field.label}
-                    wrap={false}
-                  >
+                  <Claim citationId={field.citationId} key={field.label}>
                     <dt>{field.label}</dt>
                     <dd>
                       {field.value}

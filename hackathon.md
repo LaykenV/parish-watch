@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T19:21:35Z
+- **Last updated:** 2026-08-30T19:35:50Z
 
 ## Log
 
@@ -25,6 +25,15 @@ The unsupported water-meter record link is gone, and the April meeting rows
 open matching routine records. New invariants cover inherited citation ids and
 meeting-row title mismatches. Revalidation is deferred to the next PR checks
 (`src/features/evidence/contracts.ts`, `src/features/evidence/record-fixtures.ts`).
+
+The next full-context review found two responsive defects. Accepted detail
+labels and values now stay together in the content column instead of entering
+the evidence gutter. The mobile drawer retains its last citation and size until
+the close transition finishes. Browser checks measured aligned definition rows
+at 1,280 pixels with no overflow and kept the excerpt visible during the
+390-pixel drawer exit. Automated revalidation remains with PR checks
+(`src/features/evidence/decision-page.tsx`,
+`src/features/evidence/evidence-surface.tsx`).
 
 ### 2026-08-30 - ac0cc55
 
