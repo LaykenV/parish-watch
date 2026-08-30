@@ -1,10 +1,17 @@
 # Public Parish marketing-page brief
 
-Status: approved context pack for design experiments
+Status: historical context pack; Design Slice 2 retired the standalone marketing page
 
 This file is the portable prompt for generating Public Parish landing-page
 experiments. It defines the page job, exact copy, durable structure, content
 limits, mobile behavior, and transition into the resident application.
+
+The transition is complete. Design Slice 2 kept the headline, lede, Louisiana
+relief, and trust language inside the first-visit resident Home. It replaced the
+prelaunch repository action with the area selector and moved longer method copy
+to the How it works blueprint. The discovery rail still uses labeled fixtures,
+not production resident data. Use the resident-interface documents for current
+implementation work.
 
 ## Required first read
 
@@ -156,10 +163,11 @@ Do not fabricate an issue, resident quote, metric, source excerpt, product
 screenshot, email, or successful outcome. A real public item may replace the
 abstract sequence only after the publication contract accepts it.
 
-At Slice 5, this same section becomes a rail of real major decisions. On mobile,
-the rail uses native horizontal overflow and proximity scroll snapping. Show
-part of the next card. Never hijack vertical scrolling or require dragging as
-the only input method.
+Design Slice 2 replaced this section with a rail of labeled fixture decisions.
+A later resident projection will supply real published issues. On mobile, the
+rail uses native horizontal overflow and proximity scroll snapping. Show part
+of the next card. Never hijack vertical scrolling or require dragging as the
+only input method.
 
 ## Trust and coverage
 

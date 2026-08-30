@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0 and evidence-engine Slices 1 through 4 are deployed; resident interface design is next
+Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 and 2 are deployed
 
 ## Architecture Goal
 
@@ -40,7 +40,8 @@ candidate and cited spans, cannot repair fields, and must judge every fact under
 strict schema. A deterministic policy then writes a full, source-only limited,
 or withheld immutable version. Withheld versions stay in history but never
 replace the last full or limited current pointer. The projection tables exist,
-but Slice 5 still owns the resident-facing query and interface.
+but the deployed discovery interface still reads labeled fixtures. A later
+integration slice owns the resident projection and ranking query.
 
 Slice 4 adds source-snapshot comparisons, publication material changes, and the
 `buildIssueV1` durable workflow. Every accepted publication after the first is
@@ -61,12 +62,21 @@ resident-facing decision query, issue interface, or chat path exists yet. PR
 #13 merged as `c162543`; production workflow `33273984552` deployed the Slice 4
 backend and frontend, applied the registry seed, and passed smoke. The
 independent production smoke then passed the direct Convex host, canonical
-domain, apex redirect, and readiness query. The real Terra extraction, Luna
-review, and idempotent replay ran only in the personal development deployment.
-Slice 4 development issue
+domain, apex redirect, and readiness query. Slice 4 development issue
 `n57071y9n25rrs09yaanb1hz918dd1fs` links two real Lafayette decisions and
 publishes a reviewed score of 5. No production extraction, model review, or
-issue build has run.
+issue build had run at that release.
+
+The later controlled production onboarding ran Terra extraction and Luna review
+for Lafayette atomic records. Current production publications include
+`CO-062-2026`, `CO-069-2026`, and `CO-072-2026`. Production still has no issue
+build, issue-decision link, importance assessment, or feed projection.
+
+PR #24 merged resident-interface Design Slice 2 as `4e2ac67`. The application
+now has a responsive shell plus Home, For You, and Explore routes with typed,
+visibly labeled fixtures. The area store, offline notice, URL-restored filters,
+result sorting, share fallback, and responsive navigation run in the browser.
+The fixture adapter does not read the production publication tables.
 
 ## System Boundaries
 
@@ -196,6 +206,10 @@ prerendered routes. Do not design around request-time server rendering.
 page hierarchy, state matrix, and design-agent assignments. The complete
 frontend may use typed local fixtures while APIs are unfinished. Public builds
 must never simulate a successful integration.
+
+Design Slices 1 and 2 implement the route blueprint, shared shell, Home, For
+You, and Explore. Later design slices own issue and evidence views, Ask,
+following and accounts, coverage, cross-app QA, and the connected prototype.
 
 ### Public Routes
 
@@ -1173,8 +1187,9 @@ proof. The packet split does not change the architecture or product scope below.
 4. A changed snapshot creates a material revision, and atomic decisions link
    into one issue timeline and importance record.
 5. After the complete page contract and designs are approved, one cohesive
-   frontend pass implements the resident interface. The issue and citation
-   paths go live first, while incomplete actions remain hidden.
+   frontend pass implements the resident interface. Design Slices 1 and 2 are
+   deployed with labeled fixtures. The issue and citation paths go live first,
+   while incomplete actions remain hidden or explicitly marked as prototypes.
 6. Anonymous chat answers only from the issue evidence.
 7. Convex Auth v2 Google accounts, verified email-only follows, and AgentMail
    close the outcome loop.

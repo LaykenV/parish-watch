@@ -219,6 +219,15 @@ separate approval.
 
 ### Slice 5: Complete Resident Interface
 
+Status: in progress. Design Slice 1 deployed through PR #14 as `6e46fd7`.
+Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026.
+
+The deployed Slice 2 release includes the responsive shell plus Home, For You,
+and Explore with labeled fixtures. `npm run verify` passed 160 tests across 19
+files, typecheck, production builds, prerender, and lint. Production workflow
+`33318753459` and the independent production smoke passed. The release does not
+connect the fixture cards to production publications.
+
 Do not design or build resident pages one at a time during backend slices.
 Slice 4 must first settle the issue, importance, timeline, and change contracts.
 Then pause implementation and complete this design handoff:

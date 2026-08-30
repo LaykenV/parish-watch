@@ -1,8 +1,13 @@
 # Public Parish resident interface plan
 
-Status: approved Slice 5 design and frontend handoff
+Status: approved Slice 5 design; Design Slices 1 and 2 are deployed
 
 Decision grill completed: August 29, 2026
+
+Implementation checkpoint: Design Slice 1 deployed through PR #14 as
+`6e46fd7`. Design Slice 2 deployed through PR #24 as `4e2ac67` with the
+responsive shell plus fixture-backed Home, For You, and Explore. The remaining
+six design slices and the resident API connections are not complete.
 
 ## Purpose
 
@@ -324,7 +329,7 @@ Standard evidence language:
 - Relationship uncertain
 - Coverage degraded
 
-Name controls by their result. Prefer Show local decisions, View issue, Open
+Name controls by their result. Prefer Choose area, View issue, Open
 official document, Send question, Follow, Save interests, Request coverage, and
 Report a source problem. Avoid Submit, Continue, Learn more, and OK when a
 specific verb is available.
@@ -339,18 +344,18 @@ First visit order:
 
 1. Existing hero headline and Louisiana relief
 2. Searchable `Choose a parish or city` control
-3. `Show local decisions` primary action
-4. `Browse major decisions` skip action
-5. Major local decisions
-6. Happening soon
-7. Latest updates
-8. Conditional coverage warning
-9. Voter information strip
+3. `Browse major decisions` skip action
+4. Major local decisions
+5. Happening soon
+6. Latest updates
+7. Conditional coverage warning
+8. Voter information strip
 
 Keep the relief as the visual, not the required selection control. On mobile,
 place the area control before a shorter relief so the first useful control stays
 near the top. Ask only for location in the hero. Topic selection belongs in For
-You after the resident has seen useful records.
+You after the resident has seen useful records. The searchable area field opens
+the selector directly; do not stack a second button that opens the same dialog.
 
 After the browser stores an area, replace the full hero with a compact
 `Watching [area]` header and Change area action. The feed follows immediately.
@@ -827,6 +832,8 @@ shared pattern. Every slice returns the exact artifacts listed below.
 
 ### Design slice 1: Foundation and complete low-fidelity system
 
+Status: deployed through PR #14 as `6e46fd7` on August 30, 2026.
+
 #### Objective
 
 Map every route, page hierarchy, state, and connected flow before high-fidelity
@@ -876,6 +883,8 @@ work begins. Prove that the complete application fits one responsive shell.
 - The owner approves the whole low-fidelity system before Slice 2.
 
 ### Design slice 2: Application shell and discovery
+
+Status: deployed through PR #24 as `4e2ac67` on August 30, 2026.
 
 #### Objective
 

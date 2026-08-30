@@ -92,6 +92,10 @@ pipeline through its paces:
   41,590, 43,233, and 63,145 tokens all logged `pruning diff` even though
   `custom_model_max_tokens` was already one million. Setting `max_model_tokens` to one
   million moved those diff sizes below the pruning threshold.
+- Full-context runtime grows with the diff. PR #24's large resident-interface
+  review took 7 minutes 8 seconds and completed normally. Babysitting should set
+  a six-to-nine-minute expectation for large PRs instead of applying the
+  throwaway PR's 2-minute-25-second timing to every review.
 
 ## Notes for future changes
 
@@ -125,7 +129,10 @@ the bot into Theo's T3-style PR flow. The human prompt collapses to
 - `babysit-pr` polls checks, review threads, and labels newer than the last
   push, verifies every bot finding against source, fixes real ones, dismisses
   false positives with a written reason and a resolved thread, and repeats
-  until the review is clean on the latest commit. It then asks "All passing.
+  until the review is clean on the latest commit. At the start of every thread,
+  it tells the user that small reviews often take two to three minutes and large
+  full-context reviews normally take six to nine. It reports active wait status
+  at least once a minute. It then asks "All passing.
   Merging deploys production, then I will smoke-test it. Good to merge?"
   through the harness's interactive question tool. A plain chat question works
   where none exists. On a clear yes, it squash-merges, deletes the branch,

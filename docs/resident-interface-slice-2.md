@@ -1,6 +1,6 @@
 # Resident interface Slice 2
 
-Status: implemented shell and discovery, awaiting owner review
+Status: deployed through PR #24 as `4e2ac67`; owner device review is next
 
 Date: August 30, 2026
 
@@ -14,7 +14,7 @@ slices build on.
 The marketing landing page is retired. Its hero character (kicker, tight
 display headline, lede, Louisiana relief with launch pins) moves into the
 first-visit resident Home, and the GitHub CTA is replaced by area selection,
-`Show local decisions`, and `Browse major decisions`.
+and `Browse major decisions`.
 
 Every record shown on these pages is a labeled design fixture. The surplus
 pickup issue mirrors the real development evidence for layout stress. Fixture
@@ -85,14 +85,14 @@ nested cards, and no fake civic claims outside the labeled fixture banner.
 ### Home, first visit
 
 Order: kicker, display headline, lede, `Choose a parish or city` field,
-`Show local decisions`, `Browse major decisions` skip link, short relief,
-Major local decisions (lead plus rail), Happening soon (rail), Latest updates
-(list), conditional coverage notice, voter strip. On mobile the area control
-sits before the relief so the first useful control stays near the top.
+`Browse major decisions` skip link, short relief, Major local decisions (lead
+plus rail), Happening soon (rail), Latest updates (list), conditional coverage
+notice, voter strip. On mobile the area control sits before the relief so the
+first useful control stays near the top.
 
-`Show local decisions` opens the area selector when no area is chosen.
-Selecting a supported area stores it on the device and Home switches to the
-returning view, so the feed follows immediately.
+The area field opens the selector. Selecting a supported area stores it on the
+device and Home switches to the returning view, so the feed follows
+immediately.
 
 ### Home, returning
 
@@ -113,7 +113,7 @@ Sections:
 - Coverage warning renders only in the degraded fixture.
 - Voter strip: next statewide election Nov 3, 2026, checked against the
   Secretary of State calendar on Aug 29, 2026; voter portal link; the
-  non-endorsment line. Recheck the date at feature freeze.
+  non-endorsement line. Recheck the date at feature freeze.
 
 ### For You
 
@@ -147,9 +147,9 @@ keyboard-open state hides the bottom navigation.
 ## Repair verification
 
 The August 30 review repair added focused tests for fixture labeling, direct URL
-validation, the forced no-results view, date sorting, and topic and source
-filter isolation. `npm run verify` passes typecheck, 17 test files with 152
-tests, the production build and prerender, and lint.
+validation, the forced no-results view, date sorting, topic and source filter
+isolation, timezone-stable date-only records, independent More filters groups,
+and conditional Sort visibility. The final verification result appears below.
 
 ## Component specifications
 
@@ -162,14 +162,14 @@ Spacing uses the 4-pixel base. Cards use `--radius-lg` (0.625rem) and 1px
 | Hero headline     | Inter 650      | `clamp(2.9rem, 13vw, 4.1rem)`, mobile; `clamp(3.25rem, 6.2vw, 5.75rem)` desktop; -0.055em; line-height 1 |
 | Watching masthead | Inter 650      | `clamp(1.9rem, 5.5vw, 2.75rem)`; -0.045em; "Watching" in muted ink                                       |
 | Page h1           | Inter 650      | `clamp(1.85rem, 5vw, 2.6rem)`; -0.04em                                                                   |
-| Section h2        | Inter 700      | 1.12rem; -0.015em                                                                                        |
-| Card title        | Inter 600      | 1.08rem, 3-line clamp; lead `clamp(1.45rem, 1.05rem + 2vw, 2.05rem)` 650; rail 0.98rem                   |
-| Date line         | Geist Mono 600 | 0.78rem ink; `No next date posted` fallback                                                              |
-| Evidence stamp    | Geist Mono     | 0.72rem muted; ruled top border; icon tinted success or warning; lead 0.78rem                            |
-| Match reason      | Geist Mono 600 | 0.68rem uppercase, 0.07em tracking, river-blue text                                                      |
-| Update kind       | Geist Mono 600 | 0.62rem uppercase, 0.08em tracking                                                                       |
-| Body small        | Inter          | 0.92rem muted, line-height 1.55                                                                          |
-| Pills             | Inter 600      | 0.84rem; 2.75rem height; selected = ink border and inset ring                                            |
+| Section h2        | Inter 700      | `--pp-text-subhead` (1.125rem); -0.015em                                                                 |
+| Card title        | Inter 600      | `--pp-text-subhead`, 3-line clamp; lead `clamp(1.45rem, 1.05rem + 2vw, 2.05rem)` 650                     |
+| Date line         | Geist Mono 600 | `--pp-text-caption` (0.75rem) ink; `No next date posted` fallback                                        |
+| Evidence stamp    | Geist Mono     | `--pp-text-caption` muted; ruled top border; icon tinted success or warning                              |
+| Match reason      | Geist Mono 600 | `--pp-text-caption`, uppercase, river-blue text                                                          |
+| Update kind       | Geist Mono 600 | `--pp-text-caption`, uppercase                                                                           |
+| Body small        | Inter          | `--pp-text-small` (0.875rem) muted, line-height 1.55                                                     |
+| Pills             | Inter 600      | `--pp-text-small`; 2.75rem height; selected = ink border and inset ring                                  |
 | Card padding      | --             | 1.25rem; lead 1.5rem; rail 1.1rem                                                                        |
 | Section rhythm    | --             | 1.5rem top padding after 1px rule; 2rem section gap                                                      |
 
@@ -180,9 +180,10 @@ order: optional reason, place and body, lifecycle state (dot plus text:
 river-blue active, ink settled, muted unknown), title (link), date line
 (`Final vote · Sep 15, 2026` or `Council approved · Apr 21, 2026` or `No next
 date posted`), why-matter sentence, evidence stamp, optional dated note, and
-an action row. The action row holds `View issue` (outlined), then `Follow` and
-`Share` (quiet) on lead and standard cards; rail cards keep `View issue`
-only. The title and `View issue` navigate; the rest of the card is not a link.
+an action row. The lead card uses a dark primary `View issue`; standard and rail
+cards use the outlined treatment. `Follow` and `Share` stay quiet on lead and
+standard cards; rail cards keep `View issue` only. The title and `View issue`
+navigate; the rest of the card is not a link.
 `Follow` is inert with a hidden note saying so; `Share` uses the system share
 sheet and falls back to copy with an inline check icon and green ring for
 about two seconds.
@@ -256,8 +257,9 @@ URL query/filter/sort restoration, route loading region.
 `src/features/discovery/fixtures.ts` holds the only fixture records, with a
 header comment marking them as design fixtures. The area store persists one
 signed-out area under `public-parish.area.v1`. No fixture reaches Convex
-tables, production data, or public copy. `FIXTURE_TODAY` anchors relative date
-filters so fixture scenarios stay stable.
+tables or production data. Every public fixture view carries the `Design
+fixture` banner. `FIXTURE_TODAY` anchors relative date filters so fixture
+scenarios stay stable.
 
 ## URL contracts
 
@@ -317,7 +319,8 @@ browse catalog no longer shows an inert Sort control.
 
 ## Approval gate
 
-Review the shell, the first-visit and returning Home, For You, Explore, the
-card and row families, the area selector, and the fixture scenarios at 320,
-375, and 1440 pixels. After approval, deploy and run the real-iPhone Safari
-review from the master plan before Slice 3 changes shared patterns.
+PR #24 deployed as `4e2ac67`. Production workflow `33318753459` and the
+independent production smoke passed. The remaining owner gate is the laptop and
+real-iPhone Safari review of the shell, first-visit and returning Home, For You,
+Explore, card and row families, area selector, and fixture scenarios before
+Slice 3 changes shared patterns.

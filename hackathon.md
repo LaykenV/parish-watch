@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T14:59:05Z
+- **Last updated:** 2026-08-30T15:09:04Z
 
 ## Log
 
@@ -28,7 +28,7 @@ retrieval, lifecycle, review, and Firecrawl formatting fixes that the batch
 exposed. No production issue build, importance assessment, or resident feed
 projection ran.
 
-### 2026-08-30 - working tree
+### 2026-08-30 - 4e2ac67
 
 Added a checked, metadata-only gold set for Lafayette City Council. It covers
 four agendas, three corresponding minutes, one ordinance packet, lifecycle
@@ -149,7 +149,8 @@ combined app chrome at 390 pixels wide, below the 8-rem budget, and confirmed
 the sticky desktop header at 1280 pixels. `npm run verify` passed 146 tests,
 typecheck, production client and server builds, prerender, and lint. Every
 unfinished action remains inert and labeled. No API, resident data, provider
-call, deployment, or working production feature is claimed
+call, or working production feature is claimed. PR #14 deployed the labeled
+blueprint as `6e46fd7`
 (`docs/resident-interface-plan.md`, `docs/resident-interface-slice-1.md`,
 `src/features/resident-blueprint/`, `src/routes/`).
 
@@ -167,8 +168,10 @@ their Chicago calendar day in other visitor timezones. Each More filters group
 can be cleared without removing the query or unrelated filters. Sort appears
 only when Explore shows a sortable result sequence. `npm run verify` passed 160
 tests across 19 files, typecheck, production client and server builds,
-prerender, and lint. No API, provider call, deployment, or production feature
-is claimed
+prerender, and lint. PR #24 deployed the release as `4e2ac67`. Production
+workflow `33318753459` and the independent production smoke passed the direct
+Convex host, canonical domain, apex redirect, and readiness query. No API,
+provider call, production feed projection, or working civic action is claimed
 (`docs/resident-interface-slice-2.md`, `src/features/discovery/`).
 
 ### 2026-08-30 - 3996bfc

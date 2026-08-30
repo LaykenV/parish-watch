@@ -1,6 +1,6 @@
 # Resident interface Slice 1
 
-Status: implemented low-fidelity system, awaiting owner approval
+Status: deployed low-fidelity system; shell and discovery are superseded by Design Slice 2
 
 Date: August 29, 2026
 
@@ -28,10 +28,11 @@ Parish Home link and its scoped content. It does not render the application nav.
 
 ## Release boundary
 
-This slice can be reviewed in a pull request without claiming a resident
-feature is live. Merging it to `main` would deploy the fixture-labeled routes and
-link them from Home. Do not merge until the owner explicitly accepts that public
-prototype exposure or a later slice replaces or gates the unfinished routes.
+PR #14 deployed this slice as `6e46fd7`. It exposed only labeled prototype
+routes and made no working resident-action claim. Design Slice 2 has since
+replaced the Home, For You, and Explore blueprints with their high-fidelity
+fixture-backed implementations. The remaining blueprint routes still label
+unfinished behavior and keep inert controls from reporting success.
 
 ## Design plan
 
@@ -554,8 +555,7 @@ this slice before wiring it.
 
 ## Approval gate
 
-The owner should approve the route graph, mobile reading order, shell, state
-coverage, overlay positions, connected flows, and missing contracts before
-Slice 2 starts. After this pull request deploys, the owner should also run the
-master plan's real-iPhone Safari review before Slice 2 changes the shell. Visual
-polish is not part of this approval.
+PR #14 passed the repository and responsive checks for this gate and deployed as
+`6e46fd7`. The route graph remains the contract for later slices. The founder's
+real-iPhone Safari review remains a device check for the current Slice 2 shell;
+it does not turn fixture-backed actions into production features.

@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4 are deployed, and resident interface design is next
+Status: approved product plan; evidence Slices 1 through 4 and resident-interface Design Slices 1 and 2 are deployed
 
 ## Product Sentence
 
@@ -20,6 +20,12 @@ design-agent assignments live in
 the full frontend against typed local fixtures so later API work does not reopen
 the page system. Fixture-backed success is development proof only. A production
 build cannot present an action as working until its real backend path passes.
+
+Design Slices 1 and 2 now implement the route blueprint, responsive shell,
+Home, For You, and Explore with labeled fixtures. The later design slices still
+own issues and evidence, Ask, follows and accounts, coverage, cross-app QA, and
+the connected prototype. The existing discovery fixtures are not production
+feed data.
 
 ### Start With Consequence
 

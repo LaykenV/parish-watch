@@ -22,9 +22,16 @@ Slice 4 adds material-change history plus independently reviewed issue links and
 deterministic importance scores without replacing the atomic records. The real
 Terra extraction, Luna review, and idempotent replay proofs ran in the personal
 development deployment. Slice 4 deployed through PR #13 as `c162543` and passed
-the exact production workflow plus an independent smoke. No production
-extraction, model review, or issue build was run. The resident evidence
-interface remains unbuilt.
+the exact production workflow plus an independent smoke.
+
+Resident-interface Design Slices 1 and 2 are also deployed. PR #24 merged as
+`4e2ac67` and shipped the responsive application shell plus fixture-backed Home,
+For You, and Explore routes. Every fixture view labels itself as design data.
+Area selection, URL-restored Explore filters, offline state, share fallback, and
+responsive navigation work in the browser. The discovery records are not a live
+resident feed, and no production issue build or importance assessment has run.
+Ask, evidence views, following, authentication, AgentMail, and coverage APIs
+remain unfinished.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)
@@ -104,6 +111,9 @@ auth, webhook, routing, or schema work genuinely needs isolation.
 - [Initial official-source registry](docs/sources.md)
 - [Four-week build plan](docs/build-plan.md)
 - [Hackathon requirements and win plan](docs/hackathon.md)
+- [Resident interface master plan](docs/resident-interface-plan.md)
+- [Resident interface Design Slice 1](docs/resident-interface-slice-1.md)
+- [Resident interface Design Slice 2](docs/resident-interface-slice-2.md)
 - [Public build log](hackathon.md)
 
 ## Implemented setup and intended stack
@@ -122,10 +132,10 @@ auth, webhook, routing, or schema work genuinely needs isolation.
   material-change alerts
 
 Direct dependencies and the lockfile use exact versions. Convex Auth v2 is
-pinned to `2.0.0-alpha.1`; auth is not implemented yet. Terra extraction has
-passed one real agenda case and its adversarial contract suite. Luna review and
-the broader labeled-set benchmark remain Slice 3 work before publication code
-can rely on the two-model split.
+pinned to `2.0.0-alpha.1`; auth is not implemented yet. Terra extraction and
+Luna review have passed real development and production decision cases. The
+publications remain separate from the fixture-backed discovery interface until
+the resident projection and ranking query are connected.
 
 ## License
 

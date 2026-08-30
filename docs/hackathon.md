@@ -114,8 +114,8 @@ Phase 0 was completed on August 27:
 - the public root, production-bound asset, direct not-found route, and desktop
   and mobile layouts were tested signed out.
 
-The public landing page and evidence backend through Slice 4 are live in
-production.
+The evidence backend through Slice 4 and resident-interface Design Slices 1 and
+2 are live in production.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -148,9 +148,18 @@ remained withheld. PRs #15 through #23 deployed the fixes found during the run.
 The final suite passed 146 tests, typecheck, builds, prerender, and lint, and the
 production workflow and independent smoke passed.
 
+PR #14 deployed the labeled low-fidelity route blueprint as `6e46fd7`. PR #24
+then deployed the responsive application shell plus fixture-backed Home, For
+You, and Explore as `4e2ac67`. Every discovery fixture view identifies itself
+as design data. Verification passed 160 tests across 19 files, typecheck,
+production builds, prerender, and lint. Production workflow `33318753459` and
+the independent production smoke passed the direct Convex host, canonical
+domain, apex redirect, and readiness query.
+
 No production issue build, importance assessment, or feed projection has run.
-The resident evidence interface and vibeapps.dev submission remain pending. No
-AgentMail integration or authentication flow exists yet.
+The live discovery pages still use fixtures. Real issue and evidence views,
+Ask, follows, AgentMail, authentication, coverage integration, and the
+vibeapps.dev submission remain pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests
