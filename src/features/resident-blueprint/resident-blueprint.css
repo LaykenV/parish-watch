@@ -68,8 +68,7 @@
 }
 
 .resident-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 40;
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--background) 94%, transparent);
@@ -96,7 +95,7 @@
 .resident-header-inner {
   display: flex;
   width: min(100% - 1.5rem, 80rem);
-  min-height: 4rem;
+  min-height: 3.5rem;
   margin-inline: auto;
   align-items: center;
   justify-content: space-between;
@@ -207,7 +206,7 @@
   z-index: 50;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  min-height: 4.5rem;
+  min-height: 4.25rem;
   padding: 0.35rem max(0.35rem, env(safe-area-inset-right))
     max(0.35rem, env(safe-area-inset-bottom))
     max(0.35rem, env(safe-area-inset-left));
@@ -455,7 +454,7 @@
 
   .blueprint-contract-rail {
     position: sticky;
-    top: 5.5rem;
+    top: 1.5rem;
   }
 
   .resident-blueprint-standalone .blueprint-main {
@@ -480,8 +479,14 @@
     display: none;
   }
 
+  .resident-header {
+    position: sticky;
+    top: 0;
+  }
+
   .resident-header-inner {
     width: min(100% - 3rem, 80rem);
+    min-height: 4rem;
   }
 
   .resident-desktop-nav {
@@ -496,6 +501,10 @@
 
   .resident-context-control {
     max-width: none;
+  }
+
+  .blueprint-contract-rail {
+    top: 5.5rem;
   }
 }
 

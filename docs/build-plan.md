@@ -226,6 +226,9 @@ Then pause implementation and complete this design handoff:
   design tool;
 - design and build the approved page system in one cohesive frontend pass,
   including the final Ask, Follow, account, email, and coverage positions;
+- after each design-slice pull request deploys and passes the exact production
+  workflow and independent smoke, run the documented founder review on an
+  actual iPhone in Safari before the next slice changes that shared pattern;
 - use typed fixtures and local design adapters until each real API is ready;
 - connect the issue, decision, citation, coverage, and realtime publication
   paths that already work;
@@ -398,6 +401,9 @@ Do not add a map, new institution class, broad design system, or admin product.
 - reconfirm the voter-information strip's election date and outbound link
   against the Secretary of State's official calendar;
 - test the app from a signed-out browser and mobile viewport;
+- test every enabled design slice on an actual iPhone in Safari with browser
+  controls expanded and collapsed, portrait and landscape, the keyboard, 125
+  percent page zoom, and Reduce Motion;
 - test every direct `convex.site` route;
 - test Convex Auth v2 alpha Google OAuth;
 - test AgentMail email-subscription verification, management, and unsubscribe;

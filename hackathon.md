@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T02:12:22Z
+- **Last updated:** 2026-08-30T02:51:13Z
 
 ## Log
 
@@ -24,11 +24,20 @@ responsive shell with router-driven navigation and a fixed loading region,
 typed page and state contracts, a standalone email-management frame, and a
 route inventory check tied to the generated router types. The bottom navigation
 remains available through 1024 pixels and becomes the desktop header at 1025
-pixels. Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
-horizontal overflow, and `npm run verify` passed 124 tests, typecheck, build,
-prerender, and lint. Every unfinished action remains inert and labeled. No API,
-resident data, provider call, deployment, or working production feature is
-claimed (`docs/resident-interface-slice-1.md`,
+pixels. The mobile top bar now scrolls away while the safe-area-aware bottom
+navigation stays fixed. The documented mobile contract adds written sheet
+openers, grabbers after opening, medium and full heights, explicit dismissal,
+native issue-rail snapping, browser-owned Back gestures, system sharing, and a
+real-iPhone Safari review after every deployed design slice.
+
+Browser checks passed at 375, 768, 1024, 1025, and 1440 pixels without
+horizontal overflow. A later computed-style check measured 125 pixels of
+combined app chrome at 390 pixels wide, below the 8-rem budget, and confirmed
+the sticky desktop header at 1280 pixels. `npm run verify` passed 124 tests,
+typecheck, production client and server builds, prerender, and lint. Every
+unfinished action remains inert and labeled. No API, resident data, provider
+call, deployment, or working production feature is claimed
+(`docs/resident-interface-plan.md`, `docs/resident-interface-slice-1.md`,
 `src/features/resident-blueprint/`, `src/routes/`).
 
 ### 2026-08-30 - 3996bfc

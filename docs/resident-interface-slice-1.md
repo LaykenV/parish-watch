@@ -64,6 +64,11 @@ contracts follow the page content in low fidelity. Above 48 rem, the state
 contract moves to a narrow right rail. Above 64 rem, the mobile bottom
 navigation becomes a desktop header.
 
+The mobile and tablet top bar scrolls with the page. Only bottom navigation
+stays fixed, so app chrome does not squeeze the reading window between two
+pinned bars. The top bar is at most 3.5 rem and the bottom navigation is at most
+4.25 rem before safe-area padding. Their controls keep 44-by-44-pixel targets.
+
 The master widths are:
 
 - shell: up to 80 rem;
@@ -80,6 +85,12 @@ The evidence gutter is the only signature interaction. Slice 1 reserves a
 river-blue evidence region beside Issue, Decision record, and Ask. On mobile,
 the same Source action owns a bottom sheet. Slice 3 will design the excerpt,
 connector rule, focus return, URL state, and official-document action.
+
+Every mobile sheet opens from a written control. An open sheet has a grabber,
+explicit Close control, safe backdrop dismissal, and downward drag dismissal.
+Medium sheets may expand to full height. Closing returns to the exact opener.
+The grabber never replaces Source, More filters, Follow, Choose area, or Report
+a source problem.
 
 ### Anti-template review
 
@@ -122,6 +133,23 @@ Overlays and URL state
 `/share/issues/:slug` remains a Convex HTTP share page. It is not a resident SPA
 screen. The private source-problem flow is an overlay, not a public discussion
 route.
+
+## Mobile interaction contract
+
+- Preserve the nested route and scroll position for For You, Explore, Ask, and
+  Coverage when switching destinations.
+- Tapping the active destination scrolls its current page to the top.
+- Let Safari own the screen-edge Back gesture. Do not swipe between top-level
+  destinations.
+- Use horizontal swipe only for finite issue rails. Keep part of the next card
+  visible, use proximity snapping, and preserve vertical page scrolling.
+- Do not add vertical page snapping or swipe-only management actions.
+- Use the system share sheet when available and keep Copy link as the fallback.
+- Apply safe-area insets to bottom navigation and sheet actions.
+- Hide bottom navigation for the keyboard and full-height sheets.
+
+The master plan defines starting sheet heights and the real-iPhone Safari
+review that follows every deployed design slice.
 
 ## 375 pixel page frames
 
@@ -528,4 +556,6 @@ this slice before wiring it.
 
 The owner should approve the route graph, mobile reading order, shell, state
 coverage, overlay positions, connected flows, and missing contracts before
-Slice 2 starts. Visual polish is not part of this approval.
+Slice 2 starts. After this pull request deploys, the owner should also run the
+master plan's real-iPhone Safari review before Slice 2 changes the shell. Visual
+polish is not part of this approval.
