@@ -144,8 +144,16 @@ export function DecisionPage({
 
             <Section id="ask" title="Ask Public Parish">
               <AskBlock
-                scope={`decision:${decision.recordKey}`}
-                scopeLabel="Answering from this decision record"
+                scope={
+                  decision.issue
+                    ? { issueSlug: decision.issue.slug, kind: 'issue' }
+                    : { kind: 'corpus' }
+                }
+                scopeLabel={
+                  decision.issue
+                    ? 'Answering from this issue'
+                    : 'Searching all validated Public Parish evidence'
+                }
               />
             </Section>
 

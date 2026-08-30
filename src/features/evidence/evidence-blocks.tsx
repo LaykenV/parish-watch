@@ -289,17 +289,30 @@ export function VersionHistory({ versions }: { versions: PublishedVersion[] }) {
 }
 
 /*
-  Scoped Ask entry from an issue or meeting. The draft is private conversation
+  Scoped Ask entry from a record page. The draft is private conversation
   content: it travels through the in-memory handoff, never the URL, and the
   Ask route consumes it on mount.
+
+  Ask supports corpus, issue, and meeting scope. A decision record has no
+  scope of its own, so the decision page asks from the issue that owns it and
+  falls back to the corpus when it belongs to no issue.
 */
+export type AskBlockScope =
+  | { kind: 'corpus' }
+  | { kind: 'issue'; issueSlug: string }
+  | { kind: 'meeting'; meetingId: string }
+
+function askBlockScopeKey(scope: AskBlockScope): string {
+  if (scope.kind === 'issue') return issueAskKey(scope.issueSlug)
+  if (scope.kind === 'meeting') return meetingAskKey(scope.meetingId)
+  return 'corpus'
+}
+
 export function AskBlock({
   scope,
   scopeLabel,
 }: {
-  scope:
-    | { kind: 'issue'; issueSlug: string }
-    | { kind: 'meeting'; meetingId: string }
+  scope: AskBlockScope
   scopeLabel: string
 }) {
   const navigate = useNavigate()
@@ -309,22 +322,19 @@ export function AskBlock({
   const navigateToAsk = () => {
     const draft = question.trim()
     if (!draft) return
-    setAskDraftHandoff(
-      scope.kind === 'issue'
-        ? issueAskKey(scope.issueSlug)
-        : meetingAskKey(scope.meetingId),
-      draft,
-    )
+    setAskDraftHandoff(askBlockScopeKey(scope), draft)
     if (scope.kind === 'issue') {
       navigate({
         search: { scope: 'issue', issue: scope.issueSlug },
         to: '/ask',
       })
-    } else {
+    } else if (scope.kind === 'meeting') {
       navigate({
         search: { scope: 'meeting', meeting: scope.meetingId },
         to: '/ask',
       })
+    } else {
+      navigate({ search: { scope: 'corpus' }, to: '/ask' })
     }
   }
 
