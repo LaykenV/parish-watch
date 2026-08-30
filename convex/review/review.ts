@@ -96,6 +96,7 @@ export const runIndependentReview = internalAction({
       sourceKind: args.context.sourceKind,
       sourceRecordId: args.context.sourceRecordId,
       targetRecordId: args.context.targetRecordId,
+      recordType: args.context.recordType,
       candidate: {
         recordType: args.context.recordType,
         title: args.context.title,
@@ -156,6 +157,7 @@ export const runIndependentReview = internalAction({
             fieldPath: fact.fieldPath,
           })),
           args.context.sourceRecordId !== null,
+          args.context.recordType,
         ),
       onAttempt,
     }

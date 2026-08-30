@@ -13,7 +13,7 @@ import {
 import type { IndependentReviewV1 } from '../review/contractV1'
 import { reviewContextValidator } from '../review/prepare'
 import { sha256HexOfText } from '../sources/hashing'
-import { CORE_PUBLICATION_FIELD_PATHS } from './evidenceRulesV1'
+import { CORE_IDENTITY_FIELD_PATHS } from './evidenceRulesV1'
 import { applyPublicationPolicyV1 } from './policyV1'
 
 export const finalizePublication = internalMutation({
@@ -134,6 +134,7 @@ export const finalizePublication = internalMutation({
     const sourceRecordId = candidate.sourceRecordId
     const policy = applyPublicationPolicyV1({
       sourceRecordId,
+      recordType: args.context.recordType,
       review: reviewForPolicy,
     })
 
@@ -233,7 +234,7 @@ export const finalizePublication = internalMutation({
         ? args.context.facts
         : policy.mode === 'limited'
           ? args.context.facts.filter((fact) =>
-              CORE_PUBLICATION_FIELD_PATHS.has(fact.fieldPath),
+              CORE_IDENTITY_FIELD_PATHS.has(fact.fieldPath),
             )
           : []
     for (const fact of citedFacts) {

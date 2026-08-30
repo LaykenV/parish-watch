@@ -15,11 +15,13 @@ export type PublicationPolicyResult = {
 
 export function applyPublicationPolicyV1(input: {
   sourceRecordId: string | null
+  recordType: string
   review: IndependentReviewV1
 }): PublicationPolicyResult {
   const decision = evaluateReviewEvidenceV1({
     sourceRecordIdPresent:
       input.sourceRecordId !== null && input.sourceRecordId.trim() !== '',
+    recordType: input.recordType,
     checks: input.review.checks,
     findings: input.review.findings,
   })

@@ -1,4 +1,9 @@
-export const CORE_PUBLICATION_FIELD_PATHS: ReadonlySet<string> = new Set([
+export const CORE_SOURCED_FIELD_PATHS: ReadonlySet<string> = new Set([
+  '/title',
+  '/bodyName',
+])
+
+export const CORE_IDENTITY_FIELD_PATHS: ReadonlySet<string> = new Set([
   '/sourceRecordId',
   '/title',
   '/bodyName',
@@ -16,6 +21,7 @@ export type ReviewEvidenceDecision = {
 
 export function evaluateReviewEvidenceV1(input: {
   sourceRecordIdPresent: boolean
+  recordType: string
   checks: ReadonlyArray<{
     fieldPath: string
     assessment: 'supported' | 'unclear' | 'unsupported'
@@ -31,17 +37,27 @@ export function evaluateReviewEvidenceV1(input: {
   if (input.findings.some((finding) => finding.severity === 'fail')) {
     return { verdict: 'fail', reasonCode: 'reviewer_failed' }
   }
+
+  const numberedRecordTypes = new Set(['proposal', 'vote'])
+  const sourceRecordIdRequiresCitation = numberedRecordTypes.has(
+    input.recordType,
+  )
+
   if (
     input.checks.some(
       (check) =>
-        CORE_PUBLICATION_FIELD_PATHS.has(check.fieldPath) &&
+        (CORE_SOURCED_FIELD_PATHS.has(check.fieldPath) ||
+          (check.fieldPath === '/sourceRecordId' &&
+            sourceRecordIdRequiresCitation)) &&
         check.assessment !== 'supported',
     ) ||
     input.findings.some(
       (finding) =>
         finding.severity === 'limited' &&
         finding.fieldPath !== null &&
-        CORE_PUBLICATION_FIELD_PATHS.has(finding.fieldPath),
+        (CORE_SOURCED_FIELD_PATHS.has(finding.fieldPath) ||
+          (finding.fieldPath === '/sourceRecordId' &&
+            sourceRecordIdRequiresCitation)),
     )
   ) {
     return { verdict: 'fail', reasonCode: 'core_evidence_failed' }

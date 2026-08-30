@@ -221,6 +221,7 @@ function reviewResponse(
       verdict ??
       expectedReviewVerdictV1({
         sourceRecordIdPresent: true,
+        recordType: 'proposal',
         checks,
         findings: [],
       }),
@@ -1093,6 +1094,7 @@ test('the review contract rejects missing, duplicate, and unknown fact checks', 
       },
       expected,
       true,
+      'proposal',
     ),
   ).toContain('omitted fact')
   expect(
@@ -1107,6 +1109,7 @@ test('the review contract rejects missing, duplicate, and unknown fact checks', 
       },
       expected,
       true,
+      'proposal',
     ),
   ).toContain('repeats fact')
   expect(
@@ -1121,6 +1124,7 @@ test('the review contract rejects missing, duplicate, and unknown fact checks', 
       },
       expected,
       true,
+      'proposal',
     ),
   ).toContain('unknown fact')
 })
@@ -1139,7 +1143,11 @@ test('the deterministic policy never trusts the review verdict by itself', () =>
     findings: [],
   }
   expect(
-    applyPublicationPolicyV1({ sourceRecordId: 'CO-029-2026', review }),
+    applyPublicationPolicyV1({
+      sourceRecordId: 'CO-029-2026',
+      recordType: 'proposal',
+      review,
+    }),
   ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
 })
 
@@ -1166,11 +1174,16 @@ test('a limited finding on a core field is withheld', () => {
   expect(
     expectedReviewVerdictV1({
       sourceRecordIdPresent: true,
+      recordType: 'proposal',
       checks: review.checks,
       findings: review.findings,
     }),
   ).toBe('fail')
   expect(
-    applyPublicationPolicyV1({ sourceRecordId: 'CO-029-2026', review }),
+    applyPublicationPolicyV1({
+      sourceRecordId: 'CO-029-2026',
+      recordType: 'proposal',
+      review,
+    }),
   ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
 })

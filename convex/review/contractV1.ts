@@ -60,6 +60,7 @@ const MAX_DETAIL_LENGTH = 500
 
 export function expectedReviewVerdictV1(input: {
   sourceRecordIdPresent: boolean
+  recordType: string
   checks: IndependentReviewV1['checks']
   findings: IndependentReviewV1['findings']
 }): ReviewVerdict {
@@ -70,6 +71,7 @@ export function checkIndependentReviewContractV1(
   parsed: unknown,
   expectedFacts: ExpectedReviewFact[],
   sourceRecordIdPresent: boolean,
+  recordType: string,
 ): string | null {
   const review = parsed as IndependentReviewV1
   if (review.checks.length > MAX_CHECKS) {
@@ -126,6 +128,7 @@ export function checkIndependentReviewContractV1(
 
   const expectedVerdict = expectedReviewVerdictV1({
     sourceRecordIdPresent,
+    recordType,
     checks: review.checks,
     findings: review.findings,
   })
