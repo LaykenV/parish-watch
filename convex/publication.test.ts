@@ -15,7 +15,8 @@ import {
   checkIndependentReviewContractV1,
   expectedReviewVerdictV1,
 } from './review/contractV1'
-import { extractionRunKey } from './pipeline/keys'
+import { buildIndependentReviewPromptV1 } from './review/promptV1'
+import { extractionRunKey, publicationRunKey } from './pipeline/keys'
 import { applyPublicationPolicyV1 } from './publication/policyV1'
 import schema from './schema'
 import { sha256HexOfBytes, sha256HexOfText } from './sources/hashing'
@@ -396,6 +397,80 @@ afterEach(() => {
   resetGatewayTokenMinterForTests()
 })
 
+function buildCo072AgendaReviewPrompt(section: string | null) {
+  return buildIndependentReviewPromptV1({
+    sourceKind: 'agenda',
+    sourceRecordId: 'CO-072-2026',
+    targetRecordId: 'CO-072-2026',
+    candidate: {
+      recordType: 'proposal',
+      title:
+        'CO-072-2026 An ordinance of the Lafayette City Council amending the FY 25/26 operating and capital budget',
+      bodyName: 'Lafayette City Council',
+      meetingAt: '2026-09-01T17:30:00-05:00',
+      lifecycleState: 'scheduled',
+      plainLanguageSummary:
+        'The council is scheduled to consider CO-072-2026 for final adoption.',
+      affectedPlaces: [],
+      amounts: [],
+      publicActions: [],
+    },
+    facts: [
+      {
+        factId: 'co-072-lifecycle',
+        fieldPath: '/lifecycleState',
+        value: 'scheduled',
+        excerpt: 'CO-072-2026 An ordinance of the Lafayette City Council',
+        page: 1,
+        section,
+      },
+    ],
+  })
+}
+
+test('the review prompt treats CO-072 final-adoption placement as scheduled consideration', () => {
+  const prompt = buildCo072AgendaReviewPrompt('Final Adoption of Ordinances')
+
+  expect(prompt.promptVersion).toBe('v1.2')
+  expect(prompt.messages[0].content).toContain(
+    'an item under Final Adoption of Ordinances is scheduled for final-adoption consideration',
+  )
+  expect(prompt.messages[0].content).toContain(
+    'the agenda does not prove that adoption happened',
+  )
+  expect(prompt.messages[1].content).toContain(
+    '"section":"Final Adoption of Ordinances"',
+  )
+  expect(prompt.messages[1].content).toContain(
+    'CO-072-2026 An ordinance of the Lafayette City Council',
+  )
+})
+
+test('the review prompt does not treat a bare agenda mention as scheduled', () => {
+  const prompt = buildCo072AgendaReviewPrompt(null)
+
+  expect(prompt.messages[0].content).toContain(
+    'merely appears elsewhere in an agenda without explicit scheduling language or a scheduling section does not by itself support scheduled',
+  )
+  expect(prompt.messages[1].content).toContain('"section":null')
+})
+
+test('review prompt v1.2 creates a new publication idempotency key', async () => {
+  const t = initTest()
+  const seeded = await seedValidatedCandidate(t, '-review-prompt-version')
+  const keyFor = (promptVersion: string) =>
+    publicationRunKey({
+      candidateId: seeded.candidateId,
+      processorVersion: 'v1',
+      promptVersion,
+      schemaVersion: 'v1',
+      policyVersion: 'v1',
+      payloadVersion: 'v1',
+    })
+
+  expect(await keyFor('v1.2')).not.toBe(await keyFor('v1.1'))
+})
+
 test('a second model review publishes one full immutable version with exact citations', async () => {
   const t = initTest()
   const seeded = await seedValidatedCandidate(t)
@@ -455,7 +530,7 @@ test('a second model review publishes one full immutable version with exact cita
     verdict: 'pass',
     modelRole: 'MODEL_FAST',
     modelId: LUNA_MODEL,
-    promptVersion: 'v1.1',
+    promptVersion: 'v1.2',
     schemaVersion: 'v1',
   })
   expect(evidence.version).toMatchObject({
@@ -507,6 +582,8 @@ test('a second model review publishes one full immutable version with exact cita
   const prompt = JSON.stringify(requests[0].messages)
   expect(prompt).toContain('CANDIDATE AND CITATIONS BEGIN')
   expect(prompt).toContain('An approved introduction means proposed')
+  expect(prompt).toContain('Final Adoption of Ordinances')
+  expect(prompt).toContain('merely appears elsewhere in an agenda')
   expect(prompt).not.toContain('SOURCE BEGIN')
 
   const replay = await t.mutation(
@@ -911,7 +988,7 @@ test('publication finalization rejects persisted duplicate fact checks', async (
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1.1',
+      promptVersion: 'v1.2',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
@@ -972,7 +1049,7 @@ test('a late failure cannot reuse a succeeded review', async () => {
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1.1',
+      promptVersion: 'v1.2',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
