@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 and 2 are deployed; Design Slice 3 is complete locally and not deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 3 are deployed
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -31,12 +31,13 @@ Coverage icon. Production workflow `33324166404` and the independent smoke
 passed. The current integration replaces the production discovery empty states
 with accepted atomic records.
 
-Design Slice 3 now implements the issue, atomic decision, meeting, and
-citation-level evidence surfaces on a local feature branch. Its explicit typed
-fixtures run only in development, add no resident-facing banner, and are
-ignored by production builds. Real issue, decision-detail, and meeting-detail
-queries remain integration work. Ask answers, following, accounts, email, and
-coverage remain in later design and integration slices.
+PR #27 deployed Design Slice 3 as `3a59e45`. It implements the issue, atomic
+decision, meeting, and citation-level evidence surfaces. Its explicit typed
+fixtures load only through development-only imports, add no resident-facing
+banner, and stay out of production JavaScript. Production routes show an honest
+recovery page until real issue, decision-detail, and meeting-detail queries
+exist. Ask answers, following, accounts, email, and coverage remain in later
+design and integration slices.
 
 ## Executive Decision
 

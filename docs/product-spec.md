@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4 and resident-interface Design Slices 1 and 2 are deployed; Design Slice 3 is complete locally and not deployed
+Status: approved product plan; evidence Slices 1 through 4 and resident-interface Design Slices 1 through 3 are deployed
 
 ## Product Sentence
 
@@ -29,13 +29,13 @@ publications. These views call them published decision records, open the
 accepted official source, and do not imply issue ranking or complete place
 coverage. Withheld versions remain private.
 
-Design Slice 3 implements the issue, atomic decision, meeting, and
-citation-level evidence pages on a local feature branch. Source controls keep
+PR #27 deployed Design Slice 3 as `3a59e45`. It implements the issue, atomic
+decision, meeting, and citation-level evidence pages. Source controls keep
 citation selection in the URL, open a Coss drawer on mobile or a docked rail on
 desktop, and return focus when closed. Its typed records remain explicit
-development fixtures. Production ignores them and shows recovery pages until
-real detail queries exist. The later design slices still own Ask answers,
-follows and accounts, coverage, and cross-app QA.
+development fixtures loaded through development-only imports. Production shows
+recovery pages until real detail queries exist. The later design slices still
+own Ask answers, follows and accounts, coverage, and cross-app QA.
 
 ### Start With Consequence
 

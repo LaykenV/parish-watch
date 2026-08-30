@@ -1,7 +1,6 @@
 # Resident interface Slice 3
 
-Status: implementation complete locally on `feat/resident-evidence-slice-3`;
-not deployed
+Status: deployed through PR #27 as `3a59e45` on August 30, 2026
 
 Date: August 30, 2026
 

@@ -12,11 +12,11 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T19:42:59Z
+- **Last updated:** 2026-08-30T20:06:13Z
 
 ## Log
 
-### 2026-08-30 - working tree
+### 2026-08-30 - 3a59e45
 
 PR #27 passed its first GitHub verification run. PR-Agent found an inherited-key
 crash in citation URL validation and three fixture rows whose destination did
@@ -44,6 +44,14 @@ now record the first matching Source control as their focus-return target. The
 next PR checks own automated revalidation
 (`src/features/evidence/evidence-page.data.ts`,
 `src/features/evidence/evidence-surface.tsx`).
+
+PR #27 merged as `3a59e45`. GitHub verified typecheck, 194 tests across 23
+files, the client and server builds, prerender, and lint on the final branch
+head. PR-Agent reviewed that exact head with no major or security findings.
+Production workflow `33332573558` deployed the backend and frontend, seeded the
+source configuration, and passed its smoke. The independent production smoke
+then passed the direct Convex host, canonical domain, apex redirect, and backend
+readiness query.
 
 ### 2026-08-30 - ac0cc55
 

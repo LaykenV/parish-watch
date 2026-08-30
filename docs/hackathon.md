@@ -114,9 +114,8 @@ Phase 0 was completed on August 27:
 - the public root, production-bound asset, direct not-found route, and desktop
   and mobile layouts were tested signed out.
 
-The evidence backend through Slice 4 and resident-interface Design Slices 1 and
-2 are live in production. Design Slice 3 is complete on a local feature branch
-and is not deployed.
+The evidence backend through Slice 4 and resident-interface Design Slices 1
+through 3 are live in production.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -166,11 +165,13 @@ ranked issue projection has run. Home, For You, and Explore read current full
 and limited atomic publications, label them as decision records, and open the
 official source. Withheld publications stay hidden.
 
-The local Design Slice 3 branch implements issue, atomic decision, meeting, and
-citation-level evidence views against explicit development fixtures. Production
-builds ignore those fixture parameters and show recovery pages until the real
-detail queries are connected. Ask answers, follows, AgentMail, authentication,
-coverage integration, and the vibeapps.dev submission remain pending.
+PR #27 deployed Design Slice 3 as `3a59e45`. It implements issue, atomic
+decision, meeting, and citation-level evidence views against explicit
+development fixtures. Production builds exclude those fixture modules and show
+recovery pages until the real detail queries are connected. Workflow
+`33332573558` and the independent production smoke passed. Ask answers,
+follows, AgentMail, authentication, coverage integration, and the vibeapps.dev
+submission remain pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

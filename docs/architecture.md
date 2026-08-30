@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 and 2 are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 3 are deployed
 
 ## Architecture Goal
 
@@ -93,14 +93,15 @@ scenario before Home, For You, or Explore derives page state, so fixture records
 signed-in areas, update rows, degraded notices, and failure states remain
 development-only.
 
-Design Slice 3 is complete on a local feature branch and is not deployed. It
-adds route-local typed adapters for issue, decision, meeting, and citation
-views. Explicit `preview` and `update` fixture values are accepted only when
-`import.meta.env.DEV` is true. Production builds resolve no fixture detail and
+PR #27 deployed Design Slice 3 as `3a59e45`. It adds route-local typed adapters
+for issue, decision, meeting, and citation views. Explicit `preview` and
+`update` fixture values are accepted only when `import.meta.env.DEV` is true,
+and development-only dynamic imports keep the evidence fixtures out of the
+production JavaScript graph. Production builds resolve no fixture detail and
 render the route recovery state. Citation selection lives in the `source` URL
 parameter. The shared Coss drawer handles mobile citations, while desktop keeps
-the selected excerpt in the evidence rail. No Convex schema, query, publication,
-or ranking contract changes in this design slice.
+the selected excerpt in the evidence rail. No Convex schema, query,
+publication, or ranking contract changed in this design slice.
 
 ## System Boundaries
 

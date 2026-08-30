@@ -223,7 +223,7 @@ needs a cost estimate and separate approval.
 Status: in progress. Design Slice 1 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
-Slice 3 is complete on a local feature branch and is not deployed.
+Slice 3 deployed through PR #27 as `3a59e45` on August 30, 2026.
 
 The deployed Slice 2 release includes the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -237,10 +237,11 @@ For You, and Explore identify these as decision records and open the official
 source. The integration does not create issues, scores, or complete coverage
 claims.
 
-The local Design Slice 3 branch implements issue, atomic decision, meeting, and
-citation-level evidence pages against explicit development fixtures. Production
-builds ignore those fixture parameters and show recovery pages because real
-detail queries are not connected. This work does not change the production
+The deployed Design Slice 3 code implements issue, atomic decision, meeting,
+and citation-level evidence pages against explicit development fixtures.
+Production builds exclude those fixture modules and show recovery pages because
+real detail queries are not connected. Workflow `33332573558` and the
+independent production smoke passed. This work does not change the production
 publication or ranking boundary.
 
 Do not design or build resident pages one at a time during backend slices.
