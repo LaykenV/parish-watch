@@ -2,6 +2,11 @@
   "schemaVersion": "public_parish_production_batch_v1",
   "preparedFrom": "woozy-wren-227",
   "targetDeployment": "befitting-flamingo-587",
+  "developmentBaseline": {
+    "revalidatedAt": "2026-08-31",
+    "extractionProcessorVersion": "v1.17",
+    "reviewPromptVersion": "v1.4"
+  },
   "rules": {
     "requireMatchingDevelopmentContentHash": true,
     "keepBodiesCandidate": true,
@@ -21,7 +26,7 @@
             {
               "targetRecordId": "CO-029-2026",
               "sourceRecordIdProvenance": "source_printed",
-              "expectedMode": "limited"
+              "expectedMode": "full"
             }
           ]
         },
@@ -55,7 +60,7 @@
             {
               "targetRecordId": "CO-058-2026",
               "sourceRecordIdProvenance": "source_printed",
-              "expectedMode": "limited"
+              "expectedMode": "full"
             },
             {
               "targetRecordId": "CO-060-2026",
@@ -72,12 +77,12 @@
             {
               "targetRecordId": "CO-062-2026",
               "sourceRecordIdProvenance": "source_printed",
-              "expectedMode": "limited"
+              "expectedMode": "full"
             },
             {
               "targetRecordId": "CO-063-2026",
               "sourceRecordIdProvenance": "source_printed",
-              "expectedMode": "full"
+              "expectedMode": "limited"
             },
             {
               "targetRecordId": "CO-066-2026",
@@ -109,7 +114,7 @@
             {
               "targetRecordId": "CO-070-2026",
               "sourceRecordIdProvenance": "source_printed",
-              "expectedMode": "limited"
+              "expectedMode": "full"
             }
           ]
         },
@@ -142,7 +147,7 @@
     {
       "bodySlug": "rapides-parish-police-jury",
       "estimatedPdfRetrievals": 16,
-      "estimatedModelCalls": 22,
+      "estimatedModelCalls": 21,
       "sources": [
         {
           "url": "https://rppj.com/wp-content/uploads/2026/05/April-28-2026-Special-Jury-Minutes-Transcribed.pdf",
@@ -188,12 +193,12 @@
             {
               "targetRecordId": "RAPIDES-BAYWOOD-SPEED-2026",
               "sourceRecordIdProvenance": "operator_assigned",
-              "expectedMode": "full"
+              "expectedMode": "limited"
             },
             {
               "targetRecordId": "RAPIDES-MILLAGE-LEVY-2026",
               "sourceRecordIdProvenance": "operator_assigned",
-              "expectedMode": "full"
+              "expectedMode": "limited"
             }
           ]
         },
@@ -229,11 +234,6 @@
             {
               "targetRecordId": "RAPIDES-COTILE-CAMPING-FEES-2026",
               "sourceRecordIdProvenance": "operator_assigned",
-              "expectedMode": "full"
-            },
-            {
-              "targetRecordId": "RAPIDES-MILLAGE-ELECTIONS-2026-12-12",
-              "sourceRecordIdProvenance": "operator_assigned",
               "expectedMode": "limited"
             }
           ]
@@ -246,12 +246,12 @@
             {
               "targetRecordId": "RAPIDES-HMP-2026",
               "sourceRecordIdProvenance": "operator_assigned",
-              "expectedMode": "limited"
+              "expectedMode": "full"
             },
             {
               "targetRecordId": "RAPIDES-LOATF-2026",
               "sourceRecordIdProvenance": "operator_assigned",
-              "expectedMode": "limited"
+              "expectedMode": "full"
             }
           ]
         }
@@ -264,25 +264,23 @@
           "sourceRecordIdProvenance": "operator_assigned",
           "expectedOutcome": "not_found"
         }
+      ],
+      "excludedTargets": [
+        {
+          "sourceUrl": "https://rppj.com/wp-content/uploads/2026/08/August-10-2026-Jury-Minutes-Transcribed.pdf",
+          "sourceKind": "minutes",
+          "targetRecordId": "RAPIDES-MILLAGE-ELECTIONS-2026-12-12",
+          "sourceRecordIdProvenance": "operator_assigned",
+          "expectedOutcome": "validation_failed",
+          "reason": "Current extraction failed exact citation validation twice."
+        }
       ]
     },
     {
       "bodySlug": "ebr-metropolitan-council",
-      "estimatedPdfRetrievals": 6,
-      "estimatedModelCalls": 6,
+      "estimatedPdfRetrievals": 4,
+      "estimatedModelCalls": 4,
       "sources": [
-        {
-          "url": "https://www.brla.gov/AgendaCenter/ViewFile/Minutes/_01052026-2284",
-          "developmentContentHash": "3d0addd83a35d9c9d451d775e8b621e17d5ced0adfcc6fa958272292e040f594",
-          "sourceKind": "minutes",
-          "targets": [
-            {
-              "targetRecordId": "59157",
-              "sourceRecordIdProvenance": "source_printed",
-              "expectedMode": "limited"
-            }
-          ]
-        },
         {
           "url": "https://www.brla.gov/AgendaCenter/ViewFile/Minutes/_04302026-2367",
           "developmentContentHash": "fcc486b9f6ac1dde430880513ce0abea410ce414a24600fab7035601b6113db0",
@@ -306,6 +304,17 @@
               "expectedMode": "limited"
             }
           ]
+        }
+      ],
+      "excludedTargets": [
+        {
+          "sourceUrl": "https://www.brla.gov/AgendaCenter/ViewFile/Minutes/_01052026-2284",
+          "developmentContentHash": "3d0addd83a35d9c9d451d775e8b621e17d5ced0adfcc6fa958272292e040f594",
+          "sourceKind": "minutes",
+          "targetRecordId": "59157",
+          "sourceRecordIdProvenance": "source_printed",
+          "expectedOutcome": "validation_failed",
+          "reason": "Current extraction failed exact citation validation twice."
         }
       ]
     }
