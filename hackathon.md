@@ -12,11 +12,11 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T21:40:36Z
+- **Last updated:** 2026-08-31T21:48:58Z
 
 ## Log
 
-### 2026-08-31 - 6072dda
+### 2026-08-31 - 3393b19
 
 Added production-only anonymous visit and area-selection telemetry. Fixed event
 contracts update deduplicated browser, event, and aggregate rows in one Convex
