@@ -12,7 +12,7 @@
   --ev-rail-gap: 0rem;
 
   display: flow-root;
-  width: min(100% - 2rem, 74rem);
+  width: min(100% - 2rem, 46rem);
   margin-inline: auto;
   padding-block: 1.25rem 4rem;
 }
@@ -117,18 +117,12 @@
 /* Layout */
 
 /*
-  The heading, the scope bar, and the reading column share the page's left
-  edge, the same arrangement the Issue and Decision pages use. Nothing is
-  centered, so selecting a Source docks the panel without sliding the
-  conversation sideways.
+  The page container is the reading measure, so the heading, the scope bar,
+  and the conversation share one left edge and the whole block centers in the
+  viewport. Docking the evidence panel widens the container by exactly the
+  rail and its gap, so the block re-centers as a unit instead of the column
+  sliding out from under a heading that stayed put.
 */
-
-.ask-head,
-.ask-scope,
-.ask-scope-line,
-.ask-layout {
-  max-width: calc(var(--ev-gutter) + 40rem);
-}
 
 .ask-layout {
   margin-top: 1.5rem;
@@ -705,7 +699,7 @@
   .ask-page {
     --ev-gutter: 6rem;
 
-    width: min(100% - 3rem, 74rem);
+    width: min(100% - 3rem, 46rem);
   }
 
   /*
@@ -742,6 +736,16 @@
     --ev-rail-gap: 2.5rem;
   }
 
+  .ask-page[data-panel-open] {
+    width: min(100% - 3rem, 68.5rem);
+  }
+
+  .ask-page[data-panel-open] .ask-head,
+  .ask-page[data-panel-open] .ask-scope,
+  .ask-page[data-panel-open] .ask-scope-line {
+    max-width: calc(var(--ev-gutter) + 40rem);
+  }
+
   .ask-layout[data-panel-open] {
     display: grid;
     grid-template-columns: minmax(0, 1fr) var(--ev-rail);
@@ -764,8 +768,13 @@
     min-width: 0;
   }
 
+  /*
+    The answer is the reading point, so nothing floats over it here. A phone
+    and tablet keep the sticky composer because the bottom navigation and
+    thumb reach are the reason for it; a desktop page just scrolls.
+  */
   .ask-dock[data-sticky] {
-    bottom: 1rem;
+    position: static;
   }
 }
 

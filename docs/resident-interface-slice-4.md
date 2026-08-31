@@ -828,15 +828,28 @@ composer that accepts a question and lands on the unavailable state discards it
 silently, so the blocks now consult the same gate the route uses and show the
 same honest message in place of the composer.
 
-### Layout departs from the centered reading column
+### The page container is the reading measure
 
-The responsive table specifies a centered reading column. Centering it left the
-route heading and the scope bar misaligned against the conversation, and docking
-the evidence panel slid the column sideways. The reading column is left-aligned
-on the grid the Issue and Decision pages already use, capped at the same
-`calc(var(--ev-gutter) + 40rem)` measure. The empty composer sits directly below
-the scope bar rather than after the examples and recent list, so the field is
-the first thing a resident reaches in both reading order and tab order.
+The responsive table implies a reading column inside a wider page. Sizing the
+container to `74rem` the way the record pages do left the conversation jammed
+against the left edge with a rail's worth of dead space beside it, because Ask
+has no always-present rail to fill that side. The container is now the reading
+measure itself, so the heading, the scope bar, and the conversation share one
+left edge and the block centers in the viewport. Docking the evidence panel
+widens the container by exactly the rail and its gap, so the block re-centers
+as a unit rather than the column sliding out from under a fixed heading.
+
+The empty composer sits directly below the scope bar rather than after the
+examples and recent list, so the field is the first thing a resident reaches in
+both reading order and tab order.
+
+### The composer is not sticky on desktop
+
+The responsive table says the composer stays sticky to the reading column at
+`64.0625rem` and above. It does not. A composer pinned over a long answer
+covers the reading point and puts the last claim behind it, and a desktop page
+has neither a bottom navigation bar nor a thumb-reach problem to justify that.
+Phone and tablet keep the sticky composer for exactly those reasons.
 
 ### Open work
 

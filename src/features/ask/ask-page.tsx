@@ -357,7 +357,12 @@ export function AskPage({
   const kbStyle = { '--ask-kb': `${kbInset}px` } as CSSProperties
 
   return (
-    <main className="ask-page" id="resident-main" style={kbStyle}>
+    <main
+      className="ask-page"
+      data-panel-open={panelOpen || undefined}
+      id="resident-main"
+      style={kbStyle}
+    >
       <AskStatusRegion message={status} />
 
       <header className="ask-head">
