@@ -55,7 +55,7 @@ export type ExpectedReviewFact = {
   fieldPath: string
 }
 
-const MAX_CHECKS = 100
+export const MAX_REVIEW_CHECKS = 100
 const MAX_FINDINGS = 50
 const MAX_DETAIL_LENGTH = 500
 
@@ -75,8 +75,8 @@ export function checkIndependentReviewContractV1(
   sourceRecordIdProvenance: SourceRecordIdProvenance,
 ): string | null {
   const review = parsed as IndependentReviewV1
-  if (review.checks.length > MAX_CHECKS) {
-    return `checks exceeds the limit of ${MAX_CHECKS} entries`
+  if (review.checks.length > MAX_REVIEW_CHECKS) {
+    return `checks exceeds the limit of ${MAX_REVIEW_CHECKS} entries`
   }
   if (review.findings.length > MAX_FINDINGS) {
     return `findings exceeds the limit of ${MAX_FINDINGS} entries`
@@ -149,7 +149,7 @@ export const independentReviewJsonSchemaV1: Record<string, unknown> = {
     verdict: { type: 'string', enum: ['pass', 'limited', 'fail'] },
     checks: {
       type: 'array',
-      maxItems: MAX_CHECKS,
+      maxItems: MAX_REVIEW_CHECKS,
       items: {
         type: 'object',
         properties: {

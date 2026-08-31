@@ -12,8 +12,14 @@ import {
   resetGatewayTokenMinterForTests,
 } from './ai/chatCompletions'
 import {
+  reviewJsonBudgetTokens,
+  reviewMaxCompletionTokens,
+  REVIEW_REASONING_HEADROOM_TOKENS,
+} from './review/completionBudget'
+import {
   checkIndependentReviewContractV1,
   expectedReviewVerdictV1,
+  MAX_REVIEW_CHECKS,
 } from './review/contractV1'
 import { buildIndependentReviewPromptV1 } from './review/promptV1'
 import { extractionRunKey, publicationRunKey } from './pipeline/keys'
@@ -643,7 +649,7 @@ test('a second model review publishes one full immutable version with exact cita
   expect(requests[0]).toMatchObject({
     model: LUNA_MODEL,
     reasoning_effort: 'high',
-    max_completion_tokens: 6000,
+    max_completion_tokens: 10000,
     store: false,
     response_format: {
       type: 'json_schema',
@@ -1349,4 +1355,33 @@ test('a source-printed ID remains core evidence for every record type', () => {
       review,
     }),
   ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
+})
+
+test('review completion budget accommodates high reasoning plus required JSON', () => {
+  const OBSERVED_MAX_REASONING = 5178
+  expect(REVIEW_REASONING_HEADROOM_TOKENS).toBeGreaterThanOrEqual(
+    OBSERVED_MAX_REASONING,
+  )
+
+  const estimatedFixtureTokens = (checkCount: number) => {
+    const fixture = {
+      verdict: 'pass' as const,
+      checks: Array.from({ length: checkCount }, (_, i) => ({
+        factId: `fact-${i + 1}`,
+        fieldPath: '/plainLanguageSummary',
+        assessment: 'supported' as const,
+        detail: 'The cited excerpt directly supports the candidate value.',
+      })),
+      findings: [],
+    }
+    const bytes = new TextEncoder().encode(JSON.stringify(fixture)).byteLength
+    return Math.ceil(bytes / 4)
+  }
+
+  expect(estimatedFixtureTokens(33)).toBeLessThan(reviewJsonBudgetTokens(33))
+  expect(estimatedFixtureTokens(MAX_REVIEW_CHECKS)).toBeLessThan(
+    reviewJsonBudgetTokens(MAX_REVIEW_CHECKS),
+  )
+  expect(reviewMaxCompletionTokens(33)).toBe(10000)
+  expect(reviewMaxCompletionTokens(MAX_REVIEW_CHECKS)).toBe(13000)
 })
