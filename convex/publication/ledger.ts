@@ -9,6 +9,7 @@ import {
   PUBLICATION_PAYLOAD_VERSION,
   PUBLICATION_POLICY_VERSION,
   PUBLICATION_PROCESSOR_VERSION,
+  resolveSourceRecordIdProvenance,
 } from '../pipeline/state'
 import type { IndependentReviewV1 } from '../review/contractV1'
 import { reviewContextValidator } from '../review/prepare'
@@ -46,6 +47,8 @@ export const finalizePublication = internalMutation({
       run.processorVersion !== PUBLICATION_PROCESSOR_VERSION ||
       run.candidateId !== candidate._id ||
       run.upstreamRunId !== candidate.runId ||
+      resolveSourceRecordIdProvenance(run.sourceRecordIdProvenance) !==
+        args.context.sourceRecordIdProvenance ||
       review.runId !== run._id ||
       review.candidateId !== candidate._id ||
       review.state !== 'succeeded' ||
@@ -122,18 +125,27 @@ export const finalizePublication = internalMutation({
         detail: finding.detail,
       })),
     }
-    if (
-      candidate.sourceRecordId === null ||
-      candidate.sourceRecordId !== candidate.targetRecordId
-    ) {
+    const sourceRecordIdProvenance = resolveSourceRecordIdProvenance(
+      candidate.sourceRecordIdProvenance,
+    )
+    const sourceRecordId =
+      sourceRecordIdProvenance === 'operator_assigned'
+        ? candidate.targetRecordId
+        : candidate.sourceRecordId
+    const candidateIdentityMatches =
+      sourceRecordIdProvenance === 'operator_assigned'
+        ? candidate.sourceRecordId === null
+        : candidate.sourceRecordId === candidate.targetRecordId
+    if (!sourceRecordId || !candidateIdentityMatches) {
       throw new ConvexError({
         code: 'publication_target_mismatch',
-        message: 'A publication candidate needs its exact source record ID',
+        message:
+          'A publication candidate must match its declared record ID provenance',
       })
     }
-    const sourceRecordId = candidate.sourceRecordId
     const policy = applyPublicationPolicyV1({
-      sourceRecordId,
+      recordId: sourceRecordId,
+      sourceRecordIdProvenance,
       review: reviewForPolicy,
     })
 
@@ -232,8 +244,11 @@ export const finalizePublication = internalMutation({
       policy.mode === 'full'
         ? args.context.facts
         : policy.mode === 'limited'
-          ? args.context.facts.filter((fact) =>
-              CORE_PUBLICATION_FIELD_PATHS.has(fact.fieldPath),
+          ? args.context.facts.filter(
+              (fact) =>
+                CORE_PUBLICATION_FIELD_PATHS.has(fact.fieldPath) ||
+                (sourceRecordIdProvenance === 'source_printed' &&
+                  fact.fieldPath === '/sourceRecordId'),
             )
           : []
     for (const fact of citedFacts) {
@@ -312,6 +327,7 @@ function requireContextMatchesCandidate(
     snapshotId: Id<'sourceSnapshots'>
     sourceKind: string
     targetRecordId: string
+    sourceRecordIdProvenance?: 'source_printed' | 'operator_assigned'
     sourceRecordId: string | null
     recordType: string
     title: string
@@ -336,6 +352,9 @@ function requireContextMatchesCandidate(
     snapshotId: candidate.snapshotId,
     sourceKind: candidate.sourceKind,
     targetRecordId: candidate.targetRecordId,
+    sourceRecordIdProvenance: resolveSourceRecordIdProvenance(
+      candidate.sourceRecordIdProvenance,
+    ),
     sourceRecordId: candidate.sourceRecordId,
     recordType: candidate.recordType,
     title: candidate.title,
@@ -354,6 +373,7 @@ function requireContextMatchesCandidate(
     snapshotId: context.snapshotId,
     sourceKind: context.sourceKind,
     targetRecordId: context.targetRecordId,
+    sourceRecordIdProvenance: context.sourceRecordIdProvenance,
     sourceRecordId: context.sourceRecordId,
     recordType: context.recordType,
     title: context.title,

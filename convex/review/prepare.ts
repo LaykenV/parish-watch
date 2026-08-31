@@ -13,7 +13,9 @@ import {
 import { locateExcerpt, normalizeForMatch } from '../extraction/textMatch'
 import {
   PUBLICATION_PROCESSOR_VERSION,
+  resolveSourceRecordIdProvenance,
   sourceKindUnion,
+  sourceRecordIdProvenances,
 } from '../pipeline/state'
 import schema from '../schema'
 import { isAllowedOfficialHost } from '../sources/domains'
@@ -38,6 +40,7 @@ export const reviewContextValidator = v.object({
   snapshotId: v.id('sourceSnapshots'),
   sourceKind: sourceKindUnion,
   targetRecordId: v.string(),
+  sourceRecordIdProvenance: sourceRecordIdProvenances,
   sourceRecordId: v.union(v.string(), v.null()),
   recordType: recordTypes,
   title: v.string(),
@@ -160,9 +163,17 @@ export const loadReviewRows = internalQuery({
       candidate.snapshotId !== run.snapshotId ||
       candidate.sourceKind !== run.sourceKind ||
       candidate.targetRecordId !== run.targetRecordId ||
+      resolveSourceRecordIdProvenance(candidate.sourceRecordIdProvenance) !==
+        resolveSourceRecordIdProvenance(run.sourceRecordIdProvenance) ||
+      resolveSourceRecordIdProvenance(candidate.sourceRecordIdProvenance) !==
+        resolveSourceRecordIdProvenance(
+          upstreamRun.sourceRecordIdProvenance,
+        ) ||
       extraction._id !== candidate.extractionId ||
       extraction.candidateId !== candidate._id ||
-      extraction.runId !== upstreamRun._id
+      extraction.runId !== upstreamRun._id ||
+      resolveSourceRecordIdProvenance(extraction.sourceRecordIdProvenance) !==
+        resolveSourceRecordIdProvenance(candidate.sourceRecordIdProvenance)
     ) {
       return {
         ok: false as const,
@@ -242,10 +253,17 @@ export const prepareCandidateReview = internalAction({
         'The source no longer passes its registry, completeness, and official-domain checks',
       )
     }
+    const sourceRecordIdProvenance = resolveSourceRecordIdProvenance(
+      candidate.sourceRecordIdProvenance,
+    )
+    const recordIdentityMatches =
+      sourceRecordIdProvenance === 'operator_assigned'
+        ? candidate.sourceRecordId === null
+        : candidate.sourceRecordId === candidate.targetRecordId
     if (
       body._id !== registry.governmentBodyId ||
       normalizeForMatch(body.name) !== normalizeForMatch(candidate.bodyName) ||
-      candidate.sourceRecordId !== candidate.targetRecordId
+      !recordIdentityMatches
     ) {
       return fail(
         'candidate_identity_changed',
@@ -336,6 +354,7 @@ export const prepareCandidateReview = internalAction({
     )
 
     const candidateForHash = {
+      sourceRecordIdProvenance,
       sourceRecordId: candidate.sourceRecordId,
       recordType: candidate.recordType,
       title: candidate.title,
@@ -365,7 +384,16 @@ export const prepareCandidateReview = internalAction({
         facts: preparedFacts,
       }),
     )
-    const stableRecordId = candidate.sourceRecordId
+    const stableRecordId =
+      sourceRecordIdProvenance === 'operator_assigned'
+        ? candidate.targetRecordId
+        : candidate.sourceRecordId
+    if (!stableRecordId) {
+      return fail(
+        'record_identity_missing',
+        'The candidate has no stable record identity',
+      )
+    }
     const recordKey = await sha256HexOfText(
       `${candidate.registryId}\n${stableRecordId}`,
     )
@@ -379,6 +407,7 @@ export const prepareCandidateReview = internalAction({
         snapshotId: snapshot._id,
         sourceKind: candidate.sourceKind,
         targetRecordId: candidate.targetRecordId,
+        sourceRecordIdProvenance,
         ...candidateForHash,
         extractionModelId: extraction.modelId,
         officialUrl: snapshot.canonicalUrl,

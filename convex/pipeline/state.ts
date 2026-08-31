@@ -49,13 +49,26 @@ export const sourceKindUnion = v.union(
 
 export type SourceKind = typeof sourceKindUnion.type
 
+export const sourceRecordIdProvenances = v.union(
+  v.literal('source_printed'),
+  v.literal('operator_assigned'),
+)
+
+export type SourceRecordIdProvenance = typeof sourceRecordIdProvenances.type
+
+export function resolveSourceRecordIdProvenance(
+  value: SourceRecordIdProvenance | undefined,
+): SourceRecordIdProvenance {
+  return value ?? 'source_printed'
+}
+
 export const RETRIEVAL_PROCESSOR_VERSION = 'v3'
 
 export const RETRIEVAL_RETRY_DELAY_MS = 15 * 60 * 1000
 
-export const EXTRACTION_PROCESSOR_VERSION = 'v1.14'
+export const EXTRACTION_PROCESSOR_VERSION = 'v1.15'
 
-export const EXTRACTION_PROMPT_VERSION = 'v1.5'
+export const EXTRACTION_PROMPT_VERSION = 'v1.6'
 
 export const EXTRACTION_SCHEMA_VERSION = 'v1'
 
@@ -63,11 +76,11 @@ export const EXTRACTION_WORKFLOW_NAME = 'extractSnapshotV1'
 
 export const PUBLICATION_PROCESSOR_VERSION = 'v1'
 
-export const REVIEW_PROMPT_VERSION = 'v1.2'
+export const REVIEW_PROMPT_VERSION = 'v1.3'
 
 export const REVIEW_SCHEMA_VERSION = 'v1'
 
-export const PUBLICATION_POLICY_VERSION = 'v1'
+export const PUBLICATION_POLICY_VERSION = 'v1.1'
 
 export const PUBLICATION_PAYLOAD_VERSION = 'v1'
 

@@ -16,6 +16,7 @@ import {
 } from './issues/contractV1'
 import {
   processingStates,
+  sourceRecordIdProvenances,
   runTriggers,
   sourceKindUnion,
   stageNames,
@@ -184,6 +185,7 @@ export default defineSchema({
     workflowId: v.optional(v.string()),
     sourceKind: v.optional(sourceKinds),
     targetRecordId: v.optional(v.string()),
+    sourceRecordIdProvenance: v.optional(sourceRecordIdProvenances),
     candidateId: v.optional(v.id('decisionCandidates')),
     issueBuildId: v.optional(v.id('issueBuilds')),
     upstreamRunId: v.optional(v.id('pipelineRuns')),
@@ -265,6 +267,7 @@ export default defineSchema({
     snapshotId: v.id('sourceSnapshots'),
     sourceKind: sourceKinds,
     targetRecordId: v.string(),
+    sourceRecordIdProvenance: v.optional(sourceRecordIdProvenances),
     promptVersion: v.string(),
     schemaVersion: v.string(),
     processorVersion: v.string(),
@@ -295,6 +298,7 @@ export default defineSchema({
     snapshotId: v.id('sourceSnapshots'),
     sourceKind: sourceKinds,
     targetRecordId: v.string(),
+    sourceRecordIdProvenance: v.optional(sourceRecordIdProvenances),
     sourceRecordId: v.union(v.string(), v.null()),
     recordType: recordTypes,
     title: v.string(),

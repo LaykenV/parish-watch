@@ -1,3 +1,4 @@
+import type { SourceRecordIdProvenance } from '../pipeline/state'
 import type { IndependentReviewV1 } from '../review/contractV1'
 import { evaluateReviewEvidenceV1 } from './evidenceRulesV1'
 
@@ -14,12 +15,14 @@ export type PublicationPolicyResult = {
 }
 
 export function applyPublicationPolicyV1(input: {
-  sourceRecordId: string | null
+  recordId: string | null
+  sourceRecordIdProvenance: SourceRecordIdProvenance
   review: IndependentReviewV1
 }): PublicationPolicyResult {
   const decision = evaluateReviewEvidenceV1({
-    sourceRecordIdPresent:
-      input.sourceRecordId !== null && input.sourceRecordId.trim() !== '',
+    recordIdentityPresent:
+      input.recordId !== null && input.recordId.trim() !== '',
+    sourceRecordIdProvenance: input.sourceRecordIdProvenance,
     checks: input.review.checks,
     findings: input.review.findings,
   })

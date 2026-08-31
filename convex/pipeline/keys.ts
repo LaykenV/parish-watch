@@ -1,6 +1,6 @@
 import type { Id } from '../_generated/dataModel'
 import { sha256HexOfText } from '../sources/hashing'
-import type { SourceKind } from './state'
+import type { SourceKind, SourceRecordIdProvenance } from './state'
 import { RETRIEVAL_PROCESSOR_VERSION } from './state'
 
 export async function retrievalAttemptKey(
@@ -27,6 +27,7 @@ export async function extractionRunKey(input: {
   snapshotId: Id<'sourceSnapshots'>
   sourceKind: SourceKind
   targetRecordId: string
+  sourceRecordIdProvenance: SourceRecordIdProvenance
   promptVersion: string
   schemaVersion: string
   processorVersion: string
@@ -37,6 +38,7 @@ export async function extractionRunKey(input: {
       input.snapshotId,
       input.sourceKind,
       input.targetRecordId,
+      input.sourceRecordIdProvenance,
       input.promptVersion,
       input.schemaVersion,
       input.processorVersion,

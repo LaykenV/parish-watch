@@ -6,6 +6,8 @@ import {
   EXTRACTION_PROCESSOR_VERSION,
   EXTRACTION_PROMPT_VERSION,
   EXTRACTION_SCHEMA_VERSION,
+  resolveSourceRecordIdProvenance,
+  sourceRecordIdProvenances,
   sourceKindUnion,
 } from '../pipeline/state'
 import { extractionRunKey } from '../pipeline/keys'
@@ -29,6 +31,7 @@ export const startSnapshotExtraction = internalMutation({
     snapshotId: v.id('sourceSnapshots'),
     sourceKind: sourceKindUnion,
     targetRecordId: v.string(),
+    sourceRecordIdProvenance: v.optional(sourceRecordIdProvenances),
   },
   returns: startExtractionResultValidator,
   handler: async (ctx, args): Promise<StartExtractionResult> => {
@@ -42,11 +45,15 @@ export const startSnapshotExtraction = internalMutation({
         message: `Target record ID must be one line with 1 to ${MATERIAL_STRING_LIMITS.sourceRecordId} characters`,
       })
     }
+    const sourceRecordIdProvenance = resolveSourceRecordIdProvenance(
+      args.sourceRecordIdProvenance,
+    )
     const idempotencyKey = await extractionRunKey({
       registryId: args.registryId,
       snapshotId: args.snapshotId,
       sourceKind: args.sourceKind,
       targetRecordId: args.targetRecordId,
+      sourceRecordIdProvenance,
       promptVersion: EXTRACTION_PROMPT_VERSION,
       schemaVersion: EXTRACTION_SCHEMA_VERSION,
       processorVersion: EXTRACTION_PROCESSOR_VERSION,
@@ -115,6 +122,7 @@ export const startSnapshotExtraction = internalMutation({
       snapshotId: args.snapshotId,
       sourceKind: args.sourceKind,
       targetRecordId: args.targetRecordId,
+      sourceRecordIdProvenance,
       idempotencyKey,
       startedAt,
     })
@@ -146,6 +154,7 @@ export const startSnapshotExtraction = internalMutation({
         snapshotId: args.snapshotId,
         sourceKind: args.sourceKind,
         targetRecordId: args.targetRecordId,
+        sourceRecordIdProvenance,
         extractStageId,
         validateStageId,
       },
