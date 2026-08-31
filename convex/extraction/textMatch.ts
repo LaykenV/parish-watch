@@ -201,7 +201,7 @@ function timesInText(
     second: number | null
   }> = []
   const twelveHourPattern =
-    /\b(1[0-2]|0?[1-9]):([0-5]\d)(?::([0-5]\d))?\s*([AP])\.?M\.?\b/gi
+    /(?:\(|\b)(1[0-2]|0?[1-9]):([0-5]\d)(?::([0-5]\d))?\)?(?:\s+o'clock)?\s*([AP])\.?M\.?\b/gi
   for (const match of normalized.matchAll(twelveHourPattern)) {
     const baseHour = Number(match[1]) % 12
     const second = match[3] as string | undefined
