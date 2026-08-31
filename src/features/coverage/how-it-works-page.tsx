@@ -177,8 +177,8 @@ export function HowItWorksPage() {
           <p>
             OpenAI calls run from Convex actions through Convex AI Gateway.
             Terra extracts records and issue links. Luna independently reviews
-            cited facts and answers questions from published evidence. Code runs
-            the final citation and publication checks.
+            cited facts and answers questions from published evidence.
+            Deterministic checks run the final citation and publication gate.
           </p>
           <p>
             Public Parish is open source. The repository documents the schemas,

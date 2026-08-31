@@ -151,5 +151,14 @@ gate.
 4. Private source reports do not leave the development browser.
 5. Follow body uses the existing Design Slice 5 development flow.
 
+## Follow-up correction
+
+An August 31 review found that successful coverage-request and private-report
+state changes removed the focused submit control without moving focus into the
+new state. The follow-up moves focus to the verification field, completion
+heading, or next action. It keeps fixture parameters conditional on an active
+development scenario and names the deterministic publication gate plainly on
+the public method page.
+
 Passing the data, request, and private-delivery gates replaces the adapters. It
 does not reopen the page hierarchy, coverage vocabulary, or privacy language.

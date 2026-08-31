@@ -9,7 +9,7 @@ import {
   ShieldCheckIcon,
 } from 'lucide-react'
 import type { ComponentType, FormEvent, SVGProps } from 'react'
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
 import { Badge } from '../../components/ui/badge'
@@ -48,6 +48,8 @@ const STATUS_PRESENTATION: Record<CoverageState, StatusPresentation> = {
 export function CoveragePage({ data }: { data: CoveragePageData }) {
   if (!data.available) return <CoverageUnavailable />
 
+  const requestSearch = data.scenario ? { fixture: 'new' as const } : {}
+
   return (
     <main className="coverage-page" id="resident-main">
       <header className="coverage-page-intro">
@@ -61,7 +63,7 @@ export function CoveragePage({ data }: { data: CoveragePageData }) {
         </div>
         <div className="coverage-page-actions">
           <Button
-            render={<Link search={{ fixture: 'new' }} to="/coverage/request" />}
+            render={<Link search={requestSearch} to="/coverage/request" />}
             size="touch"
           >
             Request coverage
@@ -127,7 +129,7 @@ export function CoveragePage({ data }: { data: CoveragePageData }) {
           </p>
         </div>
         <Button
-          render={<Link search={{ fixture: 'new' }} to="/coverage/request" />}
+          render={<Link search={requestSearch} to="/coverage/request" />}
           size="touch"
           variant="outline"
         >
@@ -261,6 +263,12 @@ export function CoverageRequestPage({
   const errorId = useId()
   const placeRef = useRef<HTMLInputElement>(null)
   const codeRef = useRef<HTMLInputElement>(null)
+  const completeHeadingRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    if (step === 'verify') codeRef.current?.focus()
+    if (step === 'complete') completeHeadingRef.current?.focus()
+  }, [step])
 
   if (!data.available) return <CoverageRequestUnavailable />
 
@@ -447,10 +455,12 @@ export function CoverageRequestPage({
         ) : null}
 
         {step === 'complete' ? (
-          <section className="coverage-request-complete" role="status">
+          <section className="coverage-request-complete">
             <CheckCircle2Icon aria-hidden="true" />
             <div>
-              <h2>Request recorded</h2>
+              <h2 ref={completeHeadingRef} tabIndex={-1}>
+                Request recorded
+              </h2>
               <p>{status}</p>
               {data.scenario === 'duplicate' ? (
                 <p>
@@ -460,7 +470,12 @@ export function CoverageRequestPage({
               ) : null}
               {email ? <p>A launch notice is verified for {email}.</p> : null}
               <Button
-                render={<Link search={{ fixture: 'preview' }} to="/coverage" />}
+                render={
+                  <Link
+                    search={data.scenario ? { fixture: 'preview' } : {}}
+                    to="/coverage"
+                  />
+                }
                 size="touch"
                 variant="outline"
               >
@@ -488,7 +503,7 @@ function CoverageRequestUnavailable() {
           and optional email verification pass their production checks.
         </p>
         <Button
-          render={<Link search={{ fixture: 'preview' }} to="/coverage" />}
+          render={<Link to="/coverage" />}
           size="touch"
           variant="outline"
         >

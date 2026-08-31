@@ -12,9 +12,18 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T22:18:27Z
+- **Last updated:** 2026-08-31T22:47:32Z
 
 ## Log
+
+### 2026-08-31 - working tree
+
+Corrected the public coverage flow after a focused review. Successful request
+and private-report states now move keyboard focus into the next useful control
+or heading. Fixture parameters stay tied to active development scenarios, and
+the public method page names deterministic checks as the final publication
+gate. Automated validation is pending in pull-request CI
+(`src/features/coverage/`, `docs/resident-interface-slice-6.md`).
 
 ### 2026-08-31 - d1bcdb8
 

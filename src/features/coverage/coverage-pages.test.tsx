@@ -16,6 +16,10 @@ const loaderSource = readFileSync(
   new URL('./coverage-page.data.ts', import.meta.url),
   'utf8',
 )
+const coveragePageSource = readFileSync(
+  new URL('./coverage-page.tsx', import.meta.url),
+  'utf8',
+)
 const reportSource = readFileSync(
   new URL('./source-report.tsx', import.meta.url),
   'utf8',
@@ -74,6 +78,33 @@ describe('resident coverage interface', () => {
     expect(html).not.toContain('request count')
   })
 
+  it('keeps fixture parameters conditional on an active development scenario', () => {
+    expect(coveragePageSource).not.toContain(
+      'search={{ fixture: \'new\' }}',
+    )
+    expect(coveragePageSource).not.toContain(
+      'search={{ fixture: \'preview\' }}',
+    )
+    expect(coveragePageSource).toContain(
+      "data.scenario ? { fixture: 'preview' } : {}",
+    )
+    expect(coveragePageSource).toContain(
+      "data.scenario ? { fixture: 'new' as const } : {}",
+    )
+  })
+
+  it('moves focus to the next useful action after successful transitions', () => {
+    expect(coveragePageSource).toContain(
+      "if (step === 'verify') codeRef.current?.focus()",
+    )
+    expect(coveragePageSource).toContain(
+      "if (step === 'complete') completeHeadingRef.current?.focus()",
+    )
+    expect(reportSource).toContain(
+      "if (result === 'sent') returnActionRef.current?.focus()",
+    )
+  })
+
   it('puts the resident method before optional technical detail', () => {
     const html = renderToStaticMarkup(<HowItWorksPage />)
     const source = html.indexOf('The source stays beside the claim')
@@ -83,6 +114,12 @@ describe('resident coverage interface', () => {
     expect(source).toBeLessThan(standard)
     expect(standard).toBeLessThan(technical)
     expect(html).toContain('Publish, limit, or withhold')
+    expect(html).toContain(
+      'Deterministic checks run the final citation and publication gate.',
+    )
+    expect(html).not.toContain(
+      'Code runs the final citation and publication checks.',
+    )
   })
 
   it('keeps private reporting factual and preserves the attached record', () => {
