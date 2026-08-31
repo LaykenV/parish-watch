@@ -45,8 +45,8 @@ export const recordVisit = internalMutation({
   handler: async (ctx, args) => {
     validateOpaqueInputs(args)
     const eventKey = `${args.eventKey}:visit`
-    if (await eventExists(ctx, eventKey)) return { recorded: false }
     await enforceRateLimits(ctx, args.visitorKeyHash)
+    if (await eventExists(ctx, eventKey)) return { recorded: false }
 
     const now = Date.now()
     const state = await applyVisit(ctx, args.visitorKeyHash, now)
@@ -78,8 +78,8 @@ export const recordAreaSelection = internalMutation({
   handler: async (ctx, args) => {
     validateOpaqueInputs(args)
     const eventKey = `${args.eventKey}:area`
-    if (await eventExists(ctx, eventKey)) return { recorded: false }
     await enforceRateLimits(ctx, args.visitorKeyHash)
+    if (await eventExists(ctx, eventKey)) return { recorded: false }
 
     const now = Date.now()
     const state = await applyVisit(ctx, args.visitorKeyHash, now)

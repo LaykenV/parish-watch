@@ -220,12 +220,9 @@ test('accepts only served origins and rate limits one browser', async () => {
         'content-type': 'application/json',
         origin: 'https://www.publicparish.com',
       },
-      body: JSON.stringify({
-        ...payload,
-        eventKey: `visit-event-${String(index).padStart(6, '0')}`,
-      }),
+      body: JSON.stringify(payload),
     })
-    expect(accepted.status).toBe(204)
+    expect([index, accepted.status]).toEqual([index, 204])
   }
 
   const limited = await t.fetch('/api/analytics', {
@@ -234,7 +231,7 @@ test('accepts only served origins and rate limits one browser', async () => {
       'content-type': 'application/json',
       origin: 'https://www.publicparish.com',
     },
-    body: JSON.stringify({ ...payload, eventKey: 'visit-event-000013' }),
+    body: JSON.stringify(payload),
   })
   expect(limited.status).toBe(429)
 })
