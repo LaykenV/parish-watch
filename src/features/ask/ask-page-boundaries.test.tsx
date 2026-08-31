@@ -10,6 +10,10 @@ import type { AskNotFoundAnswer } from './contracts'
 
 const page = readFileSync(new URL('./ask-page.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('./ask.css', import.meta.url), 'utf8')
+const route = readFileSync(
+  new URL('../../routes/ask.tsx', import.meta.url),
+  'utf8',
+)
 
 const contactCitation: CitationData = {
   body: 'Call the Clerk of Council at 337-555-0100.',
@@ -44,6 +48,18 @@ describe('Ask page ship boundaries', () => {
     expect(css).toContain('.ask-compose-open')
     expect(css).toContain('width: fit-content')
     expect(css).toContain('margin-left: auto')
+  })
+
+  it('attaches scope confirmation to the route-change path', () => {
+    expect(page).toContain(
+      'shouldConfirmAskScopeChange(activeConversation, data.scope)',
+    )
+    expect(page).toContain(
+      'setPendingScope({ draft: handed, scope: data.scope })',
+    )
+    expect(page).toContain('onRestoreScope(viewScope)')
+    expect(page).not.toContain('turns.length > 0) {\n        setPendingHandle')
+    expect(route).toContain('routeSearchFromScopeKey(askScopeIdentity(scope))')
   })
 
   it('renders the named official contact and its cited value', () => {

@@ -14,6 +14,7 @@ import {
   askScopeIdentity,
   countAnswerSources,
   MAX_ASK_LENGTH,
+  shouldConfirmAskScopeChange,
 } from './contracts'
 import type {
   AskAdapter,
@@ -57,10 +58,12 @@ const EXPIRY_SWEEP_MS = 30_000
 
 export function AskPage({
   data,
+  onRestoreScope,
   onSelectSource,
   source,
 }: {
   data: AskRouteData
+  onRestoreScope: (scope: AskScope) => void
   onSelectSource: (id: string | null) => void
   source?: string
 }) {
@@ -85,8 +88,10 @@ export function AskPage({
   const [composerExpanded, setComposerExpanded] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState('')
-  const [pendingHandle, setPendingHandle] =
-    useState<AskRecentConversation | null>(null)
+  const [pendingScope, setPendingScope] = useState<{
+    draft: string | null
+    scope: AskScope
+  } | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const previousConversation = useRef<AskConversationView | null>(null)
   const submitLock = useRef(false)
@@ -100,9 +105,15 @@ export function AskPage({
     const identity = askScopeIdentity(data.scope)
     const changed = consumedScope.current !== identity
     consumedScope.current = identity
-    setViewScope(data.scope)
     if (!changed) return
     const handed = takeAskDraftHandoff(identity)
+    const activeConversation = previousConversation.current
+    if (shouldConfirmAskScopeChange(activeConversation, data.scope)) {
+      setPendingScope({ draft: handed, scope: data.scope })
+      return
+    }
+    setPendingScope(null)
+    setViewScope(data.scope)
     setExpired(false)
     setComposerExpanded(false)
     setDismissed(new Set())
@@ -274,20 +285,29 @@ export function AskPage({
 
   const handleOpenRecent = useCallback(
     (handle: AskRecentConversation) => {
-      if (turns.length > 0) {
-        setPendingHandle(handle)
-        return
-      }
       void openHandle(handle)
     },
-    [openHandle, turns.length],
+    [openHandle],
   )
 
   const confirmScopeChange = useCallback(() => {
-    const handle = pendingHandle
-    setPendingHandle(null)
-    if (handle) void openHandle(handle)
-  }, [openHandle, pendingHandle])
+    const pending = pendingScope
+    if (!pending) return
+    setPendingScope(null)
+    previousConversation.current = null
+    setConversation(null)
+    setViewScope(pending.scope)
+    setExpired(false)
+    setComposerExpanded(false)
+    setDismissed(new Set())
+    setDraft(pending.draft ?? '')
+    void adapter?.startNew(pending.scope)
+  }, [adapter, pendingScope])
+
+  const cancelScopeChange = useCallback(() => {
+    setPendingScope(null)
+    onRestoreScope(viewScope)
+  }, [onRestoreScope, viewScope])
 
   const handleClearRecent = useCallback(async () => {
     if (!adapter) return
@@ -448,9 +468,9 @@ export function AskPage({
 
               {!expired ? (
                 <div className="ask-dock" data-sticky={sticky || undefined}>
-                  {pendingHandle ? (
+                  {pendingScope ? (
                     <AskScopeConfirm
-                      onCancel={() => setPendingHandle(null)}
+                      onCancel={cancelScopeChange}
                       onConfirm={confirmScopeChange}
                     />
                   ) : sticky && !composerExpanded && draft.length === 0 ? (

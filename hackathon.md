@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T03:26:01Z
+- **Last updated:** 2026-08-31T03:34:58Z
 
 ## Log
 
@@ -36,6 +36,12 @@ added focused Ask coverage for route privacy, scope restoration, in-memory draft
 consumption, citation accounting, production fixture gating, duplicate-submit
 protection, the compact thread composer, and named official contacts. GitHub
 Actions owns validation for the follow-up commit.
+
+The follow-up reviewer found that the existing scope-change confirmation was
+attached to a recent-list branch that could not run. Route scope changes could
+therefore clear an active thread without asking. The confirmation now intercepts
+the real route transition, keeps the current scope and conversation on cancel,
+and starts the new scope only after confirmation.
 
 Four checked-in fixes came out of CI and review rather than from me reading the
 diff first. Verify caught a decision page still passing the old string scope,

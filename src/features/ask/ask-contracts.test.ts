@@ -6,6 +6,7 @@ import {
   countAnswerSources,
   parseAskSearch,
   routeSearchFromScopeKey,
+  shouldConfirmAskScopeChange,
   usedCitations,
 } from './contracts'
 import type { AskSupportedAnswer } from './contracts'
@@ -73,6 +74,42 @@ describe('Ask public contracts', () => {
     setAskDraftHandoff('issue:one', 'Who voted?')
     expect(takeAskDraftHandoff('issue:two')).toBeNull()
     expect(takeAskDraftHandoff('issue:one')).toBeNull()
+  })
+
+  it('confirms only when a populated thread changes evidence scope', () => {
+    const issueScope = {
+      kind: 'issue' as const,
+      issueSlug: 'one',
+      label: 'Answering from this issue',
+      recordTitle: 'Issue one',
+      returnTo: '/issues/one',
+    }
+    const meetingScope = {
+      kind: 'meeting' as const,
+      meetingId: 'two',
+      label: 'Answering from this meeting',
+      recordTitle: 'Meeting two',
+      returnTo: '/meetings/two',
+    }
+    const conversation = {
+      id: 'conversation',
+      scope: issueScope,
+      expiresAt: '2026-09-01T12:00:00.000Z',
+      turns: [
+        {
+          id: 'turn',
+          question: 'What changed?',
+          askedAt: '2026-08-31T12:00:00.000Z',
+          state: 'checking' as const,
+        },
+      ],
+    }
+
+    expect(shouldConfirmAskScopeChange(conversation, meetingScope)).toBe(true)
+    expect(shouldConfirmAskScopeChange(conversation, issueScope)).toBe(false)
+    expect(
+      shouldConfirmAskScopeChange({ ...conversation, turns: [] }, meetingScope),
+    ).toBe(false)
   })
 
   it('deduplicates cited sources and ignores uncited map entries', () => {

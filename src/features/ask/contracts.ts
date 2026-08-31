@@ -297,6 +297,17 @@ export function askScopeIdentity(scope: AskScope): string {
   }
 }
 
+export function shouldConfirmAskScopeChange(
+  conversation: AskConversationView | null,
+  nextScope: AskScope,
+): boolean {
+  return (
+    conversation !== null &&
+    conversation.turns.length > 0 &&
+    askScopeIdentity(conversation.scope) !== askScopeIdentity(nextScope)
+  )
+}
+
 export function corpusScope(areaKey?: AreaSlug): AskScope {
   return {
     kind: 'corpus',

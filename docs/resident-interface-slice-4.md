@@ -868,7 +868,9 @@ in-memory draft consumption, citation accounting, the production fixture gate,
 duplicate-submit protection, the compact active-thread composer, and named
 official contacts. It also removed the full idle composer that covered answers
 on a phone. Expired conversations now show one restart path instead of an
-active composer beside the expiry notice.
+active composer beside the expiry notice. The final review also moved the
+scope-change confirmation from an unreachable recent-list branch to the real
+route-scope transition, so an active thread cannot disappear silently.
 
 ## Acceptance gate
 

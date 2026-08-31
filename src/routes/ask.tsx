@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import {
+  askScopeIdentity,
   getActiveAskFixture,
   askScopeKey,
   parseAskSearch,
+  routeSearchFromScopeKey,
 } from '../features/ask/contracts'
 import { AskPage } from '../features/ask/ask-page'
 import { ResidentShell } from '../features/resident-blueprint/resident-shell'
@@ -28,6 +30,16 @@ function ResidentAsk() {
     <ResidentShell>
       <AskPage
         data={data}
+        onRestoreScope={(scope) =>
+          navigate({
+            replace: true,
+            search: (prev) => ({
+              ...routeSearchFromScopeKey(askScopeIdentity(scope)),
+              fixture: prev.fixture,
+              source: prev.source,
+            }),
+          })
+        }
         onSelectSource={(selected) =>
           navigate({
             replace: true,
