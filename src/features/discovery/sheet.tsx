@@ -39,8 +39,40 @@ export function Sheet({
   const desktopMatch = useMediaQuery('(min-width: 64.0625rem)')
   const [hydrated, setHydrated] = useState(false)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const focusFrameRef = useRef(0)
+  const focusInnerFrameRef = useRef(0)
+  const focusReturnTimerRef = useRef<number | null>(null)
   const openerRef = useRef<HTMLElement | null>(null)
   useEffect(() => setHydrated(true), [])
+  useEffect(
+    () => () => {
+      if (focusReturnTimerRef.current !== null) {
+        window.clearTimeout(focusReturnTimerRef.current)
+      }
+      window.cancelAnimationFrame(focusFrameRef.current)
+      window.cancelAnimationFrame(focusInnerFrameRef.current)
+    },
+    [],
+  )
+  useEffect(() => {
+    if (!open) return
+    if (focusReturnTimerRef.current !== null) {
+      window.clearTimeout(focusReturnTimerRef.current)
+      focusReturnTimerRef.current = null
+    }
+    window.cancelAnimationFrame(focusFrameRef.current)
+    window.cancelAnimationFrame(focusInnerFrameRef.current)
+    focusFrameRef.current = window.requestAnimationFrame(() => {
+      focusInnerFrameRef.current = window.requestAnimationFrame(() => {
+        const close = closeRef.current
+        if (close?.closest('.pp-sheet[data-open]')) close.focus()
+      })
+    })
+    return () => {
+      window.cancelAnimationFrame(focusFrameRef.current)
+      window.cancelAnimationFrame(focusInnerFrameRef.current)
+    }
+  }, [open])
   const desktop = hydrated && desktopMatch
 
   const resolveInitialFocus = () => closeRef.current
@@ -48,21 +80,31 @@ export function Sheet({
     (triggerId ? document.getElementById(triggerId) : null) ?? openerRef.current
   const handleRootOpenChange = (next: boolean) => {
     if (next) {
+      if (focusReturnTimerRef.current !== null) {
+        window.clearTimeout(focusReturnTimerRef.current)
+        focusReturnTimerRef.current = null
+      }
       onOpenChange(true)
       return
     }
 
+    window.cancelAnimationFrame(focusFrameRef.current)
+    window.cancelAnimationFrame(focusInnerFrameRef.current)
     const reducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches
     const finalFocus = resolveFinalFocus()
-    window.setTimeout(
+    if (focusReturnTimerRef.current !== null) {
+      window.clearTimeout(focusReturnTimerRef.current)
+    }
+    focusReturnTimerRef.current = window.setTimeout(
       () => {
         const target = finalFocus?.isConnected
           ? finalFocus
           : resolveFinalFocus()
         target?.focus()
         openerRef.current = null
+        focusReturnTimerRef.current = null
       },
       reducedMotion ? 0 : SHEET_COMPLETION_FALLBACK_MS,
     )

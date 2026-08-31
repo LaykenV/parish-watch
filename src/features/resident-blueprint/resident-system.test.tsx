@@ -101,6 +101,9 @@ describe('resident interface Slice 7 system', () => {
     expect(sheetSource).not.toContain('onClick={() => onOpenChange(false)}')
     expect(sheetSource).toContain('inert={open ? undefined : true}')
     expect(sheetSource).toContain('target?.focus()')
+    expect(sheetSource).toContain(
+      'window.clearTimeout(focusReturnTimerRef.current)',
+    )
     expect(sheetSource).toContain('openerRef.current = event.currentTarget')
     expect(sheetSource).toContain(
       'finalFocus={triggerId ? resolveFinalFocus : undefined}',

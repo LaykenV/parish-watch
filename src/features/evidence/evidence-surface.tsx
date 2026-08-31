@@ -261,11 +261,25 @@ export function EvidencePanel() {
 function EvidenceSheet() {
   const { citations, restoreFocus, select, selected, triggerId } = useEvidence()
   const citation = selected ? citations[selected] : undefined
+  const focusReturnTimerRef = useRef<number | null>(null)
   const lastCitationRef = useRef<CitationData | undefined>(citation)
 
   useEffect(() => {
-    if (citation) lastCitationRef.current = citation
+    if (!citation) return
+    lastCitationRef.current = citation
+    if (focusReturnTimerRef.current !== null) {
+      window.clearTimeout(focusReturnTimerRef.current)
+      focusReturnTimerRef.current = null
+    }
   }, [citation])
+  useEffect(
+    () => () => {
+      if (focusReturnTimerRef.current !== null) {
+        window.clearTimeout(focusReturnTimerRef.current)
+      }
+    },
+    [],
+  )
 
   const renderedCitation = citation ?? lastCitationRef.current
 
@@ -275,9 +289,13 @@ function EvidenceSheet() {
       onOpenChange={(open) => {
         if (!open) {
           select(null)
-          window.setTimeout(() => {
+          if (focusReturnTimerRef.current !== null) {
+            window.clearTimeout(focusReturnTimerRef.current)
+          }
+          focusReturnTimerRef.current = window.setTimeout(() => {
             restoreFocus()
             lastCitationRef.current = undefined
+            focusReturnTimerRef.current = null
           }, SHEET_FOCUS_RETURN_DELAY_MS)
         }
       }}
