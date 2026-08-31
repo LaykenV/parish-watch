@@ -1,5 +1,6 @@
 import {
   corpusScopeFromKey,
+  defaultAskScenario,
   routeSearchFromScopeKey,
 } from '../features/ask/contracts'
 import type {
@@ -25,7 +26,7 @@ export async function loadAskPageData(
   fixture: AskScenario | undefined,
   scopeKey: string,
 ): Promise<AskRouteData> {
-  if (!import.meta.env.DEV || !fixture) {
+  if (!import.meta.env.DEV) {
     return {
       availability: { kind: 'unavailable' },
       scenario: null,
@@ -33,9 +34,13 @@ export async function loadAskPageData(
     }
   }
 
+  // This gate has to agree with askCanAnswer, which the record pages use to
+  // decide whether to offer a composer at all. A visit that resolves
+  // unavailable here while the blocks still invite a question would drop it.
+  const scenario = fixture ?? defaultAskScenario(scopeKey)
   const { getAskFixtureAdapter } = await import('../features/ask/fixtures')
-  const adapter = getAskFixtureAdapter(fixture)
+  const adapter = getAskFixtureAdapter(scenario)
   const scope = await adapter.resolveScope(routeSearchFromScopeKey(scopeKey))
 
-  return { availability: { kind: 'available' }, scenario: fixture, scope }
+  return { availability: { kind: 'available' }, scenario, scope }
 }

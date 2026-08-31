@@ -133,6 +133,18 @@ export function getActiveAskFixture(
   return import.meta.env.DEV ? fixture : undefined
 }
 
+/*
+  A resident arriving from a record page carries no scenario parameter, so a
+  development visit resolves the empty scenario for its scope. Without this the
+  record blocks would offer a composer whose question the route then drops, and
+  the handoff those blocks exist to exercise could never be tested.
+*/
+export function defaultAskScenario(scopeKey: string): AskScenario {
+  if (scopeKey.startsWith('issue:')) return 'empty-issue'
+  if (scopeKey.startsWith('meeting:')) return 'empty-meeting'
+  return 'empty-corpus'
+}
+
 export type AskRecentConversation = {
   localHandle: string
   scopeLabel: string
