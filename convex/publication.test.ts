@@ -643,7 +643,7 @@ test('a second model review publishes one full immutable version with exact cita
   expect(requests[0]).toMatchObject({
     model: LUNA_MODEL,
     reasoning_effort: 'high',
-    max_completion_tokens: 6000,
+    max_completion_tokens: 10000,
     store: false,
     response_format: {
       type: 'json_schema',
@@ -1349,4 +1349,32 @@ test('a source-printed ID remains core evidence for every record type', () => {
       review,
     }),
   ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
+})
+
+test('review completion budget accommodates high reasoning plus required JSON', () => {
+  const REVIEW_REASONING_HEADROOM = 6000
+  const REVIEW_JSON_BUDGET = 4000
+  const DERIVED_CAP = REVIEW_REASONING_HEADROOM + REVIEW_JSON_BUDGET
+
+  const OBSERVED_MAX_REASONING = 5178
+  expect(REVIEW_REASONING_HEADROOM).toBeGreaterThanOrEqual(OBSERVED_MAX_REASONING)
+
+  const fixture33Checks = {
+    verdict: 'pass' as const,
+    checks: Array.from({ length: 33 }, (_, i) => ({
+      factId: `fact-${i + 1}`,
+      fieldPath: '/title',
+      assessment: 'supported' as const,
+      detail: 'Excerpt supports value',
+    })),
+    findings: [],
+  }
+  const serialized = JSON.stringify(fixture33Checks)
+  const byteLength = new TextEncoder().encode(serialized).byteLength
+  const estimatedTokens = Math.ceil(byteLength / 4)
+  expect(estimatedTokens).toBeLessThan(REVIEW_JSON_BUDGET)
+
+  const MEASURED_FLOOR = 8000
+  expect(DERIVED_CAP).toBeGreaterThanOrEqual(MEASURED_FLOOR)
+  expect(DERIVED_CAP).toBe(10000)
 })

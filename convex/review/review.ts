@@ -24,7 +24,19 @@ import { buildIndependentReviewPromptV1 } from './promptV1'
 import { reviewContextValidator } from './prepare'
 
 const REVIEW_MODEL_ROLE = 'MODEL_FAST' as const
-const REVIEW_MAX_COMPLETION_TOKENS = 6000
+
+// Independent review uses reasoning_effort: 'high', where max_completion_tokens
+// is a shared budget for reasoning + visible JSON. Observed high-reasoning uses
+// ~5178 tokens. A 33-check JSON requires ~1180 tokens compact, ~1950 typical.
+// MAX_CHECKS is 100. Formula:
+//   REASONING_HEADROOM = 6000 (covers 5178 + 15% slack)
+//   JSON_BUDGET = 4000 (100 checks × ~36 tokens/check compact + findings + slack)
+//   TOTAL = 10000
+const REVIEW_REASONING_HEADROOM = 6000
+const REVIEW_JSON_BUDGET = 4000
+const REVIEW_MAX_COMPLETION_TOKENS =
+  REVIEW_REASONING_HEADROOM + REVIEW_JSON_BUDGET
+
 const MAX_STORED_RESPONSE_BYTES = 1_000_000
 
 const reviewActionResult = v.union(
