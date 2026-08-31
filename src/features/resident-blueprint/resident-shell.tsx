@@ -5,14 +5,8 @@ import {
   MessageCircleQuestionIcon,
   SearchIcon,
 } from 'lucide-react'
-import {
-  useEffect,
-  useRef,
-  useState,
-  type ComponentType,
-  type ReactNode,
-  type SVGProps,
-} from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ComponentType, ReactNode, SVGProps } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 
 import { AreaSelector } from '../discovery/area-selector'
@@ -80,7 +74,7 @@ export function ResidentRouteAccessibility() {
     const frame = window.requestAnimationFrame(() => {
       innerFrame = window.requestAnimationFrame(() => {
         const heading = document.querySelector<HTMLElement>('#resident-main h1')
-        const headingText = heading?.textContent?.trim()
+        const headingText = heading?.textContent.trim()
         document.title = headingText
           ? `${headingText} | Public Parish`
           : `${fallbackLabel} | Public Parish`
