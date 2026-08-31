@@ -382,6 +382,13 @@ Describe these as product signals, not audited people.
 Browsers that cannot persist and read back the random identifier are excluded
 instead of being counted again on each reload.
 
+The August 31 production check created a controlled baseline of 2 unique
+browser identifiers, 2 visits, 1 activated visitor, and 1 Lafayette selection.
+One tester created both identifiers by loading the canonical domain and the
+required `convex.site` origin. Origin-specific browser storage makes those two
+identifiers, not two people. Subtract this baseline from later organic totals or
+disclose it with any submission count. Do not call it user or resident evidence.
+
 ## Social Plan
 
 ### X and LinkedIn

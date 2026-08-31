@@ -8,13 +8,28 @@
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
 - **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`
-- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, durable workflows
+- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, scheduled functions, durable workflows
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T21:48:58Z
+- **Last updated:** 2026-08-31T22:18:27Z
 
 ## Log
+
+### 2026-08-31 - d1bcdb8
+
+Deployed anonymous resident telemetry through PR #41. Pull-request verification
+passed, production workflow `33444625765` deployed the exact merge, and an
+independent production smoke passed both served origins, the canonical asset,
+the apex redirect, and the readiness query.
+
+A controlled browser check started from zero counters. Loading the canonical
+domain and the required `convex.site` origin, then selecting Lafayette on the
+clean origin, produced 2 unique browser identifiers, 2 visits, 1 activated
+visitor, and 1 Lafayette selection. One human tester created both identifiers
+because browser storage is origin-specific. These rows prove that production
+visit and activation writes reach the private report. They are controlled test
+traffic, not two users or evidence of resident adoption.
 
 ### 2026-08-31 - 3393b19
 
