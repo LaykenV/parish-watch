@@ -22,6 +22,16 @@ type SheetProps = {
 
 const SHEET_COMPLETION_FALLBACK_MS = 300
 
+export function shouldRestoreSheetFocus(): boolean {
+  const active = document.activeElement
+  return (
+    active === null ||
+    active === document.body ||
+    (active instanceof HTMLElement &&
+      active.closest('.pp-sheet[aria-hidden="true"]') !== null)
+  )
+}
+
 export function Sheet({
   open,
   onOpenChange,
@@ -102,7 +112,7 @@ export function Sheet({
         const target = finalFocus?.isConnected
           ? finalFocus
           : resolveFinalFocus()
-        target?.focus()
+        if (shouldRestoreSheetFocus()) target?.focus()
         openerRef.current = null
         focusReturnTimerRef.current = null
       },

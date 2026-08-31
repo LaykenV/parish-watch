@@ -18,7 +18,7 @@ import type { ElementType, ReactNode } from 'react'
 
 import { formatDate } from '../discovery/format'
 import { useMediaQuery } from '../discovery/hooks'
-import { Sheet } from '../discovery/sheet'
+import { Sheet, shouldRestoreSheetFocus } from '../discovery/sheet'
 import {
   citationSummary,
   documentHost,
@@ -293,7 +293,7 @@ function EvidenceSheet() {
             window.clearTimeout(focusReturnTimerRef.current)
           }
           focusReturnTimerRef.current = window.setTimeout(() => {
-            restoreFocus()
+            if (shouldRestoreSheetFocus()) restoreFocus()
             lastCitationRef.current = undefined
             focusReturnTimerRef.current = null
           }, SHEET_FOCUS_RETURN_DELAY_MS)

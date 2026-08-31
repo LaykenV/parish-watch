@@ -109,6 +109,7 @@ describe('resident interface Slice 7 system', () => {
     expect(sheetSource).not.toContain('onClick={() => onOpenChange(false)}')
     expect(sheetSource).toContain('inert={open ? undefined : true}')
     expect(sheetSource).toContain('target?.focus()')
+    expect(sheetSource).toContain('if (shouldRestoreSheetFocus())')
     expect(sheetSource).toContain(
       'window.clearTimeout(focusReturnTimerRef.current)',
     )
