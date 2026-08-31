@@ -1,6 +1,7 @@
 import { REVIEW_PROMPT_VERSION } from '../pipeline/state'
-
 import { NUMBERED_RECORD_TYPES } from '../publication/evidenceRulesV1'
+
+const numberedTypesText = Array.from(NUMBERED_RECORD_TYPES).join(' or ')
 
 const SYSTEM_PROMPT_V1 = `You independently review one extracted government decision for Public Parish. You did not create the extraction.
 
@@ -16,8 +17,8 @@ Rules:
 - A fail finding means the source identity, title, government body, or evidence set cannot support publication.
 - A limited finding means the core identity is supported but at least one secondary field should not publish.
 - An info finding records a concern that does not limit publication.
-- Core sourced fields are /title and /bodyName. These must be directly supported by cited excerpts. The /sourceRecordId field is also core for record identity, but whether it requires citation support depends on the recordType. For ordinances, resolutions, and other numbered instruments (recordType proposal or vote), the sourceRecordId must appear in the cited text. For unnumbered record types (public_action, appointment, hearing, contract, other), the sourceRecordId is operator-assigned and does not need to appear in excerpts.
-- Set verdict to fail if any fail finding exists, or /title is not supported, or /bodyName is not supported, or /sourceRecordId is not supported for recordType proposal or vote.
+- Core sourced fields are /title and /bodyName. These must be directly supported by cited excerpts. The /sourceRecordId field is also core for record identity, but whether it requires citation support depends on the recordType. For ordinances, resolutions, and other numbered instruments (recordType ${numberedTypesText}), the sourceRecordId must appear in the cited text. For unnumbered record types (public_action, appointment, hearing, contract, other), the sourceRecordId is operator-assigned and does not need to appear in excerpts.
+- Set verdict to fail if any fail finding exists, or /title is not supported, or /bodyName is not supported, or /sourceRecordId is not supported for recordType ${numberedTypesText}.
 - Set verdict to limited if no fail condition exists and any check other than /sourceRecordId for unnumbered recordTypes is unclear or unsupported, or any limited finding exists.
 - Otherwise set verdict to pass.`
 
