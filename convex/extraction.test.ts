@@ -437,16 +437,22 @@ function goldContent(snapshotId: string): string {
 
 function operatorAssignedContent(snapshotId: string): string {
   const response = goldDecision(snapshotId)
-  response.decision.sourceRecordId = null
-  response.decision.recordType = 'public_action'
-  response.decision.facts = response.decision.facts
+  const facts = response.decision.facts
     .filter((fact) => fact.fieldPath !== '/sourceRecordId')
     .map((fact) =>
       fact.fieldPath === '/recordType'
         ? { ...fact, value: 'public_action' }
         : fact,
     )
-  return JSON.stringify(response)
+  return JSON.stringify({
+    ...response,
+    decision: {
+      ...response.decision,
+      sourceRecordId: null,
+      recordType: 'public_action',
+      facts,
+    },
+  })
 }
 
 function contentWith(

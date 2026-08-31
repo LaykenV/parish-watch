@@ -407,7 +407,6 @@ export const prepareCandidateReview = internalAction({
         snapshotId: snapshot._id,
         sourceKind: candidate.sourceKind,
         targetRecordId: candidate.targetRecordId,
-        sourceRecordIdProvenance,
         ...candidateForHash,
         extractionModelId: extraction.modelId,
         officialUrl: snapshot.canonicalUrl,
