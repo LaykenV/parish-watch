@@ -12,14 +12,51 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T11:47:37Z
+- **Last updated:** 2026-08-31T13:44:33Z
 
 ## Log
 
-### 2026-08-30 - PR #28 open
+### 2026-08-31 - 9d6751d
+
+PR #31 review found that muting a target could discard a cadence change that
+the resident had not saved yet. The management sheet now owns one cadence draft
+per opening. Mute and resume leave that draft visible, while closing without
+saving discards it. The exact choose-weekly, mute, close, and reopen sequence
+was replayed in the browser without overflow or runtime warnings. GitHub Actions
+will rerun the automated gate after the fix is pushed.
+
+### 2026-08-31 - f0b46ec
+
+Implemented resident-interface Design Slice 5 against development-only typed
+fixtures. The new follow flow preserves the chosen cadence through equal Google
+and email-only paths, keeps the target, cadence, and destination visible, and
+does not show `Following` before the fixture confirms the action. Following,
+saved areas and topics, notification preferences, immediate and roundup email
+layouts, and scoped email-only management now replace their low-fidelity route
+blueprints.
+
+Production still has no Convex Auth or AgentMail follow integration. Routes
+without an explicit development fixture show an honest unavailable state and
+load no fixture subscription data. Browser checks covered 320, 375, 390, 1280,
+and 1440 CSS pixels without horizontal overflow. The email verification path,
+Google return, empty and degraded lists, frequency changes, mute, one-target
+unfollow with Undo, saved-area add and removal, and expired management links
+were exercised manually. The email management page also opens on the cadence
+saved by that subscription.
+Automated validation remains deferred to pull-request CI
+(`src/features/following/`, `src/routes/following*`,
+`src/routes/email.manage.$token.tsx`).
+
+### 2026-08-31 - ff36c1b
+
+PR #28 merged the Ask Public Parish interface as `ff36c1b`. Production workflow
+`33389489990` succeeded for that exact commit. This session did not repeat the
+independent production smoke.
+
+### 2026-08-30 - PR #28 review
 
 Implemented resident-interface Design Slice 4 (Ask Public Parish) and opened
-PR #28. It is green and not merged, so none of it is deployed.
+PR #28. The review record below predates the later `ff36c1b` merge.
 
 The route renders corpus, issue, and meeting scope behind a hard production
 availability gate: a two-question cited thread on the real CO-022-2026 and

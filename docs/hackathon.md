@@ -169,9 +169,14 @@ PR #27 deployed Design Slice 3 as `3a59e45`. It implements issue, atomic
 decision, meeting, and citation-level evidence views against explicit
 development fixtures. Production builds exclude those fixture modules and show
 recovery pages until the real detail queries are connected. Workflow
-`33332573558` and the independent production smoke passed. Ask answers,
-follows, AgentMail, authentication, coverage integration, and the vibeapps.dev
-submission remain pending.
+`33332573558` and the independent production smoke passed.
+
+PR #28 merged Design Slice 4 as `ff36c1b`. Production workflow `33389489990`
+succeeded; this session did not repeat the independent production smoke. Design
+Slice 5 now implements the fixture-backed follow, account-entry, preference,
+notification, and email-management interface for review. Ask and follow
+backends, AgentMail, authentication, coverage integration, and the
+vibeapps.dev submission remain pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

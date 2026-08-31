@@ -1,7 +1,7 @@
 # Public Parish resident interface plan
 
-Status: approved Slice 5 design; Design Slices 1 through 3 are deployed and
-Design Slice 4 is implemented and awaiting merge
+Status: approved Slice 5 design; Design Slices 1 through 4 are merged and
+Design Slice 5 is implemented for review
 
 Decision grill completed: August 29, 2026
 
@@ -9,12 +9,12 @@ Implementation checkpoint: Design Slice 1 deployed through PR #14 as
 `6e46fd7`. Design Slice 2 deployed through PR #24 as `4e2ac67` with the
 responsive shell plus fixture-backed Home, For You, and Explore. PR #25 deployed
 the owner phone-review refinements as `b22e321`. PR #27 deployed Design Slice 3
-as `3a59e45`, including the issue, decision, meeting, and citation surfaces. The
-remaining design slices and the resident detail API connections are not
-complete.
-
-Design Slice 4 is implemented in PR #28, green on its checks, and not merged. It
-is therefore not deployed and not part of any production release.
+as `3a59e45`, including the issue, decision, meeting, and citation surfaces. PR
+#28 merged Design Slice 4 as `ff36c1b`; production workflow `33389489990`
+succeeded, but this session did not repeat the independent production smoke.
+Design Slice 5 is implemented against typed development fixtures and awaits its
+pull-request checks. The remaining design slices and resident detail API
+connections are not complete.
 
 ## Purpose
 
