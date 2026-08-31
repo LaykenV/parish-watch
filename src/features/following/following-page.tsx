@@ -10,7 +10,7 @@ import {
   Volume2Icon,
   VolumeXIcon,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
@@ -376,6 +376,7 @@ function FollowingList({ data }: { data: FollowingPageData }) {
       ) : null}
 
       <ManageFollowSheet
+        key={selected?.id ?? 'closed'}
         onChange={updateTarget}
         onOpenChange={(open) => {
           if (!open) setSelected(null)
@@ -466,11 +467,9 @@ function ManageFollowSheet({
   onUnfollow: (target: FollowedTarget) => void
   target: FollowedTarget | null
 }) {
-  const [frequency, setFrequency] = useState<DeliveryFrequency>('immediate')
-
-  useEffect(() => {
-    if (target) setFrequency(target.frequency)
-  }, [target])
+  const [frequency, setFrequency] = useState<DeliveryFrequency>(
+    target?.frequency ?? 'immediate',
+  )
 
   const handleOpen = (open: boolean) => {
     onOpenChange(open)
