@@ -3,7 +3,7 @@ import {
   CircleAlertIcon,
   LockKeyholeIcon,
 } from 'lucide-react'
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import { Button } from '../../components/ui/button'
 import { Sheet } from '../discovery/sheet'
@@ -29,6 +29,11 @@ export function SourceProblemReport({
   const descriptionId = useId()
   const errorId = useId()
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  const returnActionRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (result === 'sent') returnActionRef.current?.focus()
+  }, [result])
 
   const reset = () => {
     setDescription('')
@@ -76,7 +81,11 @@ export function SourceProblemReport({
               Public Parish will not change this page unless validated official
               evidence supports the correction.
             </p>
-            <Button onClick={() => handleOpenChange(false)} size="touch">
+            <Button
+              onClick={() => handleOpenChange(false)}
+              ref={returnActionRef}
+              size="touch"
+            >
               Return to the record
             </Button>
           </div>
