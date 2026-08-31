@@ -3,6 +3,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import ConvexProvider from '../integrations/convex/provider'
+import { ProductAnalyticsTracker } from '../features/analytics/product-analytics'
 import { BlueprintNotFound } from '../features/resident-blueprint/blueprint-page'
 import {
   ResidentRouteAccessibility,
@@ -75,6 +76,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ConvexProvider>
+          <ProductAnalyticsTracker />
           <ResidentRouteAccessibility />
           <RouteLoadingRegion />
           {children}

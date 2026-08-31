@@ -368,6 +368,15 @@ Ask each to:
 Capture aggregate event counts and anonymized quotes only with permission.
 Never expose private chat, email addresses, or resident identities in the demo.
 
+Report anonymous telemetry with its definition. `Unique visitors` means
+distinct production browser identifiers within a 90-day active identity
+window. `Activated visitors` means distinct browsers that selected at least one
+supported area. `Returning visitors` means a later visit at least 24 hours
+after first use. A browser returning after 90 inactive days can increment the
+cumulative visitor total again. These counts do not prove a unique person or
+Louisiana residency. A submission may call permissioned, known testers real
+residents and should keep that count separate from anonymous browser totals.
+
 ## Social Plan
 
 ### X and LinkedIn

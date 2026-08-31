@@ -11,8 +11,13 @@
 import type * as ai_chatCompletions from "../ai/chatCompletions.js";
 import type * as ai_provider from "../ai/provider.js";
 import type * as ai_types from "../ai/types.js";
+import type * as analytics_contracts from "../analytics/contracts.js";
+import type * as analytics_events from "../analytics/events.js";
+import type * as analytics_report from "../analytics/report.js";
+import type * as analytics_retention from "../analytics/retention.js";
 import type * as changes_material from "../changes/material.js";
 import type * as changes_source from "../changes/source.js";
+import type * as crons from "../crons.js";
 import type * as extraction_contractV1 from "../extraction/contractV1.js";
 import type * as extraction_extract from "../extraction/extract.js";
 import type * as extraction_ledger from "../extraction/ledger.js";
@@ -70,8 +75,13 @@ declare const fullApi: ApiFromModules<{
   "ai/chatCompletions": typeof ai_chatCompletions;
   "ai/provider": typeof ai_provider;
   "ai/types": typeof ai_types;
+  "analytics/contracts": typeof analytics_contracts;
+  "analytics/events": typeof analytics_events;
+  "analytics/report": typeof analytics_report;
+  "analytics/retention": typeof analytics_retention;
   "changes/material": typeof changes_material;
   "changes/source": typeof changes_source;
+  crons: typeof crons;
   "extraction/contractV1": typeof extraction_contractV1;
   "extraction/extract": typeof extraction_extract;
   "extraction/ledger": typeof extraction_ledger;

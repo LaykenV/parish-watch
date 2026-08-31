@@ -696,6 +696,11 @@ without exposing private chat, email, report, or resident content.
 
 Depends on: working Slice 6 through 9 adapters and provider ledgers.
 
+Production visit and location-setup telemetry landed earlier as a narrow
+resident-activation release. This packet extends that allowlist to the completed
+resident loop and provider ledgers. It does not replace or reinterpret the
+existing browser-level counts.
+
 Include:
 
 - allowlisted aggregate product-event contract;
