@@ -27,7 +27,7 @@ import {
 import { IssueCard } from './issue-card'
 import { SectionFailure, UpdateRow } from './notice'
 import { ResultRow } from './result-row'
-import { useMediaQuery } from './hooks'
+import { useMediaQuery, useRepeatedAnnouncement } from './hooks'
 import { toDecisionRow, usePublishedDecisions } from './live-publications'
 import { Sheet } from './sheet'
 
@@ -52,6 +52,9 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   const [query, setQuery] = useState(search.q ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [refreshed, setRefreshed] = useState(false)
+  const [refreshAnnouncement, announceRefresh] = useRepeatedAnnouncement(
+    'Explore results are updated.',
+  )
   const [recovered, setRecovered] = useState(false)
   const debounceRef = useRef(0)
   const searchRef = useRef(search)
@@ -183,7 +186,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   return (
     <main className="pp-page" id="resident-main">
       <p aria-live="polite" className="visually-hidden" role="status">
-        {refreshed ? 'Explore results are updated.' : ''}
+        {refreshAnnouncement}
       </p>
       <header className="pp-page-head">
         <h1>Explore</h1>
@@ -318,6 +321,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
             onRefresh={() => {
               setRefreshed(true)
               setRecovered(true)
+              announceRefresh()
             }}
           />
           {resultsBody()}

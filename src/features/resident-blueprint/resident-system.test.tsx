@@ -38,6 +38,10 @@ const evidenceSurfaceSource = readFileSync(
   new URL('../evidence/evidence-surface.tsx', import.meta.url),
   'utf8',
 )
+const discoveryHooksSource = readFileSync(
+  new URL('../discovery/hooks.ts', import.meta.url),
+  'utf8',
+)
 
 describe('resident interface Slice 7 system', () => {
   it('keeps action labels visible inside a stable loading slot', () => {
@@ -80,6 +84,10 @@ describe('resident interface Slice 7 system', () => {
     expect(homeSource).toContain('Feed updated from the official record.')
     expect(forYouSource).toContain('Your feed is updated.')
     expect(exploreSource).toContain('Explore results are updated.')
+    expect(discoveryHooksSource).toContain("setAnnouncement('')")
+    expect(discoveryHooksSource).toContain(
+      'frameRef.current = window.requestAnimationFrame',
+    )
   })
 
   it('applies reduced motion to route and action spinners', () => {
