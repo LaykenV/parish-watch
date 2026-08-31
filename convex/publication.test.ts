@@ -511,7 +511,7 @@ function buildCo072AgendaReviewPrompt(section: string | null) {
 test('the review prompt treats CO-072 final-adoption placement as scheduled consideration', () => {
   const prompt = buildCo072AgendaReviewPrompt('Final Adoption of Ordinances')
 
-  expect(prompt.promptVersion).toBe('v1.3')
+  expect(prompt.promptVersion).toBe('v1.4')
   expect(prompt.messages[0].content).toContain(
     'an item under Final Adoption of Ordinances is scheduled for final-adoption consideration',
   )
@@ -524,6 +524,15 @@ test('the review prompt treats CO-072 final-adoption placement as scheduled cons
   expect(prompt.messages[1].content).toContain(
     'CO-072-2026 An ordinance of the Lafayette City Council',
   )
+  expect(prompt.messages[0].content).toContain(
+    'copy one supplied fact fieldPath exactly',
+  )
+  expect(prompt.messages[0].content).toContain(
+    'Use null when the concern applies to the overall evidence set or more than one fact',
+  )
+  expect(prompt.messages[0].content).toContain(
+    'Do not invent a parent, summary, or new fieldPath',
+  )
 })
 
 test('the review prompt does not treat a bare agenda mention as scheduled', () => {
@@ -535,7 +544,7 @@ test('the review prompt does not treat a bare agenda mention as scheduled', () =
   expect(prompt.messages[1].content).toContain('"section":null')
 })
 
-test('review prompt v1.3 creates a new publication idempotency key', async () => {
+test('review prompt v1.4 creates a new publication idempotency key', async () => {
   const t = initTest()
   const seeded = await seedValidatedCandidate(t, '-review-prompt-version')
   const keyFor = (promptVersion: string) =>
@@ -548,7 +557,7 @@ test('review prompt v1.3 creates a new publication idempotency key', async () =>
       payloadVersion: 'v1',
     })
 
-  expect(await keyFor('v1.3')).not.toBe(await keyFor('v1.2'))
+  expect(await keyFor('v1.4')).not.toBe(await keyFor('v1.3'))
 })
 
 test('a second model review publishes one full immutable version with exact citations', async () => {
@@ -610,7 +619,7 @@ test('a second model review publishes one full immutable version with exact cita
     verdict: 'pass',
     modelRole: 'MODEL_FAST',
     modelId: LUNA_MODEL,
-    promptVersion: 'v1.3',
+    promptVersion: 'v1.4',
     schemaVersion: 'v1',
   })
   expect(evidence.version).toMatchObject({
@@ -1207,6 +1216,48 @@ test('the review contract rejects missing, duplicate, and unknown fact checks', 
       'source_printed',
     ),
   ).toContain('unknown fact')
+})
+
+test('review findings use an exact supplied fact path or null', () => {
+  const expected = [
+    { factId: 'fact-1', fieldPath: '/sourceRecordId' },
+    { factId: 'fact-2', fieldPath: '/title' },
+  ]
+  const checks = expected.map((fact) => ({
+    ...fact,
+    assessment: 'supported' as const,
+    detail: 'The excerpt supports the value.',
+  }))
+  const finding = {
+    code: 'amount_contexts_not_fully_identified',
+    severity: 'limited' as const,
+    detail: 'The concern applies to more than one amount fact.',
+  }
+
+  expect(
+    checkIndependentReviewContractV1(
+      {
+        verdict: 'limited',
+        checks,
+        findings: [{ ...finding, fieldPath: '/amounts' }],
+      },
+      expected,
+      true,
+      'source_printed',
+    ),
+  ).toContain('uses unknown path /amounts')
+  expect(
+    checkIndependentReviewContractV1(
+      {
+        verdict: 'limited',
+        checks,
+        findings: [{ ...finding, fieldPath: null }],
+      },
+      expected,
+      true,
+      'source_printed',
+    ),
+  ).toBeNull()
 })
 
 test('the deterministic policy never trusts the review verdict by itself', () => {
