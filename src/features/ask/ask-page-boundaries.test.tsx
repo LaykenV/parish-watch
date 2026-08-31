@@ -62,12 +62,16 @@ describe('Ask page ship boundaries', () => {
     expect(route).toContain('routeSearchFromScopeKey(askScopeIdentity(scope))')
   })
 
-  it('restores the old scope before saving a canceled new-scope draft', () => {
-    expect(page.indexOf('await onRestoreScope(viewScope)')).toBeLessThan(
+  it('saves a canceled new-scope draft before restoring the old route', () => {
+    expect(
       page.indexOf(
         'setAskDraftHandoff(askScopeIdentity(pending.scope), pending.draft)',
       ),
+    ).toBeLessThan(page.indexOf('void onRestoreScope(viewScope)'))
+    expect(page).toContain(
+      'setAskDraftHandoff(askScopeIdentity(pending.scope), pending.draft)',
     )
+    expect(page).toContain('void onRestoreScope(viewScope)')
     expect(page).toContain(
       'That draft is still available if you return to the new evidence scope',
     )

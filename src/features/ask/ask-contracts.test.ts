@@ -67,14 +67,14 @@ describe('Ask public contracts', () => {
     }
   })
 
-  it('consumes a private draft once and discards a scope mismatch', () => {
+  it('consumes a private draft once and preserves it across a scope mismatch', () => {
     setAskDraftHandoff('issue:one', 'What changed?')
     expect(takeAskDraftHandoff('issue:one')).toBe('What changed?')
     expect(takeAskDraftHandoff('issue:one')).toBeNull()
 
     setAskDraftHandoff('issue:one', 'Who voted?')
     expect(takeAskDraftHandoff('issue:two')).toBeNull()
-    expect(takeAskDraftHandoff('issue:one')).toBeNull()
+    expect(takeAskDraftHandoff('issue:one')).toBe('Who voted?')
   })
 
   it('confirms only when a populated thread changes evidence scope', () => {

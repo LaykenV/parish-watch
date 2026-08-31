@@ -307,16 +307,16 @@ export function AskPage({
     void adapter?.startNew(pending.scope)
   }, [adapter, pendingScope])
 
-  const cancelScopeChange = useCallback(async () => {
+  const cancelScopeChange = useCallback(() => {
     const pending = pendingScope
     setPendingScope(null)
-    await onRestoreScope(viewScope)
     if (pending?.draft) {
       setAskDraftHandoff(askScopeIdentity(pending.scope), pending.draft)
       setStatus(
         'That draft is still available if you return to the new evidence scope',
       )
     }
+    void onRestoreScope(viewScope)
   }, [onRestoreScope, pendingScope, viewScope])
 
   const handleClearRecent = useCallback(async () => {
@@ -480,7 +480,7 @@ export function AskPage({
                 <div className="ask-dock" data-sticky={sticky || undefined}>
                   {pendingScope ? (
                     <AskScopeConfirm
-                      onCancel={() => void cancelScopeChange()}
+                      onCancel={cancelScopeChange}
                       onConfirm={confirmScopeChange}
                     />
                   ) : sticky && !composerExpanded && draft.length === 0 ? (
