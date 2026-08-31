@@ -321,11 +321,7 @@ export function AskPage({
     async (turnId: string) => {
       if (!adapter || !conversation) return
       try {
-        await adapter.retry({
-          conversationId: conversation.id,
-          turnId,
-          idempotencyKey: crypto.randomUUID(),
-        })
+        await adapter.retry({ conversationId: conversation.id, turnId })
       } catch (error) {
         if (!(error instanceof AskRequestError)) throw error
         handleAvailability(error.failure)

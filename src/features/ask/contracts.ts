@@ -147,10 +147,15 @@ export type AskSubmission = {
   idempotencyKey: string
 }
 
+/*
+  A retry names the turn, not a new request. The adapter recorded the
+  submission's idempotency key against that turn and replays it, so a retry
+  cannot start a second answer for one question. Minting a key here would let
+  the caller break that guarantee by forgetting.
+*/
 export type AskRetry = {
   conversationId: string
   turnId: string
-  idempotencyKey: string
 }
 
 /*

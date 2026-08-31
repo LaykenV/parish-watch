@@ -450,7 +450,6 @@ export type AskSubmission = {
 export type AskRetry = {
   conversationId: string
   turnId: string
-  idempotencyKey: string
 }
 
 export interface AskAdapter {
@@ -805,6 +804,11 @@ interface adds:
 - `clearRecent()`, because the adapter owns same-device handle storage. Without
   it, `Clear recent conversations` cleared the rendered list and the handles
   returned on the next mount.
+
+`AskRetry` drops the `idempotencyKey` this document gave it. A retry names the
+turn, and the adapter replays the key it recorded for that turn's submission.
+The rule above, that a retry uses the original key, cannot hold if the caller
+mints a new one, and no view type carries the original for the page to reuse.
 
 A refused `submit` or `retry` also applies its own `AskRequestError.failure` to
 availability rather than waiting for the adapter to push. A page that clears its
