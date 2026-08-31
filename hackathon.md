@@ -7,7 +7,7 @@
 - **Repo:** https://github.com/LaykenV/public-parish
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
-- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`
+- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`
 - **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, durable workflows
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
@@ -23,8 +23,10 @@ contracts update deduplicated browser, event, and aggregate rows in one Convex
 mutation. The private report separates unique browsers, 30-minute visits,
 activated visitors, 24-hour returns, and area counts. A bounded daily cleanup
 removes browser identifiers and events after 90 days. The browser sends a hash
-of a random local identifier, never resident content. Automated validation is
-pending in pull-request CI (`convex/analytics/`,
+of a random local identifier, never resident content. A same-origin HTTP route
+keeps the write mutations internal, validates the exact payload, and applies
+per-browser and global limits. The counts remain unauthenticated product
+signals. Automated validation is pending in pull-request CI (`convex/analytics/`,
 `src/features/analytics/product-analytics.tsx`).
 
 ### 2026-08-31 - dd5501e

@@ -1,7 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { useMutation } from 'convex/react'
 
-import { api } from '../../../convex/_generated/api'
 import type { AreaSlug } from '../discovery/contracts'
 
 const VISITOR_STORAGE_KEY = 'public-parish.analytics.visitor.v1'
@@ -31,39 +29,37 @@ export function isAnalyticsRuntimeAllowed(runtime: AnalyticsRuntime): boolean {
 }
 
 export function ProductAnalyticsTracker() {
-  const recordVisit = useMutation(api.analytics.events.recordVisit)
-
   useEffect(() => {
-    void sendAnalytics((visitorKeyHash, eventKey) =>
-      recordVisit({ visitorKeyHash, eventKey }),
-    )
-  }, [recordVisit])
+    void sendAnalytics({ kind: 'app_visit' })
+  }, [])
 
   return null
 }
 
 export function useRecordAreaSelection() {
-  const recordAreaSelection = useMutation(
-    api.analytics.events.recordAreaSelection,
-  )
-
-  return useCallback(
-    (areaSlug: AreaSlug) => {
-      void sendAnalytics((visitorKeyHash, eventKey) =>
-        recordAreaSelection({ visitorKeyHash, eventKey, areaSlug }),
-      )
-    },
-    [recordAreaSelection],
-  )
+  return useCallback((areaSlug: AreaSlug) => {
+    void sendAnalytics({ kind: 'area_selected', areaSlug })
+  }, [])
 }
 
 async function sendAnalytics(
-  send: (visitorKeyHash: string, eventKey: string) => Promise<unknown>,
+  event: { kind: 'app_visit' } | { kind: 'area_selected'; areaSlug: AreaSlug },
 ) {
   try {
     if (!canUseAnalytics()) return
     const visitorKeyHash = await getVisitorKeyHash()
-    await send(visitorKeyHash, crypto.randomUUID())
+    await fetch('/api/analytics', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        ...event,
+        visitorKeyHash,
+        eventKey: crypto.randomUUID(),
+      }),
+      credentials: 'omit',
+      keepalive: true,
+      referrerPolicy: 'no-referrer',
+    })
   } catch {
     // Product telemetry never blocks a resident action.
   }

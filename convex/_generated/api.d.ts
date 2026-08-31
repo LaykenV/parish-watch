@@ -13,6 +13,7 @@ import type * as ai_provider from "../ai/provider.js";
 import type * as ai_types from "../ai/types.js";
 import type * as analytics_contracts from "../analytics/contracts.js";
 import type * as analytics_events from "../analytics/events.js";
+import type * as analytics_http from "../analytics/http.js";
 import type * as analytics_report from "../analytics/report.js";
 import type * as analytics_retention from "../analytics/retention.js";
 import type * as changes_material from "../changes/material.js";
@@ -77,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   "ai/types": typeof ai_types;
   "analytics/contracts": typeof analytics_contracts;
   "analytics/events": typeof analytics_events;
+  "analytics/http": typeof analytics_http;
   "analytics/report": typeof analytics_report;
   "analytics/retention": typeof analytics_retention;
   "changes/material": typeof changes_material;
@@ -159,5 +161,6 @@ export declare const internal: FilterApi<
 export declare const components: {
   staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   firecrawl: import("@firecrawl/firecrawl-convex/_generated/component.js").ComponentApi<"firecrawl">;
 };

@@ -1,8 +1,10 @@
+import { DAY, MINUTE, RateLimiter } from '@convex-dev/rate-limiter'
 import { ConvexError, v } from 'convex/values'
 
+import { components } from '../_generated/api'
 import type { Doc } from '../_generated/dataModel'
 import type { MutationCtx } from '../_generated/server'
-import { mutation } from '../_generated/server'
+import { internalMutation } from '../_generated/server'
 import {
   ANALYTICS_RETENTION_MS,
   ANALYTICS_RETURN_WINDOW_MS,
@@ -16,6 +18,17 @@ import type { AnalyticsAreaSlug } from './contracts'
 
 const eventResult = v.object({ recorded: v.boolean() })
 
+const analyticsRateLimiter = new RateLimiter(components.rateLimiter, {
+  analyticsBurst: { kind: 'fixed window', rate: 120, period: MINUTE },
+  analyticsDaily: { kind: 'fixed window', rate: 5_000, period: DAY },
+  analyticsVisitor: {
+    kind: 'token bucket',
+    rate: 12,
+    period: MINUTE,
+    capacity: 12,
+  },
+})
+
 type VisitState = {
   subject: Doc<'analyticsSubjects'>
   isNewVisitor: boolean
@@ -23,7 +36,7 @@ type VisitState = {
   becameReturning: boolean
 }
 
-export const recordVisit = mutation({
+export const recordVisit = internalMutation({
   args: {
     visitorKeyHash: v.string(),
     eventKey: v.string(),
@@ -33,6 +46,7 @@ export const recordVisit = mutation({
     validateOpaqueInputs(args)
     const eventKey = `${args.eventKey}:visit`
     if (await eventExists(ctx, eventKey)) return { recorded: false }
+    await enforceRateLimits(ctx, args.visitorKeyHash)
 
     const now = Date.now()
     const state = await applyVisit(ctx, args.visitorKeyHash, now)
@@ -54,7 +68,7 @@ export const recordVisit = mutation({
   },
 })
 
-export const recordAreaSelection = mutation({
+export const recordAreaSelection = internalMutation({
   args: {
     visitorKeyHash: v.string(),
     eventKey: v.string(),
@@ -65,6 +79,7 @@ export const recordAreaSelection = mutation({
     validateOpaqueInputs(args)
     const eventKey = `${args.eventKey}:area`
     if (await eventExists(ctx, eventKey)) return { recorded: false }
+    await enforceRateLimits(ctx, args.visitorKeyHash)
 
     const now = Date.now()
     const state = await applyVisit(ctx, args.visitorKeyHash, now)
@@ -201,6 +216,15 @@ function validateOpaqueInputs(args: {
       message: 'Analytics event identifiers must be opaque values',
     })
   }
+}
+
+async function enforceRateLimits(ctx: MutationCtx, visitorKeyHash: string) {
+  await analyticsRateLimiter.limit(ctx, 'analyticsBurst', { throws: true })
+  await analyticsRateLimiter.limit(ctx, 'analyticsDaily', { throws: true })
+  await analyticsRateLimiter.limit(ctx, 'analyticsVisitor', {
+    key: visitorKeyHash,
+    throws: true,
+  })
 }
 
 type CounterIncrement = {

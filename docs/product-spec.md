@@ -617,6 +617,15 @@ the authenticated
 `npm run analytics:report:production` Convex CLI operation. The resident
 interface never shows popularity counts.
 
+The browser sends these events to one same-origin HTTP route. That route accepts
+only the two served production origins, validates an exact payload shape, and
+calls internal Convex mutations. The official rate-limiter component caps one
+browser at 12 requests per minute, the app at 120 requests per minute, and the
+app at 5,000 requests per day. Origin checks and rate limits reduce accidental
+or scripted inflation but cannot prove that anonymous traffic came from a
+human. Treat the report as unauthenticated product telemetry, not an audited
+resident count.
+
 ## Empty and Error States
 
 - No current decisions: show recent outcomes, search, and coverage status.

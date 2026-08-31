@@ -376,6 +376,9 @@ after first use. A browser returning after 90 inactive days can increment the
 cumulative visitor total again. These counts do not prove a unique person or
 Louisiana residency. A submission may call permissioned, known testers real
 residents and should keep that count separate from anonymous browser totals.
+The production endpoint checks its served origin and applies per-browser and
+global rate limits, but a scripted client can still spoof anonymous traffic.
+Describe these as product signals, not audited people.
 
 ## Social Plan
 
