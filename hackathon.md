@@ -12,9 +12,23 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T14:20:53Z
+- **Last updated:** 2026-08-31T15:32:48Z
 
 ## Log
+
+### 2026-08-31 - 0853f69
+
+Implemented resident-interface Design Slice 6 against explicit development
+fixtures. Coverage now explains five written source-health states body by body,
+keeps accepted records distinct from complete coverage, records coverage demand
+without starting source work, explains the evidence method, and sends source
+problems through a private form. Production routes remain unavailable until
+their real coverage, request, and private-delivery paths pass their gates.
+Browser checks covered the request, email verification, duplicate, rate-limit,
+notice-delivery failure, follow, area-selector, and report paths from 320
+through 1440 CSS pixels without application overflow. Automated validation
+remains with the pull-request checks (`src/features/coverage/`,
+`src/routes/coverage*`, `src/routes/how-it-works.tsx`).
 
 ### 2026-08-31 - adfe81e
 
