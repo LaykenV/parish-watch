@@ -170,7 +170,10 @@ export function DecisionPage({
                 <p className="ev-report-lede">
                   Something here does not match the official record?
                 </p>
-                <ReportProblem recordUrl={`/decisions/${decision.recordKey}`} />
+                <ReportProblem
+                  available={Boolean(search.fixture)}
+                  recordUrl={`/decisions/${decision.recordKey}`}
+                />
               </div>
             </Section>
           </div>
