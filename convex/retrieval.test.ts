@@ -835,4 +835,40 @@ test('seeding is idempotent by slug', async () => {
     ALT_URL,
     'https://www.lafayettela.gov/your-government/city-and-parish-councils/schedule-research-ord-reso/',
   ])
+
+  const rapides = await t.query(
+    internal.sources.registries.getForBodySlug,
+    {
+      bodySlug: 'rapides-parish-police-jury',
+    },
+  )
+  expect(rapides).toMatchObject({
+    body: {
+      name: 'Rapides Parish Police Jury',
+      publicStatus: 'candidate',
+    },
+    registry: {
+      officialDomains: ['rppj.com'],
+      seedUrls: ['https://rppj.com/agendas/'],
+      status: 'candidate',
+    },
+  })
+
+  const eastBatonRouge = await t.query(
+    internal.sources.registries.getForBodySlug,
+    {
+      bodySlug: 'ebr-metropolitan-council',
+    },
+  )
+  expect(eastBatonRouge).toMatchObject({
+    body: {
+      name: 'Metropolitan Council of the Parish of East Baton Rouge and the City of Baton Rouge',
+      publicStatus: 'candidate',
+    },
+    registry: {
+      officialDomains: ['brla.gov'],
+      seedUrls: ['https://www.brla.gov/AgendaCenter'],
+      status: 'candidate',
+    },
+  })
 })

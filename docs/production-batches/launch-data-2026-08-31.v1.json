@@ -1,0 +1,313 @@
+{
+  "schemaVersion": "public_parish_production_batch_v1",
+  "preparedFrom": "woozy-wren-227",
+  "targetDeployment": "befitting-flamingo-587",
+  "rules": {
+    "requireMatchingDevelopmentContentHash": true,
+    "keepBodiesCandidate": true,
+    "replayAfterSuccess": true
+  },
+  "bodies": [
+    {
+      "bodySlug": "lafayette-city-council",
+      "estimatedPdfRetrievals": 14,
+      "estimatedModelCalls": 30,
+      "sources": [
+        {
+          "url": "https://apps.lafayettela.gov/obcouncil/api/Document/2553291/",
+          "developmentContentHash": "7a17e244e2be9fe4a49d26862081eaa6b615d0bd27ee9d81a47b4f49656edca4",
+          "sourceKind": "agenda",
+          "targets": [
+            {
+              "targetRecordId": "CO-029-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://apps.lafayettela.gov/obcouncil/api/Document/2554437/",
+          "developmentContentHash": "339c1886bcf40a2935322f27db855c1ef14b7da2aac1f100f081f497c1cba81e",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "CO-022-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            },
+            {
+              "targetRecordId": "CO-023-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            }
+          ]
+        },
+        {
+          "url": "https://apps.lafayettela.gov/obcouncil/api/Document/2573516/",
+          "developmentContentHash": "b8c4801d316123efe193586735621786ad9f19293a0fa59b0b8fd4e6601fbb6d",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "CO-056-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            },
+            {
+              "targetRecordId": "CO-058-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "limited"
+            },
+            {
+              "targetRecordId": "CO-060-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            }
+          ]
+        },
+        {
+          "url": "https://apps.lafayettela.gov/obcouncil/api/Document/2577984/",
+          "developmentContentHash": "1f0354e537a6c3f11dc5cff4a36ec5aca1d496467f5960fd1905423c305ebf92",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "CO-062-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "limited"
+            },
+            {
+              "targetRecordId": "CO-063-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            },
+            {
+              "targetRecordId": "CO-066-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            },
+            {
+              "targetRecordId": "CR-015-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            }
+          ]
+        },
+        {
+          "url": "https://apps.lafayettela.gov/obcouncil/api/Document/2580143/",
+          "developmentContentHash": "fc92927aa246f5e2b33f5b36f095fbbd457d7da9faa52a2fc5a7a6d7590f670a",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "CO-068-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            },
+            {
+              "targetRecordId": "CO-069-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "full"
+            },
+            {
+              "targetRecordId": "CO-070-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://apps.lafayettela.gov/obcouncil/api/Document/2580895/",
+          "developmentContentHash": "b25520a463c7bd33fbd3ace105009af8104494c3918261113bfaccee87f1a1cc",
+          "sourceKind": "ordinance",
+          "targets": [
+            {
+              "targetRecordId": "CO-072-2026",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://apps.lafayettela.gov/obcouncil/api/Document/2581071/",
+          "developmentContentHash": "f43d21e7194be9b321b88bf3f379754342d46c6d8db4303e23e84bf69c9f38ff",
+          "sourceKind": "agenda",
+          "targets": [
+            {
+              "targetRecordId": "CITY-BOARD-APPLICATIONS-2026-09-15",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "limited"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "bodySlug": "rapides-parish-police-jury",
+      "estimatedPdfRetrievals": 16,
+      "estimatedModelCalls": 22,
+      "sources": [
+        {
+          "url": "https://rppj.com/wp-content/uploads/2026/05/April-28-2026-Special-Jury-Minutes-Transcribed.pdf",
+          "developmentContentHash": "d26a80f63f64897a4296de898036537c47c9b92e34224cb338d752371448b0f5",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "RAPIDES-PAFFORD-EMS-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://rppj.com/wp-content/uploads/2026/05/May-11-2026-Jury-Minutes-Transcribed.pdf",
+          "developmentContentHash": "4f130f6eb591f4e531c6edb871478d259b65f617a602f27ef5ca4791c9f84f1d",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "RAPIDES-MILLAGE-LEVY-MAY-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://rppj.com/wp-content/uploads/2026/06/June-1-2026-Special-Jury-Minutes-Transcribed.pdf",
+          "developmentContentHash": "e957aadfaf64df9628d6cea35980f1e41364c8b803e6b6847b3515ef856cca3f",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "RAPIDES-PUBLIC-WORKS-DIRECTOR-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://rppj.com/wp-content/uploads/2026/06/June-8-2026-Jury-Minutes-Transcribed.pdf",
+          "developmentContentHash": "4bcfe873df587ebcb70063d99cb2f54a9f326a6105198b426e90c2b30735976c",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "RAPIDES-BAYWOOD-SPEED-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "full"
+            },
+            {
+              "targetRecordId": "RAPIDES-MILLAGE-LEVY-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "full"
+            }
+          ]
+        },
+        {
+          "url": "https://rppj.com/wp-content/uploads/2026/07/June-17-2026-Special-Jury-Minutes-Transcribed.pdf",
+          "developmentContentHash": "a6c87ed5a4c80d5a868eecdc1d2bf6ee50bfaff16dc361037b283cc562aafe35",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "RAPIDES-CIVIL-SERVICE-COMP-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://rppj.com/wp-content/uploads/2026/07/July-13-2026-Jury-Minutes-Transcribed.pdf",
+          "developmentContentHash": "0e00e44f43dcb63183b02666cc0adb3aa9fd556c3df32518353b16548a36b44a",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "RAPIDES-ADJUDICATED-SQ50-2026-07-13",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "full"
+            }
+          ]
+        },
+        {
+          "url": "https://rppj.com/wp-content/uploads/2026/08/August-10-2026-Jury-Minutes-Transcribed.pdf",
+          "developmentContentHash": "3432ca352c1a9b00f7427e07f3b168ccb0cf3e823e2712b9257796bfa0f4597d",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "RAPIDES-COTILE-CAMPING-FEES-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "full"
+            },
+            {
+              "targetRecordId": "RAPIDES-MILLAGE-ELECTIONS-2026-12-12",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://rppj.com/wp-content/uploads/2026/08/August-25-2026-Special-Jury-Minutes-Transcribed.pdf",
+          "developmentContentHash": "439241e58434f5843b973dacefaf0984067174d5dc6655eeff32d8c149d7b019",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "RAPIDES-HMP-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "limited"
+            },
+            {
+              "targetRecordId": "RAPIDES-LOATF-2026",
+              "sourceRecordIdProvenance": "operator_assigned",
+              "expectedMode": "limited"
+            }
+          ]
+        }
+      ],
+      "negativeCases": [
+        {
+          "sourceUrl": "https://rppj.com/wp-content/uploads/2026/05/May-11-2026-Jury-Minutes-Transcribed.pdf",
+          "sourceKind": "minutes",
+          "targetRecordId": "RAPIDES-FIRE7-MILLAGE-ELECTION-2026-11-03",
+          "sourceRecordIdProvenance": "operator_assigned",
+          "expectedOutcome": "not_found"
+        }
+      ]
+    },
+    {
+      "bodySlug": "ebr-metropolitan-council",
+      "estimatedPdfRetrievals": 6,
+      "estimatedModelCalls": 6,
+      "sources": [
+        {
+          "url": "https://www.brla.gov/AgendaCenter/ViewFile/Minutes/_01052026-2284",
+          "developmentContentHash": "3d0addd83a35d9c9d451d775e8b621e17d5ced0adfcc6fa958272292e040f594",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "59157",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://www.brla.gov/AgendaCenter/ViewFile/Minutes/_04302026-2367",
+          "developmentContentHash": "fcc486b9f6ac1dde430880513ce0abea410ce414a24600fab7035601b6113db0",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "59374",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "limited"
+            }
+          ]
+        },
+        {
+          "url": "https://www.brla.gov/AgendaCenter/ViewFile/Minutes/_06102026-2392",
+          "developmentContentHash": "c509e3262ed2467bc00273f937773c260cf83627b1fbaa8d27c273f55b699887",
+          "sourceKind": "minutes",
+          "targets": [
+            {
+              "targetRecordId": "19882",
+              "sourceRecordIdProvenance": "source_printed",
+              "expectedMode": "limited"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

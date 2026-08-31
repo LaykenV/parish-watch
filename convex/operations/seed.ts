@@ -1,19 +1,146 @@
 import { v } from 'convex/values'
 
+import type { Id } from '../_generated/dataModel'
+import type { MutationCtx } from '../_generated/server'
 import { internalMutation } from '../_generated/server'
 
-const LAFAYETTE_COUNCIL_HUB_URL =
-  'https://www.lafayettela.gov/your-government/city-and-parish-councils/'
-const LAFAYETTE_COUNCIL_DOCUMENT_SEARCH_URL =
-  'https://apps.lafayettela.gov/obcouncil/index.html'
-const LAFAYETTE_COUNCIL_SCHEDULE_RESEARCH_URL =
-  'https://www.lafayettela.gov/your-government/city-and-parish-councils/schedule-research-ord-reso/'
-const LAFAYETTE_OFFICIAL_DOMAINS = ['lafayettela.gov', 'apps.lafayettela.gov']
-const LAFAYETTE_COUNCIL_SEED_URLS = [
-  LAFAYETTE_COUNCIL_HUB_URL,
-  LAFAYETTE_COUNCIL_DOCUMENT_SEARCH_URL,
-  LAFAYETTE_COUNCIL_SCHEDULE_RESEARCH_URL,
-]
+const LAUNCH_REGISTRIES = [
+  {
+    jurisdiction: {
+      name: 'Lafayette Parish',
+      slug: 'lafayette-parish',
+    },
+    body: {
+      name: 'Lafayette City Council',
+      slug: 'lafayette-city-council',
+      bodyType: 'city_council',
+      officialUrl:
+        'https://www.lafayettela.gov/your-government/city-and-parish-councils/',
+    },
+    registry: {
+      officialDomains: ['lafayettela.gov', 'apps.lafayettela.gov'],
+      seedUrls: [
+        'https://www.lafayettela.gov/your-government/city-and-parish-councils/',
+        'https://apps.lafayettela.gov/obcouncil/index.html',
+        'https://www.lafayettela.gov/your-government/city-and-parish-councils/schedule-research-ord-reso/',
+      ],
+      sourceKinds: ['agenda', 'minutes', 'ordinance', 'resolution'],
+      expectedWeekdays: [2],
+      initialStatus: 'validating',
+    },
+  },
+  {
+    jurisdiction: {
+      name: 'Rapides Parish',
+      slug: 'rapides-parish',
+    },
+    body: {
+      name: 'Rapides Parish Police Jury',
+      slug: 'rapides-parish-police-jury',
+      bodyType: 'parish_council',
+      officialUrl: 'https://rppj.com/',
+    },
+    registry: {
+      officialDomains: ['rppj.com'],
+      seedUrls: ['https://rppj.com/agendas/'],
+      sourceKinds: [
+        'agenda',
+        'minutes',
+        'packet',
+        'ordinance',
+        'resolution',
+      ],
+      expectedWeekdays: [1],
+      initialStatus: 'candidate',
+    },
+  },
+  {
+    jurisdiction: {
+      name: 'East Baton Rouge Parish',
+      slug: 'east-baton-rouge-parish',
+    },
+    body: {
+      name: 'Metropolitan Council of the Parish of East Baton Rouge and the City of Baton Rouge',
+      slug: 'ebr-metropolitan-council',
+      bodyType: 'parish_council',
+      officialUrl: 'https://www.brla.gov/AgendaCenter',
+    },
+    registry: {
+      officialDomains: ['brla.gov'],
+      seedUrls: ['https://www.brla.gov/AgendaCenter'],
+      sourceKinds: ['agenda', 'minutes', 'ordinance', 'resolution'],
+      expectedWeekdays: [3],
+      initialStatus: 'candidate',
+    },
+  },
+] as const
+
+type LaunchRegistryConfig = (typeof LAUNCH_REGISTRIES)[number]
+
+async function seedRegistry(
+  ctx: MutationCtx,
+  config: LaunchRegistryConfig,
+): Promise<{
+  jurisdictionId: Id<'jurisdictions'>
+  bodyId: Id<'governmentBodies'>
+  registryId: Id<'sourceRegistries'>
+}> {
+  const existingJurisdiction = await ctx.db
+    .query('jurisdictions')
+    .withIndex('by_slug', (q) => q.eq('slug', config.jurisdiction.slug))
+    .unique()
+  const jurisdictionId =
+    existingJurisdiction?._id ??
+    (await ctx.db.insert('jurisdictions', {
+      name: config.jurisdiction.name,
+      slug: config.jurisdiction.slug,
+      type: 'parish',
+      state: 'LA',
+      publicStatus: 'candidate',
+    }))
+
+  const existingBody = await ctx.db
+    .query('governmentBodies')
+    .withIndex('by_slug', (q) => q.eq('slug', config.body.slug))
+    .unique()
+  const bodyId =
+    existingBody?._id ??
+    (await ctx.db.insert('governmentBodies', {
+      jurisdictionId,
+      name: config.body.name,
+      slug: config.body.slug,
+      bodyType: config.body.bodyType,
+      officialUrl: config.body.officialUrl,
+      publicStatus: 'candidate',
+    }))
+
+  const existingRegistry = await ctx.db
+    .query('sourceRegistries')
+    .withIndex('by_body_and_status', (q) => q.eq('governmentBodyId', bodyId))
+    .first()
+  const registryFields = {
+    officialDomains: [...config.registry.officialDomains],
+    seedUrls: [...config.registry.seedUrls],
+    sourceKinds: [...config.registry.sourceKinds],
+    expectedCadence: {
+      kind: 'meeting_cycle' as const,
+      expectedWeekdays: [...config.registry.expectedWeekdays],
+    },
+    discoveryMode: 'dynamic' as const,
+  }
+  const registryId = existingRegistry
+    ? existingRegistry._id
+    : await ctx.db.insert('sourceRegistries', {
+        governmentBodyId: bodyId,
+        ...registryFields,
+        status: config.registry.initialStatus,
+      })
+  if (existingRegistry) {
+    await ctx.db.patch(registryId, registryFields)
+  }
+
+  return { jurisdictionId, bodyId, registryId }
+}
 
 export const seedLaunchCoverage = internalMutation({
   args: {},
@@ -23,67 +150,10 @@ export const seedLaunchCoverage = internalMutation({
     registryId: v.id('sourceRegistries'),
   }),
   handler: async (ctx) => {
-    const existingJurisdiction = await ctx.db
-      .query('jurisdictions')
-      .withIndex('by_slug', (q) => q.eq('slug', 'lafayette-parish'))
-      .unique()
-    const jurisdictionId =
-      existingJurisdiction?._id ??
-      (await ctx.db.insert('jurisdictions', {
-        name: 'Lafayette Parish',
-        slug: 'lafayette-parish',
-        type: 'parish',
-        state: 'LA',
-        publicStatus: 'candidate',
-      }))
-
-    const existingBody = await ctx.db
-      .query('governmentBodies')
-      .withIndex('by_slug', (q) => q.eq('slug', 'lafayette-city-council'))
-      .unique()
-    const bodyId =
-      existingBody?._id ??
-      (await ctx.db.insert('governmentBodies', {
-        jurisdictionId,
-        name: 'Lafayette City Council',
-        slug: 'lafayette-city-council',
-        bodyType: 'city_council',
-        officialUrl: LAFAYETTE_COUNCIL_HUB_URL,
-        publicStatus: 'candidate',
-      }))
-
-    const existingRegistry = await ctx.db
-      .query('sourceRegistries')
-      .withIndex('by_body_and_status', (q) => q.eq('governmentBodyId', bodyId))
-      .first()
-    let registryId
-    if (existingRegistry) {
-      registryId = existingRegistry._id
-      await ctx.db.patch(registryId, {
-        officialDomains: LAFAYETTE_OFFICIAL_DOMAINS,
-        seedUrls: LAFAYETTE_COUNCIL_SEED_URLS,
-        sourceKinds: ['agenda', 'minutes', 'ordinance', 'resolution'],
-        expectedCadence: {
-          kind: 'meeting_cycle',
-          expectedWeekdays: [2],
-        },
-        discoveryMode: 'dynamic',
-      })
-    } else {
-      registryId = await ctx.db.insert('sourceRegistries', {
-        governmentBodyId: bodyId,
-        officialDomains: LAFAYETTE_OFFICIAL_DOMAINS,
-        seedUrls: LAFAYETTE_COUNCIL_SEED_URLS,
-        sourceKinds: ['agenda', 'minutes', 'ordinance', 'resolution'],
-        expectedCadence: {
-          kind: 'meeting_cycle',
-          expectedWeekdays: [2],
-        },
-        discoveryMode: 'dynamic',
-        status: 'validating',
-      })
+    const lafayette = await seedRegistry(ctx, LAUNCH_REGISTRIES[0])
+    for (const config of LAUNCH_REGISTRIES.slice(1)) {
+      await seedRegistry(ctx, config)
     }
-
-    return { jurisdictionId, bodyId, registryId }
+    return lafayette
   },
 })
