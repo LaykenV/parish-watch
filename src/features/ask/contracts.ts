@@ -289,7 +289,7 @@ export function meetingAskKey(meetingId: string): string {
 export function askScopeIdentity(scope: AskScope): string {
   switch (scope.kind) {
     case 'corpus':
-      return 'corpus'
+      return scope.areaKey ? `corpus:${scope.areaKey}` : 'corpus'
     case 'issue':
       return issueAskKey(scope.issueSlug)
     case 'meeting':

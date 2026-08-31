@@ -24,7 +24,7 @@ import type {
   AskScope,
   AskTurnState,
 } from './contracts'
-import { takeAskDraftHandoff } from './draft-handoff'
+import { setAskDraftHandoff, takeAskDraftHandoff } from './draft-handoff'
 import { AskComposer } from './ask-composer'
 import { AskThread } from './ask-thread'
 import {
@@ -63,7 +63,7 @@ export function AskPage({
   source,
 }: {
   data: AskRouteData
-  onRestoreScope: (scope: AskScope) => void
+  onRestoreScope: (scope: AskScope) => Promise<void>
   onSelectSource: (id: string | null) => void
   source?: string
 }) {
@@ -304,10 +304,17 @@ export function AskPage({
     void adapter?.startNew(pending.scope)
   }, [adapter, pendingScope])
 
-  const cancelScopeChange = useCallback(() => {
+  const cancelScopeChange = useCallback(async () => {
+    const pending = pendingScope
     setPendingScope(null)
-    onRestoreScope(viewScope)
-  }, [onRestoreScope, viewScope])
+    await onRestoreScope(viewScope)
+    if (pending?.draft) {
+      setAskDraftHandoff(askScopeIdentity(pending.scope), pending.draft)
+      setStatus(
+        'That draft is still available if you return to the new evidence scope',
+      )
+    }
+  }, [onRestoreScope, pendingScope, viewScope])
 
   const handleClearRecent = useCallback(async () => {
     if (!adapter) return
@@ -470,7 +477,7 @@ export function AskPage({
                 <div className="ask-dock" data-sticky={sticky || undefined}>
                   {pendingScope ? (
                     <AskScopeConfirm
-                      onCancel={cancelScopeChange}
+                      onCancel={() => void cancelScopeChange()}
                       onConfirm={confirmScopeChange}
                     />
                   ) : sticky && !composerExpanded && draft.length === 0 ? (

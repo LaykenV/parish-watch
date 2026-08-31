@@ -870,7 +870,9 @@ official contacts. It also removed the full idle composer that covered answers
 on a phone. Expired conversations now show one restart path instead of an
 active composer beside the expiry notice. The final review also moved the
 scope-change confirmation from an unreachable recent-list branch to the real
-route-scope transition, so an active thread cannot disappear silently.
+route-scope transition, so an active thread cannot disappear silently. Corpus
+scope identity retains its public area key, and canceling a cross-scope change
+saves the incoming draft in memory for that scope instead of dropping it.
 
 ## Acceptance gate
 

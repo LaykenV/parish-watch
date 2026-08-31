@@ -62,6 +62,17 @@ describe('Ask page ship boundaries', () => {
     expect(route).toContain('routeSearchFromScopeKey(askScopeIdentity(scope))')
   })
 
+  it('restores the old scope before saving a canceled new-scope draft', () => {
+    expect(page.indexOf('await onRestoreScope(viewScope)')).toBeLessThan(
+      page.indexOf(
+        'setAskDraftHandoff(askScopeIdentity(pending.scope), pending.draft)',
+      ),
+    )
+    expect(page).toContain(
+      'That draft is still available if you return to the new evidence scope',
+    )
+  })
+
   it('renders the named official contact and its cited value', () => {
     const answer: AskNotFoundAnswer = {
       kind: 'not_found',

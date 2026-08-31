@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { CitationData } from '../evidence/contracts'
 import {
   askScopeKey,
+  askScopeIdentity,
   countAnswerSources,
   parseAskSearch,
   routeSearchFromScopeKey,
@@ -110,6 +111,23 @@ describe('Ask public contracts', () => {
     expect(
       shouldConfirmAskScopeChange({ ...conversation, turns: [] }, meetingScope),
     ).toBe(false)
+  })
+
+  it('keeps area-scoped corpus identities distinct', () => {
+    expect(
+      askScopeIdentity({
+        kind: 'corpus',
+        areaKey: 'lafayette-parish',
+        label: 'Searching Lafayette Parish',
+      }),
+    ).toBe('corpus:lafayette-parish')
+    expect(
+      askScopeIdentity({
+        kind: 'corpus',
+        areaKey: 'rapides-parish',
+        label: 'Searching Rapides Parish',
+      }),
+    ).toBe('corpus:rapides-parish')
   })
 
   it('deduplicates cited sources and ignores uncited map entries', () => {

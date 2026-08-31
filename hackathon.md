@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T03:34:58Z
+- **Last updated:** 2026-08-31T03:44:13Z
 
 ## Log
 
@@ -42,6 +42,11 @@ attached to a recent-list branch that could not run. Route scope changes could
 therefore clear an active thread without asking. The confirmation now intercepts
 the real route transition, keeps the current scope and conversation on cancel,
 and starts the new scope only after confirmation.
+
+The next review caught two related edge cases. Corpus scope identity dropped
+the selected public area, and canceling a cross-scope handoff discarded its
+draft. Corpus identities now retain the area key. Cancel restores the old route
+before returning the incoming draft to its in-memory scope handoff.
 
 Four checked-in fixes came out of CI and review rather than from me reading the
 diff first. Verify caught a decision page still passing the old string scope,
