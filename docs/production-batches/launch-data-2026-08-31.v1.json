@@ -10,7 +10,18 @@
   "rules": {
     "requireMatchingDevelopmentContentHash": true,
     "keepBodiesCandidate": true,
-    "replayAfterSuccess": true
+    "replayAfterSuccess": true,
+    "allowReviewedModeVariance": true,
+    "requirePublicationEvidenceConsistentWithMode": true
+  },
+  "completedOutcome": {
+    "completedAt": "2026-08-31",
+    "publishedRecords": 26,
+    "fullRecords": 15,
+    "limitedRecords": 11,
+    "negativeCases": 1,
+    "excludedTargets": 3,
+    "replayedRuns": 27
   },
   "bodies": [
     {
@@ -153,13 +164,7 @@
           "url": "https://rppj.com/wp-content/uploads/2026/05/April-28-2026-Special-Jury-Minutes-Transcribed.pdf",
           "developmentContentHash": "d26a80f63f64897a4296de898036537c47c9b92e34224cb338d752371448b0f5",
           "sourceKind": "minutes",
-          "targets": [
-            {
-              "targetRecordId": "RAPIDES-PAFFORD-EMS-2026",
-              "sourceRecordIdProvenance": "operator_assigned",
-              "expectedMode": "limited"
-            }
-          ]
+          "targets": []
         },
         {
           "url": "https://rppj.com/wp-content/uploads/2026/05/May-11-2026-Jury-Minutes-Transcribed.pdf",
@@ -266,6 +271,14 @@
         }
       ],
       "excludedTargets": [
+        {
+          "sourceUrl": "https://rppj.com/wp-content/uploads/2026/05/April-28-2026-Special-Jury-Minutes-Transcribed.pdf",
+          "sourceKind": "minutes",
+          "targetRecordId": "RAPIDES-PAFFORD-EMS-2026",
+          "sourceRecordIdProvenance": "operator_assigned",
+          "expectedOutcome": "validation_failed",
+          "reason": "Production extraction failed exact citation validation twice."
+        },
         {
           "sourceUrl": "https://rppj.com/wp-content/uploads/2026/08/August-10-2026-Jury-Minutes-Transcribed.pdf",
           "sourceKind": "minutes",
