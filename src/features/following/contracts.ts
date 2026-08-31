@@ -26,6 +26,8 @@ export type FollowTarget = {
 }
 
 export type FollowedTarget = FollowTarget & {
+  evidenceScenario?: 'preview' | 'update'
+  href?: string
   id: string
   destination: string
   frequency: DeliveryFrequency

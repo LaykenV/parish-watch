@@ -15,9 +15,11 @@ export const Route = createFileRoute('/ask')({
   component: ResidentAsk,
   loaderDeps: ({ search }) => ({
     fixture: getActiveAskFixture(search.fixture),
+    returnTo: search.returnTo,
     scopeKey: askScopeKey(search),
   }),
-  loader: ({ deps }) => loadAskPageData(deps.fixture, deps.scopeKey),
+  loader: ({ deps }) =>
+    loadAskPageData(deps.fixture, deps.scopeKey, deps.returnTo),
   validateSearch: parseAskSearch,
 })
 
@@ -36,6 +38,10 @@ function ResidentAsk() {
             search: (prev) => ({
               ...routeSearchFromScopeKey(askScopeIdentity(scope)),
               fixture: prev.fixture,
+              returnTo:
+                askScopeIdentity(scope) === askScopeKey(prev)
+                  ? prev.returnTo
+                  : undefined,
               source: prev.source,
             }),
           })

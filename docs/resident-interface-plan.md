@@ -1,6 +1,6 @@
 # Public Parish resident interface plan
 
-Status: approved resident design; Design Slices 1 through 6 are deployed
+Status: approved resident design; Design Slices 1 through 7 are deployed
 
 Decision grill completed: August 29, 2026
 
@@ -12,8 +12,9 @@ as `3a59e45`, including the issue, decision, meeting, and citation surfaces. PR
 #28 merged Design Slice 4 as `ff36c1b`; production workflow `33389489990`
 succeeded. PR #31 deployed Design Slice 5 as `adfe81e`; production workflow
 `33401768387` and the independent production smoke passed. PR #34 deployed
-Design Slice 6 as `0aa7474`. Design Slice 7 is implemented for review in
-`docs/resident-interface-slice-7.md`. Resident detail, account, email, and
+Design Slice 6 as `0aa7474`. PR #37 deployed Design Slice 7 as `f854c2e`.
+Design Slice 8 is implemented for review in
+`docs/resident-interface-slice-8.md`. Resident detail, account, email, and
 coverage API connections are not complete.
 
 ## Purpose
@@ -1178,6 +1179,10 @@ local component variants or accessibility failures.
 - No unresolved defect can change page structure.
 
 ### Design slice 8: Final connected prototype and implementation handoff
+
+Implementation checkpoint: The connected resident journeys and implementation
+handoff are recorded in `docs/resident-interface-slice-8.md`. The typed route
+contract is in `src/features/resident-handoff/contracts.ts`.
 
 #### Objective
 

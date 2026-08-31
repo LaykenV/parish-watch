@@ -9,6 +9,8 @@ import type { FollowedTarget } from './contracts'
 export const FOLLOWED_TARGET_FIXTURES: FollowedTarget[] = [
   {
     id: 'drainage-credit-cap',
+    href: '/issues/drainage-fee-credit-cap',
+    evidenceScenario: 'update',
     kind: 'Issue',
     title: 'Drainage fee credit cap for large properties',
     detail: 'Lafayette Parish · Lafayette City-Parish Council',
@@ -20,6 +22,8 @@ export const FOLLOWED_TARGET_FIXTURES: FollowedTarget[] = [
   },
   {
     id: 'surplus-pickup-donations',
+    href: '/issues/surplus-pickup-donations',
+    evidenceScenario: 'preview',
     kind: 'Issue',
     title: 'Surplus 2016 Crew Cab pickup donations',
     detail: 'Lafayette Parish · Lafayette City Council',

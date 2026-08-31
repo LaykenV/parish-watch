@@ -113,7 +113,11 @@ export function CoveragePage({ data }: { data: CoveragePageData }) {
             </div>
             <div className="coverage-body-list">
               {region.bodies.map((body) => (
-                <CoverageBodyRow body={body} key={body.id} />
+                <CoverageBodyRow
+                  body={body}
+                  key={body.id}
+                  requestSearch={requestSearch}
+                />
               ))}
             </div>
           </section>
@@ -140,7 +144,13 @@ export function CoveragePage({ data }: { data: CoveragePageData }) {
   )
 }
 
-function CoverageBodyRow({ body }: { body: CoverageBody }) {
+function CoverageBodyRow({
+  body,
+  requestSearch,
+}: {
+  body: CoverageBody
+  requestSearch: { fixture?: 'new' }
+}) {
   return (
     <article
       className="coverage-body"
@@ -195,6 +205,17 @@ function CoverageBodyRow({ body }: { body: CoverageBody }) {
                 title: body.name,
               }}
             />
+          ) : null}
+          {body.state === 'Degraded' ? (
+            <Button
+              render={
+                <Link search={requestSearch} to="/coverage/request" />
+              }
+              size="touch"
+              variant="ghost"
+            >
+              Request another area
+            </Button>
           ) : null}
         </div>
       </div>

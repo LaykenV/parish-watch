@@ -1,10 +1,23 @@
 import { ChevronRightIcon } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 
 import { formatDate } from './format'
 import type { ResultRowData } from './contracts'
+import { evidenceJourneySearch } from '../resident-handoff/navigation'
 
 export function ResultRow({ row }: { row: ResultRowData }) {
+  const journey = useRouterState({
+    select: (state) => ({
+      currentHref: state.location.href,
+      hasDevelopmentFixture: Boolean(
+        (state.location.search as Record<string, unknown> | undefined)?.fixture,
+      ),
+    }),
+  })
+  const detailSearch = evidenceJourneySearch({
+    currentHref: journey.currentHref,
+    fixture: journey.hasDevelopmentFixture,
+  })
   const metaParts = [
     row.place,
     row.body,
@@ -58,7 +71,12 @@ export function ResultRow({ row }: { row: ResultRowData }) {
       {content}
     </a>
   ) : (
-    <Link className="pp-row" data-kind={row.kind} to={row.href}>
+    <Link
+      className="pp-row"
+      data-kind={row.kind}
+      search={detailSearch}
+      to={row.href}
+    >
       {content}
     </Link>
   )

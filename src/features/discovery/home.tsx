@@ -1,9 +1,10 @@
 import { ArrowUpRightIcon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
 import { LouisianaRelief } from '../landing/louisiana-relief'
+import { evidenceJourneySearch } from '../resident-handoff/navigation'
 import { AreaSelector } from './area-selector'
 import { useArea } from './area-store'
 import { areaName, getActiveDiscoveryFixture } from './contracts'
@@ -202,7 +203,11 @@ function HomeFeed({
       {showUpdateRow ? <UpdateRow onRefresh={onRefresh} /> : null}
       <MajorDecisionsSection scenario={scenario} watching={watching} />
       <HappeningSoonSection watching={watching} />
-      <LatestUpdatesSection entries={relevantUpdates} />
+      <LatestUpdatesSection
+        entries={relevantUpdates}
+        evidenceScenario={refreshed ? 'update' : 'preview'}
+        fixturesEnabled={fixturesEnabled}
+      />
       {degraded ? (
         <Notice
           action={
@@ -430,9 +435,22 @@ function HappeningSoonSection({ watching }: { watching: AreaSlug[] }) {
 
 function LatestUpdatesSection({
   entries,
+  evidenceScenario,
+  fixturesEnabled,
 }: {
   entries: typeof UPDATE_FIXTURES
+  evidenceScenario: 'preview' | 'update'
+  fixturesEnabled: boolean
 }) {
+  const currentHref = useRouterState({
+    select: (state) => state.location.href,
+  })
+  const detailSearch = evidenceJourneySearch({
+    currentHref,
+    fixture: fixturesEnabled,
+    scenario: evidenceScenario,
+  })
+
   return (
     <section aria-labelledby="latest-updates-title" className="pp-section">
       <div className="pp-section-head">
@@ -446,7 +464,10 @@ function LatestUpdatesSection({
               <p className="pp-update-kind">{entry.kind}</p>
               <p className="pp-update-text">
                 {entry.issueSlug ? (
-                  <Link to={'/issues/' + entry.issueSlug}>
+                  <Link
+                    search={detailSearch}
+                    to={'/issues/' + entry.issueSlug}
+                  >
                     {entry.issueTitle}
                   </Link>
                 ) : null}

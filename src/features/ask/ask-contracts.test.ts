@@ -39,6 +39,7 @@ describe('Ask public contracts', () => {
     ).toEqual({
       fixture: 'thread',
       issue: 'drainage-fee-credit-cap',
+      returnTo: undefined,
       scope: 'issue',
       source: 'drainage.vote',
     })
@@ -50,6 +51,7 @@ describe('Ask public contracts', () => {
     ).toEqual({
       area: undefined,
       fixture: undefined,
+      returnTo: undefined,
       scope: undefined,
       source: undefined,
     })

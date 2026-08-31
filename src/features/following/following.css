@@ -286,6 +286,17 @@
   overflow-wrap: anywhere;
 }
 
+.following-row-open {
+  display: block;
+  width: fit-content;
+  min-height: 2.75rem;
+  margin-top: 0.35rem;
+  color: var(--info-foreground);
+  font-weight: 650;
+  line-height: 2.75rem;
+  text-underline-offset: 0.2em;
+}
+
 .following-coverage-warning,
 .email-delivery-warning {
   display: flex;

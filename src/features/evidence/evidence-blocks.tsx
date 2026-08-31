@@ -8,7 +8,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { useId, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
 import { askCanAnswer, issueAskKey, meetingAskKey } from '../ask/contracts'
@@ -16,6 +16,10 @@ import { setAskDraftHandoff } from '../ask/draft-handoff'
 import { SourceProblemReport } from '../coverage/source-report'
 import { formatDate } from '../discovery/format'
 import type { EvidenceStatus, LifecycleState } from '../discovery/contracts'
+import {
+  parseResidentReturnTo,
+  residentReturnLabel,
+} from '../resident-handoff/navigation'
 import { documentHost } from './evidence-model'
 import { Claim, SourceControl } from './evidence-surface'
 import type {
@@ -27,11 +31,20 @@ import type {
   UncertainLink,
 } from './contracts'
 
-export function BackLink({ label, to }: { label: string; to: string }) {
+export function BackLink({
+  label,
+  returnTo,
+  to,
+}: {
+  label: string
+  returnTo?: string
+  to: string
+}) {
+  const destination = parseResidentReturnTo(returnTo) ?? to
   return (
-    <Link className="ev-back" to={to}>
+    <Link className="ev-back" to={destination}>
       <ArrowLeftIcon aria-hidden="true" />
-      {label}
+      {returnTo ? residentReturnLabel(destination) : label}
     </Link>
   )
 }
@@ -107,9 +120,11 @@ export function EvidenceStamp({
 export function Timeline({
   entries,
   fixture,
+  returnTo,
 }: {
   entries: TimelineEntry[]
   fixture?: EvidenceScenario
+  returnTo?: string
 }) {
   return (
     <ol className="ev-timeline">
@@ -141,7 +156,7 @@ export function Timeline({
                   <Link
                     className="ev-inline-link"
                     params={{ recordKey: entry.recordKey }}
-                    search={{ fixture }}
+                    search={{ fixture, returnTo }}
                     to="/decisions/$recordKey"
                   >
                     View decision {entry.recordKey}
@@ -159,9 +174,11 @@ export function Timeline({
 export function UncertainList({
   fixture,
   items,
+  returnTo,
 }: {
   fixture?: EvidenceScenario
   items: UncertainLink[]
+  returnTo?: string
 }) {
   return (
     <div className="ev-uncertain">
@@ -179,7 +196,7 @@ export function UncertainList({
               <Link
                 className="ev-inline-link"
                 params={{ recordKey: item.recordKey }}
-                search={{ fixture }}
+                search={{ fixture, returnTo }}
                 to="/decisions/$recordKey"
               >
                 View decision {item.recordKey}
@@ -316,6 +333,9 @@ export function AskBlock({
   scopeLabel: string
 }) {
   const navigate = useNavigate()
+  const returnTo = useRouterState({
+    select: (state) => parseResidentReturnTo(state.location.href),
+  })
   const [question, setQuestion] = useState('')
   const fieldId = useId()
 
@@ -337,12 +357,12 @@ export function AskBlock({
     setAskDraftHandoff(askBlockScopeKey(scope), draft)
     if (scope.kind === 'issue') {
       navigate({
-        search: { scope: 'issue', issue: scope.issueSlug },
+        search: { scope: 'issue', issue: scope.issueSlug, returnTo },
         to: '/ask',
       })
     } else if (scope.kind === 'meeting') {
       navigate({
-        search: { scope: 'meeting', meeting: scope.meetingId },
+        search: { scope: 'meeting', meeting: scope.meetingId, returnTo },
         to: '/ask',
       })
     } else {

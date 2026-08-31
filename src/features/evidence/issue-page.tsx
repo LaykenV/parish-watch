@@ -6,6 +6,7 @@ import { formatDate } from '../discovery/format'
 import { Notice } from '../discovery/notice'
 import { ShareButton } from '../discovery/share'
 import { FollowAction } from '../following/follow-action'
+import { evidenceRouteHref } from '../resident-handoff/navigation'
 import {
   AskBlock,
   BackLink,
@@ -92,6 +93,7 @@ function IssueDetail({
   const { citations, issue } = fixture
   const sections = issueSections(fixture)
   const selected = resolveCitationId(citations, search.source)
+  const currentIssueHref = evidenceRouteHref(`/issues/${issue.slug}`, search)
 
   return (
     <EvidenceProvider
@@ -100,7 +102,11 @@ function IssueDetail({
       selected={selected}
     >
       <main className="ev-page" id="resident-main">
-        <BackLink label="Back to Explore" to="/explore" />
+        <BackLink
+          label="Back to Explore"
+          returnTo={search.returnTo}
+          to="/explore"
+        />
 
         <header className="ev-head">
           <p className="ev-kicker">
@@ -272,11 +278,16 @@ function IssueDetail({
 
             {sections.timeline ? (
               <Section id="timeline" title="Decision timeline">
-                <Timeline entries={issue.timeline} fixture={search.fixture} />
+                <Timeline
+                  entries={issue.timeline}
+                  fixture={search.fixture}
+                  returnTo={currentIssueHref}
+                />
                 {sections.uncertain ? (
                   <UncertainList
                     fixture={search.fixture}
                     items={issue.uncertain}
+                    returnTo={currentIssueHref}
                   />
                 ) : null}
               </Section>

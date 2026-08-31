@@ -4,6 +4,7 @@ import type {
   LifecycleState,
   UpdateKind,
 } from '../discovery/contracts'
+import { parseResidentReturnTo } from '../resident-handoff/navigation'
 
 export type DocumentKind =
   | 'Agenda'
@@ -230,6 +231,7 @@ export type EvidenceScenario = (typeof EVIDENCE_SCENARIOS)[number]
 
 export type EvidenceSearch = {
   fixture?: EvidenceScenario
+  returnTo?: string
   source?: string
 }
 
@@ -251,8 +253,9 @@ export function parseEvidenceSearch(
     typeof search.source === 'string' && search.source.trim().length > 0
       ? search.source.trim()
       : undefined
+  const returnTo = parseResidentReturnTo(search.returnTo)
 
-  return { fixture, source }
+  return { fixture, returnTo, source }
 }
 
 /*

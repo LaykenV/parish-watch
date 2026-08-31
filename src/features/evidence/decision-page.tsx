@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '../../components/ui/button'
 import { formatDate } from '../discovery/format'
 import { Notice } from '../discovery/notice'
+import { evidenceRouteHref } from '../resident-handoff/navigation'
 import {
   AskBlock,
   BackLink,
@@ -37,6 +38,10 @@ export function DecisionPage({
 
   const { citations, decision } = fixture
   const selected = resolveCitationId(citations, search.source)
+  const currentDecisionHref = evidenceRouteHref(
+    `/decisions/${decision.recordKey}`,
+    search,
+  )
 
   return (
     <EvidenceProvider
@@ -45,14 +50,21 @@ export function DecisionPage({
       selected={selected}
     >
       <main className="ev-page" id="resident-main">
-        <BackLink label="Back to Explore" to="/explore" />
+        <BackLink
+          label="Back to Explore"
+          returnTo={search.returnTo}
+          to="/explore"
+        />
 
         {decision.issue ? (
           <p className="ev-parent">
             <span className="ev-parent-label">Part of the issue</span>
             <Link
               params={{ issueSlug: decision.issue.slug }}
-              search={{ fixture: search.fixture }}
+              search={{
+                fixture: search.fixture,
+                returnTo: currentDecisionHref,
+              }}
               to="/issues/$issueSlug"
             >
               {decision.issue.title}
