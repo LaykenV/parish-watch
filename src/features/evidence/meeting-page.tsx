@@ -181,7 +181,10 @@ export function MeetingPage({
                 <p className="ev-report-lede">
                   A document is missing or does not match the official record?
                 </p>
-                <ReportProblem recordUrl={`/meetings/${meeting.id}`} />
+                <ReportProblem
+                  available={Boolean(search.fixture)}
+                  recordUrl={`/meetings/${meeting.id}`}
+                />
               </div>
             </Section>
           </div>

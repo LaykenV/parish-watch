@@ -13,8 +13,8 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { Button } from '../../components/ui/button'
 import { askCanAnswer, issueAskKey, meetingAskKey } from '../ask/contracts'
 import { setAskDraftHandoff } from '../ask/draft-handoff'
+import { SourceProblemReport } from '../coverage/source-report'
 import { formatDate } from '../discovery/format'
-import { Sheet } from '../discovery/sheet'
 import type { EvidenceStatus, LifecycleState } from '../discovery/contracts'
 import { documentHost } from './evidence-model'
 import { Claim, SourceControl } from './evidence-surface'
@@ -387,83 +387,17 @@ export function AskBlock({
   )
 }
 
-export function ReportProblem({ recordUrl }: { recordUrl: string }) {
-  const [open, setOpen] = useState(false)
-  const noteId = useId()
-
+export function ReportProblem({
+  available,
+  recordUrl,
+}: {
+  available: boolean
+  recordUrl: string
+}) {
   return (
-    <>
-      <Button
-        className="ev-report-open"
-        onClick={() => setOpen(true)}
-        size="touch"
-        variant="ghost"
-      >
-        Report a source problem
-      </Button>
-      <Sheet
-        className="ev-report-sheet"
-        description="This goes to Public Parish privately. It does not open a public thread."
-        onOpenChange={setOpen}
-        open={open}
-        size="full"
-        title="Report a source problem"
-      >
-        <div className="ev-report">
-          <label className="ev-field">
-            <span>What is wrong?</span>
-            <select defaultValue="wrong-fact">
-              <option value="wrong-fact">
-                A fact does not match the source
-              </option>
-              <option value="missing-document">
-                An official document is missing
-              </option>
-              <option value="broken-link">The document link is broken</option>
-              <option value="wrong-record">
-                This record belongs to a different issue
-              </option>
-            </select>
-          </label>
-          <label className="ev-field">
-            <span>What did you see?</span>
-            <textarea
-              placeholder="Describe the problem in a sentence or two."
-              rows={4}
-            />
-          </label>
-          <label className="ev-field">
-            <span>Official document link, if you have one</span>
-            <input inputMode="url" placeholder="https://" type="url" />
-          </label>
-          <label className="ev-field">
-            <span>Your email, only if you want a reply</span>
-            <input
-              autoComplete="email"
-              placeholder="you@example.com"
-              type="email"
-            />
-          </label>
-          <p className="ev-report-attached">
-            Attached automatically: <code>{recordUrl}</code>
-          </p>
-          <ul className="ev-report-privacy">
-            <li>Sent privately</li>
-            <li>No street address needed</li>
-            <li>
-              Public Parish will not change this page unless validated official
-              evidence supports the correction.
-            </li>
-          </ul>
-          <Button aria-describedby={noteId} size="touch">
-            Send report
-          </Button>
-          <p className="ev-report-note" id={noteId}>
-            This form shows its final placement. Sending connects with the
-            source-reporting work, so nothing is transmitted yet.
-          </p>
-        </div>
-      </Sheet>
-    </>
+    <SourceProblemReport
+      available={import.meta.env.DEV && available}
+      recordUrl={recordUrl}
+    />
   )
 }

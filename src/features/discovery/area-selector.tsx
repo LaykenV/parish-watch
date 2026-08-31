@@ -1,4 +1,4 @@
-import { SearchIcon } from 'lucide-react'
+import { CheckCircle2Icon, Clock3Icon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
@@ -91,7 +91,10 @@ function AreaSelectorDialog({
                   data-status="validating"
                 >
                   <span className="pp-area-name">{place.name}</span>
-                  <span className="pp-area-status">Validating sources</span>
+                  <span className="pp-area-status">
+                    <Clock3Icon aria-hidden="true" />
+                    Validating sources
+                  </span>
                   {place.note ? (
                     <span className="pp-area-note">{place.note}</span>
                   ) : null}
@@ -114,14 +117,18 @@ function AreaSelectorDialog({
               >
                 <span className="pp-area-name">{place.name}</span>
                 <span className="pp-area-status">
+                  <CheckCircle2Icon aria-hidden="true" />
                   {selected ? 'Watching' : 'Records available'}
                 </span>
+                {place.note ? (
+                  <span className="pp-area-note">{place.note}</span>
+                ) : null}
               </button>
             </li>
           )
         })}
         {places.length === 0 ? (
-          <li className="pp-area-empty">No listed place matches “{query}”.</li>
+          <li className="pp-area-empty">No listed place matches "{query}".</li>
         ) : null}
       </ul>
     </Sheet>

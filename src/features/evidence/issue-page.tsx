@@ -295,7 +295,10 @@ function IssueDetail({
                 <p className="ev-report-lede">
                   Something here does not match the official record?
                 </p>
-                <ReportProblem recordUrl={`/issues/${issue.slug}`} />
+                <ReportProblem
+                  available={Boolean(search.fixture)}
+                  recordUrl={`/issues/${issue.slug}`}
+                />
               </div>
             </Section>
           </div>

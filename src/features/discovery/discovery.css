@@ -1457,13 +1457,22 @@ button.pp-area-row:hover {
 }
 
 .pp-area-status {
+  display: inline-flex;
   align-self: center;
+  align-items: center;
+  gap: 0.3rem;
   color: var(--success-foreground);
   font-family: var(--font-mono);
   font-size: var(--pp-text-caption);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.pp-area-status svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
 }
 
 .pp-area-row[data-selected] .pp-area-status {

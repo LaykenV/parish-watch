@@ -1,0 +1,180 @@
+/* Hallmark · component: private source report · genre: editorial · theme: Public Parish civic utility
+ * states: default · hover · focus · active · disabled · loading · error · success
+ * contrast: pass (verified against the approved Public Parish tokens)
+ */
+
+.source-report-sheet {
+  --source-report-field-height: var(--pp-control-height);
+}
+
+.source-report-form,
+.source-report-confirmation,
+.source-report-unavailable {
+  display: grid;
+  gap: 1.25rem;
+  width: min(100%, 38rem);
+  margin-inline: auto;
+}
+
+.source-report-private-note,
+.source-report-confirmation,
+.source-report-unavailable {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.source-report-private-note {
+  padding-block: 0.875rem;
+  border-block: 1px solid var(--border);
+}
+
+.source-report-private-note svg,
+.source-report-confirmation > svg {
+  color: var(--success-foreground);
+}
+
+.source-report-unavailable > svg {
+  color: var(--warning-foreground);
+}
+
+.source-report-private-note p,
+.source-report-confirmation p,
+.source-report-unavailable p {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.55;
+}
+
+.source-report-confirmation h2,
+.source-report-unavailable h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.source-report-confirmation [data-slot='button'] {
+  margin-top: 1.25rem;
+}
+
+.source-report-field {
+  display: grid;
+  gap: 0.375rem;
+  color: var(--foreground);
+  font-size: var(--pp-text-small);
+  font-weight: 650;
+}
+
+.source-report-field input,
+.source-report-field select,
+.source-report-field textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--pp-border-control);
+  border-radius: var(--radius-md);
+  outline: 2px solid transparent;
+  outline-offset: 1px;
+  color: var(--foreground);
+  background: var(--card);
+  font: inherit;
+  font-weight: 400;
+}
+
+.source-report-field input,
+.source-report-field select {
+  height: var(--source-report-field-height);
+  min-height: var(--source-report-field-height);
+}
+
+.source-report-field textarea {
+  min-height: 7.5rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.source-report-field input:hover,
+.source-report-field select:hover,
+.source-report-field textarea:hover {
+  background: var(--muted);
+}
+
+.source-report-field input:focus-visible,
+.source-report-field select:focus-visible,
+.source-report-field textarea:focus-visible {
+  outline-color: var(--ring);
+}
+
+.source-report-field input:active,
+.source-report-field select:active,
+.source-report-field textarea:active {
+  background: var(--card);
+}
+
+.source-report-field input:disabled,
+.source-report-field select:disabled,
+.source-report-field textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.source-report-field textarea[aria-invalid='true'] {
+  border-color: var(--destructive);
+}
+
+.source-report-attached {
+  display: grid;
+  gap: 0.375rem;
+  min-width: 0;
+  padding: 0.875rem 0;
+  border-block: 1px solid var(--border);
+}
+
+.source-report-attached span {
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-caption);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.source-report-attached code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--pp-text-small);
+}
+
+.source-report-form-footer {
+  display: grid;
+  gap: 0.5rem;
+  min-height: 4.25rem;
+}
+
+.source-report-form-footer p {
+  min-height: 1.35rem;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
+  line-height: 1.45;
+}
+
+.source-report-form-footer .source-report-error {
+  color: var(--destructive-foreground);
+}
+
+@media (min-width: 48rem) {
+  .source-report-form-footer {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .source-report-sheet *,
+  .source-report-sheet *::before,
+  .source-report-sheet *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
