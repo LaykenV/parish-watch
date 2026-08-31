@@ -13,7 +13,10 @@ import {
 import type { IndependentReviewV1 } from '../review/contractV1'
 import { reviewContextValidator } from '../review/prepare'
 import { sha256HexOfText } from '../sources/hashing'
-import { CORE_IDENTITY_FIELD_PATHS } from './evidenceRulesV1'
+import {
+  CORE_IDENTITY_FIELD_PATHS,
+  NUMBERED_RECORD_TYPES,
+} from './evidenceRulesV1'
 import { applyPublicationPolicyV1 } from './policyV1'
 
 export const finalizePublication = internalMutation({
@@ -245,11 +248,10 @@ export const finalizePublication = internalMutation({
       )
       .unique()
 
-    const numberedRecordTypes = new Set(['proposal', 'vote'])
     const shouldCiteSourceRecordId =
       !sourceRecordIdCheck ||
       sourceRecordIdCheck.assessment === 'supported' ||
-      numberedRecordTypes.has(args.context.recordType)
+      NUMBERED_RECORD_TYPES.has(args.context.recordType)
 
     const factsToPublish = shouldCiteSourceRecordId
       ? citedFacts

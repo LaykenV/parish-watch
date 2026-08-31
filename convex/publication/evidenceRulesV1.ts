@@ -9,6 +9,11 @@ export const CORE_IDENTITY_FIELD_PATHS: ReadonlySet<string> = new Set([
   '/bodyName',
 ])
 
+export const NUMBERED_RECORD_TYPES: ReadonlySet<string> = new Set([
+  'proposal',
+  'vote',
+])
+
 export type ReviewEvidenceDecision = {
   verdict: 'pass' | 'limited' | 'fail'
   reasonCode:
@@ -38,8 +43,7 @@ export function evaluateReviewEvidenceV1(input: {
     return { verdict: 'fail', reasonCode: 'reviewer_failed' }
   }
 
-  const numberedRecordTypes = new Set(['proposal', 'vote'])
-  const sourceRecordIdRequiresCitation = numberedRecordTypes.has(
+  const sourceRecordIdRequiresCitation = NUMBERED_RECORD_TYPES.has(
     input.recordType,
   )
 

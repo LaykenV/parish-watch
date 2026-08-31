@@ -1,5 +1,7 @@
 import { REVIEW_PROMPT_VERSION } from '../pipeline/state'
 
+import { NUMBERED_RECORD_TYPES } from '../publication/evidenceRulesV1'
+
 const SYSTEM_PROMPT_V1 = `You independently review one extracted government decision for Public Parish. You did not create the extraction.
 
 Rules:
