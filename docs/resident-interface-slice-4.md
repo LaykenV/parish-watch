@@ -873,6 +873,8 @@ scope-change confirmation from an unreachable recent-list branch to the real
 route-scope transition, so an active thread cannot disappear silently. Corpus
 scope identity retains its public area key, and canceling a cross-scope change
 saves the incoming draft in memory for that scope instead of dropping it.
+Opening a recent conversation also updates the public route to that
+conversation's evidence scope, so the URL and visible scope cannot disagree.
 
 ## Acceptance gate
 

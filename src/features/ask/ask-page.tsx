@@ -278,9 +278,12 @@ export function AskPage({
       setComposerExpanded(false)
       setDismissed(new Set())
       setViewScope(view.scope)
+      // Install the conversation first so the route-sync effect recognizes
+      // the same scope and does not ask to clear the thread just opened.
       handleConversation(view)
+      await onRestoreScope(view.scope)
     },
-    [adapter, handleConversation],
+    [adapter, handleConversation, onRestoreScope],
   )
 
   const handleOpenRecent = useCallback(

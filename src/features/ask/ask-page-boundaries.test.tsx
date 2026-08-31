@@ -73,6 +73,14 @@ describe('Ask page ship boundaries', () => {
     )
   })
 
+  it('keeps the route aligned with an opened recent conversation', () => {
+    expect(page).toContain('handleConversation(view)')
+    expect(page).toContain('await onRestoreScope(view.scope)')
+    expect(page.indexOf('handleConversation(view)')).toBeLessThan(
+      page.indexOf('await onRestoreScope(view.scope)'),
+    )
+  })
+
   it('renders the named official contact and its cited value', () => {
     const answer: AskNotFoundAnswer = {
       kind: 'not_found',
