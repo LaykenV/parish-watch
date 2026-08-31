@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button'
 import { formatDate } from '../discovery/format'
 import { Notice } from '../discovery/notice'
 import { ShareButton } from '../discovery/share'
+import { FollowAction } from '../following/follow-action'
 import {
   AskBlock,
   BackLink,
@@ -192,16 +193,19 @@ function IssueDetail({
                 status={issue.evidence.status}
               />
               <div className="ev-status-actions">
-                <Button aria-describedby="issue-follow-note" size="touch">
-                  Follow this issue
-                </Button>
+                <FollowAction
+                  available={import.meta.env.DEV && Boolean(search.fixture)}
+                  label="Follow this issue"
+                  target={{
+                    kind: 'Issue',
+                    title: issue.title,
+                    detail: `${issue.place} · ${issue.body}`,
+                  }}
+                />
                 <ShareButton
                   path={`/issues/${issue.slug}`}
                   title={issue.title}
                 />
-                <span className="visually-hidden" id="issue-follow-note">
-                  Prototype control. Following is not connected yet.
-                </span>
               </div>
             </div>
           </aside>

@@ -223,8 +223,10 @@ needs a cost estimate and separate approval.
 Status: in progress. Design Slice 1 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
-Slice 3 deployed through PR #27 as `3a59e45` on August 30, 2026. Design Slice 4
-is implemented in PR #28, green on its checks, and not merged.
+Slice 3 deployed through PR #27 as `3a59e45` on August 30, 2026. PR #28 merged
+Design Slice 4 as `ff36c1b`; production workflow `33389489990` succeeded. This
+session did not repeat the independent production smoke. Design Slice 5 is
+implemented for review and remains fixture-backed.
 
 The deployed Slice 2 release includes the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -245,15 +247,19 @@ real detail queries are not connected. Workflow `33332573558` and the
 independent production smoke passed. This work does not change the production
 publication or ranking boundary.
 
-The Design Slice 4 code in PR #28 implements Ask Public Parish against the same
-development fixtures and the shipped evidence viewer. The branch includes
+Design Slice 4 implements Ask Public Parish against the same development
+fixtures and the shipped evidence viewer. It includes
 focused Ask tests for route privacy, scope restoration, draft consumption,
 citation accounting, production fixture gating, duplicate-submit protection,
-the compact thread composer, and named official contacts. GitHub Actions owns
-the branch validation. Because the PR is unmerged there is no production
-workflow or smoke result for it, and there will be none until it merges.
-Production keeps Ask in navigation behind the honest unavailable state because
-no chat backend exists yet.
+the compact thread composer, and named official contacts. Production keeps Ask
+in navigation behind the honest unavailable state because no chat backend
+exists yet.
+
+Design Slice 5 replaces the Following and email-management blueprints with the
+finished page hierarchy and interactions. It uses development-only typed
+fixtures for Google return, email verification, ownership, preferences, and
+alerts. Production shows an honest unavailable state and creates no follow
+until the Auth and AgentMail adapters pass their gates.
 
 Do not design or build resident pages one at a time during backend slices.
 Slice 4 must first settle the issue, importance, timeline, and change contracts.

@@ -1,9 +1,9 @@
 import { CircleAlertIcon, CircleCheckIcon, Clock3Icon } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useId } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouterState } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
+import { FollowAction } from '../following/follow-action'
 import { formatDate, formatDay, formatTime } from './format'
 import type {
   EvidenceStatus,
@@ -53,7 +53,12 @@ export function IssueCard({
   reason,
   variant = 'standard',
 }: IssueCardProps) {
-  const inertId = useId()
+  const hasDevelopmentFixture = useRouterState({
+    select: (state) =>
+      Boolean(
+        (state.location.search as Record<string, unknown> | undefined)?.fixture,
+      ),
+  })
   const href = issue.href ?? '/issues/' + issue.slug
   const external = href.startsWith('https://') || href.startsWith('http://')
   const showSecondaryActions = issue.showSecondaryActions ?? true
@@ -125,18 +130,18 @@ export function IssueCard({
           </Button>
           {variant !== 'rail' && showSecondaryActions ? (
             <>
-              <Button
-                aria-describedby={inertId}
+              <FollowAction
+                available={
+                  import.meta.env.DEV && hasDevelopmentFixture && !external
+                }
                 className="pp-inline-action"
-                size="touch"
-                variant="outline"
-              >
-                Follow
-              </Button>
+                target={{
+                  kind: 'Issue',
+                  title: issue.title,
+                  detail: `${issue.place} · ${issue.body}`,
+                }}
+              />
               <ShareButton path={'/issues/' + issue.slug} title={issue.title} />
-              <span className="visually-hidden" id={inertId}>
-                Prototype control. Following is not connected yet.
-              </span>
             </>
           ) : null}
         </div>

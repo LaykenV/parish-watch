@@ -13,6 +13,11 @@ import {
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: ReactNode }) => <a href="#">{children}</a>,
   useNavigate: () => () => {},
+  useRouterState: ({
+    select,
+  }: {
+    select: (state: { location: { search: { fixture: string } } }) => unknown
+  }) => select({ location: { search: { fixture: 'preview' } } }),
 }))
 
 const { DecisionPage } = await import('./decision-page')

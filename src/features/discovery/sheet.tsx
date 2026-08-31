@@ -2,7 +2,7 @@ import { Dialog } from '@base-ui/react/dialog'
 import { Drawer } from '@base-ui/react/drawer'
 import { XIcon } from 'lucide-react'
 import type { ReactElement, ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useMediaQuery, useOverlay } from './hooks'
 
@@ -38,14 +38,18 @@ export function Sheet({
   useOverlay(open)
   const desktopMatch = useMediaQuery('(min-width: 64.0625rem)')
   const [hydrated, setHydrated] = useState(false)
+  const closeRef = useRef<HTMLButtonElement>(null)
   useEffect(() => setHydrated(true), [])
   const desktop = hydrated && desktopMatch
+  const handleOpenChangeComplete = (next: boolean) => {
+    onOpenChangeComplete?.(next)
+  }
 
   if (!desktop) {
     return (
       <Drawer.Root
         onOpenChange={onOpenChange}
-        onOpenChangeComplete={onOpenChangeComplete}
+        onOpenChangeComplete={handleOpenChangeComplete}
         open={open}
         swipeDirection="down"
         triggerId={triggerId}
@@ -59,11 +63,17 @@ export function Sheet({
               data-modal-kind="drawer"
               data-size={size}
               id={popupId}
+              initialFocus={closeRef}
             >
               <span aria-hidden="true" className="pp-sheet-grabber" />
               <header className="pp-sheet-head">
                 <Drawer.Title className="pp-sheet-title">{title}</Drawer.Title>
-                <Drawer.Close aria-label="Close" className="pp-sheet-close">
+                <Drawer.Close
+                  aria-label="Close"
+                  className="pp-sheet-close"
+                  onClick={() => onOpenChange(false)}
+                  ref={closeRef}
+                >
                   <XIcon aria-hidden="true" />
                 </Drawer.Close>
               </header>
@@ -90,7 +100,7 @@ export function Sheet({
   return (
     <Dialog.Root
       onOpenChange={onOpenChange}
-      onOpenChangeComplete={onOpenChangeComplete}
+      onOpenChangeComplete={handleOpenChangeComplete}
       open={open}
       triggerId={triggerId}
     >
@@ -102,10 +112,16 @@ export function Sheet({
           data-modal-kind="dialog"
           data-size={size}
           id={popupId}
+          initialFocus={closeRef}
         >
           <header className="pp-sheet-head">
             <Dialog.Title className="pp-sheet-title">{title}</Dialog.Title>
-            <Dialog.Close aria-label="Close" className="pp-sheet-close">
+            <Dialog.Close
+              aria-label="Close"
+              className="pp-sheet-close"
+              onClick={() => onOpenChange(false)}
+              ref={closeRef}
+            >
               <XIcon aria-hidden="true" />
             </Dialog.Close>
           </header>
