@@ -12,8 +12,14 @@ import {
   resetGatewayTokenMinterForTests,
 } from './ai/chatCompletions'
 import {
+  reviewJsonBudgetTokens,
+  reviewMaxCompletionTokens,
+  REVIEW_REASONING_HEADROOM_TOKENS,
+} from './review/completionBudget'
+import {
   checkIndependentReviewContractV1,
   expectedReviewVerdictV1,
+  MAX_REVIEW_CHECKS,
 } from './review/contractV1'
 import { buildIndependentReviewPromptV1 } from './review/promptV1'
 import { extractionRunKey, publicationRunKey } from './pipeline/keys'
@@ -1352,29 +1358,30 @@ test('a source-printed ID remains core evidence for every record type', () => {
 })
 
 test('review completion budget accommodates high reasoning plus required JSON', () => {
-  const REVIEW_REASONING_HEADROOM = 6000
-  const REVIEW_JSON_BUDGET = 4000
-  const DERIVED_CAP = REVIEW_REASONING_HEADROOM + REVIEW_JSON_BUDGET
-
   const OBSERVED_MAX_REASONING = 5178
-  expect(REVIEW_REASONING_HEADROOM).toBeGreaterThanOrEqual(OBSERVED_MAX_REASONING)
+  expect(REVIEW_REASONING_HEADROOM_TOKENS).toBeGreaterThanOrEqual(
+    OBSERVED_MAX_REASONING,
+  )
 
-  const fixture33Checks = {
-    verdict: 'pass' as const,
-    checks: Array.from({ length: 33 }, (_, i) => ({
-      factId: `fact-${i + 1}`,
-      fieldPath: '/title',
-      assessment: 'supported' as const,
-      detail: 'Excerpt supports value',
-    })),
-    findings: [],
+  const estimatedFixtureTokens = (checkCount: number) => {
+    const fixture = {
+      verdict: 'pass' as const,
+      checks: Array.from({ length: checkCount }, (_, i) => ({
+        factId: `fact-${i + 1}`,
+        fieldPath: '/plainLanguageSummary',
+        assessment: 'supported' as const,
+        detail: 'The cited excerpt directly supports the candidate value.',
+      })),
+      findings: [],
+    }
+    const bytes = new TextEncoder().encode(JSON.stringify(fixture)).byteLength
+    return Math.ceil(bytes / 4)
   }
-  const serialized = JSON.stringify(fixture33Checks)
-  const byteLength = new TextEncoder().encode(serialized).byteLength
-  const estimatedTokens = Math.ceil(byteLength / 4)
-  expect(estimatedTokens).toBeLessThan(REVIEW_JSON_BUDGET)
 
-  const MEASURED_FLOOR = 8000
-  expect(DERIVED_CAP).toBeGreaterThanOrEqual(MEASURED_FLOOR)
-  expect(DERIVED_CAP).toBe(10000)
+  expect(estimatedFixtureTokens(33)).toBeLessThan(reviewJsonBudgetTokens(33))
+  expect(estimatedFixtureTokens(MAX_REVIEW_CHECKS)).toBeLessThan(
+    reviewJsonBudgetTokens(MAX_REVIEW_CHECKS),
+  )
+  expect(reviewMaxCompletionTokens(33)).toBe(10000)
+  expect(reviewMaxCompletionTokens(MAX_REVIEW_CHECKS)).toBe(13000)
 })
