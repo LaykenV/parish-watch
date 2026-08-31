@@ -12,11 +12,11 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T22:47:32Z
+- **Last updated:** 2026-08-31T22:48:16Z
 
 ## Log
 
-### 2026-08-31 - working tree
+### 2026-08-31 - c180659
 
 Corrected the public coverage flow after a focused review. Successful request
 and private-report states now move keyboard focus into the next useful control
