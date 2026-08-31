@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 3 are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 3 are deployed; resident-interface Design Slice 4 is implemented and awaiting merge
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -36,8 +36,18 @@ decision, meeting, and citation-level evidence surfaces. Its explicit typed
 fixtures load only through development-only imports, add no resident-facing
 banner, and stay out of production JavaScript. Production routes show an honest
 recovery page until real issue, decision-detail, and meeting-detail queries
-exist. Ask answers, following, accounts, email, and coverage remain in later
-design and integration slices.
+exist. Following, accounts, email, and coverage remain in later design and
+integration slices.
+
+PR #28 implements resident-interface Design Slice 4, Ask Public Parish. It is
+green on its checks and not merged, so nothing in it is deployed. Ask resolves
+corpus, issue, and meeting scope through a typed adapter, renders cited answers
+in the existing evidence gutter, and moves the resident's question out of the
+URL into an in-memory handoff. No chat backend exists behind it. Production
+keeps Ask in navigation and shows the honest unavailable state, and the record
+pages show that same message in place of a composer, so no resident is asked
+for a question the product cannot take. Eleven presentation scenarios load only
+through a development-only dynamic import.
 
 ## Executive Decision
 

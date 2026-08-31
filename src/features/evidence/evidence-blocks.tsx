@@ -11,6 +11,8 @@ import type { ReactNode } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
+import { askCanAnswer, issueAskKey, meetingAskKey } from '../ask/contracts'
+import { setAskDraftHandoff } from '../ask/draft-handoff'
 import { formatDate } from '../discovery/format'
 import { Sheet } from '../discovery/sheet'
 import type { EvidenceStatus, LifecycleState } from '../discovery/contracts'
@@ -286,26 +288,74 @@ export function VersionHistory({ versions }: { versions: PublishedVersion[] }) {
   )
 }
 
+/*
+  Scoped Ask entry from a record page. The draft is private conversation
+  content: it travels through the in-memory handoff, never the URL, and the
+  Ask route consumes it on mount.
+
+  Ask supports corpus, issue, and meeting scope. A decision record has no
+  scope of its own, so the decision page asks from the issue that owns it and
+  falls back to the corpus when it belongs to no issue.
+*/
+export type AskBlockScope =
+  | { kind: 'corpus' }
+  | { kind: 'issue'; issueSlug: string }
+  | { kind: 'meeting'; meetingId: string }
+
+function askBlockScopeKey(scope: AskBlockScope): string {
+  if (scope.kind === 'issue') return issueAskKey(scope.issueSlug)
+  if (scope.kind === 'meeting') return meetingAskKey(scope.meetingId)
+  return 'corpus'
+}
+
 export function AskBlock({
   scope,
   scopeLabel,
 }: {
-  scope: string
+  scope: AskBlockScope
   scopeLabel: string
 }) {
   const navigate = useNavigate()
   const [question, setQuestion] = useState('')
   const fieldId = useId()
 
+  if (!askCanAnswer()) {
+    return (
+      <div className="ev-ask">
+        <p className="ev-ask-scope">{scopeLabel}</p>
+        <p className="ev-ask-label">Ask is not available yet</p>
+        <p className="ev-ask-note">
+          You can still inspect every official source on this page.
+        </p>
+      </div>
+    )
+  }
+
+  const navigateToAsk = () => {
+    const draft = question.trim()
+    if (!draft) return
+    setAskDraftHandoff(askBlockScopeKey(scope), draft)
+    if (scope.kind === 'issue') {
+      navigate({
+        search: { scope: 'issue', issue: scope.issueSlug },
+        to: '/ask',
+      })
+    } else if (scope.kind === 'meeting') {
+      navigate({
+        search: { scope: 'meeting', meeting: scope.meetingId },
+        to: '/ask',
+      })
+    } else {
+      navigate({ search: { scope: 'corpus' }, to: '/ask' })
+    }
+  }
+
   return (
     <form
       className="ev-ask"
       onSubmit={(event) => {
         event.preventDefault()
-        navigate({
-          search: { q: question.trim() || undefined, scope },
-          to: '/ask',
-        })
+        navigateToAsk()
       }}
     >
       <p className="ev-ask-scope">{scopeLabel}</p>
@@ -321,7 +371,11 @@ export function AskBlock({
         value={question}
       />
       <div className="ev-ask-actions">
-        <Button size="touch" type="submit">
+        <Button
+          disabled={question.trim().length === 0}
+          size="touch"
+          type="submit"
+        >
           Send question
         </Button>
         <p className="ev-ask-note">

@@ -135,25 +135,36 @@ export function EvidenceProvider({
 export function Claim({
   children,
   citationId,
+  citationIds,
   tag: Tag = 'div',
   wrap = true,
 }: {
   children: ReactNode
   citationId?: string
+  citationIds?: readonly string[]
   tag?: ElementType
   wrap?: boolean
 }) {
   const { selected } = useEvidence()
+  const ids = citationIds ?? (citationId ? [citationId] : [])
+  const isSelected = selected != null && ids.includes(selected)
 
   return (
-    <Tag
-      className="ev-claim"
-      data-selected={citationId && selected === citationId ? '' : undefined}
-    >
+    <Tag className="ev-claim" data-selected={isSelected ? '' : undefined}>
       {wrap ? <div className="ev-claim-body">{children}</div> : children}
-      {citationId ? <SourceControl citationId={citationId} /> : null}
+      {ids.map((id) => (
+        <SourceControl citationId={id} key={id} />
+      ))}
     </Tag>
   )
+}
+
+/*
+  Selects a citation in the existing viewer. Rows outside a claim, such as the
+  Ask "Sources used" inventory, use this instead of a second viewer.
+*/
+export function useEvidenceSelect() {
+  return useEvidence().select
 }
 
 export function SourceControl({ citationId }: { citationId: string }) {

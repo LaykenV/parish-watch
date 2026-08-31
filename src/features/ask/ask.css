@@ -1,0 +1,800 @@
+/*
+  Ask Public Parish. A clear reading copy with margin notes, not a support
+  chat window. The scope bar is the orientation point, the answer is the
+  reading point, and the composer stays secondary while an answer is on
+  screen. No bubbles, avatars, typing dots, streaming words, or decorative
+  motion. Existing tokens only.
+*/
+
+.ask-page {
+  --ev-gutter: 0rem;
+  --ev-rail: 0rem;
+  --ev-rail-gap: 0rem;
+
+  display: flow-root;
+  width: min(100% - 2rem, 46rem);
+  margin-inline: auto;
+  padding-block: 1.25rem 4rem;
+}
+
+/* Route heading */
+
+.ask-head {
+  margin-bottom: 1.1rem;
+}
+
+.ask-title {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 2.5rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.ask-lede {
+  margin: 0.5rem 0 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
+  line-height: 1.5;
+}
+
+/* Scope */
+
+.ask-scope-line {
+  display: inline-flex;
+  margin-top: 0.25rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--info-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.ask-scope {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1.05rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.ask-scope-label {
+  margin: 0;
+  color: var(--info-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ask-scope-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ask-scope-title {
+  margin: 0;
+  font-size: var(--pp-text-body);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.ask-scope-back {
+  display: inline-flex;
+  flex: none;
+  gap: 0.4rem;
+  align-items: center;
+  min-height: var(--pp-control-height);
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ask-scope-back:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+.ask-scope-back svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Layout */
+
+/*
+  The page container is the reading measure, so the heading, the scope bar,
+  and the conversation share one left edge and the whole block centers in the
+  viewport. Docking the evidence panel widens the container by exactly the
+  rail and its gap, so the block re-centers as a unit instead of the column
+  sliding out from under a heading that stayed put.
+*/
+
+.ask-layout {
+  margin-top: 1.5rem;
+}
+
+.ask-reading {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+/* Thread */
+
+/* An empty thread region would still spend a flex gap on the empty page. */
+.ask-thread-region:empty {
+  display: none;
+}
+
+.ask-turn {
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--border);
+}
+
+.ask-turn:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ask-turn-head {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ask-turn-question {
+  margin: 0.45rem 0 0;
+  font-size: var(--pp-text-subhead);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+/* Checking */
+
+.ask-checking {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  min-height: 6rem;
+  margin-top: 1.1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.ask-checking svg {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.2rem;
+  color: var(--info-foreground);
+}
+
+.ask-checking-title {
+  margin: 0;
+  font-size: var(--pp-text-small);
+  font-weight: 650;
+}
+
+.ask-checking-note {
+  margin: 0.3rem 0 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-caption);
+  line-height: 1.5;
+}
+
+/* Answer */
+
+.ask-answer {
+  margin-top: 1.1rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  animation: ask-answer-in var(--dur-deliberate) var(--ease-out);
+}
+
+@keyframes ask-answer-in {
+  from {
+    background: color-mix(in srgb, var(--info) 7%, var(--card));
+  }
+  to {
+    background: var(--card);
+  }
+}
+
+.ask-answer-stamp {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0 0 0.4rem;
+  color: var(--success-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ask-answer-stamp svg {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+.ask-claim-text {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.ask-lead .ask-claim-text {
+  font-size: var(--pp-text-subhead);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.55;
+}
+
+@media (min-width: 48rem) {
+  .ask-lead .ask-claim-text {
+    font-size: 1.25rem;
+  }
+}
+
+.ask-answer .ev-claim + .ev-claim {
+  margin-top: 0.6rem;
+}
+
+/* Not found */
+
+.ask-answer-notfound {
+  border-left: 2px solid var(--warning);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.ask-notfound-statement {
+  margin: 0;
+  font-size: var(--pp-text-body);
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.ask-notfound-explanation {
+  margin: 0.5rem 0 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
+  line-height: 1.6;
+}
+
+.ask-closest,
+.ask-contact {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.ask-closest-note {
+  margin: 0;
+  font-size: var(--pp-text-small);
+  line-height: 1.55;
+}
+
+.ask-closest .ev-source {
+  margin-top: 0.5rem;
+}
+
+.ask-contact-label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ask-contact-name {
+  margin: 0.3rem 0 0;
+  font-size: var(--pp-text-small);
+  font-weight: 600;
+}
+
+.ask-contact-value {
+  margin: 0.15rem 0 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
+}
+
+/* Sources used */
+
+.ask-sources {
+  margin-top: 1.1rem;
+  border-top: 1px solid var(--border);
+}
+
+.ask-sources > summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--foreground);
+  font-size: var(--pp-text-small);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.ask-sources-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ask-source-row {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.ask-source-title {
+  margin: 0;
+  font-size: var(--pp-text-small);
+  font-weight: 600;
+}
+
+.ask-source-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.75rem;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+}
+
+.ask-source-inspect {
+  justify-self: start;
+  min-height: var(--pp-control-height);
+  padding: 0.25rem 0.85rem;
+  border: 1px solid var(--pp-border-control);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--info-foreground);
+  font: inherit;
+  font-size: var(--pp-text-caption);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ask-source-inspect:hover {
+  border-color: var(--pp-border-strong);
+}
+
+/* Suggestions and empty-page examples */
+
+.ask-suggestions {
+  margin-top: 1.1rem;
+  border-top: 1px solid var(--border);
+}
+
+.ask-suggestions-head,
+.ask-examples-head,
+.ask-recent-head {
+  margin: 0 0 0.35rem;
+  padding-top: 0.6rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ask-suggestions-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ask-suggestion {
+  display: flex;
+  width: 100%;
+  min-height: var(--pp-control-height);
+  align-items: center;
+  padding: 0.5rem 0.25rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: none;
+  color: var(--info-foreground);
+  font: inherit;
+  font-size: var(--pp-text-small);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ask-suggestion:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Notices */
+
+.ask-notice {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1.1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.ask-notice[data-tone='warning'] {
+  border-left: 2px solid var(--warning);
+}
+
+.ask-notice-title {
+  margin: 0;
+  font-size: var(--pp-text-small);
+  font-weight: 650;
+}
+
+.ask-notice-text {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
+  line-height: 1.55;
+}
+
+.ask-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.ask-gate {
+  display: grid;
+  gap: 0.4rem;
+  max-width: 40rem;
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.ask-gate-title {
+  margin: 0;
+  font-size: var(--pp-text-subhead);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.ask-gate-text {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
+  line-height: 1.6;
+}
+
+.ask-waiting {
+  display: grid;
+  min-height: 8rem;
+  place-items: center;
+  color: var(--info-foreground);
+}
+
+/* Scope-change confirm */
+
+.ask-confirm {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--warning) 55%, transparent);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.ask-confirm-title {
+  margin: 0;
+  font-size: var(--pp-text-small);
+  font-weight: 650;
+}
+
+.ask-confirm-text {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
+  line-height: 1.55;
+}
+
+.ask-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+/* Recent on this device */
+
+.ask-recent-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ask-recent-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--pp-control-height);
+  padding: 0.5rem 0.25rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ask-recent-scope {
+  font-size: var(--pp-text-small);
+  font-weight: 600;
+}
+
+.ask-recent-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.75rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.ask-recent-clear {
+  margin-top: 0.35rem;
+  min-height: var(--pp-control-height);
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: var(--pp-text-caption);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.ask-recent-confirm {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--muted);
+}
+
+.ask-recent-confirm p {
+  margin: 0;
+  font-size: var(--pp-text-small);
+  font-weight: 600;
+}
+
+.ask-recent-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Composer dock */
+
+/*
+  The empty composer stays in normal document flow. Pinning it there would
+  park it under the fixed mobile navigation, and a sticky element cannot be
+  scrolled out from behind the software keyboard.
+
+  Once a thread exists a compact invitation sticks above the bottom
+  navigation. It expands only while the resident is writing, so the answer
+  remains readable. The expanded composer follows the keyboard through the
+  visual viewport inset.
+*/
+.ask-dock[data-sticky] {
+  position: sticky;
+  bottom: calc(5.25rem + var(--ask-kb, 0rem));
+  z-index: 10;
+}
+
+.ask-compose-open {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  background: var(--card);
+  box-shadow: var(--pp-shadow-control);
+}
+
+.resident-blueprint[data-keyboard-open] .ask-dock[data-sticky] {
+  bottom: calc(var(--ask-kb, 0rem) + 0.5rem);
+}
+
+.ask-composer {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--pp-shadow-control);
+}
+
+.ask-composer-label {
+  font-size: var(--pp-text-small);
+  font-weight: 650;
+}
+
+.ask-composer-field {
+  width: 100%;
+  max-height: 10.5rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  background: var(--background);
+  font: inherit;
+  font-size: var(--pp-text-body);
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+}
+
+.ask-composer-field:focus-visible {
+  border-color: var(--info);
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.ask-composer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ask-composer-count {
+  margin: 0;
+  color: var(--warning-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.ask-composer-privacy {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-caption);
+  line-height: 1.5;
+}
+
+/* Evidence gutter inside the answer */
+
+/*
+  From 48rem the answer's Source controls move into the card's left padding,
+  the same margin the Issue and Decision pages use. The evidence.css rules
+  position them; here the card reserves the space.
+*/
+@media (min-width: 48rem) {
+  .ask-page {
+    --ev-gutter: 6rem;
+
+    width: min(100% - 3rem, 46rem);
+  }
+
+  /*
+    One text edge down the column. The answer card reserves the gutter inside
+    its own padding so Source controls stay on the card surface, and the
+    question and the wait block inset by the same amount so the reading edge
+    never shifts between a resident's question and its answer.
+  */
+  .ask-answer,
+  .ask-checking {
+    padding-left: calc(var(--ev-gutter) + 1.1rem);
+  }
+
+  .ask-turn-head,
+  .ask-turn-question {
+    padding-left: calc(var(--ev-gutter) + 1.1rem);
+  }
+
+  /* Two claims can share one source; the second control stacks below. */
+  .ask-answer .ev-claim > .ev-source {
+    grid-row: auto;
+  }
+}
+
+/*
+  From 64.0625rem a selected Source docks the existing 320px panel beside the
+  reading column, on the same grid the Issue and Decision pages use. The
+  column keeps its left edge either way, so docking the panel never slides
+  the conversation sideways, and no blank panel is reserved before selection.
+*/
+@media (min-width: 64.0625rem) {
+  .ask-page {
+    --ev-rail: 20rem;
+    --ev-rail-gap: 2.5rem;
+  }
+
+  .ask-page[data-panel-open] {
+    width: min(100% - 3rem, 68.5rem);
+  }
+
+  .ask-page[data-panel-open] .ask-head,
+  .ask-page[data-panel-open] .ask-scope,
+  .ask-page[data-panel-open] .ask-scope-line {
+    max-width: calc(var(--ev-gutter) + 40rem);
+  }
+
+  .ask-layout[data-panel-open] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--ev-rail);
+    column-gap: var(--ev-rail-gap);
+    align-items: start;
+    max-width: none;
+  }
+
+  .ask-layout[data-panel-open] .ask-reading {
+    grid-row: 1;
+    grid-column: 1;
+    max-width: calc(var(--ev-gutter) + 40rem);
+  }
+
+  .ask-rail {
+    position: sticky;
+    top: 5rem;
+    grid-row: 1;
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  /*
+    The answer is the reading point, so nothing floats over it here. A phone
+    and tablet keep the sticky composer because the bottom navigation and
+    thumb reach are the reason for it; a desktop page just scrolls.
+  */
+  .ask-dock[data-sticky] {
+    position: static;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-answer {
+    animation-duration: 1ms !important;
+  }
+}
