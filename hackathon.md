@@ -7,14 +7,68 @@
 - **Repo:** https://github.com/LaykenV/public-parish
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
-- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`
+- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`
 - **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, durable workflows
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T19:12:00Z
+- **Last updated:** 2026-08-31T21:48:58Z
 
 ## Log
+
+### 2026-08-31 - 3393b19
+
+Added production-only anonymous visit and area-selection telemetry. Fixed event
+contracts update deduplicated browser, event, and aggregate rows in one Convex
+mutation. The private report separates unique browsers, 30-minute visits,
+activated visitors, 24-hour returns, and area counts. A bounded daily cleanup
+removes browser identifiers and events after 90 days. The browser sends a hash
+of a random local identifier, never resident content. A same-origin HTTP route
+keeps the write mutations internal, validates the exact payload, and applies
+per-browser and global limits. The counts remain unauthenticated product
+signals. Browsers that cannot persist the random identifier are excluded rather
+than recounted after each reload. Automated validation is pending in pull-request CI (`convex/analytics/`,
+`src/features/analytics/product-analytics.tsx`).
+
+### 2026-08-31 - dd5501e
+
+Deployed the repeatable launch-data promotion through production workflow
+`33435833908`; the independent production smoke passed the Convex origin,
+canonical domain, apex redirect, and readiness query. Seventeen included
+official PDFs matched their development hashes before extraction.
+
+The run published 26 launch records: 15 Lafayette, 9 Rapides, and 2 East Baton
+Rouge. Fifteen are full and 11 are limited. The Rapides negative control
+returned `not_found`, and replay reused all 27 successful extraction run IDs
+without new model calls. Three targets stayed out after repeat exact-citation
+validation failures. The resident query also exposes one older duplicate
+Lafayette board-vacancy card, so its current public count is 27 until a
+ledger-preserving withdrawal operation exists
+(`docs/production-batches/launch-data-2026-08-31.v1.json`,
+`convex/operations/seed.ts`).
+
+### 2026-08-31 - 432645b
+
+PR #33 fixed review completion budgets for high reasoning effort, merged as
+`fd03192`, deployed to production, and passed the independent production smoke.
+PR #35 moved review findings onto exact fact paths or `null`; a development
+retry then published the previously blocked Rapides millage-election record as
+limited. It merged as `434c263`. Exact production workflow `33419095880` and an
+independent production smoke passed.
+
+PR #36 fixed displaced PDF superscript text that blocked a valid lifecycle
+citation. Extraction processor v1.17 restores the paired ordinal suffix without
+weakening changed-text checks; the Pafford EMS contract then validated,
+reviewed, and published limited. It merged as `432645b`. Production workflow
+`33419981241` timed out during its first static-file upload after deploying the
+backend. Attempt 2 completed the backend and frontend deploy, production seed,
+and workflow smoke. An independent production smoke also passed.
+
+The bounded data runs ingested four East Baton Rouge and four Rapides official
+PDFs, published seven limited records, retained two negative cases, and replayed
+without new snapshots or model calls. Production was not used for those data
+runs (`convex/extraction/textMatch.ts`, `convex/review/`,
+`convex/pipeline/state.ts`).
 
 ### 2026-08-31 - Design Slice 7 review
 

@@ -577,6 +577,7 @@ keyboard behavior, rotation, page zoom, and reduced motion.
 
 Track aggregate product actions separately from personal content:
 
+- production app visit;
 - location setup completed;
 - decision card opened;
 - issue citation opened;
@@ -591,6 +592,43 @@ Track aggregate product actions separately from personal content:
 
 Do not treat a page impression as civic proof. Do not expose private question
 text in analytics.
+
+The initial telemetry release uses these exact terms:
+
+- a unique visitor is one opaque browser identifier seen on a production host
+  during its 90-day active identity window;
+- a visit is a load at least 30 minutes after that browser's prior visit;
+- an activated visitor has selected at least one supported area;
+- a returning visitor has a later visit at least 24 hours after first use;
+- activation rate is activated visitors divided by unique visitors.
+
+These are browser-level product signals. They do not prove a unique person,
+Louisiana residency, or completion of the resident loop. Call a known tester a
+real resident only when recruitment or permission provides that evidence.
+
+The browser hashes a random local identifier before sending it. Application
+analytics rows store only allowlisted events, fixed area slugs, server times,
+and aggregate counts. They do not store IP addresses, referrer URLs, user-agent
+strings, questions, emails, exact locations, or arbitrary event properties.
+Identifiers and event rows expire after 90 days. A browser that returns after
+90 inactive days can increment the cumulative visitor total again. Aggregate
+counters remain for submission evidence. The owner reads the summary through
+the authenticated
+`npm run analytics:report:production` Convex CLI operation. The resident
+interface never shows popularity counts.
+
+The browser sends these events to one same-origin HTTP route. That route accepts
+only the two served production origins, validates an exact payload shape, and
+calls internal Convex mutations. The official rate-limiter component caps one
+browser at 12 requests per minute, the app at 120 requests per minute, and the
+app at 5,000 requests per day. Origin checks and rate limits reduce accidental
+or scripted inflation but cannot prove that anonymous traffic came from a
+human. Treat the report as unauthenticated product telemetry, not an audited
+resident count.
+
+If the browser cannot write and read back its random identifier, it sends no
+telemetry. This avoids counting a new visitor on every reload when site storage
+is blocked, at the cost of excluding those browsers from the report.
 
 ## Empty and Error States
 

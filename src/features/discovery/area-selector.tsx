@@ -2,6 +2,7 @@ import { CheckCircle2Icon, Clock3Icon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
+import { useRecordAreaSelection } from '../analytics/product-analytics'
 import { setArea, useArea } from './area-store'
 import { AREA_FIXTURES } from './fixtures'
 import { Sheet } from './sheet'
@@ -44,6 +45,7 @@ function AreaSelectorDialog({
 }) {
   const [query, setQuery] = useState('')
   const area = useArea()
+  const recordAreaSelection = useRecordAreaSelection()
   const normalized = query.trim().toLowerCase()
   const places = AREA_FIXTURES.filter((place) =>
     place.name.toLowerCase().includes(normalized),
@@ -111,6 +113,7 @@ function AreaSelectorDialog({
                 data-selected={selected || undefined}
                 onClick={() => {
                   setArea(place.slug)
+                  if (!selected) recordAreaSelection(place.slug)
                   onOpenChange(false)
                 }}
                 type="button"

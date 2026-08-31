@@ -646,6 +646,41 @@ Indexes: run; decision record plus version; candidate.
 
 ### Resident Product
 
+#### `analyticsSubjects`, `analyticsEvents`, and `analyticsCounters`
+
+The production client creates a random local browser identifier and sends only
+its SHA-256 hash. Subject rows deduplicate unique browsers, 30-minute visits,
+first area selection, and a return at least 24 hours after first use. Events are
+an append-only union of `app_visit` and `area_selected`; no generic event name
+or property bag exists. The area value is one fixed supported slug.
+
+The same mutation writes the subject, event, and one production counter row, so
+the owner report reads exact totals without scanning a growing table. The
+report remains an internal function invoked through the authenticated Convex
+CLI. Identifiers and event rows expire after 90 days through a bounded daily
+cleanup. Aggregate counters retain no resident identifier. A browser that
+returns after 90 inactive days can increment the cumulative visitor total
+again. Development, unrecognized hosts, browsers that identify as automated,
+and opted-out founder devices do not send telemetry. These counts measure
+browsers and product actions, not proven people or residency.
+
+The client posts to `/api/analytics` on its current origin. The HTTP action
+rejects any origin other than the canonical domain and production
+`convex.site` host, rejects payloads over 512 bytes or outside the exact event
+union, then calls internal mutations. `@convex-dev/rate-limiter` enforces 12
+requests per browser per minute, 120 requests across the app per minute, and
+5,000 requests across the app per day. These controls bound casual abuse and
+storage growth. A non-browser client can spoof an Origin header, so the numbers
+remain unauthenticated telemetry rather than fraud-proof identity evidence.
+The client must read back a newly written browser identifier before sending an
+event. A browser that cannot persist that value sends no telemetry, which
+prevents reloads from creating a series of false unique visitors.
+
+Before using a production browser for internal checks, set
+`public-parish.analytics.optout.v1` to `true` in that origin's local storage.
+The opt-out prevents future writes from that browser. It does not rewrite
+already recorded aggregate counters.
+
 #### `anonymousSessions`
 
 Fields: opaque session hash, Agent thread reference, issue or meeting or corpus

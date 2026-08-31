@@ -73,7 +73,73 @@ const issuePayload = v.object({
   importance: issueScore,
 })
 
+const analyticsAreaSlug = v.union(
+  v.literal('lafayette-parish'),
+  v.literal('east-baton-rouge-parish'),
+  v.literal('rapides-parish'),
+)
+
+const analyticsAreaCounts = v.object({
+  lafayetteParish: v.number(),
+  eastBatonRougeParish: v.number(),
+  rapidesParish: v.number(),
+})
+
 export default defineSchema({
+  analyticsSubjects: defineTable({
+    visitorKeyHash: v.string(),
+    firstSeenAt: v.number(),
+    lastSeenAt: v.number(),
+    lastVisitStartedAt: v.number(),
+    visitCount: v.number(),
+    firstAreaSelectedAt: v.optional(v.number()),
+    firstAreaSlug: v.optional(analyticsAreaSlug),
+    lastAreaSelectedAt: v.optional(v.number()),
+    lastAreaSlug: v.optional(analyticsAreaSlug),
+    areaSelectionCount: v.number(),
+    returnedAt: v.optional(v.number()),
+    expiresAt: v.number(),
+  })
+    .index('by_visitor_key_hash', ['visitorKeyHash'])
+    .index('by_expires_at', ['expiresAt']),
+
+  analyticsEvents: defineTable(
+    v.union(
+      v.object({
+        eventKey: v.string(),
+        subjectId: v.id('analyticsSubjects'),
+        kind: v.literal('app_visit'),
+        occurredAt: v.number(),
+        expiresAt: v.number(),
+      }),
+      v.object({
+        eventKey: v.string(),
+        subjectId: v.id('analyticsSubjects'),
+        kind: v.literal('area_selected'),
+        areaSlug: analyticsAreaSlug,
+        occurredAt: v.number(),
+        expiresAt: v.number(),
+      }),
+    ),
+  )
+    .index('by_event_key', ['eventKey'])
+    .index('by_subject_id_and_occurred_at', ['subjectId', 'occurredAt'])
+    .index('by_kind_and_occurred_at', ['kind', 'occurredAt'])
+    .index('by_expires_at', ['expiresAt']),
+
+  analyticsCounters: defineTable({
+    scope: v.literal('production'),
+    startedAt: v.number(),
+    updatedAt: v.number(),
+    uniqueVisitors: v.number(),
+    visits: v.number(),
+    activatedVisitors: v.number(),
+    returningVisitors: v.number(),
+    areaSelections: v.number(),
+    firstSelectionsByArea: analyticsAreaCounts,
+    selectionsByArea: analyticsAreaCounts,
+  }).index('by_scope', ['scope']),
+
   jurisdictions: defineTable({
     name: v.string(),
     slug: v.string(),

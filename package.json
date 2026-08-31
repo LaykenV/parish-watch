@@ -24,12 +24,14 @@
     "test:watch": "vitest",
     "verify": "npm run typecheck && npm run test && npm run build && npm run lint",
     "hosting:smoke:dev": "npx @convex-dev/static-hosting upload --build --dist dist/client",
+    "analytics:report:production": "npx convex run --prod analytics/report:summary '{}'",
     "smoke:production": "node scripts/smoke-production.mjs && npx convex run --prod system/status:readiness '{}'",
     "deploy": "npx @convex-dev/static-hosting deploy --dist dist/client"
   },
   "dependencies": {
     "@base-ui/react": "1.6.0",
     "@convex-dev/auth": "2.0.0-alpha.1",
+    "@convex-dev/rate-limiter": "0.3.2",
     "@convex-dev/react-query": "0.1.0",
     "@convex-dev/static-hosting": "0.2.1",
     "@convex-dev/workflow": "0.4.6",
