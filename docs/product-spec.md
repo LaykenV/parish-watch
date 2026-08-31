@@ -626,6 +626,10 @@ or scripted inflation but cannot prove that anonymous traffic came from a
 human. Treat the report as unauthenticated product telemetry, not an audited
 resident count.
 
+If the browser cannot write and read back its random identifier, it sends no
+telemetry. This avoids counting a new visitor on every reload when site storage
+is blocked, at the cost of excluding those browsers from the report.
+
 ## Empty and Error States
 
 - No current decisions: show recent outcomes, search, and coverage status.

@@ -10,8 +10,6 @@ const PRODUCTION_HOSTS = new Set([
   'befitting-flamingo-587.convex.site',
 ])
 
-let volatileVisitorId: string | null = null
-
 type AnalyticsRuntime = {
   automated: boolean
   hostname: string
@@ -48,6 +46,7 @@ async function sendAnalytics(
   try {
     if (!canUseAnalytics()) return
     const visitorKeyHash = await getVisitorKeyHash()
+    if (!visitorKeyHash) return
     await fetch('/api/analytics', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -82,20 +81,11 @@ function canUseAnalytics(): boolean {
   })
 }
 
-async function getVisitorKeyHash(): Promise<string> {
-  let visitorId = volatileVisitorId
-  try {
-    const stored = window.localStorage.getItem(VISITOR_STORAGE_KEY)
-    if (stored) {
-      visitorId = stored
-    } else {
-      visitorId = crypto.randomUUID()
-      window.localStorage.setItem(VISITOR_STORAGE_KEY, visitorId)
-    }
-  } catch {
-    visitorId ??= crypto.randomUUID()
-  }
-  volatileVisitorId = visitorId
+async function getVisitorKeyHash(): Promise<string | null> {
+  const visitorId = getPersistentVisitorId(window.localStorage, () =>
+    crypto.randomUUID(),
+  )
+  if (!visitorId) return null
 
   const digest = await crypto.subtle.digest(
     'SHA-256',
@@ -104,4 +94,20 @@ async function getVisitorKeyHash(): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) =>
     byte.toString(16).padStart(2, '0'),
   ).join('')
+}
+
+export function getPersistentVisitorId(
+  storage: Pick<Storage, 'getItem' | 'setItem'>,
+  createId: () => string,
+): string | null {
+  try {
+    const stored = storage.getItem(VISITOR_STORAGE_KEY)
+    if (stored) return stored
+
+    const created = createId()
+    storage.setItem(VISITOR_STORAGE_KEY, created)
+    return storage.getItem(VISITOR_STORAGE_KEY) === created ? created : null
+  } catch {
+    return null
+  }
 }

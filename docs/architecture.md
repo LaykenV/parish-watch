@@ -672,6 +672,9 @@ requests per browser per minute, 120 requests across the app per minute, and
 5,000 requests across the app per day. These controls bound casual abuse and
 storage growth. A non-browser client can spoof an Origin header, so the numbers
 remain unauthenticated telemetry rather than fraud-proof identity evidence.
+The client must read back a newly written browser identifier before sending an
+event. A browser that cannot persist that value sends no telemetry, which
+prevents reloads from creating a series of false unique visitors.
 
 Before using a production browser for internal checks, set
 `public-parish.analytics.optout.v1` to `true` in that origin's local storage.

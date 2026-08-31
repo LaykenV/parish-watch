@@ -379,6 +379,8 @@ residents and should keep that count separate from anonymous browser totals.
 The production endpoint checks its served origin and applies per-browser and
 global rate limits, but a scripted client can still spoof anonymous traffic.
 Describe these as product signals, not audited people.
+Browsers that cannot persist and read back the random identifier are excluded
+instead of being counted again on each reload.
 
 ## Social Plan
 

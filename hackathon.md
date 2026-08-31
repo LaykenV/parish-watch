@@ -26,7 +26,8 @@ removes browser identifiers and events after 90 days. The browser sends a hash
 of a random local identifier, never resident content. A same-origin HTTP route
 keeps the write mutations internal, validates the exact payload, and applies
 per-browser and global limits. The counts remain unauthenticated product
-signals. Automated validation is pending in pull-request CI (`convex/analytics/`,
+signals. Browsers that cannot persist the random identifier are excluded rather
+than recounted after each reload. Automated validation is pending in pull-request CI (`convex/analytics/`,
 `src/features/analytics/product-analytics.tsx`).
 
 ### 2026-08-31 - dd5501e
