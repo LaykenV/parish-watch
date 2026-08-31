@@ -48,9 +48,21 @@ function unwrapWhitespaceBoundedAsteriskEmphasis(text: string): string {
   return text.replace(/(?<!\S)\*([^\s*](?:[^\r\n]*?[^\s*])?)\*(?!\S)/g, '$1')
 }
 
+function unwrapPdfSuperscriptArtifacts(text: string): string {
+  return text
+    .replace(
+      /(?:^|\r?\n)[ \t]*(st|nd|rd|th)[ \t]*\r?\n([^\r\n]{0,200}<sup(?:\s+[^<>]*?)?\s*>\1<\/sup\s*>[^\r\n]{0,200}?\b\d{1,2})(?=\s+day\b)/gi,
+      (_artifact, suffix: string, lineBeforeDay: string) =>
+        `\n${lineBeforeDay}${suffix}`,
+    )
+    .replace(/<sup(?:\s+[^<>]*?)?\s*>|<\/sup\s*>/gi, '')
+}
+
 export function normalizeForMatch(text: string): string {
-  return unwrapWhitespaceBoundedAsteriskEmphasis(
-    unwrapWhitespaceBoundedUnderscoreEmphasis(unwrapMatchingMailtoLinks(text)),
+  return unwrapPdfSuperscriptArtifacts(
+    unwrapWhitespaceBoundedAsteriskEmphasis(
+      unwrapWhitespaceBoundedUnderscoreEmphasis(unwrapMatchingMailtoLinks(text)),
+    ),
   )
     .replace(/\u00a0/g, ' ')
     .replace(/[\u2018\u2019]/g, "'")
