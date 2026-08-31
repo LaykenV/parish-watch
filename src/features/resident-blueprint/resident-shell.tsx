@@ -83,9 +83,21 @@ export function ResidentRouteAccessibility() {
           previousPath.current !== null &&
           previousPath.current !== pathname
         ) {
-          heading?.setAttribute('tabindex', '-1')
-          heading?.focus({ preventScroll: true })
-          setAnnouncement(`${headingText || fallbackLabel} page loaded.`)
+          // Moving focus to the heading already reads it aloud. Announcing the
+          // same text again would say the page name twice, so the live region
+          // only speaks when there is no heading to land on.
+          if (heading) {
+            heading.setAttribute('tabindex', '-1')
+            heading.addEventListener(
+              'blur',
+              () => heading.removeAttribute('tabindex'),
+              { once: true },
+            )
+            heading.focus({ preventScroll: true })
+            setAnnouncement('')
+          } else {
+            setAnnouncement(`${fallbackLabel} page loaded.`)
+          }
         }
         previousPath.current = pathname
       })

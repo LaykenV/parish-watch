@@ -953,8 +953,8 @@
 
 .pp-search-field input {
   flex: 1;
+  align-self: stretch;
   min-width: 0;
-  min-height: var(--pp-control-height);
   border: 0;
   background: none;
   color: inherit;

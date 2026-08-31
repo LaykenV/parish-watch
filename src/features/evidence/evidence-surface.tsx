@@ -18,7 +18,11 @@ import type { ElementType, ReactNode } from 'react'
 
 import { formatDate } from '../discovery/format'
 import { useMediaQuery } from '../discovery/hooks'
-import { Sheet, shouldRestoreSheetFocus } from '../discovery/sheet'
+import {
+  Sheet,
+  sheetExitDelay,
+  shouldRestoreSheetFocus,
+} from '../discovery/sheet'
 import {
   citationSummary,
   documentHost,
@@ -29,7 +33,6 @@ import type { CitationData, CitationMap } from './contracts'
 import './evidence.css'
 
 const PANEL_ID = 'pp-evidence-panel'
-const SHEET_FOCUS_RETURN_DELAY_MS = 300
 
 type EvidenceContextValue = {
   citations: CitationMap
@@ -296,7 +299,7 @@ function EvidenceSheet() {
             if (shouldRestoreSheetFocus()) restoreFocus()
             lastCitationRef.current = undefined
             focusReturnTimerRef.current = null
-          }, SHEET_FOCUS_RETURN_DELAY_MS)
+          }, sheetExitDelay())
         }
       }}
       open={Boolean(citation)}

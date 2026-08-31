@@ -20,7 +20,24 @@ type SheetProps = {
   trigger?: (props: React.ComponentProps<'button'>) => ReactElement
 }
 
-const SHEET_COMPLETION_FALLBACK_MS = 300
+const SHEET_DESKTOP_QUERY = '(min-width: 64.0625rem)'
+const SHEET_EXIT_FALLBACK_MS = 240
+
+// Focus returns to the opener once the sheet has finished animating out. The
+// desktop dialog has no exit animation, so waiting there is dead time. Reading
+// `--dur-standard` keeps this in step with the motion tokens in styles.css.
+export function sheetExitDelay(): number {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0
+  if (window.matchMedia(SHEET_DESKTOP_QUERY).matches) return 0
+
+  const token = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue('--dur-standard')
+    .trim()
+  const value = Number.parseFloat(token)
+  if (!Number.isFinite(value) || value <= 0) return SHEET_EXIT_FALLBACK_MS
+  return token.endsWith('ms') ? value : value * 1000
+}
 
 export function shouldRestoreSheetFocus(): boolean {
   const active = document.activeElement
@@ -46,7 +63,7 @@ export function Sheet({
   trigger,
 }: SheetProps) {
   useOverlay(open)
-  const desktopMatch = useMediaQuery('(min-width: 64.0625rem)')
+  const desktopMatch = useMediaQuery(SHEET_DESKTOP_QUERY)
   const [hydrated, setHydrated] = useState(false)
   const closeRef = useRef<HTMLButtonElement>(null)
   const focusFrameRef = useRef(0)
@@ -100,9 +117,6 @@ export function Sheet({
 
     window.cancelAnimationFrame(focusFrameRef.current)
     window.cancelAnimationFrame(focusInnerFrameRef.current)
-    const reducedMotion = window.matchMedia(
-      '(prefers-reduced-motion: reduce)',
-    ).matches
     const finalFocus = resolveFinalFocus()
     if (focusReturnTimerRef.current !== null) {
       window.clearTimeout(focusReturnTimerRef.current)
@@ -116,7 +130,7 @@ export function Sheet({
         openerRef.current = null
         focusReturnTimerRef.current = null
       },
-      reducedMotion ? 0 : SHEET_COMPLETION_FALLBACK_MS,
+      sheetExitDelay(),
     )
     onOpenChange(false)
   }

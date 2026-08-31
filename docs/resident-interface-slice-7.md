@@ -8,15 +8,20 @@ This slice treats the resident interface as one application. It keeps the
 approved paper-and-ink hierarchy and corrects shared behavior that could drift
 between routes.
 
-- Route completion updates the document title, moves keyboard focus to the new
-  page heading, and announces the loaded page.
+- Route completion updates the document title and moves keyboard focus to the
+  new page heading. The heading is read by the focus move, so the live region
+  only speaks when a route has no heading to land on.
 - Route and action loading states keep their written labels. Actions reserve a
-  fixed spinner slot before work starts, so the control does not change width.
+  mirrored spinner slot on both sides of the label, so the control keeps a
+  stable width and a centered label.
 - Home, For You, and Explore announce accepted live refreshes without moving
   focus or reordering content.
 - Every sheet moves focus to its written Close control after opening. Existing
-  trigger ownership returns focus when the sheet closes.
-- Explore's search input now owns the full 44-pixel shared control height.
+  trigger ownership returns focus when the sheet closes, after an exit delay
+  read from the `--dur-standard` motion token. The desktop dialog has no exit
+  animation, so focus returns to its opener immediately.
+- Explore's search input stretches to fill its search field, so the whole
+  control height is a pointer target.
 - Reduced-motion mode shortens resident transitions and both spinner types to
   one millisecond while preserving the state change.
 
@@ -52,10 +57,14 @@ no unlabeled visible form field, and no undersized standalone written control.
 Native radio and checkbox boxes were measured with their full written labels.
 
 The loading-button interaction was measured before and during submission. It
-stayed 168.90625 CSS pixels wide, kept `Request coverage` visible, exposed
-`aria-busy`, and added the spinner inside its reserved slot. A Home to For You
-keyboard navigation moved focus to the For You heading without scrolling,
-announced the route, and set `For You | Public Parish` as the title.
+kept a stable width, kept `Request coverage` visible, exposed `aria-busy`, and
+added the spinner inside its reserved slot. A Home to For You keyboard
+navigation moved focus to the For You heading without scrolling and set
+`For You | Public Parish` as the title.
+
+Review corrections applied after that sweep changed the measured button width,
+so the earlier 168.90625-pixel figure no longer describes the shipped control.
+The mirrored slot is what holds the width steady now.
 
 The keyboard flow opened citation and filter sheets on their written Close
 control and returned focus to the exact Source or More filters opener. Closed
@@ -100,7 +109,13 @@ No unresolved interface defect changes page structure.
 
 - The founder still owns the real-iPhone Safari review. The six CSS widths do
   not prove browser chrome, safe-area, or physical keyboard behavior on that
-  device.
+  device. The corrected button width and search-input stretch were not
+  re-measured in a browser after review.
+- The shared sheet still layers Base UI `initialFocus`, `autoFocus`, and a
+  manual frame-scheduled focus call on open, plus Base UI `finalFocus` and a
+  manual timer on close. Each layer was added to fix a real browser defect and
+  the suite has no DOM environment to prove which one is load-bearing.
+  Collapsing them needs its own change with a browser to test in.
 - Each feature owner still owns its production adapter and runtime gate. This
   slice does not connect resident detail, Ask, Auth, AgentMail, coverage request,
   or private report data.

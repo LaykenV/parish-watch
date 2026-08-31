@@ -12,18 +12,20 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T17:37:01Z
+- **Last updated:** 2026-08-31T19:12:00Z
 
 ## Log
 
 ### 2026-08-31 - Design Slice 7 review
 
 Implemented resident-interface Design Slice 7 for pull-request review. Shared
-route completion now updates the page title, focuses the new heading, and sends
-one polite announcement. Loading actions keep their written label and reserve a
-fixed spinner slot. Discovery refreshes announce accepted updates, sheets focus
-their written Close control, Explore uses the full shared control height, and
-reduced-motion rules cover resident transitions and spinners. A browser sweep
+route completion now updates the page title and focuses the new heading, which
+reads the page name once instead of twice. Loading actions keep their written
+label inside a mirrored spinner slot that holds the width and keeps the label
+centered. Discovery refreshes announce accepted updates, sheets focus their
+written Close control and return focus after a delay read from the
+`--dur-standard` motion token, Explore's search input stretches to fill its
+field, and reduced-motion rules cover resident transitions and spinners. A browser sweep
 checked 14 development routes at 320, 375, 414, 768, 1280, and 1440 CSS pixels.
 All 84 frames had one main region, a visible page heading, named visible form
 fields, full-size written controls, and no page-level horizontal overflow.

@@ -54,7 +54,9 @@ describe('resident interface Slice 7 system', () => {
 
     expect(buttonVariants()).not.toContain('data-loading:text-transparent')
     expect(idle).toContain('data-slot="button-loading-slot"')
+    expect(idle).toContain('data-slot="button-loading-spacer"')
     expect(loading).toContain('data-slot="button-loading-slot"')
+    expect(loading).toContain('data-slot="button-loading-spacer"')
     expect(loading).toContain('data-slot="button-loading-indicator"')
     expect(loading).toContain('aria-busy="true"')
     expect(loading).toContain('Request coverage')
@@ -72,10 +74,11 @@ describe('resident interface Slice 7 system', () => {
     )
   })
 
-  it('focuses the route heading and announces completion without moving scroll', () => {
+  it('focuses the route heading without naming the page twice', () => {
     expect(shellSource).toContain("'#resident-main h1'")
-    expect(shellSource).toContain("heading?.setAttribute('tabindex', '-1')")
-    expect(shellSource).toContain('heading?.focus({ preventScroll: true })')
+    expect(shellSource).toContain("heading.setAttribute('tabindex', '-1')")
+    expect(shellSource).toContain('heading.focus({ preventScroll: true })')
+    expect(shellSource).toContain("heading.removeAttribute('tabindex')")
     expect(shellSource).toContain('page loaded.`')
     expect(shellSource).toContain('aria-atomic="true"')
   })
@@ -96,12 +99,12 @@ describe('resident interface Slice 7 system', () => {
     expect(shellCss).toContain('animation-iteration-count: 1 !important')
   })
 
-  it('gives the Explore text input the full shared control height', () => {
+  it('stretches the Explore text input to fill its search field', () => {
     const searchInputRule = discoveryCss.match(
       /\.pp-search-field input \{[\s\S]*?\n\}/,
     )?.[0]
 
-    expect(searchInputRule).toContain('min-height: var(--pp-control-height)')
+    expect(searchInputRule).toContain('align-self: stretch')
   })
 
   it('moves focus into every sheet after its opening motion completes', () => {
@@ -118,6 +121,8 @@ describe('resident interface Slice 7 system', () => {
       'finalFocus={triggerId ? resolveFinalFocus : undefined}',
     )
     expect(evidenceSurfaceSource).toContain('restoreFocus()')
-    expect(evidenceSurfaceSource).toContain('SHEET_FOCUS_RETURN_DELAY_MS')
+    expect(evidenceSurfaceSource).toContain('sheetExitDelay()')
+    expect(sheetSource).toContain("getPropertyValue('--dur-standard')")
+    expect(sheetSource).not.toMatch(/FALLBACK_MS = 300|DELAY_MS = 300/)
   })
 })
