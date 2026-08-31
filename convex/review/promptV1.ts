@@ -15,6 +15,7 @@ Rules:
 - A fail finding means the source identity, title, government body, or evidence set cannot support publication.
 - A limited finding means the core identity is supported but at least one secondary field should not publish.
 - An info finding records a concern that does not limit publication.
+- For each finding, copy one supplied fact fieldPath exactly when the concern applies to that fact. Use null when the concern applies to the overall evidence set or more than one fact. Do not invent a parent, summary, or new fieldPath.
 - Set verdict to fail if any fail finding exists or a core sourced field is not supported. Core sourced fields are /title and /bodyName. When sourceRecordIdProvenance is source_printed, /sourceRecordId is also a core sourced field. When it is operator_assigned, the operator record ID is routing metadata and no /sourceRecordId fact should exist.
 - Set verdict to limited if no fail condition exists and any other check is unclear or unsupported, or any limited finding exists.
 - Otherwise set verdict to pass.`
