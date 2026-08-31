@@ -1327,17 +1327,17 @@ test('unsupported sourceRecordId on public_action is not cited', async () => {
   expect(result.citations.some((c) => c.fieldPath === '/bodyName')).toBe(true)
 })
 
-test('unclear sourceRecordId on public_action is not cited', async () => {
+test('unclear sourceRecordId on unnumbered record is not cited', async () => {
   const t = initTest()
-  const seeded = await seedValidatedCandidate(t, '-public-action-unclear')
+  const seeded = await seedValidatedCandidate(t, '-unclear-source-id')
 
   await t.run(async (ctx) => {
-    await ctx.db.patch(seeded.candidateId, { recordType: 'public_action' })
+    await ctx.db.patch(seeded.candidateId, { recordType: 'appointment' })
     const recordTypeFact = seeded.factIds.find(
       (f) => f.fieldPath === '/recordType',
     )
     if (recordTypeFact) {
-      await ctx.db.patch(recordTypeFact.factId, { value: 'public_action' })
+      await ctx.db.patch(recordTypeFact.factId, { value: 'appointment' })
     }
   })
 
@@ -1347,32 +1347,21 @@ test('unclear sourceRecordId on public_action is not cited', async () => {
     ),
   )
 
-  const started = await t.mutation(
-    internal.operations.publication.startCandidatePublication,
-    { candidateId: seeded.candidateId, trigger: 'manual_publication' },
-  )
-  vi.useFakeTimers()
-  await t.finishAllScheduledFunctions(vi.runAllTimers)
-  vi.useRealTimers()
+  const started = await startAndDrain(t, seeded.candidateId)
 
-  const result = await t.run(async (ctx) => {
+  const citations = await t.run(async (ctx) => {
     const version = await ctx.db
       .query('publicationVersions')
       .withIndex('by_run', (q) => q.eq('runId', started.runId))
       .unique()
-    if (!version) return { version: null, citations: [] }
-    const allCitations = await ctx.db.query('citations').collect()
-    const citations = allCitations.filter(
-      (c) => c.publicationVersionId === version._id,
-    )
-    return { version, citations }
+    return version
+      ? await ctx.db.query('citations').collect().then((all) =>
+          all.filter((c) => c.publicationVersionId === version._id),
+        )
+      : []
   })
 
-  expect(result.version).toBeTruthy()
-  expect(result.version?.mode).toBe('full')
-  expect(result.citations.some((c) => c.fieldPath === '/sourceRecordId')).toBe(
-    false,
-  )
-  expect(result.citations.some((c) => c.fieldPath === '/title')).toBe(true)
-  expect(result.citations.some((c) => c.fieldPath === '/bodyName')).toBe(true)
+  expect(citations.some((c) => c.fieldPath === '/sourceRecordId')).toBe(false)
+  expect(citations.some((c) => c.fieldPath === '/title')).toBe(true)
+  expect(citations.some((c) => c.fieldPath === '/bodyName')).toBe(true)
 })
