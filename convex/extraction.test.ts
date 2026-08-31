@@ -286,6 +286,30 @@ test('citation matching joins a hyphenated PDF line break', () => {
   ).toBeGreaterThanOrEqual(0)
 })
 
+test('citation matching ignores displaced PDF ordinal superscripts', () => {
+  const visibleExcerpt =
+    'Passed, approved and adopted by the President and the Police Jury of Rapides Parish, Louisiana, on this 28th day of April, 2026.'
+  const firecrawlMarkdown =
+    'Passed, approved and adopted by the President and the Police Jury of Rapides Parish,\nth\nLouisiana, on <sup>th</sup>is 28 day of April, 2026.'
+  const source = normalizeForMatch(firecrawlMarkdown)
+
+  expect(source).toBe(visibleExcerpt)
+  expect(normalizeForMatch('Keep\nTH\ninitials.')).toBe('Keep TH initials.')
+  expect(locateExcerpt(source, visibleExcerpt)).toBe(0)
+  expect(
+    locateExcerpt(
+      source,
+      'Passed, approved and adopted by the President and the Police Jury of Rapides Parish, Louisiana, on this 28 day of April, 2026.',
+    ),
+  ).toBe(-1)
+  expect(
+    locateExcerpt(
+      source,
+      'Passed, approved and adopted by the President and the Police Jury of Rapides Parish, Louisiana, on this 29th day of April, 2026.',
+    ),
+  ).toBe(-1)
+})
+
 test('citation matching ignores Firecrawl underline tags around a record ID', () => {
   const source = normalizeForMatch(
     '6. <u>CO-062-2026</u> An ordinance authorizing a utility agreement.',
@@ -721,7 +745,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     route: 'ai_gateway',
     promptVersion: 'v1.6',
     schemaVersion: 'v1',
-    processorVersion: 'v1.15',
+    processorVersion: 'v1.17',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
