@@ -24,14 +24,21 @@ Terra extraction, Luna review, and idempotent replay proofs ran in the personal
 development deployment. Slice 4 deployed through PR #13 as `c162543` and passed
 the exact production workflow plus an independent smoke.
 
-Resident-interface Design Slices 1 and 2 are also deployed. PR #24 merged as
+Resident-interface Design Slices 1 through 3 are also deployed. PR #24 merged as
 `4e2ac67` and shipped the responsive application shell plus fixture-backed Home,
-For You, and Explore routes. Every fixture view labels itself as design data.
-Area selection, URL-restored Explore filters, offline state, share fallback, and
-responsive navigation work in the browser. The discovery records are not a live
-resident feed, and no production issue build or importance assessment has run.
-Ask, evidence views, following, authentication, AgentMail, and coverage APIs
-remain unfinished.
+For You, and Explore routes. PR #27 merged as `3a59e45` and added the issue,
+atomic decision, meeting, and citation-level evidence surfaces. Every fixture
+view labels itself as design data. Area selection, URL-restored Explore filters,
+offline state, share fallback, and responsive navigation work in the browser.
+The discovery records are not a live resident feed, and no production issue
+build or importance assessment has run.
+
+Design Slice 4, Ask Public Parish, is implemented in PR #28 and green on
+`2dcaf6b`. It is not merged and therefore not deployed. Ask resolves corpus,
+issue, and meeting scope through a typed adapter and renders cited answers in
+the existing evidence gutter, but no chat backend exists behind it. Production
+keeps Ask in navigation showing an honest unavailable state. Following,
+authentication, AgentMail, and coverage APIs remain unfinished.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)
@@ -115,6 +122,7 @@ auth, webhook, routing, or schema work genuinely needs isolation.
 - [Resident interface Design Slice 1](docs/resident-interface-slice-1.md)
 - [Resident interface Design Slice 2](docs/resident-interface-slice-2.md)
 - [Resident interface Design Slice 3](docs/resident-interface-slice-3.md)
+- [Resident interface Design Slice 4](docs/resident-interface-slice-4.md)
 - [Public build log](hackathon.md)
 
 ## Implemented setup and intended stack

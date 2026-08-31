@@ -1,6 +1,7 @@
 # Resident interface Slice 4 handoff
 
-Status: implemented. Updated August 30, 2026.
+Status: implemented in PR #28, green on `2dcaf6b`, not merged and not
+deployed. Updated August 30, 2026.
 
 This handoff finishes the resident experience for Ask Public Parish. It covers
 the route, scoped entry from an issue or meeting, a demonstrated two-question
@@ -784,6 +785,59 @@ interface plan applies. Ask also needs these checks:
   never appears in the URL;
 - wait for a complete answer and confirm no words appear before validation;
 - open a recent handle and confirm no message preview exists outside the thread.
+
+## What shipped differs from this handoff
+
+The implementation follows this document except where recorded here. Each
+departure is deliberate.
+
+### Three additions to the adapter contract
+
+The `AskAdapter` interface above does not close the state model. The shipped
+interface adds:
+
+- `subscribe(listener)`, the realtime channel a Convex backend will own.
+  Conversation, availability, and recent-handle state arrive only through it,
+  so no component infers state from a write call's return value.
+- `resolveChallenge(challengeId)`, owned by the abuse adapter. The page renders
+  only the challenge the adapter selected and calls this when the resident
+  completes it.
+- `clearRecent()`, because the adapter owns same-device handle storage. Without
+  it, `Clear recent conversations` cleared the rendered list and the handles
+  returned on the next mount.
+
+A refused `submit` or `retry` also applies its own `AskRequestError.failure` to
+availability rather than waiting for the adapter to push. A page that clears its
+own cooldown while the adapter still refuses would otherwise show an enabled
+composer whose Send does nothing.
+
+### The decision page asks from its issue
+
+This handoff names three scopes and no decision scope. `DecisionDetailData`
+carries no meeting id, so the decision page's Ask block asks from the issue that
+owns the record and falls back to the corpus when it belongs to none.
+
+### The Ask blocks honor the availability gate
+
+The file plan expected the record pages only to replace the `q=` handoff. A
+composer that accepts a question and lands on the unavailable state discards it
+silently, so the blocks now consult the same gate the route uses and show the
+same honest message in place of the composer.
+
+### Layout departs from the centered reading column
+
+The responsive table specifies a centered reading column. Centering it left the
+route heading and the scope bar misaligned against the conversation, and docking
+the evidence panel slid the column sideways. The reading column is left-aligned
+on the grid the Issue and Decision pages already use, capped at the same
+`calc(var(--ev-gutter) + 40rem)` measure. The empty composer sits directly below
+the scope bar rather than after the examples and recent list, so the field is
+the first thing a resident reaches in both reading order and tab order.
+
+### Open work
+
+No test covers Ask. The reviewer flagged the gap on every pass. The evidence
+pages have tests and this feature does not.
 
 ## Acceptance gate
 

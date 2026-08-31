@@ -12,39 +12,45 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T21:32:44Z
+- **Last updated:** 2026-08-30T22:31:05Z
 
 ## Log
 
-### 2026-08-30 - working tree
+### 2026-08-30 - PR #28 open at 2dcaf6b
 
-Implemented resident-interface Design Slice 4 (Ask Public Parish) in the
-working tree, uncommitted. The route renders corpus, issue, and meeting
-scopes behind a hard production availability gate, a two-question cited
-thread on the real CO-022-2026 and CO-023-2026 fixture records, not-found,
-checking, expiry, cooldown, CAPTCHA, retryable and terminal provider
-failures, offline, recent same-device handles, and the existing evidence
-viewer with multi-source claims. The private `q=` URL handoff from issue and
-meeting Ask blocks is replaced by an in-memory draft that never enters a URL
-or history state. Eleven development scenarios load through a DEV-only
-dynamic import; production never requests the fixture module and shows the
-honest unavailable state.
+Implemented resident-interface Design Slice 4 (Ask Public Parish) and opened
+PR #28. It is green and not merged, so none of it is deployed.
 
-A static review pass then fixed three build failures (a `getActiveAskFixture`
-that was imported in two files and defined in none, a `consumedScope` const
-declared twice in `ask-page.tsx`, and an unused `useNavigate` import), plus
-the reading column that never lined up with the route heading and slid
-sideways when a Source docked, a composer that stuck under the mobile
-navigation and the software keyboard on the empty page, and the composer
-sitting below the examples and recent list instead of above them. The adapter
-gained a third documented method, `clearRecent`, because clearing recent
-handles has to reach the store that owns them.
+The route renders corpus, issue, and meeting scope behind a hard production
+availability gate: a two-question cited thread on the real CO-022-2026 and
+CO-023-2026 records, not-found, checking, expiry, cooldown, CAPTCHA, retryable
+and terminal provider failures, offline, recent same-device handles, and the
+shipped evidence viewer with multi-source claims. The private `q=` URL handoff
+is replaced by an in-memory draft that never enters a URL or history state.
+Eleven presentation scenarios load through a DEV-only dynamic import;
+production never requests the fixture module.
 
-Typecheck, tests, build, and lint are deferred to the next PR checks
-(`src/features/ask/`, `src/routes/ask.tsx`, `src/routes/ask.data.ts`,
-`src/features/evidence/evidence-surface.tsx`,
-`src/features/evidence/evidence-blocks.tsx`,
-`src/features/discovery/hooks.ts`).
+`npm run verify` passed on `2dcaf6b`: 194 tests across 23 files, typecheck, the
+production build, prerender, and lint. No test covers Ask. The reviewer flagged
+that gap on every pass and it stays open.
+
+Four checked-in fixes came out of CI and review rather than from me reading the
+diff first. Verify caught a decision page still passing the old string scope,
+then seventeen lint errors in the new module. The reviewer then found two real
+defects: the record pages invited a question and dropped it at the unavailable
+gate, and the page cleared its own cooldown while the adapter kept refusing, so
+Send did nothing at all. A third finding about a stale closure in the expiry
+sweep was wrong and was dismissed with a written reason; the effect closes over
+the conversation object, so the field is read fresh on every tick.
+
+The adapter contract needed three additions the handoff did not specify:
+`subscribe` for the realtime channel a Convex backend will own,
+`resolveChallenge` for the abuse adapter, and `clearRecent` because the adapter
+owns same-device handle storage.
+
+No chat backend exists behind any of this. Ask stays in production navigation
+showing the honest unavailable state, and the record pages show that same
+message instead of a composer.
 
 ### 2026-08-30 - 3a59e45
 
