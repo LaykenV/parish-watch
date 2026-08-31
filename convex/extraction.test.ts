@@ -2159,25 +2159,25 @@ test('deterministic date and amount helpers reject malformed values', () => {
   expect(fourPm).not.toBeNull()
   expect(
     textSupportsZonedDateTime(
-      'on Monday, July 13, 2026, at three (3:00) o'clock p.m. (Central Standard Time).',
+      "on Monday, July 13, 2026, at three (3:00) o'clock p.m. (Central Standard Time).",
       threePm!,
     ),
   ).toBe(true)
   expect(
     textSupportsZonedDateTime(
-      'on Monday, August 10, 2026, at three (3:00) o'clock p.m. (Central Standard Time).',
+      "on Monday, August 10, 2026, at three (3:00) o'clock p.m. (Central Standard Time).",
       parseZonedIsoDateTime('2026-08-10T15:00:00-05:00')!,
     ),
   ).toBe(true)
   expect(
     textSupportsZonedDateTime(
-      'on Monday, August 25, 2026, at 4:00 p.m. (Central Standard Time).',
+      "on Monday, August 25, 2026, at 4:00 p.m. (Central Standard Time).",
       fourPm!,
     ),
   ).toBe(true)
   expect(
     textSupportsZonedDateTime(
-      'on Monday, July 13, 2026, at three (3:00) o'clock p.m. (Central Standard Time).',
+      "on Monday, July 13, 2026, at three (3:00) o'clock p.m. (Central Standard Time).",
       parseZonedIsoDateTime('2026-07-13T14:00:00-05:00')!,
     ),
   ).toBe(false)
@@ -2185,7 +2185,7 @@ test('deterministic date and amount helpers reject malformed values', () => {
   expect(tenAm).not.toBeNull()
   expect(
     textSupportsZonedDateTime(
-      'Meeting on June 15, 2026, at ten (10:00) o'clock a.m.',
+      "Meeting on June 15, 2026, at ten (10:00) o'clock a.m.",
       tenAm!,
     ),
   ).toBe(true)
