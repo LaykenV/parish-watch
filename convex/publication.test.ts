@@ -1272,3 +1272,56 @@ test('unsupported sourceRecordId on proposal fails and withholds', () => {
     }),
   ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
 })
+
+test('unsupported sourceRecordId on public_action is not cited', async () => {
+  const t = initTest()
+  const seeded = await seedValidatedCandidate(t, '-public-action-uncited')
+  
+  await t.run(async (ctx) => {
+    await ctx.db.patch(seeded.candidateId, { recordType: 'public_action' })
+  })
+
+  stubReviewFetch(
+    JSON.stringify({
+      verdict: 'pass',
+      checks: seeded.factIds.map((fact) => ({
+        factId: fact.factId,
+        fieldPath: fact.fieldPath,
+        assessment:
+          fact.fieldPath === '/sourceRecordId' ? 'unsupported' : 'supported',
+        detail:
+          fact.fieldPath === '/sourceRecordId'
+            ? 'Operator-assigned ID does not appear in source.'
+            : 'The cited span directly supports this value.',
+      })),
+      findings: [],
+    }),
+  )
+
+  const started = await t.mutation(
+    internal.operations.publication.startCandidatePublication,
+    { candidateId: seeded.candidateId },
+  )
+  vi.useFakeTimers()
+  await t.finishAllScheduledFunctions(vi.runAllTimers)
+  vi.useRealTimers()
+
+  const citations = await t.run(async (ctx) => {
+    const version = await ctx.db
+      .query('publicationVersions')
+      .withIndex('by_run', (q) => q.eq('runId', started.runId))
+      .unique()
+    return version
+      ? await ctx.db
+          .query('citations')
+          .withIndex('by_publication_version', (q) =>
+            q.eq('publicationVersionId', version._id),
+          )
+          .collect()
+      : []
+  })
+
+  expect(citations.some((c) => c.fieldPath === '/sourceRecordId')).toBe(false)
+  expect(citations.some((c) => c.fieldPath === '/title')).toBe(true)
+  expect(citations.some((c) => c.fieldPath === '/bodyName')).toBe(true)
+})

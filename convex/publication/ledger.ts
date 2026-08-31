@@ -237,7 +237,25 @@ export const finalizePublication = internalMutation({
               CORE_IDENTITY_FIELD_PATHS.has(fact.fieldPath),
             )
           : []
-    for (const fact of citedFacts) {
+
+    const sourceRecordIdCheck = await ctx.db
+      .query('reviewChecks')
+      .withIndex('by_review_and_field_path', (q) =>
+        q.eq('reviewId', review._id).eq('fieldPath', '/sourceRecordId'),
+      )
+      .unique()
+
+    const numberedRecordTypes = new Set(['proposal', 'vote'])
+    const shouldCiteSourceRecordId =
+      !sourceRecordIdCheck ||
+      sourceRecordIdCheck.assessment === 'supported' ||
+      numberedRecordTypes.has(args.context.recordType)
+
+    const factsToPublish = shouldCiteSourceRecordId
+      ? citedFacts
+      : citedFacts.filter((fact) => fact.fieldPath !== '/sourceRecordId')
+
+    for (const fact of factsToPublish) {
       await ctx.db.insert('citations', {
         publicationVersionId,
         candidateFactId: fact.factId,
