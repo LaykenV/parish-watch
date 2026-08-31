@@ -70,6 +70,7 @@ export const runExtraction = internalAction({
         snapshotId: args.context.snapshotId,
         sourceKind: args.context.sourceKind,
         targetRecordId: args.context.targetRecordId,
+        sourceRecordIdProvenance: args.context.sourceRecordIdProvenance,
       },
     )
     if (existing) {
@@ -110,6 +111,7 @@ export const runExtraction = internalAction({
       sourceKind: context.sourceKind,
       bodyName: context.bodyName,
       targetRecordId: context.targetRecordId,
+      sourceRecordIdProvenance: context.sourceRecordIdProvenance,
       sourceText,
     })
 
@@ -199,6 +201,7 @@ export const runExtraction = internalAction({
             snapshotId: context.snapshotId,
             sourceKind: context.sourceKind,
             targetRecordId: context.targetRecordId,
+            sourceRecordIdProvenance: context.sourceRecordIdProvenance,
             modelRole: EXTRACTION_MODEL_ROLE,
             modelId: outcome.result.modelId,
             route: outcome.result.route,
@@ -240,6 +243,7 @@ export const runExtraction = internalAction({
           snapshotId: context.snapshotId,
           sourceKind: context.sourceKind,
           targetRecordId: context.targetRecordId,
+          sourceRecordIdProvenance: context.sourceRecordIdProvenance,
           modelRole: EXTRACTION_MODEL_ROLE,
           modelId: outcome.result.modelId,
           route: outcome.result.route,
@@ -327,6 +331,7 @@ async function failExtraction(
         snapshotId: args.context.snapshotId,
         sourceKind: args.context.sourceKind,
         targetRecordId: args.context.targetRecordId,
+        sourceRecordIdProvenance: args.context.sourceRecordIdProvenance,
         modelRole: EXTRACTION_MODEL_ROLE,
         modelId: failure.modelId,
         route: failure.route,

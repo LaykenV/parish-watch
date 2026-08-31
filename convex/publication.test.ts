@@ -116,10 +116,11 @@ async function seedValidatedCandidate(
       registryId,
       trigger: 'manual_extraction',
       state: 'succeeded',
-      processorVersion: 'v1.14',
+      processorVersion: 'v1.15',
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
+      sourceRecordIdProvenance: 'source_printed',
       startedAt: 1_788_000_000_100,
       completedAt: 1_788_000_000_200,
     })
@@ -129,9 +130,10 @@ async function seedValidatedCandidate(
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
-      promptVersion: 'v1.5',
+      sourceRecordIdProvenance: 'source_printed',
+      promptVersion: 'v1.6',
       schemaVersion: 'v1',
-      processorVersion: 'v1.14',
+      processorVersion: 'v1.15',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
       route: 'ai_gateway',
@@ -145,6 +147,7 @@ async function seedValidatedCandidate(
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
+      sourceRecordIdProvenance: 'source_printed',
       sourceRecordId: 'CO-029-2026',
       recordType: 'proposal',
       title: 'Accept grant revenue',
@@ -157,7 +160,7 @@ async function seedValidatedCandidate(
       amounts: [],
       publicActions: [],
       state: 'deterministically_validated',
-      promptVersion: 'v1.5',
+      promptVersion: 'v1.6',
       schemaVersion: 'v1',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
@@ -206,6 +209,8 @@ function reviewResponse(
     Record<string, 'supported' | 'unclear' | 'unsupported'>
   > = {},
   verdict?: 'pass' | 'limited' | 'fail',
+  sourceRecordIdProvenance: 'source_printed' | 'operator_assigned' =
+    'source_printed',
 ) {
   const checks = facts.map((fact) => ({
     factId: fact.factId,
@@ -220,7 +225,8 @@ function reviewResponse(
     verdict:
       verdict ??
       expectedReviewVerdictV1({
-        sourceRecordIdPresent: true,
+        recordIdentityPresent: true,
+        sourceRecordIdProvenance,
         checks,
         findings: [],
       }),
@@ -296,10 +302,12 @@ async function seedReextractedCandidate(
       registryId: original.registryId,
       trigger: 'manual_extraction',
       state: 'succeeded',
-      processorVersion: 'v1.14',
+      processorVersion: 'v1.15',
       snapshotId: original.snapshotId,
       sourceKind: original.sourceKind,
       targetRecordId: original.targetRecordId,
+      sourceRecordIdProvenance:
+        original.sourceRecordIdProvenance ?? 'source_printed',
       startedAt: 1_788_000_001_100,
       completedAt: 1_788_000_001_200,
     })
@@ -309,9 +317,11 @@ async function seedReextractedCandidate(
       snapshotId: original.snapshotId,
       sourceKind: original.sourceKind,
       targetRecordId: original.targetRecordId,
+      sourceRecordIdProvenance:
+        original.sourceRecordIdProvenance ?? 'source_printed',
       promptVersion: original.promptVersion,
       schemaVersion: original.schemaVersion,
-      processorVersion: 'v1.14',
+      processorVersion: 'v1.15',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
       route: 'ai_gateway',
@@ -325,6 +335,8 @@ async function seedReextractedCandidate(
       snapshotId: original.snapshotId,
       sourceKind: original.sourceKind,
       targetRecordId: original.targetRecordId,
+      sourceRecordIdProvenance:
+        original.sourceRecordIdProvenance ?? 'source_printed',
       sourceRecordId: original.sourceRecordId,
       recordType: original.recordType,
       title: original.title,
@@ -375,6 +387,67 @@ async function seedReextractedCandidate(
   })
 }
 
+async function makeOperatorAssignedPublicAction(
+  t: TestConvex,
+  seeded: SeededCandidate,
+): Promise<SeededCandidate> {
+  const targetRecordId = 'CITY-BOARD-APPLICATIONS-2026-09-15'
+  const sourceText = `Lafayette City Council
+public_action
+Accept grant revenue
+scheduled
+The council will consider accepting grant revenue.`
+  const normalizedBytes = new TextEncoder().encode(sourceText)
+  const normalizedHash = await sha256HexOfText(sourceText)
+  return await t.run(async (ctx) => {
+    const normalizedStorageId = await ctx.storage.store(
+      new Blob([normalizedBytes], { type: 'text/markdown' }),
+    )
+    await ctx.db.patch(seeded.snapshotId, {
+      normalizedStorageId,
+      normalizedContentHash: normalizedHash,
+      normalizedByteLength: normalizedBytes.byteLength,
+    })
+    await ctx.db.patch(seeded.runId, {
+      targetRecordId,
+      sourceRecordIdProvenance: 'operator_assigned',
+    })
+    await ctx.db.patch(seeded.extractionId, {
+      targetRecordId,
+      sourceRecordIdProvenance: 'operator_assigned',
+    })
+    await ctx.db.patch(seeded.candidateId, {
+      targetRecordId,
+      sourceRecordIdProvenance: 'operator_assigned',
+      sourceRecordId: null,
+      recordType: 'public_action',
+    })
+    const facts = await ctx.db
+      .query('candidateFacts')
+      .withIndex('by_candidate_and_field_path', (q) =>
+        q.eq('candidateId', seeded.candidateId),
+      )
+      .take(101)
+    for (const fact of facts) {
+      if (fact.fieldPath === '/sourceRecordId') {
+        await ctx.db.delete('candidateFacts', fact._id)
+      }
+      if (fact.fieldPath === '/recordType') {
+        await ctx.db.patch(fact._id, {
+          value: 'public_action',
+          excerpt: 'public_action',
+        })
+      }
+    }
+    return {
+      ...seeded,
+      factIds: seeded.factIds.filter(
+        (fact) => fact.fieldPath !== '/sourceRecordId',
+      ),
+    }
+  })
+}
+
 async function startAndDrain(
   t: TestConvex,
   candidateId: Id<'decisionCandidates'>,
@@ -400,6 +473,7 @@ afterEach(() => {
 function buildCo072AgendaReviewPrompt(section: string | null) {
   return buildIndependentReviewPromptV1({
     sourceKind: 'agenda',
+    sourceRecordIdProvenance: 'source_printed',
     sourceRecordId: 'CO-072-2026',
     targetRecordId: 'CO-072-2026',
     candidate: {
@@ -431,7 +505,7 @@ function buildCo072AgendaReviewPrompt(section: string | null) {
 test('the review prompt treats CO-072 final-adoption placement as scheduled consideration', () => {
   const prompt = buildCo072AgendaReviewPrompt('Final Adoption of Ordinances')
 
-  expect(prompt.promptVersion).toBe('v1.2')
+  expect(prompt.promptVersion).toBe('v1.3')
   expect(prompt.messages[0].content).toContain(
     'an item under Final Adoption of Ordinances is scheduled for final-adoption consideration',
   )
@@ -455,7 +529,7 @@ test('the review prompt does not treat a bare agenda mention as scheduled', () =
   expect(prompt.messages[1].content).toContain('"section":null')
 })
 
-test('review prompt v1.2 creates a new publication idempotency key', async () => {
+test('review prompt v1.3 creates a new publication idempotency key', async () => {
   const t = initTest()
   const seeded = await seedValidatedCandidate(t, '-review-prompt-version')
   const keyFor = (promptVersion: string) =>
@@ -464,11 +538,11 @@ test('review prompt v1.2 creates a new publication idempotency key', async () =>
       processorVersion: 'v1',
       promptVersion,
       schemaVersion: 'v1',
-      policyVersion: 'v1',
+      policyVersion: 'v1.1',
       payloadVersion: 'v1',
     })
 
-  expect(await keyFor('v1.2')).not.toBe(await keyFor('v1.1'))
+  expect(await keyFor('v1.3')).not.toBe(await keyFor('v1.2'))
 })
 
 test('a second model review publishes one full immutable version with exact citations', async () => {
@@ -530,14 +604,14 @@ test('a second model review publishes one full immutable version with exact cita
     verdict: 'pass',
     modelRole: 'MODEL_FAST',
     modelId: LUNA_MODEL,
-    promptVersion: 'v1.2',
+    promptVersion: 'v1.3',
     schemaVersion: 'v1',
   })
   expect(evidence.version).toMatchObject({
     mode: 'full',
     reasonCode: 'all_evidence_supported',
     version: 1,
-    policyVersion: 'v1',
+    policyVersion: 'v1.1',
     payloadVersion: 'v1',
     payload: {
       kind: 'full',
@@ -855,9 +929,10 @@ test('replaying a succeeded extraction repairs a missing publication run', async
     snapshotId: seeded.snapshotId,
     sourceKind: 'agenda',
     targetRecordId: 'CO-029-2026',
-    promptVersion: 'v1.5',
+    sourceRecordIdProvenance: 'source_printed',
+    promptVersion: 'v1.6',
     schemaVersion: 'v1',
-    processorVersion: 'v1.14',
+    processorVersion: 'v1.15',
   })
   await t.run(async (ctx) => {
     await ctx.db.patch(seeded.runId, { idempotencyKey })
@@ -869,7 +944,7 @@ test('replaying a succeeded extraction repairs a missing publication run', async
       attempt: 1,
       inputSnapshotId: seeded.snapshotId,
       outputExtractionId: seeded.extractionId,
-      promptVersion: 'v1.5',
+      promptVersion: 'v1.6',
       schemaVersion: 'v1',
     })
     await ctx.db.insert('pipelineStages', {
@@ -988,7 +1063,7 @@ test('publication finalization rejects persisted duplicate fact checks', async (
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1.2',
+      promptVersion: 'v1.3',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
@@ -1049,7 +1124,7 @@ test('a late failure cannot reuse a succeeded review', async () => {
       modelRole: 'MODEL_FAST',
       modelId: LUNA_MODEL,
       route: 'ai_gateway',
-      promptVersion: 'v1.2',
+      promptVersion: 'v1.3',
       schemaVersion: 'v1',
       processorVersion: 'v1',
       createdAt: 1_788_000_000_300,
@@ -1093,6 +1168,7 @@ test('the review contract rejects missing, duplicate, and unknown fact checks', 
       },
       expected,
       true,
+      'source_printed',
     ),
   ).toContain('omitted fact')
   expect(
@@ -1107,6 +1183,7 @@ test('the review contract rejects missing, duplicate, and unknown fact checks', 
       },
       expected,
       true,
+      'source_printed',
     ),
   ).toContain('repeats fact')
   expect(
@@ -1121,6 +1198,7 @@ test('the review contract rejects missing, duplicate, and unknown fact checks', 
       },
       expected,
       true,
+      'source_printed',
     ),
   ).toContain('unknown fact')
 })
@@ -1139,7 +1217,11 @@ test('the deterministic policy never trusts the review verdict by itself', () =>
     findings: [],
   }
   expect(
-    applyPublicationPolicyV1({ sourceRecordId: 'CO-029-2026', review }),
+    applyPublicationPolicyV1({
+      recordId: 'CO-029-2026',
+      sourceRecordIdProvenance: 'source_printed',
+      review,
+    }),
   ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
 })
 
@@ -1165,12 +1247,106 @@ test('a limited finding on a core field is withheld', () => {
   }
   expect(
     expectedReviewVerdictV1({
-      sourceRecordIdPresent: true,
+      recordIdentityPresent: true,
+      sourceRecordIdProvenance: 'source_printed',
       checks: review.checks,
       findings: review.findings,
     }),
   ).toBe('fail')
   expect(
-    applyPublicationPolicyV1({ sourceRecordId: 'CO-029-2026', review }),
+    applyPublicationPolicyV1({
+      recordId: 'CO-029-2026',
+      sourceRecordIdProvenance: 'source_printed',
+      review,
+    }),
+  ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
+})
+
+test('operator-assigned identity publishes without inventing a source ID fact', async () => {
+  const t = initTest()
+  const seeded = await makeOperatorAssignedPublicAction(
+    t,
+    await seedValidatedCandidate(t, '-operator-record-id'),
+  )
+  const requests: Array<Record<string, unknown>> = []
+  stubReviewFetch(
+    JSON.stringify(
+      reviewResponse(
+        seeded.factIds,
+        {},
+        undefined,
+        'operator_assigned',
+      ),
+    ),
+    requests,
+  )
+
+  const started = await startAndDrain(t, seeded.candidateId)
+  const evidence = await t.run(async (ctx) => {
+    const version = await ctx.db
+      .query('publicationVersions')
+      .withIndex('by_run', (q) => q.eq('runId', started.runId))
+      .unique()
+    const citations = version
+      ? await ctx.db
+          .query('citations')
+          .withIndex('by_publication_and_field_path', (q) =>
+            q.eq('publicationVersionId', version._id),
+          )
+          .take(101)
+      : []
+    return { version, citations }
+  })
+
+  expect(evidence.version).toMatchObject({
+    mode: 'full',
+    payload: {
+      kind: 'full',
+      sourceRecordId: 'CITY-BOARD-APPLICATIONS-2026-09-15',
+      recordType: 'public_action',
+    },
+  })
+  expect(
+    evidence.citations.some(
+      (citation) => citation.fieldPath === '/sourceRecordId',
+    ),
+  ).toBe(false)
+  expect(JSON.stringify(requests[0])).toContain(
+    'Source record ID provenance: operator_assigned',
+  )
+})
+
+test('a source-printed ID remains core evidence for every record type', () => {
+  const review = {
+    verdict: 'pass' as const,
+    checks: [
+      {
+        factId: 'fact-1',
+        fieldPath: '/sourceRecordId',
+        assessment: 'unsupported' as const,
+        detail: 'The cited span does not contain the contract number.',
+      },
+      {
+        factId: 'fact-2',
+        fieldPath: '/title',
+        assessment: 'supported' as const,
+        detail: 'The cited span supports the title.',
+      },
+      {
+        factId: 'fact-3',
+        fieldPath: '/bodyName',
+        assessment: 'supported' as const,
+        detail: 'The cited span supports the body.',
+      },
+    ],
+    findings: [],
+  }
+
+  expect(
+    applyPublicationPolicyV1({
+      recordId: 'CONTRACT-2026-17',
+      sourceRecordIdProvenance: 'source_printed',
+      review,
+    }),
   ).toEqual({ mode: 'withheld', reasonCode: 'core_evidence_failed' })
 })

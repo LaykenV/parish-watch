@@ -9,7 +9,9 @@ import {
   EXTRACTION_PROMPT_VERSION,
   EXTRACTION_SCHEMA_VERSION,
   MODEL_STEP_RETRY,
+  resolveSourceRecordIdProvenance,
   sourceKindUnion,
+  sourceRecordIdProvenances,
 } from '../pipeline/state'
 import schema from '../schema'
 import {
@@ -127,7 +129,9 @@ async function requireValidationTargets(
     candidate.registryId !== extraction.registryId ||
     candidate.snapshotId !== extraction.snapshotId ||
     candidate.sourceKind !== extraction.sourceKind ||
-    candidate.targetRecordId !== extraction.targetRecordId
+    candidate.targetRecordId !== extraction.targetRecordId ||
+    resolveSourceRecordIdProvenance(candidate.sourceRecordIdProvenance) !==
+      resolveSourceRecordIdProvenance(extraction.sourceRecordIdProvenance)
   ) {
     throw new ConvexError({
       code: 'validation_target_mismatch',
@@ -163,6 +167,7 @@ export const loadExtractionResultForRun = internalQuery({
     snapshotId: v.id('sourceSnapshots'),
     sourceKind: sourceKindUnion,
     targetRecordId: v.string(),
+    sourceRecordIdProvenance: sourceRecordIdProvenances,
   },
   returns: storedExtractionResult,
   handler: async (ctx, args) => {
@@ -173,7 +178,9 @@ export const loadExtractionResultForRun = internalQuery({
       run.registryId !== args.registryId ||
       run.snapshotId !== args.snapshotId ||
       run.sourceKind !== args.sourceKind ||
-      run.targetRecordId !== args.targetRecordId
+      run.targetRecordId !== args.targetRecordId ||
+      resolveSourceRecordIdProvenance(run.sourceRecordIdProvenance) !==
+        args.sourceRecordIdProvenance
     ) {
       throw new ConvexError({
         code: 'extraction_target_mismatch',
@@ -345,6 +352,7 @@ export const persistExtractionSuccess = internalMutation({
     snapshotId: v.id('sourceSnapshots'),
     sourceKind: sourceKindUnion,
     targetRecordId: v.string(),
+    sourceRecordIdProvenance: sourceRecordIdProvenances,
     modelRole: modelRoles,
     modelId: v.string(),
     route: aiRoutes,
@@ -377,7 +385,9 @@ export const persistExtractionSuccess = internalMutation({
       run.registryId !== args.registryId ||
       run.snapshotId !== args.snapshotId ||
       run.sourceKind !== args.sourceKind ||
-      run.targetRecordId !== args.targetRecordId
+      run.targetRecordId !== args.targetRecordId ||
+      resolveSourceRecordIdProvenance(run.sourceRecordIdProvenance) !==
+        args.sourceRecordIdProvenance
     ) {
       throw new ConvexError({
         code: 'extraction_target_mismatch',
@@ -411,6 +421,8 @@ export const persistExtractionSuccess = internalMutation({
         existing.snapshotId !== args.snapshotId ||
         existing.sourceKind !== args.sourceKind ||
         existing.targetRecordId !== args.targetRecordId ||
+        resolveSourceRecordIdProvenance(existing.sourceRecordIdProvenance) !==
+          args.sourceRecordIdProvenance ||
         existing.state !== expectedState ||
         (expectedState === 'extracted' && !existing.candidateId)
       ) {
@@ -437,6 +449,7 @@ export const persistExtractionSuccess = internalMutation({
       snapshotId: args.snapshotId,
       sourceKind: args.sourceKind,
       targetRecordId: args.targetRecordId,
+      sourceRecordIdProvenance: args.sourceRecordIdProvenance,
       promptVersion: args.promptVersion,
       schemaVersion: args.schemaVersion,
       processorVersion: run.processorVersion,
@@ -460,6 +473,7 @@ export const persistExtractionSuccess = internalMutation({
         snapshotId: args.snapshotId,
         sourceKind: args.sourceKind,
         targetRecordId: args.targetRecordId,
+        sourceRecordIdProvenance: args.sourceRecordIdProvenance,
         sourceRecordId: args.decision.sourceRecordId,
         recordType: args.decision.recordType,
         title: args.decision.title,
@@ -513,6 +527,7 @@ export const persistExtractionFailure = internalMutation({
     snapshotId: v.id('sourceSnapshots'),
     sourceKind: sourceKindUnion,
     targetRecordId: v.string(),
+    sourceRecordIdProvenance: sourceRecordIdProvenances,
     modelRole: modelRoles,
     modelId: v.optional(v.string()),
     route: v.optional(aiRoutes),
@@ -539,7 +554,9 @@ export const persistExtractionFailure = internalMutation({
       run.registryId !== args.registryId ||
       run.snapshotId !== args.snapshotId ||
       run.sourceKind !== args.sourceKind ||
-      run.targetRecordId !== args.targetRecordId
+      run.targetRecordId !== args.targetRecordId ||
+      resolveSourceRecordIdProvenance(run.sourceRecordIdProvenance) !==
+        args.sourceRecordIdProvenance
     ) {
       throw new ConvexError({
         code: 'extraction_target_mismatch',
@@ -557,6 +574,8 @@ export const persistExtractionFailure = internalMutation({
         existing.snapshotId !== args.snapshotId ||
         existing.sourceKind !== args.sourceKind ||
         existing.targetRecordId !== args.targetRecordId ||
+        resolveSourceRecordIdProvenance(existing.sourceRecordIdProvenance) !==
+          args.sourceRecordIdProvenance ||
         existing.state !== 'failed'
       ) {
         throw new ConvexError({
@@ -580,6 +599,7 @@ export const persistExtractionFailure = internalMutation({
       snapshotId: args.snapshotId,
       sourceKind: args.sourceKind,
       targetRecordId: args.targetRecordId,
+      sourceRecordIdProvenance: args.sourceRecordIdProvenance,
       promptVersion: args.promptVersion,
       schemaVersion: args.schemaVersion,
       processorVersion: run.processorVersion,
@@ -619,6 +639,7 @@ export const failExtractionRun = internalMutation({
         snapshotId: v.id('sourceSnapshots'),
         sourceKind: sourceKindUnion,
         targetRecordId: v.string(),
+        sourceRecordIdProvenance: sourceRecordIdProvenances,
       }),
     ),
   },
@@ -635,6 +656,7 @@ type FailExtractionRunArgs = {
     snapshotId: Id<'sourceSnapshots'>
     sourceKind: typeof sourceKindUnion.type
     targetRecordId: string
+    sourceRecordIdProvenance: typeof sourceRecordIdProvenances.type
   }
 }
 
@@ -659,7 +681,9 @@ export async function failExtractionRunTransaction(
       run.registryId !== args.extractionSeed.registryId ||
       run.snapshotId !== args.extractionSeed.snapshotId ||
       run.sourceKind !== args.extractionSeed.sourceKind ||
-      run.targetRecordId !== args.extractionSeed.targetRecordId)
+      run.targetRecordId !== args.extractionSeed.targetRecordId ||
+      resolveSourceRecordIdProvenance(run.sourceRecordIdProvenance) !==
+        args.extractionSeed.sourceRecordIdProvenance)
   ) {
     throw new ConvexError({
       code: 'extraction_target_mismatch',
@@ -702,7 +726,9 @@ export async function failExtractionRunTransaction(
     (extraction.registryId !== args.extractionSeed.registryId ||
       extraction.snapshotId !== args.extractionSeed.snapshotId ||
       extraction.sourceKind !== args.extractionSeed.sourceKind ||
-      extraction.targetRecordId !== args.extractionSeed.targetRecordId)
+      extraction.targetRecordId !== args.extractionSeed.targetRecordId ||
+      resolveSourceRecordIdProvenance(extraction.sourceRecordIdProvenance) !==
+        args.extractionSeed.sourceRecordIdProvenance)
   ) {
     throw new ConvexError({
       code: 'extraction_target_mismatch',
@@ -717,6 +743,7 @@ export async function failExtractionRunTransaction(
       snapshotId: args.extractionSeed.snapshotId,
       sourceKind: args.extractionSeed.sourceKind,
       targetRecordId: args.extractionSeed.targetRecordId,
+      sourceRecordIdProvenance: args.extractionSeed.sourceRecordIdProvenance,
       promptVersion: extractStage?.promptVersion ?? EXTRACTION_PROMPT_VERSION,
       schemaVersion: extractStage?.schemaVersion ?? EXTRACTION_SCHEMA_VERSION,
       processorVersion: run.processorVersion,

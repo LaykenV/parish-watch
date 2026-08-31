@@ -1,7 +1,10 @@
 import { v } from 'convex/values'
 
 import { internalQuery } from '../_generated/server'
-import { sourceKindUnion } from '../pipeline/state'
+import {
+  sourceKindUnion,
+  sourceRecordIdProvenances,
+} from '../pipeline/state'
 import { isAllowedOfficialHost } from '../sources/domains'
 
 export const MAX_EXTRACTION_SOURCE_BYTES = 200_000
@@ -11,6 +14,7 @@ export const extractionContextValidator = v.object({
   snapshotId: v.id('sourceSnapshots'),
   sourceKind: sourceKindUnion,
   targetRecordId: v.string(),
+  sourceRecordIdProvenance: sourceRecordIdProvenances,
   bodyName: v.string(),
   normalizedStorageId: v.id('_storage'),
   normalizedContentHash: v.string(),
@@ -26,6 +30,7 @@ export const prepareExtractionContext = internalQuery({
     snapshotId: v.id('sourceSnapshots'),
     sourceKind: sourceKindUnion,
     targetRecordId: v.string(),
+    sourceRecordIdProvenance: sourceRecordIdProvenances,
   },
   returns: v.union(
     v.object({ ok: v.literal(true), context: extractionContextValidator }),
@@ -125,6 +130,7 @@ export const prepareExtractionContext = internalQuery({
         snapshotId: args.snapshotId,
         sourceKind: args.sourceKind,
         targetRecordId: args.targetRecordId,
+        sourceRecordIdProvenance: args.sourceRecordIdProvenance,
         bodyName: body.name,
         normalizedStorageId: snapshot.normalizedStorageId,
         normalizedContentHash: snapshot.normalizedContentHash,

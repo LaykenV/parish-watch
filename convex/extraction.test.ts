@@ -435,6 +435,26 @@ function goldContent(snapshotId: string): string {
   return JSON.stringify(goldDecision(snapshotId))
 }
 
+function operatorAssignedContent(snapshotId: string): string {
+  const response = goldDecision(snapshotId)
+  const facts = response.decision.facts
+    .filter((fact) => fact.fieldPath !== '/sourceRecordId')
+    .map((fact) =>
+      fact.fieldPath === '/recordType'
+        ? { ...fact, value: 'public_action' }
+        : fact,
+    )
+  return JSON.stringify({
+    ...response,
+    decision: {
+      ...response.decision,
+      sourceRecordId: null,
+      recordType: 'public_action',
+      facts,
+    },
+  })
+}
+
 function contentWith(
   snapshotId: string,
   mutate: (decision: ReturnType<typeof goldDecision>['decision']) => void,
@@ -593,12 +613,15 @@ async function startExtraction(
   registryId: Id<'sourceRegistries'>,
   snapshotId: Id<'sourceSnapshots'>,
   targetRecordId: string = TARGET_RECORD_ID,
+  sourceRecordIdProvenance: 'source_printed' | 'operator_assigned' =
+    'source_printed',
 ) {
   return await t.mutation(internal.operations.extract.startSnapshotExtraction, {
     registryId,
     snapshotId,
     sourceKind: 'agenda',
     targetRecordId,
+    sourceRecordIdProvenance,
   })
 }
 
@@ -686,7 +709,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     ['validate', 'succeeded'],
   ])
   expect(stages[0].attempt).toBe(1)
-  expect(stages[0].promptVersion).toBe('v1.5')
+  expect(stages[0].promptVersion).toBe('v1.6')
   expect(stages[0].schemaVersion).toBe('v1')
 
   const extraction = await extractionByRun(t, start.runId)
@@ -696,9 +719,9 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     modelRole: 'MODEL_STRONG',
     modelId: MODEL_ID,
     route: 'ai_gateway',
-    promptVersion: 'v1.5',
+    promptVersion: 'v1.6',
     schemaVersion: 'v1',
-    processorVersion: 'v1.14',
+    processorVersion: 'v1.15',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
@@ -805,6 +828,56 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
   expect(messages[1].content).toContain(`Source snapshot ID: ${snapshotId}`)
   expect(messages[1].content).toContain('SOURCE BEGIN')
   expect(modelCallCount(fetchMock)).toBe(1)
+})
+
+test('operator-assigned routing IDs validate without a fabricated source ID fact', async () => {
+  const t = initTest()
+  const modelRequests: Array<Record<string, unknown>> = []
+  const modelResponses: ModelResponseSpec[] = []
+  stubFetch({ modelRequests, modelResponses })
+  const { registryId, snapshotId } = await createAgendaSnapshot(t)
+  modelResponses.push(operatorAssignedContent(snapshotId))
+
+  const start = await startExtraction(
+    t,
+    registryId,
+    snapshotId,
+    'CITY-BOARD-APPLICATIONS-2026-09-15',
+    'operator_assigned',
+  )
+  await drainWorkflows(t)
+
+  const extraction = await extractionByRun(t, start.runId)
+  const candidateId = extraction?.candidateId
+  const candidate = candidateId
+    ? await t.run(async (ctx) => ctx.db.get(candidateId))
+    : null
+  const facts = extraction
+    ? await t.run(async (ctx) =>
+        ctx.db
+          .query('candidateFacts')
+          .withIndex('by_extraction', (q) =>
+            q.eq('extractionId', extraction._id),
+          )
+          .take(101),
+      )
+    : []
+
+  expect(extraction).toMatchObject({
+    state: 'extracted',
+    sourceRecordIdProvenance: 'operator_assigned',
+  })
+  expect(candidate).toMatchObject({
+    state: 'deterministically_validated',
+    targetRecordId: 'CITY-BOARD-APPLICATIONS-2026-09-15',
+    sourceRecordIdProvenance: 'operator_assigned',
+    sourceRecordId: null,
+    recordType: 'public_action',
+  })
+  expect(facts.some((fact) => fact.fieldPath === '/sourceRecordId')).toBe(false)
+  expect(JSON.stringify(modelRequests[0])).toContain(
+    'This is a routing label supplied by the operator',
+  )
 })
 
 test('the publication pipeline fails closed when MODEL_FAST is not configured', async () => {
@@ -966,6 +1039,7 @@ test('failure evidence cannot be attached to a different extraction target', asy
         snapshotId,
         sourceKind: 'minutes',
         targetRecordId: TARGET_RECORD_ID,
+        sourceRecordIdProvenance: 'source_printed',
       },
     }),
   ).rejects.toThrow('Failure evidence must match the extraction run target')
@@ -1017,8 +1091,9 @@ test('an old processor run cannot persist under the new processor label', async 
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: TARGET_RECORD_ID,
+      sourceRecordIdProvenance: 'source_printed',
       modelRole: 'MODEL_STRONG',
-      promptVersion: 'v1.5',
+      promptVersion: 'v1.6',
       schemaVersion: 'v1',
       errorClass: 'forced',
       errorDetail: 'must reject mixed processor versions',
@@ -1036,6 +1111,7 @@ test('an old processor run cannot persist under the new processor label', async 
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: TARGET_RECORD_ID,
+      sourceRecordIdProvenance: 'source_printed',
     },
   })
   await drainWorkflows(t)
@@ -1107,6 +1183,7 @@ test('a replayed model action reuses the persisted extraction without another ca
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: TARGET_RECORD_ID,
+      sourceRecordIdProvenance: 'source_printed',
     },
   )
   if (!prepared.ok) {
@@ -1152,6 +1229,7 @@ test('prompt, processor, schema, target, or snapshot changes create a new extrac
     snapshotId: 's1' as Id<'sourceSnapshots'>,
     sourceKind: 'agenda' as const,
     targetRecordId: 'CO-029-2026',
+    sourceRecordIdProvenance: 'source_printed' as const,
     promptVersion: 'v1',
     schemaVersion: 'v1',
     processorVersion: 'v1',
@@ -1165,6 +1243,12 @@ test('prompt, processor, schema, target, or snapshot changes create a new extrac
   )
   expect(
     await extractionRunKey({ ...base, targetRecordId: 'CO-030-2026' }),
+  ).not.toBe(key)
+  expect(
+    await extractionRunKey({
+      ...base,
+      sourceRecordIdProvenance: 'operator_assigned',
+    }),
   ).not.toBe(key)
   expect(
     await extractionRunKey({

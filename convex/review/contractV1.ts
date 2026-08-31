@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 
 import { REVIEW_SCHEMA_VERSION } from '../pipeline/state'
+import type { SourceRecordIdProvenance } from '../pipeline/state'
 import { evaluateReviewEvidenceV1 } from '../publication/evidenceRulesV1'
 
 export const reviewAssessments = v.union(
@@ -59,7 +60,8 @@ const MAX_FINDINGS = 50
 const MAX_DETAIL_LENGTH = 500
 
 export function expectedReviewVerdictV1(input: {
-  sourceRecordIdPresent: boolean
+  recordIdentityPresent: boolean
+  sourceRecordIdProvenance: SourceRecordIdProvenance
   checks: IndependentReviewV1['checks']
   findings: IndependentReviewV1['findings']
 }): ReviewVerdict {
@@ -69,7 +71,8 @@ export function expectedReviewVerdictV1(input: {
 export function checkIndependentReviewContractV1(
   parsed: unknown,
   expectedFacts: ExpectedReviewFact[],
-  sourceRecordIdPresent: boolean,
+  recordIdentityPresent: boolean,
+  sourceRecordIdProvenance: SourceRecordIdProvenance,
 ): string | null {
   const review = parsed as IndependentReviewV1
   if (review.checks.length > MAX_CHECKS) {
@@ -125,7 +128,8 @@ export function checkIndependentReviewContractV1(
   }
 
   const expectedVerdict = expectedReviewVerdictV1({
-    sourceRecordIdPresent,
+    recordIdentityPresent,
+    sourceRecordIdProvenance,
     checks: review.checks,
     findings: review.findings,
   })

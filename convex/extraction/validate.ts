@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 
 import { internal } from '../_generated/api'
 import { internalAction } from '../_generated/server'
+import { resolveSourceRecordIdProvenance } from '../pipeline/state'
 import { isAllowedOfficialHost } from '../sources/domains'
 import { sha256HexOfText } from '../sources/hashing'
 import {
@@ -207,11 +208,28 @@ export const runValidation = internalAction({
       })
     }
 
-    if (candidate.sourceRecordId !== candidate.targetRecordId) {
+    const sourceRecordIdProvenance = resolveSourceRecordIdProvenance(
+      candidate.sourceRecordIdProvenance,
+    )
+    if (
+      sourceRecordIdProvenance === 'source_printed' &&
+      candidate.sourceRecordId !== candidate.targetRecordId
+    ) {
       addFinding({
         code: 'target_record_mismatch',
         fieldPath: MATERIAL_FIELD_PATHS.sourceRecordId,
         detail: `Candidate record "${candidate.sourceRecordId ?? 'null'}" does not match the requested record "${candidate.targetRecordId}"`,
+      })
+    }
+    if (
+      sourceRecordIdProvenance === 'operator_assigned' &&
+      candidate.sourceRecordId !== null
+    ) {
+      addFinding({
+        code: 'operator_record_id_must_not_be_extracted',
+        fieldPath: MATERIAL_FIELD_PATHS.sourceRecordId,
+        detail:
+          'An operator-assigned record ID is routing metadata, not a source field',
       })
     }
 

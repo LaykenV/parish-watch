@@ -3,7 +3,10 @@ import { vResultValidator, vWorkflowId } from '@convex-dev/workflow'
 
 import { internal } from '../_generated/api'
 import { internalMutation } from '../_generated/server'
-import { sourceKindUnion } from '../pipeline/state'
+import {
+  sourceKindUnion,
+  sourceRecordIdProvenances,
+} from '../pipeline/state'
 import { extractionWorkflowManager } from '../pipeline/workflowManager'
 import { failExtractionRunTransaction } from './ledger'
 
@@ -29,6 +32,7 @@ export const extractSnapshotV1 = extractionWorkflowManager
       snapshotId: v.id('sourceSnapshots'),
       sourceKind: sourceKindUnion,
       targetRecordId: v.string(),
+      sourceRecordIdProvenance: sourceRecordIdProvenances,
       extractStageId: v.id('pipelineStages'),
       validateStageId: v.id('pipelineStages'),
     },
@@ -42,6 +46,7 @@ export const extractSnapshotV1 = extractionWorkflowManager
         snapshotId: args.snapshotId,
         sourceKind: args.sourceKind,
         targetRecordId: args.targetRecordId,
+        sourceRecordIdProvenance: args.sourceRecordIdProvenance,
       },
       { name: 'prepare-extraction-v1' },
     )
@@ -55,6 +60,7 @@ export const extractSnapshotV1 = extractionWorkflowManager
         snapshotId: args.snapshotId,
         sourceKind: args.sourceKind,
         targetRecordId: args.targetRecordId,
+        sourceRecordIdProvenance: args.sourceRecordIdProvenance,
       },
     }
 
@@ -227,6 +233,8 @@ export const handleExtractionComplete = internalMutation({
               snapshotId: run.snapshotId,
               sourceKind: run.sourceKind,
               targetRecordId: run.targetRecordId,
+              sourceRecordIdProvenance:
+                run.sourceRecordIdProvenance ?? 'source_printed',
             }
           : undefined,
     })

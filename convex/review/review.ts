@@ -94,6 +94,7 @@ export const runIndependentReview = internalAction({
     )
     const prompt = buildIndependentReviewPromptV1({
       sourceKind: args.context.sourceKind,
+      sourceRecordIdProvenance: args.context.sourceRecordIdProvenance,
       sourceRecordId: args.context.sourceRecordId,
       targetRecordId: args.context.targetRecordId,
       candidate: {
@@ -155,7 +156,10 @@ export const runIndependentReview = internalAction({
             factId: fact.factId,
             fieldPath: fact.fieldPath,
           })),
-          args.context.sourceRecordId !== null,
+          args.context.sourceRecordIdProvenance === 'operator_assigned'
+            ? args.context.targetRecordId.trim() !== ''
+            : args.context.sourceRecordId !== null,
+          args.context.sourceRecordIdProvenance,
         ),
       onAttempt,
     }

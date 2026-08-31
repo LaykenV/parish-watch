@@ -1,4 +1,5 @@
 import { REVIEW_PROMPT_VERSION } from '../pipeline/state'
+import type { SourceRecordIdProvenance } from '../pipeline/state'
 
 const SYSTEM_PROMPT_V1 = `You independently review one extracted government decision for Public Parish. You did not create the extraction.
 
@@ -14,12 +15,13 @@ Rules:
 - A fail finding means the source identity, title, government body, or evidence set cannot support publication.
 - A limited finding means the core identity is supported but at least one secondary field should not publish.
 - An info finding records a concern that does not limit publication.
-- Set verdict to fail if any fail finding exists or a core field is not supported. Core fields are /sourceRecordId, /title, and /bodyName.
+- Set verdict to fail if any fail finding exists or a core sourced field is not supported. Core sourced fields are /title and /bodyName. When sourceRecordIdProvenance is source_printed, /sourceRecordId is also a core sourced field. When it is operator_assigned, the operator record ID is routing metadata and no /sourceRecordId fact should exist.
 - Set verdict to limited if no fail condition exists and any other check is unclear or unsupported, or any limited finding exists.
 - Otherwise set verdict to pass.`
 
 export type ReviewPromptInputV1 = {
   sourceKind: string
+  sourceRecordIdProvenance: SourceRecordIdProvenance
   sourceRecordId: string | null
   targetRecordId: string
   candidate: {
@@ -60,6 +62,7 @@ export function buildIndependentReviewPromptV1(input: ReviewPromptInputV1): {
         content: [
           'Review this exact candidate and its cited spans.',
           `Source kind: ${input.sourceKind}`,
+          `Source record ID provenance: ${input.sourceRecordIdProvenance}`,
           `Requested record ID: ${input.targetRecordId}`,
           `Extracted source record ID: ${input.sourceRecordId ?? 'null'}`,
           '',

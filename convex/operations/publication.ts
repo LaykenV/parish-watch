@@ -12,6 +12,7 @@ import {
   PUBLICATION_PROCESSOR_VERSION,
   REVIEW_PROMPT_VERSION,
   REVIEW_SCHEMA_VERSION,
+  resolveSourceRecordIdProvenance,
 } from '../pipeline/state'
 import { publicationWorkflowManager } from '../pipeline/workflowManager'
 import schema from '../schema'
@@ -64,12 +65,16 @@ export async function startCandidatePublicationTransaction(
     upstreamRun.snapshotId !== candidate.snapshotId ||
     upstreamRun.sourceKind !== candidate.sourceKind ||
     upstreamRun.targetRecordId !== candidate.targetRecordId ||
+    resolveSourceRecordIdProvenance(upstreamRun.sourceRecordIdProvenance) !==
+      resolveSourceRecordIdProvenance(candidate.sourceRecordIdProvenance) ||
     !extraction ||
     extraction.runId !== upstreamRun._id ||
     extraction.registryId !== candidate.registryId ||
     extraction.snapshotId !== candidate.snapshotId ||
     extraction.sourceKind !== candidate.sourceKind ||
     extraction.targetRecordId !== candidate.targetRecordId ||
+    resolveSourceRecordIdProvenance(extraction.sourceRecordIdProvenance) !==
+      resolveSourceRecordIdProvenance(candidate.sourceRecordIdProvenance) ||
     extraction.candidateId !== candidate._id ||
     extraction.state !== 'extracted'
   ) {
@@ -125,6 +130,9 @@ export async function startCandidatePublicationTransaction(
     snapshotId: candidate.snapshotId,
     sourceKind: candidate.sourceKind,
     targetRecordId: candidate.targetRecordId,
+    sourceRecordIdProvenance: resolveSourceRecordIdProvenance(
+      candidate.sourceRecordIdProvenance,
+    ),
     candidateId: candidate._id,
     upstreamRunId: upstreamRun._id,
     idempotencyKey,
