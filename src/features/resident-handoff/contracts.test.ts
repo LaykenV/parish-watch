@@ -7,6 +7,7 @@ import {
 } from './contracts'
 import {
   evidenceJourneySearch,
+  evidenceRouteHref,
   parseResidentReturnTo,
   residentReturnLabel,
 } from './navigation'
@@ -74,5 +75,26 @@ describe('resident implementation handoff', () => {
       fixture: 'preview',
       returnTo: '/explore?fixture=update&q=drainage',
     })
+  })
+
+  it('keeps the original origin when a resident crosses two records', () => {
+    expect(
+      evidenceRouteHref('/decisions/CO-022-2026', {
+        fixture: 'preview',
+        returnTo: '/explore?fixture=update&type=decision',
+      }),
+    ).toBe(
+      '/decisions/CO-022-2026?fixture=preview&returnTo=%2Fexplore%3Ffixture%3Dupdate%26type%3Ddecision',
+    )
+  })
+
+  it('drops a nested origin before the return value exceeds its bound', () => {
+    const returnTo = `/explore?q=${'x'.repeat(730)}`
+    expect(
+      evidenceRouteHref('/decisions/CO-022-2026', {
+        fixture: 'preview',
+        returnTo,
+      }),
+    ).toBe('/decisions/CO-022-2026?fixture=preview')
   })
 })

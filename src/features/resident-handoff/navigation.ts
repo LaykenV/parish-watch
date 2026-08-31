@@ -62,15 +62,29 @@ export function evidenceJourneySearch({
 
 export function evidenceRouteHref(
   pathname: string,
-  search: { fixture?: EvidenceScenario; source?: string },
+  search: {
+    fixture?: EvidenceScenario
+    returnTo?: string
+    source?: string
+  },
 ): string {
   const params = new URLSearchParams()
   if (import.meta.env.DEV && search.fixture) {
     params.set('fixture', search.fixture)
   }
+  const returnTo = parseResidentReturnTo(search.returnTo)
+  if (returnTo) params.set('returnTo', returnTo)
   if (search.source) params.set('source', search.source)
-  const query = params.toString()
-  return query ? `${pathname}?${query}` : pathname
+  let query = params.toString()
+  let href = query ? `${pathname}?${query}` : pathname
+
+  if (href.length > 768 && returnTo) {
+    params.delete('returnTo')
+    query = params.toString()
+    href = query ? `${pathname}?${query}` : pathname
+  }
+
+  return href
 }
 
 export function residentReturnLabel(returnTo: string): string {
