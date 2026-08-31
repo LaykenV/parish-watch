@@ -65,6 +65,9 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
 
   return (
     <main className="pp-page" id="resident-main">
+      <p aria-live="polite" className="visually-hidden" role="status">
+        {refreshed ? 'Your feed is updated.' : ''}
+      </p>
       <header className="pp-page-head">
         <h1>For You</h1>
         <p className="pp-page-lede">

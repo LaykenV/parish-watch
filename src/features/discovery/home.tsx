@@ -40,6 +40,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   if (watching.length === 0) {
     return (
       <main className="pp-page" id="resident-main">
+        <FeedUpdateStatus updated={refreshed} />
         <FirstVisitHero />
         <HomeFeed
           onRefresh={onRefresh}
@@ -55,6 +56,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
 
   return (
     <main className="pp-page" id="resident-main">
+      <FeedUpdateStatus updated={refreshed} />
       <header className="pp-watching">
         <div className="pp-watching-copy">
           <h1 className="pp-watching-title">
@@ -94,6 +96,14 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
         watching={watching}
       />
     </main>
+  )
+}
+
+function FeedUpdateStatus({ updated }: { updated: boolean }) {
+  return (
+    <p aria-live="polite" className="visually-hidden" role="status">
+      {updated ? 'Feed updated from the official record.' : ''}
+    </p>
   )
 }
 

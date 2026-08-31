@@ -29,6 +29,7 @@ import type { CitationData, CitationMap } from './contracts'
 import './evidence.css'
 
 const PANEL_ID = 'pp-evidence-panel'
+const SHEET_FOCUS_RETURN_DELAY_MS = 300
 
 type EvidenceContextValue = {
   citations: CitationMap
@@ -272,12 +273,12 @@ function EvidenceSheet() {
     <Sheet
       className="ev-sheet"
       onOpenChange={(open) => {
-        if (!open) select(null)
-      }}
-      onOpenChangeComplete={(open) => {
         if (!open) {
-          restoreFocus()
-          lastCitationRef.current = undefined
+          select(null)
+          window.setTimeout(() => {
+            restoreFocus()
+            lastCitationRef.current = undefined
+          }, SHEET_FOCUS_RETURN_DELAY_MS)
         }
       }}
       open={Boolean(citation)}

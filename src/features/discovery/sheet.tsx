@@ -12,7 +12,6 @@ type SheetProps = {
   description?: string
   footer?: ReactNode
   onOpenChange: (open: boolean) => void
-  onOpenChangeComplete?: (open: boolean) => void
   open: boolean
   popupId?: string
   size?: 'medium' | 'tall' | 'full'
@@ -21,10 +20,11 @@ type SheetProps = {
   trigger?: (props: React.ComponentProps<'button'>) => ReactElement
 }
 
+const SHEET_COMPLETION_FALLBACK_MS = 300
+
 export function Sheet({
   open,
   onOpenChange,
-  onOpenChangeComplete,
   title,
   triggerId,
   description,
@@ -39,39 +39,74 @@ export function Sheet({
   const desktopMatch = useMediaQuery('(min-width: 64.0625rem)')
   const [hydrated, setHydrated] = useState(false)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
   useEffect(() => setHydrated(true), [])
   const desktop = hydrated && desktopMatch
-  const handleOpenChangeComplete = (next: boolean) => {
-    onOpenChangeComplete?.(next)
+
+  const resolveInitialFocus = () => closeRef.current
+  const resolveFinalFocus = () =>
+    (triggerId ? document.getElementById(triggerId) : null) ?? openerRef.current
+  const handleRootOpenChange = (next: boolean) => {
+    if (next) {
+      onOpenChange(true)
+      return
+    }
+
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    const finalFocus = resolveFinalFocus()
+    window.setTimeout(
+      () => {
+        const target = finalFocus?.isConnected
+          ? finalFocus
+          : resolveFinalFocus()
+        target?.focus()
+        openerRef.current = null
+      },
+      reducedMotion ? 0 : SHEET_COMPLETION_FALLBACK_MS,
+    )
+    onOpenChange(false)
   }
+  const renderTrigger = trigger
+    ? (props: React.ComponentProps<'button'>) =>
+        trigger({
+          ...props,
+          onClick: (event) => {
+            openerRef.current = event.currentTarget
+            props.onClick?.(event)
+          },
+        })
+    : undefined
 
   if (!desktop) {
     return (
       <Drawer.Root
-        onOpenChange={onOpenChange}
-        onOpenChangeComplete={handleOpenChangeComplete}
+        onOpenChange={handleRootOpenChange}
         open={open}
         swipeDirection="down"
-        triggerId={triggerId}
       >
-        {trigger ? <Drawer.Trigger render={trigger} /> : null}
+        {renderTrigger ? <Drawer.Trigger render={renderTrigger} /> : null}
         <Drawer.Portal>
           <Drawer.Backdrop className="pp-backdrop" />
           <Drawer.Viewport className="pp-drawer-viewport">
             <Drawer.Popup
+              aria-hidden={open ? undefined : true}
               className={['pp-sheet', className].filter(Boolean).join(' ')}
               data-modal-kind="drawer"
               data-size={size}
+              finalFocus={triggerId ? resolveFinalFocus : undefined}
               id={popupId}
-              initialFocus={closeRef}
+              initialFocus={resolveInitialFocus}
+              inert={open ? undefined : true}
             >
               <span aria-hidden="true" className="pp-sheet-grabber" />
               <header className="pp-sheet-head">
                 <Drawer.Title className="pp-sheet-title">{title}</Drawer.Title>
                 <Drawer.Close
                   aria-label="Close"
+                  autoFocus
                   className="pp-sheet-close"
-                  onClick={() => onOpenChange(false)}
                   ref={closeRef}
                 >
                   <XIcon aria-hidden="true" />
@@ -98,28 +133,26 @@ export function Sheet({
   }
 
   return (
-    <Dialog.Root
-      onOpenChange={onOpenChange}
-      onOpenChangeComplete={handleOpenChangeComplete}
-      open={open}
-      triggerId={triggerId}
-    >
-      {trigger ? <Dialog.Trigger render={trigger} /> : null}
+    <Dialog.Root onOpenChange={handleRootOpenChange} open={open}>
+      {renderTrigger ? <Dialog.Trigger render={renderTrigger} /> : null}
       <Dialog.Portal>
         <Dialog.Backdrop className="pp-backdrop" />
         <Dialog.Popup
+          aria-hidden={open ? undefined : true}
           className={['pp-sheet', className].filter(Boolean).join(' ')}
           data-modal-kind="dialog"
           data-size={size}
+          finalFocus={triggerId ? resolveFinalFocus : undefined}
           id={popupId}
-          initialFocus={closeRef}
+          initialFocus={resolveInitialFocus}
+          inert={open ? undefined : true}
         >
           <header className="pp-sheet-head">
             <Dialog.Title className="pp-sheet-title">{title}</Dialog.Title>
             <Dialog.Close
               aria-label="Close"
+              autoFocus
               className="pp-sheet-close"
-              onClick={() => onOpenChange(false)}
               ref={closeRef}
             >
               <XIcon aria-hidden="true" />

@@ -8,7 +8,7 @@ import { cn } from '../../lib/utils'
 import { Spinner } from './spinner'
 
 export const buttonVariants = cva(
-  "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border font-medium text-base outline-none transition-shadow before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-lg)-1px)] pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-64 data-loading:select-none data-loading:text-transparent sm:text-sm [&_svg:not([class*='opacity-'])]:opacity-80 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:-mx-0.5 [&_svg]:shrink-0",
+  "relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border font-medium text-base outline-none transition-shadow before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-lg)-1px)] pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-64 data-loading:select-none sm:text-sm [&_svg:not([class*='opacity-'])]:opacity-80 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:-mx-0.5 [&_svg]:shrink-0",
   {
     defaultVariants: {
       size: 'default',
@@ -62,11 +62,13 @@ export function Button({
   size,
   render,
   children,
-  loading = false,
+  loading,
   disabled: disabledProp,
   ...props
 }: ButtonProps): React.ReactElement {
-  const isDisabled = Boolean(loading || disabledProp)
+  const isLoading = loading === true
+  const hasLoadingSlot = loading !== undefined
+  const isDisabled = Boolean(isLoading || disabledProp)
   const typeValue: React.ButtonHTMLAttributes<HTMLButtonElement>['type'] =
     render ? undefined : 'button'
 
@@ -74,17 +76,27 @@ export function Button({
     children: (
       <>
         {children}
-        {loading && (
-          <Spinner
-            className="pointer-events-none absolute"
-            data-slot="button-loading-indicator"
-          />
-        )}
+        {hasLoadingSlot ? (
+          <span
+            aria-hidden="true"
+            className="inline-flex size-4 shrink-0 items-center justify-center"
+            data-slot="button-loading-slot"
+          >
+            {isLoading ? (
+              <Spinner
+                aria-hidden="true"
+                className="pointer-events-none size-4"
+                data-slot="button-loading-indicator"
+              />
+            ) : null}
+          </span>
+        ) : null}
       </>
     ),
     className: cn(buttonVariants({ className, size, variant })),
-    'aria-disabled': loading || undefined,
-    'data-loading': loading ? '' : undefined,
+    'aria-busy': isLoading || undefined,
+    'aria-disabled': isLoading || undefined,
+    'data-loading': isLoading ? '' : undefined,
     'data-slot': 'button',
     disabled: isDisabled,
     type: typeValue,
