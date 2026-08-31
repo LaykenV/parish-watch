@@ -12,9 +12,18 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T13:30:34Z
+- **Last updated:** 2026-08-31T13:44:33Z
 
 ## Log
+
+### 2026-08-31 - 9d6751d
+
+PR #31 review found that muting a target could discard a cadence change that
+the resident had not saved yet. The management sheet now owns one cadence draft
+per opening. Mute and resume leave that draft visible, while closing without
+saving discards it. The exact choose-weekly, mute, close, and reopen sequence
+was replayed in the browser without overflow or runtime warnings. GitHub Actions
+will rerun the automated gate after the fix is pushed.
 
 ### 2026-08-31 - f0b46ec
 
