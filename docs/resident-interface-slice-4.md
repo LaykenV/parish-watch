@@ -851,6 +851,16 @@ covers the reading point and puts the last claim behind it, and a desktop page
 has neither a bottom navigation bar nor a thumb-reach problem to justify that.
 Phone and tablet keep the sticky composer for exactly those reasons.
 
+### Back does not close the evidence panel
+
+The evidence interaction rules say the selected source lives in the `source`
+field so browser Back can close or restore it. Selecting a source replaces the
+history entry instead of pushing one, so Back leaves the route. This matches
+the Issue, Decision, and Meeting pages shipped in Slice 3, which all replace.
+Ask follows the shipped behavior rather than becoming the one evidence surface
+where Back means something different. Changing it is a Slice 3 decision, not a
+Slice 4 one.
+
 ### Open work
 
 No test covers Ask. The reviewer flagged the gap on every pass. The evidence

@@ -141,6 +141,10 @@ export function AskPage({
 
   const handleConversation = useCallback((next: AskConversationView | null) => {
     setConversation(next)
+    // A conversation on the page is not an expired one. Without this the
+    // notice outlives the thread that replaced it, and its restart action
+    // would then clear the conversation the resident just started.
+    if (next) setExpired(false)
     const previous = previousConversation.current
     previousConversation.current = next
     if (!next || !previous || previous.id !== next.id) return
@@ -307,6 +311,7 @@ export function AskPage({
     }
     // Clear the draft only after the submission is accepted.
     setDraft('')
+    setExpired(false)
     setStatus('Checking the official record')
   }, [
     adapter,
