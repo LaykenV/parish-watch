@@ -8,6 +8,7 @@ import { useArea } from './area-store'
 import { areaName, getActiveDiscoveryFixture } from './contracts'
 import type { AreaSlug, ForYouScenario, IssueCardData } from './contracts'
 import { ISSUE_FIXTURES } from './fixtures'
+import { useRepeatedAnnouncement } from './hooks'
 import { IssueCard } from './issue-card'
 import { toDecisionCard, usePublishedDecisions } from './live-publications'
 import { Notice, SectionFailure, UpdateRow } from './notice'
@@ -39,6 +40,9 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
         : []
 
   const [refreshed, setRefreshed] = useState(false)
+  const [refreshAnnouncement, announceRefresh] = useRepeatedAnnouncement(
+    'Your feed is updated.',
+  )
   const [recovered, setRecovered] = useState(false)
   const showUpdateRow = activeScenario === 'update' && !refreshed && !recovered
   const showFailure = activeScenario === 'section-failure' && !recovered
@@ -65,6 +69,9 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
 
   return (
     <main className="pp-page" id="resident-main">
+      <p aria-live="polite" className="visually-hidden" role="status">
+        {refreshAnnouncement}
+      </p>
       <header className="pp-page-head">
         <h1>For You</h1>
         <p className="pp-page-lede">
@@ -126,6 +133,7 @@ export function ForYouPage({ scenario }: { scenario?: ForYouScenario }) {
               onRefresh={() => {
                 setRefreshed(true)
                 setRecovered(true)
+                announceRefresh()
               }}
             />
           ) : null}

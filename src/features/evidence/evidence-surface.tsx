@@ -18,7 +18,11 @@ import type { ElementType, ReactNode } from 'react'
 
 import { formatDate } from '../discovery/format'
 import { useMediaQuery } from '../discovery/hooks'
-import { Sheet } from '../discovery/sheet'
+import {
+  Sheet,
+  sheetExitDelay,
+  shouldRestoreSheetFocus,
+} from '../discovery/sheet'
 import {
   citationSummary,
   documentHost,
@@ -260,11 +264,25 @@ export function EvidencePanel() {
 function EvidenceSheet() {
   const { citations, restoreFocus, select, selected, triggerId } = useEvidence()
   const citation = selected ? citations[selected] : undefined
+  const focusReturnTimerRef = useRef<number | null>(null)
   const lastCitationRef = useRef<CitationData | undefined>(citation)
 
   useEffect(() => {
-    if (citation) lastCitationRef.current = citation
+    if (!citation) return
+    lastCitationRef.current = citation
+    if (focusReturnTimerRef.current !== null) {
+      window.clearTimeout(focusReturnTimerRef.current)
+      focusReturnTimerRef.current = null
+    }
   }, [citation])
+  useEffect(
+    () => () => {
+      if (focusReturnTimerRef.current !== null) {
+        window.clearTimeout(focusReturnTimerRef.current)
+      }
+    },
+    [],
+  )
 
   const renderedCitation = citation ?? lastCitationRef.current
 
@@ -272,12 +290,16 @@ function EvidenceSheet() {
     <Sheet
       className="ev-sheet"
       onOpenChange={(open) => {
-        if (!open) select(null)
-      }}
-      onOpenChangeComplete={(open) => {
         if (!open) {
-          restoreFocus()
-          lastCitationRef.current = undefined
+          select(null)
+          if (focusReturnTimerRef.current !== null) {
+            window.clearTimeout(focusReturnTimerRef.current)
+          }
+          focusReturnTimerRef.current = window.setTimeout(() => {
+            if (shouldRestoreSheetFocus()) restoreFocus()
+            lastCitationRef.current = undefined
+            focusReturnTimerRef.current = null
+          }, sheetExitDelay())
         }
       }}
       open={Boolean(citation)}

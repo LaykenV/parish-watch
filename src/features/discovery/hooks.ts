@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 let overlayCount = 0
 const overlayListeners = new Set<() => void>()
@@ -99,6 +99,23 @@ export function useOnline(): boolean {
   }, [])
 
   return online
+}
+
+export function useRepeatedAnnouncement(message: string) {
+  const [announcement, setAnnouncement] = useState('')
+  const frameRef = useRef(0)
+
+  useEffect(() => () => window.cancelAnimationFrame(frameRef.current), [])
+
+  const announce = () => {
+    window.cancelAnimationFrame(frameRef.current)
+    setAnnouncement('')
+    frameRef.current = window.requestAnimationFrame(() => {
+      setAnnouncement(message)
+    })
+  }
+
+  return [announcement, announce] as const
 }
 
 export function useMediaQuery(query: string): boolean {

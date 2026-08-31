@@ -12,7 +12,6 @@ type SheetProps = {
   description?: string
   footer?: ReactNode
   onOpenChange: (open: boolean) => void
-  onOpenChangeComplete?: (open: boolean) => void
   open: boolean
   popupId?: string
   size?: 'medium' | 'tall' | 'full'
@@ -21,10 +20,38 @@ type SheetProps = {
   trigger?: (props: React.ComponentProps<'button'>) => ReactElement
 }
 
+const SHEET_DESKTOP_QUERY = '(min-width: 64.0625rem)'
+const SHEET_EXIT_FALLBACK_MS = 240
+
+// Focus returns to the opener once the sheet has finished animating out. The
+// desktop dialog has no exit animation, so waiting there is dead time. Reading
+// `--dur-standard` keeps this in step with the motion tokens in styles.css.
+export function sheetExitDelay(): number {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 0
+  if (window.matchMedia(SHEET_DESKTOP_QUERY).matches) return 0
+
+  const token = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue('--dur-standard')
+    .trim()
+  const value = Number.parseFloat(token)
+  if (!Number.isFinite(value) || value <= 0) return SHEET_EXIT_FALLBACK_MS
+  return token.endsWith('ms') ? value : value * 1000
+}
+
+export function shouldRestoreSheetFocus(): boolean {
+  const active = document.activeElement
+  return (
+    active === null ||
+    active === document.body ||
+    (active instanceof HTMLElement &&
+      active.closest('.pp-sheet[aria-hidden="true"]') !== null)
+  )
+}
+
 export function Sheet({
   open,
   onOpenChange,
-  onOpenChangeComplete,
   title,
   triggerId,
   description,
@@ -36,42 +63,116 @@ export function Sheet({
   trigger,
 }: SheetProps) {
   useOverlay(open)
-  const desktopMatch = useMediaQuery('(min-width: 64.0625rem)')
+  const desktopMatch = useMediaQuery(SHEET_DESKTOP_QUERY)
   const [hydrated, setHydrated] = useState(false)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const focusFrameRef = useRef(0)
+  const focusInnerFrameRef = useRef(0)
+  const focusReturnTimerRef = useRef<number | null>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
   useEffect(() => setHydrated(true), [])
+  useEffect(
+    () => () => {
+      if (focusReturnTimerRef.current !== null) {
+        window.clearTimeout(focusReturnTimerRef.current)
+      }
+      window.cancelAnimationFrame(focusFrameRef.current)
+      window.cancelAnimationFrame(focusInnerFrameRef.current)
+    },
+    [],
+  )
+  useEffect(() => {
+    if (!open) return
+    if (focusReturnTimerRef.current !== null) {
+      window.clearTimeout(focusReturnTimerRef.current)
+      focusReturnTimerRef.current = null
+    }
+    window.cancelAnimationFrame(focusFrameRef.current)
+    window.cancelAnimationFrame(focusInnerFrameRef.current)
+    focusFrameRef.current = window.requestAnimationFrame(() => {
+      focusInnerFrameRef.current = window.requestAnimationFrame(() => {
+        const close = closeRef.current
+        if (close?.closest('.pp-sheet[data-open]')) close.focus()
+      })
+    })
+    return () => {
+      window.cancelAnimationFrame(focusFrameRef.current)
+      window.cancelAnimationFrame(focusInnerFrameRef.current)
+    }
+  }, [open])
   const desktop = hydrated && desktopMatch
-  const handleOpenChangeComplete = (next: boolean) => {
-    onOpenChangeComplete?.(next)
+
+  const resolveInitialFocus = () => closeRef.current
+  const resolveFinalFocus = () =>
+    (triggerId ? document.getElementById(triggerId) : null) ?? openerRef.current
+  const handleRootOpenChange = (next: boolean) => {
+    if (next) {
+      if (focusReturnTimerRef.current !== null) {
+        window.clearTimeout(focusReturnTimerRef.current)
+        focusReturnTimerRef.current = null
+      }
+      onOpenChange(true)
+      return
+    }
+
+    window.cancelAnimationFrame(focusFrameRef.current)
+    window.cancelAnimationFrame(focusInnerFrameRef.current)
+    const finalFocus = resolveFinalFocus()
+    if (focusReturnTimerRef.current !== null) {
+      window.clearTimeout(focusReturnTimerRef.current)
+    }
+    focusReturnTimerRef.current = window.setTimeout(
+      () => {
+        const target = finalFocus?.isConnected
+          ? finalFocus
+          : resolveFinalFocus()
+        if (shouldRestoreSheetFocus()) target?.focus()
+        openerRef.current = null
+        focusReturnTimerRef.current = null
+      },
+      sheetExitDelay(),
+    )
+    onOpenChange(false)
   }
+  const renderTrigger = trigger
+    ? (props: React.ComponentProps<'button'>) =>
+        trigger({
+          ...props,
+          onClick: (event) => {
+            openerRef.current = event.currentTarget
+            props.onClick?.(event)
+          },
+        })
+    : undefined
 
   if (!desktop) {
     return (
       <Drawer.Root
-        onOpenChange={onOpenChange}
-        onOpenChangeComplete={handleOpenChangeComplete}
+        onOpenChange={handleRootOpenChange}
         open={open}
         swipeDirection="down"
-        triggerId={triggerId}
       >
-        {trigger ? <Drawer.Trigger render={trigger} /> : null}
+        {renderTrigger ? <Drawer.Trigger render={renderTrigger} /> : null}
         <Drawer.Portal>
           <Drawer.Backdrop className="pp-backdrop" />
           <Drawer.Viewport className="pp-drawer-viewport">
             <Drawer.Popup
+              aria-hidden={open ? undefined : true}
               className={['pp-sheet', className].filter(Boolean).join(' ')}
               data-modal-kind="drawer"
               data-size={size}
+              finalFocus={triggerId ? resolveFinalFocus : undefined}
               id={popupId}
-              initialFocus={closeRef}
+              initialFocus={resolveInitialFocus}
+              inert={open ? undefined : true}
             >
               <span aria-hidden="true" className="pp-sheet-grabber" />
               <header className="pp-sheet-head">
                 <Drawer.Title className="pp-sheet-title">{title}</Drawer.Title>
                 <Drawer.Close
                   aria-label="Close"
+                  autoFocus
                   className="pp-sheet-close"
-                  onClick={() => onOpenChange(false)}
                   ref={closeRef}
                 >
                   <XIcon aria-hidden="true" />
@@ -98,28 +199,26 @@ export function Sheet({
   }
 
   return (
-    <Dialog.Root
-      onOpenChange={onOpenChange}
-      onOpenChangeComplete={handleOpenChangeComplete}
-      open={open}
-      triggerId={triggerId}
-    >
-      {trigger ? <Dialog.Trigger render={trigger} /> : null}
+    <Dialog.Root onOpenChange={handleRootOpenChange} open={open}>
+      {renderTrigger ? <Dialog.Trigger render={renderTrigger} /> : null}
       <Dialog.Portal>
         <Dialog.Backdrop className="pp-backdrop" />
         <Dialog.Popup
+          aria-hidden={open ? undefined : true}
           className={['pp-sheet', className].filter(Boolean).join(' ')}
           data-modal-kind="dialog"
           data-size={size}
+          finalFocus={triggerId ? resolveFinalFocus : undefined}
           id={popupId}
-          initialFocus={closeRef}
+          initialFocus={resolveInitialFocus}
+          inert={open ? undefined : true}
         >
           <header className="pp-sheet-head">
             <Dialog.Title className="pp-sheet-title">{title}</Dialog.Title>
             <Dialog.Close
               aria-label="Close"
+              autoFocus
               className="pp-sheet-close"
-              onClick={() => onOpenChange(false)}
               ref={closeRef}
             >
               <XIcon aria-hidden="true" />

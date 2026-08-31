@@ -16,6 +16,7 @@ import {
 } from './fixtures'
 import { formatDate } from './format'
 import { IssueCard, UpcomingCard } from './issue-card'
+import { useRepeatedAnnouncement } from './hooks'
 import { toDecisionCard, usePublishedDecisions } from './live-publications'
 import type { PublishedDecision } from './live-publications'
 import { Notice, SectionFailure, UpdateRow } from './notice'
@@ -35,11 +36,18 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
       : []
 
   const [refreshed, setRefreshed] = useState(false)
-  const onRefresh = () => setRefreshed(true)
+  const [refreshAnnouncement, announceRefresh] = useRepeatedAnnouncement(
+    'Feed updated from the official record.',
+  )
+  const onRefresh = () => {
+    setRefreshed(true)
+    announceRefresh()
+  }
 
   if (watching.length === 0) {
     return (
       <main className="pp-page" id="resident-main">
+        <FeedUpdateStatus announcement={refreshAnnouncement} />
         <FirstVisitHero />
         <HomeFeed
           onRefresh={onRefresh}
@@ -55,6 +63,7 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
 
   return (
     <main className="pp-page" id="resident-main">
+      <FeedUpdateStatus announcement={refreshAnnouncement} />
       <header className="pp-watching">
         <div className="pp-watching-copy">
           <h1 className="pp-watching-title">
@@ -94,6 +103,14 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
         watching={watching}
       />
     </main>
+  )
+}
+
+function FeedUpdateStatus({ announcement }: { announcement: string }) {
+  return (
+    <p aria-live="polite" className="visually-hidden" role="status">
+      {announcement}
+    </p>
   )
 }
 

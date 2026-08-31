@@ -953,6 +953,7 @@
 
 .pp-search-field input {
   flex: 1;
+  align-self: stretch;
   min-width: 0;
   border: 0;
   background: none;
@@ -1223,6 +1224,7 @@
 
 .pp-backdrop[data-ending-style] {
   opacity: 0;
+  pointer-events: none;
 }
 
 .pp-backdrop[data-swiping] {
@@ -1276,6 +1278,10 @@
 
 .pp-sheet[data-modal-kind='drawer'][data-ending-style] {
   transform: translateY(calc(100% + env(safe-area-inset-bottom, 0px)));
+}
+
+.pp-sheet[data-ending-style] {
+  pointer-events: none;
 }
 
 .pp-sheet[data-modal-kind='drawer'][data-swiping] {

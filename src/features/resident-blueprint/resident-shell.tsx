@@ -5,6 +5,7 @@ import {
   MessageCircleQuestionIcon,
   SearchIcon,
 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import type { ComponentType, ReactNode, SVGProps } from 'react'
 import { Link, useRouterState } from '@tanstack/react-router'
 
@@ -32,6 +33,94 @@ const PRIMARY_NAVIGATION: NavigationItem[] = [
   { href: '/coverage', icon: LouisianaIcon, label: 'Coverage' },
 ]
 
+const STATIC_ROUTE_LABELS: Record<string, string> = {
+  '/': 'Home',
+  '/ask': 'Ask Public Parish',
+  '/coverage': 'Coverage',
+  '/coverage/request': 'Request coverage',
+  '/explore': 'Explore',
+  '/following': 'Following',
+  '/following/areas-and-topics': 'Areas and topics',
+  '/following/notifications': 'Notifications',
+  '/for-you': 'For You',
+  '/how-it-works': 'How Public Parish works',
+}
+
+export function residentRouteLabel(pathname: string): string {
+  const staticLabel = STATIC_ROUTE_LABELS[pathname]
+  if (staticLabel) return staticLabel
+  if (pathname.startsWith('/decisions/')) return 'Decision record'
+  if (pathname.startsWith('/email/manage/')) return 'Manage this follow'
+  if (pathname.startsWith('/issues/')) return 'Issue'
+  if (pathname.startsWith('/meetings/')) return 'Meeting'
+  return 'Page'
+}
+
+export function ResidentRouteAccessibility() {
+  const { isLoading, pathname } = useRouterState({
+    select: (state) => ({
+      isLoading: state.isLoading,
+      pathname: state.location.pathname,
+    }),
+  })
+  const previousPath = useRef<string | null>(null)
+  const [announcement, setAnnouncement] = useState('')
+
+  useEffect(() => {
+    if (isLoading) return
+
+    const fallbackLabel = residentRouteLabel(pathname)
+    let innerFrame = 0
+    const frame = window.requestAnimationFrame(() => {
+      innerFrame = window.requestAnimationFrame(() => {
+        const heading = document.querySelector<HTMLElement>('#resident-main h1')
+        const headingText = heading?.textContent.trim()
+        document.title = headingText
+          ? `${headingText} | Public Parish`
+          : `${fallbackLabel} | Public Parish`
+
+        if (
+          previousPath.current !== null &&
+          previousPath.current !== pathname
+        ) {
+          // Moving focus to the heading already reads it aloud. Announcing the
+          // same text again would say the page name twice, so the live region
+          // only speaks when there is no heading to land on.
+          if (heading) {
+            heading.setAttribute('tabindex', '-1')
+            heading.addEventListener(
+              'blur',
+              () => heading.removeAttribute('tabindex'),
+              { once: true },
+            )
+            heading.focus({ preventScroll: true })
+            setAnnouncement('')
+          } else {
+            setAnnouncement(`${fallbackLabel} page loaded.`)
+          }
+        }
+        previousPath.current = pathname
+      })
+    })
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.cancelAnimationFrame(innerFrame)
+    }
+  }, [isLoading, pathname])
+
+  return (
+    <p
+      aria-atomic="true"
+      aria-live="polite"
+      className="visually-hidden"
+      role="status"
+    >
+      {announcement}
+    </p>
+  )
+}
+
 function LouisianaIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg fill="none" viewBox="0 0 260 240" {...props}>
@@ -49,7 +138,12 @@ export function RouteLoadingRegion() {
   const isLoading = useRouterState({ select: (state) => state.isLoading })
 
   return (
-    <div aria-busy={isLoading} className="route-loading-region" role="status">
+    <div
+      aria-atomic="true"
+      aria-busy={isLoading}
+      className="route-loading-region"
+      role="status"
+    >
       {isLoading ? (
         <>
           <Spinner aria-hidden="true" />

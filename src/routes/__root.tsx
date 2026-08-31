@@ -4,7 +4,10 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import ConvexProvider from '../integrations/convex/provider'
 import { BlueprintNotFound } from '../features/resident-blueprint/blueprint-page'
-import { RouteLoadingRegion } from '../features/resident-blueprint/resident-shell'
+import {
+  ResidentRouteAccessibility,
+  RouteLoadingRegion,
+} from '../features/resident-blueprint/resident-shell'
 
 import appCss from '../styles.css?url'
 
@@ -19,7 +22,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Public Parish — See how local government is changing',
+        title: 'Public Parish | See how local government is changing',
       },
       {
         name: 'description',
@@ -72,6 +75,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ConvexProvider>
+          <ResidentRouteAccessibility />
           <RouteLoadingRegion />
           {children}
           <TanStackDevtools
