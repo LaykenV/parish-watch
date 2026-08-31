@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-30T22:31:05Z
+- **Last updated:** 2026-08-31T03:26:01Z
 
 ## Log
 
@@ -30,9 +30,12 @@ is replaced by an in-memory draft that never enters a URL or history state.
 Eleven presentation scenarios load through a DEV-only dynamic import;
 production never requests the fixture module.
 
-`npm run verify` passed on the branch: 194 tests across 23 files, typecheck, the
-production build, prerender, and lint. No test covers Ask. The reviewer flagged
-that gap on every pass and it stays open.
+The first `npm run verify` run passed on the branch with 194 tests across 23
+files, typecheck, the production build, prerender, and lint. A later ship review
+added focused Ask coverage for route privacy, scope restoration, in-memory draft
+consumption, citation accounting, production fixture gating, duplicate-submit
+protection, the compact thread composer, and named official contacts. GitHub
+Actions owns validation for the follow-up commit.
 
 Four checked-in fixes came out of CI and review rather than from me reading the
 diff first. Verify caught a decision page still passing the old string scope,

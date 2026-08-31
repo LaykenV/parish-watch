@@ -188,6 +188,7 @@ function NotFoundAnswer({
           <p className="ask-contact-label">
             Contact listed in the official record
           </p>
+          <p className="ask-contact-name">{answer.officialContact.label}</p>
           <p className="ask-contact-value">{answer.officialContact.value}</p>
           <SourceControl citationId={answer.officialContact.sourceId} />
         </div>

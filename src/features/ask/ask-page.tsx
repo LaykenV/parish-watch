@@ -3,6 +3,7 @@ import { ArrowLeftIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 
+import { Button } from '../../components/ui/button'
 import { Spinner } from '../../components/ui/spinner'
 import { resolveCitationId } from '../evidence/contracts'
 import type { CitationMap } from '../evidence/contracts'
@@ -81,11 +82,14 @@ export function AskPage({
     () => new Set(),
   )
   const [expired, setExpired] = useState(false)
+  const [composerExpanded, setComposerExpanded] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState('')
   const [pendingHandle, setPendingHandle] =
     useState<AskRecentConversation | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const previousConversation = useRef<AskConversationView | null>(null)
+  const submitLock = useRef(false)
 
   // Consume the in-memory draft handoff, and when the public scope changes by
   // navigation, drop the previous conversation instead of showing it under a
@@ -100,6 +104,7 @@ export function AskPage({
     if (!changed) return
     const handed = takeAskDraftHandoff(identity)
     setExpired(false)
+    setComposerExpanded(false)
     setDismissed(new Set())
     if (handed) {
       previousConversation.current = null
@@ -117,9 +122,10 @@ export function AskPage({
   }, [data.scope])
 
   // Development scenarios load through a dynamic import; production never
-  // reaches this branch because the loader leaves scenario null.
+  // reaches or bundles this branch. The loader's null scenario remains the
+  // runtime backstop.
   useEffect(() => {
-    if (!data.scenario) return
+    if (!import.meta.env.DEV || !data.scenario) return
     let cancelled = false
     import('./fixtures').then(({ getAskFixtureAdapter }) => {
       if (!cancelled) setAdapter(getAskFixtureAdapter(data.scenario!))
@@ -191,7 +197,7 @@ export function AskPage({
   const captcha = availability.kind === 'captcha'
   const offline = !online || availability.kind === 'offline'
   const composerDisabled =
-    checking || blockingRetry || cooldown || captcha || offline
+    submitting || checking || blockingRetry || cooldown || captcha || offline
   const canSubmit =
     !composerDisabled &&
     draft.trim().length > 0 &&
@@ -234,6 +240,7 @@ export function AskPage({
       previousConversation.current = null
       setConversation(null)
       setExpired(true)
+      setComposerExpanded(false)
       setDismissed(new Set())
       setDraft('')
       void adapter.listRecent().then(setRecent)
@@ -251,11 +258,13 @@ export function AskPage({
           current.filter((item) => item.localHandle !== handle.localHandle),
         )
         setExpired(true)
+        setComposerExpanded(false)
         previousConversation.current = null
         setConversation(null)
         return
       }
       setExpired(false)
+      setComposerExpanded(false)
       setDismissed(new Set())
       setViewScope(view.scope)
       handleConversation(view)
@@ -286,13 +295,23 @@ export function AskPage({
     setRecent([])
   }, [adapter])
 
-  const handleSuggestion = useCallback((suggestion: string) => {
-    setDraft(suggestion)
-    inputRef.current?.focus()
+  const expandComposer = useCallback(() => {
+    setComposerExpanded(true)
+    window.requestAnimationFrame(() => inputRef.current?.focus())
   }, [])
 
+  const handleSuggestion = useCallback(
+    (suggestion: string) => {
+      setDraft(suggestion)
+      expandComposer()
+    },
+    [expandComposer],
+  )
+
   const handleSubmit = useCallback(async () => {
-    if (!adapter || !canSubmit) return
+    if (!adapter || !canSubmit || submitLock.current) return
+    submitLock.current = true
+    setSubmitting(true)
     const question = draft.trim()
     try {
       await adapter.submit({
@@ -308,10 +327,14 @@ export function AskPage({
       // enabled composer whose Send silently does nothing. Keep the draft.
       handleAvailability(error.failure)
       return
+    } finally {
+      submitLock.current = false
+      setSubmitting(false)
     }
     // Clear the draft only after the submission is accepted.
     setDraft('')
     setExpired(false)
+    setComposerExpanded(false)
     setStatus('Checking the official record')
   }, [
     adapter,
@@ -423,30 +446,42 @@ export function AskPage({
                 {offline ? <AskOfflineNotice /> : null}
               </section>
 
-              <div className="ask-dock" data-sticky={sticky || undefined}>
-                {pendingHandle ? (
-                  <AskScopeConfirm
-                    onCancel={() => setPendingHandle(null)}
-                    onConfirm={confirmScopeChange}
-                  />
-                ) : (
-                  <AskComposer
-                    canSubmit={canSubmit}
-                    draft={draft}
-                    inputRef={inputRef}
-                    label={
-                      sticky
-                        ? 'Ask another question'
-                        : 'What do you want to understand?'
-                    }
-                    onDraftChange={setDraft}
-                    onSubmit={() => void handleSubmit()}
-                    pending={checking}
-                    privacyNote={turns.length === 0}
-                    sendLabel={sticky ? 'Send' : 'Send question'}
-                  />
-                )}
-              </div>
+              {!expired ? (
+                <div className="ask-dock" data-sticky={sticky || undefined}>
+                  {pendingHandle ? (
+                    <AskScopeConfirm
+                      onCancel={() => setPendingHandle(null)}
+                      onConfirm={confirmScopeChange}
+                    />
+                  ) : sticky && !composerExpanded && draft.length === 0 ? (
+                    <Button
+                      className="ask-compose-open"
+                      disabled={composerDisabled}
+                      onClick={expandComposer}
+                      size="touch"
+                      variant="outline"
+                    >
+                      Ask another question
+                    </Button>
+                  ) : (
+                    <AskComposer
+                      canSubmit={canSubmit}
+                      draft={draft}
+                      inputRef={inputRef}
+                      label={
+                        sticky
+                          ? 'Ask another question'
+                          : 'What do you want to understand?'
+                      }
+                      onDraftChange={setDraft}
+                      onSubmit={() => void handleSubmit()}
+                      pending={checking || submitting}
+                      privacyNote={turns.length === 0}
+                      sendLabel={sticky ? 'Send' : 'Send question'}
+                    />
+                  )}
+                </div>
+              ) : null}
 
               {empty && viewScope.kind === 'corpus' ? (
                 <div className="ask-examples">

@@ -861,10 +861,14 @@ Ask follows the shipped behavior rather than becoming the one evidence surface
 where Back means something different. Changing it is a Slice 3 decision, not a
 Slice 4 one.
 
-### Open work
+### Ship review fixes
 
-No test covers Ask. The reviewer flagged the gap on every pass. The evidence
-pages have tests and this feature does not.
+The final ship review added focused Ask tests for route privacy, scope keys,
+in-memory draft consumption, citation accounting, the production fixture gate,
+duplicate-submit protection, the compact active-thread composer, and named
+official contacts. It also removed the full idle composer that covered answers
+on a phone. Expired conversations now show one restart path instead of an
+active composer beside the expiry notice.
 
 ## Acceptance gate
 

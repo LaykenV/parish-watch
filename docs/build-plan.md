@@ -246,13 +246,14 @@ independent production smoke passed. This work does not change the production
 publication or ranking boundary.
 
 The Design Slice 4 code in PR #28 implements Ask Public Parish against the same
-development fixtures and the shipped evidence viewer. `npm run verify` passed
-194 tests across 23 files, typecheck, the production build, prerender, and lint
-on the branch. None of those tests cover Ask; the reviewer flagged the gap on
-every pass and it is open work. Because the PR is unmerged there is no
-production workflow or smoke result for it, and there will be none until it
-merges. Production keeps Ask in navigation behind the honest unavailable state
-because no chat backend exists yet.
+development fixtures and the shipped evidence viewer. The branch includes
+focused Ask tests for route privacy, scope restoration, draft consumption,
+citation accounting, production fixture gating, duplicate-submit protection,
+the compact thread composer, and named official contacts. GitHub Actions owns
+the branch validation. Because the PR is unmerged there is no production
+workflow or smoke result for it, and there will be none until it merges.
+Production keeps Ask in navigation behind the honest unavailable state because
+no chat backend exists yet.
 
 Do not design or build resident pages one at a time during backend slices.
 Slice 4 must first settle the issue, importance, timeline, and change contracts.

@@ -316,10 +316,16 @@
   text-transform: uppercase;
 }
 
-.ask-contact-value {
+.ask-contact-name {
   margin: 0.3rem 0 0;
   font-size: var(--pp-text-small);
   font-weight: 600;
+}
+
+.ask-contact-value {
+  margin: 0.15rem 0 0;
+  color: var(--muted-foreground);
+  font-size: var(--pp-text-small);
 }
 
 /* Sources used */
@@ -405,7 +411,6 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-
 
 .ask-suggestions-list {
   margin: 0;
@@ -616,14 +621,24 @@
   park it under the fixed mobile navigation, and a sticky element cannot be
   scrolled out from behind the software keyboard.
 
-  Once a thread exists the composer sticks above the bottom navigation, and
-  above the keyboard through the visual viewport inset. The shell hides the
-  navigation while the keyboard is open, so only the inset remains.
+  Once a thread exists a compact invitation sticks above the bottom
+  navigation. It expands only while the resident is writing, so the answer
+  remains readable. The expanded composer follows the keyboard through the
+  visual viewport inset.
 */
 .ask-dock[data-sticky] {
   position: sticky;
   bottom: calc(5.25rem + var(--ask-kb, 0rem));
   z-index: 10;
+}
+
+.ask-compose-open {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  background: var(--card);
+  box-shadow: var(--pp-shadow-control);
 }
 
 .resident-blueprint[data-keyboard-open] .ask-dock[data-sticky] {
