@@ -1279,23 +1279,22 @@ test('unsupported sourceRecordId on public_action is not cited', async () => {
   
   await t.run(async (ctx) => {
     await ctx.db.patch(seeded.candidateId, { recordType: 'public_action' })
+    const recordTypeFact = seeded.factIds.find(
+      (f) => f.fieldPath === '/recordType',
+    )
+    if (recordTypeFact) {
+      await ctx.db.patch(recordTypeFact.factId, { value: 'public_action' })
+    }
   })
 
   stubReviewFetch(
-    JSON.stringify({
-      verdict: 'pass',
-      checks: seeded.factIds.map((fact) => ({
-        factId: fact.factId,
-        fieldPath: fact.fieldPath,
-        assessment:
-          fact.fieldPath === '/sourceRecordId' ? 'unsupported' : 'supported',
-        detail:
-          fact.fieldPath === '/sourceRecordId'
-            ? 'Operator-assigned ID does not appear in source.'
-            : 'The cited span directly supports this value.',
-      })),
-      findings: [],
-    }),
+    JSON.stringify(
+      reviewResponse(
+        seeded.factIds,
+        { '/sourceRecordId': 'unsupported' },
+        'pass',
+      ),
+    ),
   )
 
   const started = await t.mutation(
@@ -1306,21 +1305,24 @@ test('unsupported sourceRecordId on public_action is not cited', async () => {
   await t.finishAllScheduledFunctions(vi.runAllTimers)
   vi.useRealTimers()
 
-  const citations = await t.run(async (ctx) => {
+  const result = await t.run(async (ctx) => {
     const version = await ctx.db
       .query('publicationVersions')
       .withIndex('by_run', (q) => q.eq('runId', started.runId))
       .unique()
-    if (!version) return []
-    return await ctx.db
-      .query('citations')
-      .collect()
-      .then((all) =>
-        all.filter((c) => c.publicationVersionId === version._id),
-      )
+    if (!version) return { version: null, citations: [] }
+    const allCitations = await ctx.db.query('citations').collect()
+    const citations = allCitations.filter(
+      (c) => c.publicationVersionId === version._id,
+    )
+    return { version, citations }
   })
 
-  expect(citations.some((c) => c.fieldPath === '/sourceRecordId')).toBe(false)
-  expect(citations.some((c) => c.fieldPath === '/title')).toBe(true)
-  expect(citations.some((c) => c.fieldPath === '/bodyName')).toBe(true)
+  expect(result.version).toBeTruthy()
+  expect(result.version?.mode).toBe('full')
+  expect(result.citations.some((c) => c.fieldPath === '/sourceRecordId')).toBe(
+    false,
+  )
+  expect(result.citations.some((c) => c.fieldPath === '/title')).toBe(true)
+  expect(result.citations.some((c) => c.fieldPath === '/bodyName')).toBe(true)
 })
