@@ -1300,7 +1300,7 @@ test('unsupported sourceRecordId on public_action is not cited', async () => {
 
   const started = await t.mutation(
     internal.operations.publication.startCandidatePublication,
-    { candidateId: seeded.candidateId },
+    { candidateId: seeded.candidateId, trigger: 'manual_publication' },
   )
   vi.useFakeTimers()
   await t.finishAllScheduledFunctions(vi.runAllTimers)
@@ -1311,14 +1311,13 @@ test('unsupported sourceRecordId on public_action is not cited', async () => {
       .query('publicationVersions')
       .withIndex('by_run', (q) => q.eq('runId', started.runId))
       .unique()
-    return version
-      ? await ctx.db
-          .query('citations')
-          .withIndex('by_publication_version', (q) =>
-            q.eq('publicationVersionId', version._id),
-          )
-          .collect()
-      : []
+    if (!version) return []
+    return await ctx.db
+      .query('citations')
+      .collect()
+      .then((all) =>
+        all.filter((c) => c.publicationVersionId === version._id),
+      )
   })
 
   expect(citations.some((c) => c.fieldPath === '/sourceRecordId')).toBe(false)
