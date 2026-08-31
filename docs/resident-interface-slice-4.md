@@ -1,7 +1,7 @@
 # Resident interface Slice 4 handoff
 
-Status: implemented in PR #28, green on its checks, not merged and not
-deployed. Updated August 30, 2026.
+Status: deployed through PR #28 as `ff36c1b`. Production workflow `33389489990`
+succeeded. Updated August 31, 2026.
 
 This handoff finishes the resident experience for Ask Public Parish. It covers
 the route, scoped entry from an issue or meeting, a demonstrated two-question

@@ -12,9 +12,17 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T13:44:33Z
+- **Last updated:** 2026-08-31T14:20:53Z
 
 ## Log
+
+### 2026-08-31 - adfe81e
+
+PR #31 deployed resident-interface Design Slice 5. Exact production workflow
+`33401768387` and the independent smoke passed the Convex host, canonical
+domain, apex redirect, asset delivery, and production readiness query. The
+deployed code keeps follows unavailable until Auth and AgentMail pass their
+integration gates.
 
 ### 2026-08-31 - 9d6751d
 

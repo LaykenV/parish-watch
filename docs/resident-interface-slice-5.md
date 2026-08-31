@@ -1,8 +1,13 @@
 # Resident interface Slice 5 handoff
 
-Status: implemented for review; automated validation belongs to pull-request CI
+Status: deployed through PR #31 as `adfe81e`
 
 Date: August 31, 2026
+
+Pull-request verification passed 221 tests across 27 files, typecheck, client
+and server production builds, prerender, and lint. Production workflow
+`33401768387` and the independent production smoke passed. Production still
+creates no follow until Auth and AgentMail pass the integration gates below.
 
 ## Decision
 

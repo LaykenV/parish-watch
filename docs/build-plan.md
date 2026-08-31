@@ -220,13 +220,14 @@ needs a cost estimate and separate approval.
 
 ### Slice 5: Complete Resident Interface
 
-Status: in progress. Design Slice 1 deployed through PR #14 as `6e46fd7`.
+Status: complete. Design Slice 1 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
 Slice 3 deployed through PR #27 as `3a59e45` on August 30, 2026. PR #28 merged
-Design Slice 4 as `ff36c1b`; production workflow `33389489990` succeeded. This
-session did not repeat the independent production smoke. Design Slice 5 is
-implemented for review and remains fixture-backed.
+Design Slice 4 as `ff36c1b`; production workflow `33389489990` succeeded. PR
+#31 deployed Design Slice 5 as `adfe81e`. Production workflow `33401768387` and
+the independent production smoke passed. The interface remains fixture-backed
+until its account, email, and public-data adapters pass their integration gates.
 
 The deployed Slice 2 release includes the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -259,7 +260,9 @@ Design Slice 5 replaces the Following and email-management blueprints with the
 finished page hierarchy and interactions. It uses development-only typed
 fixtures for Google return, email verification, ownership, preferences, and
 alerts. Production shows an honest unavailable state and creates no follow
-until the Auth and AgentMail adapters pass their gates.
+until the Auth and AgentMail adapters pass their gates. Pull-request verification
+passed 221 tests across 27 files, typecheck, production builds, prerender, and
+lint.
 
 Do not design or build resident pages one at a time during backend slices.
 Slice 4 must first settle the issue, importance, timeline, and change contracts.

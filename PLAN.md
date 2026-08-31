@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 3 are deployed; Design Slice 4 is merged and Design Slice 5 is in review
+Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 5 are deployed
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -36,13 +36,12 @@ decision, meeting, and citation-level evidence surfaces. Its explicit typed
 fixtures load only through development-only imports, add no resident-facing
 banner, and stay out of production JavaScript. Production routes show an honest
 recovery page until real issue, decision-detail, and meeting-detail queries
-exist. Following, accounts, email, and coverage remain in later design and
-integration slices.
+exist. The Following interface is deployed through Design Slice 5. Accounts,
+email delivery, and coverage remain integration work.
 
 PR #28 merged resident-interface Design Slice 4 as `ff36c1b`. Its production
-workflow `33389489990` succeeded. This session did not repeat the independent
-production smoke. Ask resolves
-corpus, issue, and meeting scope through a typed adapter, renders cited answers
+workflow `33389489990` succeeded. Ask resolves corpus, issue, and meeting scope
+through a typed adapter, renders cited answers
 in the existing evidence gutter, and moves the resident's question out of the
 URL into an in-memory handoff. No chat backend exists behind it. Production
 keeps Ask in navigation and shows the honest unavailable state, and the record
@@ -50,9 +49,10 @@ pages show that same message in place of a composer, so no resident is asked
 for a question the product cannot take. Eleven presentation scenarios load only
 through a development-only dynamic import.
 
-Design Slice 5 now implements the fixture-backed follow and ownership
-interface. It covers Google return, email-only verification, Following, areas
-and topics, notification preferences, scoped email management, and alert
+PR #31 deployed Design Slice 5 as `adfe81e`. Production workflow `33401768387`
+and the independent production smoke passed. The fixture-backed follow and
+ownership interface covers Google return, email-only verification, Following,
+areas and topics, notification preferences, scoped email management, and alert
 layouts. The production routes remain unavailable until Convex Auth and
 AgentMail pass their integration gates.
 
