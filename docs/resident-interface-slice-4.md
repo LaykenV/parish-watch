@@ -1,6 +1,6 @@
 # Resident interface Slice 4 handoff
 
-Status: implemented in PR #28, green on `2dcaf6b`, not merged and not
+Status: implemented in PR #28, green on its checks, not merged and not
 deployed. Updated August 30, 2026.
 
 This handoff finishes the resident experience for Ask Public Parish. It covers

@@ -34,7 +34,7 @@ The discovery records are not a live resident feed, and no production issue
 build or importance assessment has run.
 
 Design Slice 4, Ask Public Parish, is implemented in PR #28 and green on
-`2dcaf6b`. It is not merged and therefore not deployed. Ask resolves corpus,
+its checks. It is not merged and therefore not deployed. Ask resolves corpus,
 issue, and meeting scope through a typed adapter and renders cited answers in
 the existing evidence gutter, but no chat backend exists behind it. Production
 keeps Ask in navigation showing an honest unavailable state. Following,

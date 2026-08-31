@@ -40,7 +40,7 @@ exist. Following, accounts, email, and coverage remain in later design and
 integration slices.
 
 PR #28 implements resident-interface Design Slice 4, Ask Public Parish. It is
-green on `2dcaf6b` and not merged, so nothing in it is deployed. Ask resolves
+green on its checks and not merged, so nothing in it is deployed. Ask resolves
 corpus, issue, and meeting scope through a typed adapter, renders cited answers
 in the existing evidence gutter, and moves the resident's question out of the
 URL into an in-memory handoff. No chat backend exists behind it. Production

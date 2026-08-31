@@ -224,7 +224,7 @@ Status: in progress. Design Slice 1 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
 Slice 3 deployed through PR #27 as `3a59e45` on August 30, 2026. Design Slice 4
-is implemented in PR #28, green on `2dcaf6b`, and not merged.
+is implemented in PR #28, green on its checks, and not merged.
 
 The deployed Slice 2 release includes the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -248,7 +248,7 @@ publication or ranking boundary.
 The Design Slice 4 code in PR #28 implements Ask Public Parish against the same
 development fixtures and the shipped evidence viewer. `npm run verify` passed
 194 tests across 23 files, typecheck, the production build, prerender, and lint
-on `2dcaf6b`. None of those tests cover Ask; the reviewer flagged the gap on
+on the branch. None of those tests cover Ask; the reviewer flagged the gap on
 every pass and it is open work. Because the PR is unmerged there is no
 production workflow or smoke result for it, and there will be none until it
 merges. Production keeps Ask in navigation behind the honest unavailable state

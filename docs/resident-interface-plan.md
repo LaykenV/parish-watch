@@ -13,7 +13,7 @@ as `3a59e45`, including the issue, decision, meeting, and citation surfaces. The
 remaining design slices and the resident detail API connections are not
 complete.
 
-Design Slice 4 is implemented in PR #28, green on `2dcaf6b`, and not merged. It
+Design Slice 4 is implemented in PR #28, green on its checks, and not merged. It
 is therefore not deployed and not part of any production release.
 
 ## Purpose
@@ -1006,7 +1006,7 @@ viewer, timeline, and update history from real evidence.
 
 ### Design slice 4: Ask Public Parish
 
-Implementation checkpoint: implemented in PR #28, green on `2dcaf6b`, not
+Implementation checkpoint: implemented in PR #28, green on its checks, not
 merged and not deployed. The implementation, the fixture boundary, and the
 three additions to the adapter contract are recorded in
 [`resident-interface-slice-4.md`](./resident-interface-slice-4.md).

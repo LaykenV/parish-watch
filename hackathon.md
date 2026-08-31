@@ -16,7 +16,7 @@
 
 ## Log
 
-### 2026-08-30 - PR #28 open at 2dcaf6b
+### 2026-08-30 - PR #28 open
 
 Implemented resident-interface Design Slice 4 (Ask Public Parish) and opened
 PR #28. It is green and not merged, so none of it is deployed.
@@ -30,7 +30,7 @@ is replaced by an in-memory draft that never enters a URL or history state.
 Eleven presentation scenarios load through a DEV-only dynamic import;
 production never requests the fixture module.
 
-`npm run verify` passed on `2dcaf6b`: 194 tests across 23 files, typecheck, the
+`npm run verify` passed on the branch: 194 tests across 23 files, typecheck, the
 production build, prerender, and lint. No test covers Ask. The reviewer flagged
 that gap on every pass and it stays open.
 
