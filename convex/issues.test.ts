@@ -5,7 +5,7 @@ import { convexTest } from 'convex-test'
 import type { TestConvexForDataModelAndIdentity } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
 
-import { internal } from './_generated/api'
+import { api, internal } from './_generated/api'
 import type { DataModel, Id } from './_generated/dataModel'
 import {
   overrideGatewayTokenMinterForTests,
@@ -258,6 +258,14 @@ async function seedIssueInput(t: TestConvex): Promise<SeededIssueInput> {
           sourceSnapshotId: snapshotId,
           excerpt: title,
         })
+        const bodyFactId = await ctx.db.insert('candidateFacts', {
+          candidateId,
+          extractionId,
+          fieldPath: '/bodyName',
+          value: 'Lafayette City Council',
+          sourceSnapshotId: snapshotId,
+          excerpt: 'Lafayette City Council',
+        })
         const lifecycleFactId = await ctx.db.insert('candidateFacts', {
           candidateId,
           extractionId,
@@ -275,6 +283,17 @@ async function seedIssueInput(t: TestConvex): Promise<SeededIssueInput> {
           excerpt: title,
           normalizedStartOffset: 0,
           normalizedEndOffset: title.length,
+          retrievedAt: 1_788_000_000_000 + versionNumber,
+        })
+        await ctx.db.insert('citations', {
+          publicationVersionId,
+          candidateFactId: bodyFactId,
+          fieldPath: '/bodyName',
+          snapshotId,
+          officialUrl: `https://apps.lafayettela.gov/obcouncil/${sourceKind}/${sourceRecordId}`,
+          excerpt: 'Lafayette City Council',
+          normalizedStartOffset: 0,
+          normalizedEndOffset: 'Lafayette City Council'.length,
           retrievedAt: 1_788_000_000_000 + versionNumber,
         })
         const lifecycleCitationId = await ctx.db.insert('citations', {
@@ -741,7 +760,7 @@ test('two atomic decisions publish one cited issue, score, timeline, and materia
         decision.changes.some(
           (change) => change.classification === 'decided' && change.material,
         ) &&
-        decision.citations.length === 4,
+        decision.citations.length === 6,
     ),
   ).toBe(true)
   expect(requests[0]).toMatchObject({
@@ -1040,6 +1059,17 @@ test('a published decision refresh creates one new issue version and replays wit
     internal.operations.issues.readIssueBuildEvidence,
     { runId: firstStarted.runId },
   )
+  const firstResidentIssue = await t.query(
+    api.resident.evidence.getPublishedIssue,
+    { slug: firstEvidence.issue?.slug as string },
+  )
+  expect(firstResidentIssue).toMatchObject({
+    revision: firstEvidence.issueVersion?._id,
+    mode: 'full',
+  })
+  expect(firstResidentIssue?.links).toHaveLength(2)
+  expect(firstResidentIssue?.citations.length).toBeGreaterThan(0)
+  expect(JSON.stringify(firstResidentIssue)).not.toContain('reviewId')
   vi.unstubAllGlobals()
 
   const refreshedInput = await advanceCurrentVersions(t, seeded)
@@ -1064,6 +1094,16 @@ test('a published decision refresh creates one new issue version and replays wit
   ])
   expect(issueEvidence.currentVersion?.version).toBe(2)
   expect(refreshFetch).toHaveBeenCalledTimes(2)
+  const refreshedResidentIssue = await t.query(
+    api.resident.evidence.getPublishedIssue,
+    { slug: firstEvidence.issue?.slug as string },
+  )
+  expect(refreshedResidentIssue?.revision).toBe(
+    issueEvidence.currentVersion?._id,
+  )
+  expect(refreshedResidentIssue?.revision).not.toBe(
+    firstResidentIssue?.revision,
+  )
 
   await t.mutation(internal.operations.issues.refreshLinkedIssues, {
     recordId: seeded.recordIds[1],

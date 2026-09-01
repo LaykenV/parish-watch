@@ -68,11 +68,12 @@ across discovery, records, Ask, Following, and Coverage without exposing
 fixtures in production.
 
 The resident UI design and implementation track is complete. The production
-resident loop is not. Real issue, decision-detail, meeting, Ask, account,
+resident loop is not. The resident-evidence integration connects current
+accepted decisions, grouped meeting evidence, exact citations, and fail-closed
+issue subscriptions to the finished routes. A fresh production issue build and
+realtime change proof still gate issue availability and PR 6A. Ask, account,
 follow, AgentMail, coverage, request, and private-report adapters remain in the
-post-Slice-5 implementation plan. Until each adapter passes its gate, the
-deployed route shows accepted atomic records, static method copy, or an honest
-unavailable state.
+post-Slice-5 implementation plan.
 
 ## Executive Decision
 

@@ -201,10 +201,12 @@ Anonymous visit and area-selection telemetry is live and private. A controlled
 test proved the production writes and origin-specific browser accounting. It is
 test traffic, not resident adoption.
 
-The UI track is complete. Real issue-detail and live-update projections, the Ask
-backend, mounted Convex Auth, follows, AgentMail, coverage integration, the
-owner compiler, resident proof, the demo, and the vibeapps.dev submission remain
-pending.
+The UI track is complete. Resident-safe decision and meeting projections now
+map accepted publications and exact citations into the finished routes, and the
+issue query fails closed on stale decision links. A fresh production issue
+build and live-update proof, the Ask backend, mounted Convex Auth, follows,
+AgentMail, coverage integration, the owner compiler, resident proof, the demo,
+and the vibeapps.dev submission remain pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

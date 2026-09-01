@@ -30,10 +30,12 @@ Exactly one board-vacancy card remains, under
 defect, not another launch record.
 
 This proof covers selected official PDF source families. It does not mark any
-government body fully supported. The resident decision-record views open each
-accepted publication's official source, which satisfies the source-link
-requirement only. Lafayette, Rapides, and East Baton Rouge bodies must still
-pass every coverage gate below before Public Parish calls them supported.
+government body fully supported. Resident discovery opens the accepted decision
+record, where every published claim can open its exact excerpt and original
+official source. Current full records with the same accepted body and meeting
+time form one bounded meeting view. Lafayette, Rapides, and East Baton Rouge
+bodies must still pass every coverage gate below before Public Parish calls
+them supported.
 
 ## Source Policy
 

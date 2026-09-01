@@ -2,6 +2,7 @@ import { ExternalLinkIcon } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
+import { Spinner } from '../../components/ui/spinner'
 import { formatDate, formatTime } from '../discovery/format'
 import { IssueCard } from '../discovery/issue-card'
 import { evidenceRouteHref } from '../resident-handoff/navigation'
@@ -24,6 +25,7 @@ import { artifactTone } from './evidence-model'
 import { resolveCitationId } from './contracts'
 import type { EvidenceSearch, MeetingDecisionRow } from './contracts'
 import type { MeetingPageData } from './evidence-page.data'
+import { toMeetingFixture, usePublishedMeeting } from './live-evidence'
 
 export function MeetingPage({
   data,
@@ -36,8 +38,64 @@ export function MeetingPage({
   onSelectSource: (id: string | null) => void
   search: EvidenceSearch
 }) {
-  if (!data) return <MeetingNotFound meetingId={meetingId} />
+  if (data) {
+    return (
+      <MeetingView
+        data={data}
+        onSelectSource={onSelectSource}
+        search={search}
+      />
+    )
+  }
+  return (
+    <PublishedMeetingPage
+      meetingId={meetingId}
+      onSelectSource={onSelectSource}
+      search={search}
+    />
+  )
+}
 
+function PublishedMeetingPage({
+  meetingId,
+  onSelectSource,
+  search,
+}: {
+  meetingId: string
+  onSelectSource: (id: string | null) => void
+  search: EvidenceSearch
+}) {
+  const published = usePublishedMeeting(meetingId)
+  const currentData = published ? toMeetingFixture(published) : null
+  if (published === undefined) {
+    return (
+      <main className="ev-page" id="resident-main">
+        <div className="ev-loading" role="status">
+          <Spinner aria-hidden="true" />
+          <span>Loading published evidence</span>
+        </div>
+      </main>
+    )
+  }
+  if (!currentData) return <MeetingNotFound meetingId={meetingId} />
+  return (
+    <MeetingView
+      data={currentData}
+      onSelectSource={onSelectSource}
+      search={{ ...search, fixture: undefined }}
+    />
+  )
+}
+
+function MeetingView({
+  data,
+  onSelectSource,
+  search,
+}: {
+  data: MeetingPageData
+  onSelectSource: (id: string | null) => void
+  search: EvidenceSearch
+}) {
   const { fixture, issues } = data
   const { citations, meeting } = fixture
   const selected = resolveCitationId(citations, search.source)
@@ -77,7 +135,9 @@ export function MeetingPage({
                   <time dateTime={meeting.date}>
                     {formatDate(meeting.date)}
                   </time>
-                  <span> · {formatTime(meeting.date)}</span>
+                  {meeting.timeKnown === false ? null : (
+                    <span> · {formatTime(meeting.date)}</span>
+                  )}
                 </p>
               </div>
               <p className="ev-status-row">

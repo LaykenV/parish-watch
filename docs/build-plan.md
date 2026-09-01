@@ -250,11 +250,12 @@ source. The integration does not create issues, scores, or complete coverage
 claims.
 
 The deployed Design Slice 3 code implements issue, atomic decision, meeting,
-and citation-level evidence pages against explicit development fixtures.
-Production builds exclude those fixture modules and show recovery pages because
-real detail queries are not connected. Workflow `33332573558` and the
-independent production smoke passed. This work does not change the production
-publication or ranking boundary.
+and citation-level evidence pages against explicit development fixtures. The
+resident-evidence integration replaces the production decision and meeting
+recovery states with bounded current accepted projections and exact citations.
+Issue reads subscribe to the accepted pointer and fail closed when any link is
+stale. A fresh production issue build and realtime change proof still gate the
+full Slice 5 exit. This work does not change publication or ranking policy.
 
 Design Slice 4 implements Ask Public Parish against the same development
 fixtures and the shipped evidence viewer. It includes

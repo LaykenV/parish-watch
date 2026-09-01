@@ -32,9 +32,11 @@ coverage. Withheld versions remain private.
 PR #27 deployed Design Slice 3 as `3a59e45`. It implements the issue, atomic
 decision, meeting, and citation-level evidence pages. Source controls keep
 citation selection in the URL, open a Coss drawer on mobile or a docked rail on
-desktop, and return focus when closed. Its typed records remain explicit
-development fixtures loaded through development-only imports. Production shows
-recovery pages until real detail queries exist.
+desktop, and return focus when closed. The resident-evidence adapter now maps
+current accepted decisions and grouped meeting records into those pages and
+subscribes issue pages to the accepted issue pointer. Issue routes still fail
+closed until a fresh accepted issue version points at every current decision
+publication.
 
 Design Slices 4 through 6 completed Ask, Follow and account-entry, email
 management, Coverage, coverage request, public method, and private-report
@@ -45,10 +47,11 @@ handoff. PR #43 deployed that final interface as `85d6947`; production workflow
 `33454522729` and the independent production smoke passed.
 
 This closes resident UI design and implementation, not the production adapters.
-Production keeps real detail, Ask, accounts, follows, AgentMail, coverage
-requests, and private reports unavailable until their backend paths pass. Those
-integrations must replace the matching typed adapter without changing the page
-hierarchy or visual system.
+Production keeps Ask, accounts, follows, AgentMail, coverage requests, and
+private reports unavailable until their backend paths pass. The issue route
+also stays unavailable until a fresh accepted issue build passes its gate.
+Those integrations must replace the matching typed adapter without changing
+the page hierarchy or visual system.
 
 ### Start With Consequence
 

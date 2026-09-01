@@ -4,7 +4,7 @@ import { convexTest } from 'convex-test'
 import type { TestConvexForDataModelAndIdentity } from 'convex-test'
 import { expect, test } from 'vitest'
 
-import { api } from './_generated/api'
+import { api, internal } from './_generated/api'
 import type { DataModel, Id } from './_generated/dataModel'
 import schema from './schema'
 
@@ -94,6 +94,79 @@ test('returns only current accepted publication fields to residents', async () =
   expect(JSON.stringify(decisions)).not.toContain('snapshotId')
 })
 
+test('projects accepted decision citations and bounded meeting evidence', async () => {
+  const t = convexTest(schema, modules)
+  const seeded = await t.run(async (ctx) => {
+    const jurisdictionId = await ctx.db.insert('jurisdictions', {
+      name: 'Rapides Parish',
+      slug: 'rapides-parish',
+      type: 'parish',
+      state: 'LA',
+      publicStatus: 'validating',
+    })
+    const governmentBodyId = await ctx.db.insert('governmentBodies', {
+      jurisdictionId,
+      name: 'Rapides Parish Police Jury',
+      slug: 'rapides-parish-police-jury',
+      bodyType: 'other',
+      publicStatus: 'validating',
+    })
+    const registryId = await ctx.db.insert('sourceRegistries', {
+      governmentBodyId,
+      officialDomains: ['rppj.com'],
+      seedUrls: ['https://rppj.com/agendas/'],
+      sourceKinds: ['minutes'],
+      expectedCadence: { kind: 'meeting_cycle' },
+      discoveryMode: 'dynamic',
+      status: 'validating',
+    })
+    return await seedPublication({
+      ctx,
+      registryId,
+      governmentBodyId,
+      sourceRecordId: 'RAPIDES-TEST-2026',
+      mode: 'full',
+      updatedAt: 50,
+    })
+  })
+
+  const before = await t.query(api.resident.evidence.getPublishedDecision, {
+    recordKey: seeded.recordKey,
+  })
+  expect(before).toMatchObject({
+    meetingAt: '2026-09-15T17:30:00-05:00',
+    meetingKey: null,
+    mode: 'full',
+  })
+  expect(before?.citations.map((citation) => citation.fieldPath)).toContain(
+    '/title',
+  )
+  expect(JSON.stringify(before)).not.toContain('candidateFactId')
+
+  const backfill = await t.mutation(
+    internal.resident.evidence.backfillCurrentMeetingKeys,
+    { paginationOpts: { numItems: 10, cursor: null } },
+  )
+  expect(backfill).toMatchObject({ isDone: true, updated: 1 })
+
+  const after = await t.query(api.resident.evidence.getPublishedDecision, {
+    recordKey: seeded.recordKey,
+  })
+  expect(after?.meetingKey).toBe(
+    'rapides-parish-police-jury-2026-09-15t17-30-00-05-00',
+  )
+
+  const meeting = await t.query(api.resident.evidence.getPublishedMeeting, {
+    meetingKey: after?.meetingKey as string,
+  })
+  expect(meeting).toMatchObject({
+    bodyName: 'Rapides Parish Police Jury',
+    placeSlug: 'rapides-parish',
+  })
+  expect(meeting?.decisions).toHaveLength(1)
+  expect(meeting?.citations.length).toBeGreaterThan(0)
+})
+
 async function seedPublication({
   ctx,
   registryId,
@@ -109,6 +182,9 @@ async function seedPublication({
   mode: 'full' | 'limited' | 'withheld'
   updatedAt: number
 }) {
+  const body = await ctx.db.get(governmentBodyId)
+  const jurisdiction = body ? await ctx.db.get(body.jurisdictionId) : null
+  if (!body || !jurisdiction) throw new Error('Test government body is missing')
   const normalizedStorageId = await ctx.storage.store(
     new Blob([sourceRecordId], { type: 'text/markdown' }),
   )
@@ -169,11 +245,11 @@ async function seedPublication({
     sourceRecordId,
     recordType: 'proposal',
     title: `Title for ${sourceRecordId}`,
-    bodyName: 'Lafayette City Council',
+    bodyName: body.name,
     meetingAt: '2026-09-15T17:30:00-05:00',
     lifecycleState: 'scheduled',
     plainLanguageSummary: 'The council is scheduled to consider the ordinance.',
-    affectedPlaces: ['Lafayette Parish'],
+    affectedPlaces: [jurisdiction.name],
     amounts: [],
     publicActions: [],
     state: 'deterministically_validated',
@@ -184,6 +260,33 @@ async function seedPublication({
     route: 'ai_gateway',
     createdAt: 4,
   })
+  const factSpecs = [
+    ['/title', `Title for ${sourceRecordId}`],
+    ['/bodyName', body.name],
+    ['/meetingAt', '2026-09-15T17:30:00-05:00'],
+    ['/recordType', 'proposal'],
+    ['/lifecycleState', 'scheduled'],
+    [
+      '/plainLanguageSummary',
+      'The council is scheduled to consider the ordinance.',
+    ],
+  ] as const
+  const facts: Array<{
+    factId: Id<'candidateFacts'>
+    fieldPath: string
+    excerpt: string
+  }> = []
+  for (const [fieldPath, value] of factSpecs) {
+    const factId = await ctx.db.insert('candidateFacts', {
+      candidateId,
+      extractionId,
+      fieldPath,
+      value,
+      sourceSnapshotId: snapshotId,
+      excerpt: value,
+    })
+    facts.push({ factId, fieldPath, excerpt: value })
+  }
   const publicationRunId = await ctx.db.insert('pipelineRuns', {
     registryId,
     trigger: 'manual_publication',
@@ -244,7 +347,7 @@ async function seedPublication({
             kind: 'limited' as const,
             sourceRecordId,
             title: `Title for ${sourceRecordId}`,
-            bodyName: 'Lafayette City Council',
+            bodyName: body.name,
             source,
           }
         : {
@@ -252,12 +355,12 @@ async function seedPublication({
             sourceRecordId,
             recordType: 'proposal' as const,
             title: `Title for ${sourceRecordId}`,
-            bodyName: 'Lafayette City Council',
+            bodyName: body.name,
             meetingAt: '2026-09-15T17:30:00-05:00',
             lifecycleState: 'scheduled' as const,
             plainLanguageSummary:
               'The council is scheduled to consider the ordinance.',
-            affectedPlaces: ['Lafayette Parish'],
+            affectedPlaces: [jurisdiction.name],
             amounts: [],
             publicActions: [],
             source,
@@ -282,5 +385,29 @@ async function seedPublication({
       currentPublishedVersionId: publicationVersionId,
       currentMode: mode,
     })
+    const acceptedFacts =
+      mode === 'limited'
+        ? facts.filter((fact) =>
+            ['/title', '/bodyName'].includes(fact.fieldPath),
+          )
+        : facts
+    for (const fact of acceptedFacts) {
+      await ctx.db.insert('citations', {
+        publicationVersionId,
+        candidateFactId: fact.factId,
+        fieldPath: fact.fieldPath,
+        snapshotId,
+        officialUrl: source.officialUrl,
+        excerpt: fact.excerpt,
+        normalizedStartOffset: 0,
+        normalizedEndOffset: fact.excerpt.length,
+        retrievedAt: source.retrievedAt,
+      })
+    }
+  }
+  return {
+    publicationVersionId,
+    recordId,
+    recordKey: `record-${sourceRecordId}`,
   }
 }
