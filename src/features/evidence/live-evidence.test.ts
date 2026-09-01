@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
+import type { Id } from '../../../convex/_generated/dataModel'
 import type { PublishedIssue } from './live-evidence'
 import { toIssueFixture } from './live-evidence'
+
+const citationId = (value: string) => value as Id<'citations'>
 
 const citation = {
   bodyName: 'Rapides Parish Police Jury',
@@ -31,22 +34,22 @@ const publishedIssue: PublishedIssue = {
   lifecycleState: 'decided',
   links: [
     {
-      citationIds: ['citation-undated'],
+      citationIds: [citationId('citation-undated')],
       lifecycleState: null,
       meetingAt: null,
       reason: 'The minutes name the same millage levy.',
       recordKey: 'record-undated',
-      relationship: 'same_matter',
+      relationship: 'same_government_action',
       summary: null,
       title: 'A limited record with no published meeting date',
     },
     {
-      citationIds: ['citation-dated'],
+      citationIds: [citationId('citation-dated')],
       lifecycleState: 'decided',
       meetingAt: '2026-02-09T00:00:00.000Z',
       reason: 'The minutes record the adoption.',
       recordKey: 'record-dated',
-      relationship: 'same_matter',
+      relationship: 'same_government_action',
       summary: 'The jury adopted the levy.',
       title: 'A full record with a published meeting date',
     },
@@ -56,7 +59,7 @@ const publishedIssue: PublishedIssue = {
   placeName: 'Rapides Parish',
   placeSlug: 'rapides-parish',
   publicActions: [],
-  revision: 'issue-version-1',
+  revision: 'issue-version-1' as Id<'issueVersions'>,
   slug: 'millage-levy',
   summary: 'The jury set the 2026 millage levy.',
   title: '2026 millage levy',
