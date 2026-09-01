@@ -7,7 +7,7 @@ import {
 } from '../pipeline/state'
 import { isAllowedOfficialHost } from '../sources/domains'
 
-export const MAX_EXTRACTION_SOURCE_BYTES = 200_000
+export const MAX_EXTRACTION_SOURCE_BYTES = 524_288
 
 export const extractionContextValidator = v.object({
   registryId: v.id('sourceRegistries'),
