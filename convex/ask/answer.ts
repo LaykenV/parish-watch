@@ -14,15 +14,17 @@ import { completeStructuredDirectFallback } from '../ai/provider'
 import type { CompleteStructuredOptions } from '../ai/provider'
 import type { AttemptRecord, ModelUsage } from '../ai/types'
 import { sha256HexOfText } from '../sources/hashing'
-import { askAnswerResult, askModelAnswer, askModelSelection } from './contracts'
-import type {
-  AskAnswerResult,
-  AskEvidence,
-  AskEvidenceResult,
-  AskModelAnswer,
-  AskModelSelection,
+import {
+  askAnswerResult,
+  askModelAnswer,
+  askModelSelection,
+  MAX_ANSWER_EVIDENCE_IDS,
+  type AskAnswerResult,
+  type AskEvidence,
+  type AskEvidenceResult,
+  type AskModelAnswer,
+  type AskModelSelection,
 } from './contracts'
-import { MAX_ANSWER_EVIDENCE_IDS } from './contracts'
 import type { PublishedDocumentRef } from './evidence'
 
 export const ASK_PROMPT_VERSION = 'ask-answer-v3'
