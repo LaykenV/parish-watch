@@ -204,13 +204,14 @@ jurisdiction as the only shared signal. Issue-link prompt v1.3 tells Terra the
 same rule.
 
 On August 30, a controlled production onboarding processed eight official
-Lafayette City Council PDFs. The current production publications are
-`CO-062-2026` as postponed, `CO-069-2026` as decided, and
-`CO-072-2026` as scheduled. The board-vacancy announcement is limited to its
-supported title, body, and source. Its unsupported zoned deadline remains
-withheld. PRs #15 through #23 deployed each correction exposed by the batch, and
-the final verification passed 146 tests, typecheck, builds, prerender, and lint.
-The exact production workflow and independent smoke passed after every merge.
+Lafayette City Council PDFs and exposed the first corrections through PRs #15
+through #23. On August 31, the repeatable launch batch promoted 26 atomic
+records from 17 hash-matched official PDFs: 15 Lafayette, 9 Rapides, and 2 East
+Baton Rouge. Fifteen are full and 11 are limited. One negative control returned
+`not_found`, three targets stayed out after exact-citation failures, and replay
+reused all 27 successful extraction run IDs. The resident query also contains
+one older duplicate Lafayette board-vacancy card pending a ledger-preserving
+withdrawal operation.
 
 Production still has no issue build, issue-decision link, or importance
 assessment. Accepted atomic records may appear in the unranked "Published
@@ -220,14 +221,19 @@ needs a cost estimate and separate approval.
 
 ### Slice 5: Complete Resident Interface
 
-Status: complete. Design Slice 1 deployed through PR #14 as `6e46fd7`.
+Status: interface design and implementation complete; production integration
+exit gate remains open. Design Slice 1 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
 Slice 3 deployed through PR #27 as `3a59e45` on August 30, 2026. PR #28 merged
 Design Slice 4 as `ff36c1b`; production workflow `33389489990` succeeded. PR
 #31 deployed Design Slice 5 as `adfe81e`. Production workflow `33401768387` and
-the independent production smoke passed. The interface remains fixture-backed
-until its account, email, and public-data adapters pass their integration gates.
+the independent production smoke passed. PR #34 deployed Design Slice 6 as
+`0aa7474`, PR #37 deployed Design Slice 7 as `f854c2e`, and PR #43 deployed
+Design Slice 8 as `85d6947`. Production workflow `33454522729` and the
+independent production smoke passed. The complete interface remains
+fixture-backed where account, email, detail, Ask, follow, coverage, request, and
+private-report adapters have not passed their integration gates.
 
 The deployed Slice 2 release includes the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -264,6 +270,15 @@ until the Auth and AgentMail adapters pass their gates. Pull-request verificatio
 passed 221 tests across 27 files, typecheck, production builds, prerender, and
 lint.
 
+Design Slice 6 completes Coverage, coverage request, public method, area-state,
+and private-report interfaces. Design Slice 7 makes loading, heading focus,
+sheet focus return, announcements, and reduced motion consistent. Design Slice
+8 connects the ten required resident journeys, preserves route and evidence
+context across page changes, and records every fixture and API owner in code.
+The UI vocabulary, component system, responsive hierarchy, and route structure
+are closed. Backend integration work must replace adapters without redesigning
+the pages.
+
 Do not design or build resident pages one at a time during backend slices.
 Slice 4 must first settle the issue, importance, timeline, and change contracts.
 Then pause implementation and complete this design handoff:
@@ -288,9 +303,10 @@ Then pause implementation and complete this design handoff:
 - never promote fixture-backed success as working production behavior.
 
 Exit gate: the approved resident interface is implemented as one responsive
-system, one real issue and its citations are live, and a published change
-updates an open page without refresh. Later slices connect remaining actions
-without reopening page layout or visual direction.
+system. The design portion is complete. The full Slice 5 exit gate remains open
+until one real issue and its citations are live and a published change updates
+that open production page without refresh. Later implementation slices connect
+remaining actions without reopening page layout or visual direction.
 
 After Slice 5, use
 [`post-slice-5-pr-plan.md`](./post-slice-5-pr-plan.md) as the agent execution

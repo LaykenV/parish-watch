@@ -1,6 +1,7 @@
 # Resident interface Design Slice 7
 
-Status: implemented for pull-request review on August 31, 2026
+Status: deployed through PR #37 as `f854c2e`. Production workflow
+`33427716526` passed.
 
 ## What this slice closes
 

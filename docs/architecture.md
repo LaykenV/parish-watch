@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 3 are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 8 are deployed
 
 ## Architecture Goal
 
@@ -63,8 +63,9 @@ version. A withheld version remains in history and cannot replace the current
 full or limited pointer.
 
 The extraction, publication, and issue ledgers remain internal. The public
-decision query exposes only current accepted fields and source metadata. No
-resident-facing issue interface or chat path exists yet. PR #13 merged as
+decision query exposes only current accepted fields and source metadata. The
+resident issue and chat interfaces are deployed, but production has no real
+issue-detail or anonymous-chat adapter yet. PR #13 merged as
 `c162543`; production workflow `33273984552` deployed the Slice 4
 backend and frontend, applied the registry seed, and passed smoke. The
 independent production smoke then passed the direct Convex host, canonical
@@ -74,9 +75,12 @@ publishes a reviewed score of 5. No production extraction, model review, or
 issue build had run at that release.
 
 The later controlled production onboarding ran Terra extraction and Luna review
-for Lafayette atomic records. Current production publications include
-`CO-062-2026`, `CO-069-2026`, and `CO-072-2026`. Production still has no issue
-build, issue-decision link, importance assessment, or ranked issue projection.
+for launch atomic records. The August 31 batch published 26 records from 17
+hash-matched official PDFs: 15 Lafayette, 9 Rapides, and 2 East Baton Rouge.
+Fifteen are full and 11 are limited. Production still has no issue build,
+issue-decision link, importance assessment, or ranked issue projection. The
+resident query exposes one older duplicate Lafayette board-vacancy card pending
+a ledger-preserving withdrawal operation.
 
 PR #24 merged resident-interface Design Slice 2 as `4e2ac67`. The application
 now has a responsive shell plus Home, For You, and Explore routes. Explicit
@@ -102,6 +106,20 @@ render the route recovery state. Citation selection lives in the `source` URL
 parameter. The shared Coss drawer handles mobile citations, while desktop keeps
 the selected excerpt in the evidence rail. No Convex schema, query,
 publication, or ranking contract changed in this design slice.
+
+PRs #28, #31, and #34 deployed the Ask, Following, account-entry, email,
+Coverage, coverage-request, public-method, and private-report interfaces behind
+their production availability gates. PR #37 unified route completion, loading,
+sheet focus return, live announcements, and reduced motion. PR #43 deployed the
+final connected prototype as `85d6947`. It carries validated resident return
+paths and development evidence scenarios through route changes, and records the
+typed contract, current gate, fixture owner, and future API owner for every
+resident destination. Production workflow `33454522729` and the independent
+production smoke passed.
+
+The frontend contract is complete. Production still needs the public issue,
+decision-detail, meeting, anonymous Ask, Auth, follow, AgentMail, coverage,
+request, and private-report adapters named in the post-Slice-5 plan.
 
 ## System Boundaries
 
@@ -232,9 +250,10 @@ page hierarchy, state matrix, and design-agent assignments. The complete
 frontend may use typed local fixtures while APIs are unfinished. Public builds
 must never simulate a successful integration.
 
-Design Slices 1 and 2 implement the route blueprint, shared shell, Home, For
-You, and Explore. Later design slices own issue and evidence views, Ask,
-following and accounts, coverage, cross-app QA, and the connected prototype.
+Design Slices 1 through 8 implement the route blueprint, shared shell,
+discovery, issue and evidence views, Ask, Following and accounts, Coverage,
+cross-app QA, and the connected prototype. Typed local fixtures remain the
+development proof for unfinished APIs. Production never treats them as data.
 
 ### Public Routes
 
@@ -1246,10 +1265,10 @@ proof. The packet split does not change the architecture or product scope below.
 3. Validation plus independent review produces a versioned public projection.
 4. A changed snapshot creates a material revision, and atomic decisions link
    into one issue timeline and importance record.
-5. After the complete page contract and designs are approved, one cohesive
-   frontend pass implements the resident interface. Design Slices 1 and 2 are
-   deployed with development-only typed fixtures. The issue and citation paths go live first,
-   while incomplete actions remain hidden or explicitly marked as prototypes.
+5. Design Slices 1 through 8 implement the complete resident interface with
+   development-only typed fixtures. Accepted atomic records are live in
+   discovery. Detail and action routes stay unavailable until their real
+   adapters pass instead of presenting prototype success.
 6. Anonymous chat answers only from the issue evidence.
 7. Convex Auth v2 Google accounts, verified email-only follows, and AgentMail
    close the outcome loop.

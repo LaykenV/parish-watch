@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4 and resident-interface Design Slices 1 through 3 are deployed
+Status: approved product plan; evidence Slices 1 through 4 and resident-interface Design Slices 1 through 8 are deployed
 
 ## Product Sentence
 
@@ -21,7 +21,7 @@ the full frontend against typed local fixtures so later API work does not reopen
 the page system. Fixture-backed success is development proof only. A production
 build cannot present an action as working until its real backend path passes.
 
-Design Slices 1 and 2 implement the route blueprint, responsive shell, Home,
+Design Slices 1 and 2 implemented the route blueprint, responsive shell, Home,
 For You, and Explore with development-only typed QA fixtures and no
 resident-facing fixture banner. Production ignores fixture query parameters and
 uses a bounded Convex query to show current full and limited atomic
@@ -34,8 +34,21 @@ decision, meeting, and citation-level evidence pages. Source controls keep
 citation selection in the URL, open a Coss drawer on mobile or a docked rail on
 desktop, and return focus when closed. Its typed records remain explicit
 development fixtures loaded through development-only imports. Production shows
-recovery pages until real detail queries exist. The later design slices still
-own Ask answers, follows and accounts, coverage, and cross-app QA.
+recovery pages until real detail queries exist.
+
+Design Slices 4 through 6 completed Ask, Follow and account-entry, email
+management, Coverage, coverage request, public method, and private-report
+interfaces. Design Slice 7 unified route focus, loading, sheet focus return,
+live announcements, and reduced motion. Design Slice 8 connected the ten
+resident journeys with bounded return paths and a code-level fixture-to-API
+handoff. PR #43 deployed that final interface as `85d6947`; production workflow
+`33454522729` and the independent production smoke passed.
+
+This closes resident UI design and implementation, not the production adapters.
+Production keeps real detail, Ask, accounts, follows, AgentMail, coverage
+requests, and private reports unavailable until their backend paths pass. Those
+integrations must replace the matching typed adapter without changing the page
+hierarchy or visual system.
 
 ### Start With Consequence
 

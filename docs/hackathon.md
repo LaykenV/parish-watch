@@ -148,6 +148,16 @@ remained withheld. PRs #15 through #23 deployed the fixes found during the run.
 The final suite passed 146 tests, typecheck, builds, prerender, and lint, and the
 production workflow and independent smoke passed.
 
+On August 31, the repeatable launch batch promoted 26 atomic records from 17
+official PDFs whose production hashes matched the reviewed development inputs.
+The batch produced 15 Lafayette, 9 Rapides, and 2 East Baton Rouge records: 15
+full and 11 limited. One negative control returned `not_found`, three targets
+stayed out after exact-citation failures, and replay reused all 27 successful
+extraction run IDs. The resident query also exposes one older duplicate
+Lafayette board-vacancy card, so the current public count is 27 until a
+ledger-preserving withdrawal operation exists. These records do not prove
+complete government-body coverage.
+
 PR #14 deployed the labeled low-fidelity route blueprint as `6e46fd7`. PR #24
 then deployed the responsive application shell plus fixture-backed Home, For
 You, and Explore as `4e2ac67`. Explicit fixture query scenarios remain available
@@ -175,9 +185,24 @@ PR #28 merged Design Slice 4 as `ff36c1b`. Production workflow `33389489990`
 succeeded. PR #31 deployed Design Slice 5 as `adfe81e`. Production workflow
 `33401768387` and the independent production smoke passed. The fixture-backed
 follow, account-entry, preference, notification, and email-management interface
-is now deployed behind the honest production unavailable state. Ask and follow
-backends, AgentMail, authentication, coverage integration, and the vibeapps.dev
-submission remain pending.
+is deployed behind the honest production unavailable state.
+
+PR #34 deployed Design Slice 6 as `0aa7474`. PR #37 deployed Design Slice 7 as
+`f854c2e`. PR #43 deployed Design Slice 8 as `85d6947`, completing the resident
+route hierarchy, responsive system, evidence interface, Ask, follow and email,
+Coverage, accessibility pass, and connected prototype. Production workflow
+`33454522729` and the independent production smoke passed. The final release
+keeps all development fixtures out of production behavior and records the real
+API owner for every fixture-backed action.
+
+Anonymous visit and area-selection telemetry is live and private. A controlled
+test proved the production writes and origin-specific browser accounting. It is
+test traffic, not resident adoption.
+
+The UI track is complete. Real issue-detail and live-update projections, the Ask
+backend, mounted Convex Auth, follows, AgentMail, coverage integration, the
+owner compiler, resident proof, the demo, and the vibeapps.dev submission remain
+pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

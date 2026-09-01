@@ -1,6 +1,7 @@
 # Resident interface Slice 6 handoff
 
-Status: pull request pending
+Status: deployed through PR #34 as `0aa7474`; follow-up focus and copy fixes
+deployed through PR #42 as `eafab66`
 
 Date: August 31, 2026
 

@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 5 are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 8 are deployed
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -10,14 +10,16 @@ review, and writes full, limited, or withheld immutable publication versions.
 The first issue-link and importance proof ran in the personal development
 deployment. PR #12 deployed the hardened Slice 3 backend as `8df651c`. PR #13
 deployed Slice 4 as `c162543`; production workflow `33273984552` and the
-independent production smoke passed. A controlled production onboarding then
-published cited atomic records for `CO-062-2026`, `CO-069-2026`, and
-`CO-072-2026` after Terra extraction, Luna review, and deterministic policy.
-The resident integration now reads current full and limited atomic publications
-through one bounded public query. Home, For You, and Explore label them as
-published decision records and open the accepted official source. Withheld
-versions stay hidden. No production issue build, importance assessment, or
-ranked issue feed has run.
+independent production smoke passed. The controlled launch-data batch then
+published 26 cited atomic records after Terra extraction, Luna review, and
+deterministic policy: 15 Lafayette, 9 Rapides, and 2 East Baton Rouge records.
+Fifteen are full and 11 are limited. Three targets stayed out after exact-citation
+validation failures, and one negative control returned `not_found`. The
+resident integration reads current full and limited atomic publications through
+one bounded public query. Home, For You, and Explore label them as published
+decision records and open the accepted official source. Withheld versions stay
+hidden. No production issue build, importance assessment, or ranked issue feed
+has run. Publication counts do not prove complete body coverage.
 
 Resident-interface Design Slice 1 established the complete route blueprint.
 Design Slice 2 then shipped the responsive shell plus fixture-backed Home, For
@@ -36,8 +38,7 @@ decision, meeting, and citation-level evidence surfaces. Its explicit typed
 fixtures load only through development-only imports, add no resident-facing
 banner, and stay out of production JavaScript. Production routes show an honest
 recovery page until real issue, decision-detail, and meeting-detail queries
-exist. The Following interface is deployed through Design Slice 5. Accounts,
-email delivery, and coverage remain integration work.
+exist.
 
 PR #28 merged resident-interface Design Slice 4 as `ff36c1b`. Its production
 workflow `33389489990` succeeded. Ask resolves corpus, issue, and meeting scope
@@ -55,6 +56,23 @@ ownership interface covers Google return, email-only verification, Following,
 areas and topics, notification preferences, scoped email management, and alert
 layouts. The production routes remain unavailable until Convex Auth and
 AgentMail pass their integration gates.
+
+PR #34 deployed Design Slice 6 as `0aa7474`, including Coverage, coverage
+requests, the public method page, area states, and private source-problem
+reporting. PR #37 deployed Design Slice 7 as `f854c2e` and made route focus,
+loading, sheets, live announcements, and reduced motion consistent across the
+application. PR #43 deployed the final connected prototype as `85d6947`.
+Production workflow `33454522729` and the independent production smoke passed.
+The final UI carries development evidence scenarios and bounded return routes
+across discovery, records, Ask, Following, and Coverage without exposing
+fixtures in production.
+
+The resident UI design and implementation track is complete. The production
+resident loop is not. Real issue, decision-detail, meeting, Ask, account,
+follow, AgentMail, coverage, request, and private-report adapters remain in the
+post-Slice-5 implementation plan. Until each adapter passes its gate, the
+deployed route shows accepted atomic records, static method copy, or an honest
+unavailable state.
 
 ## Executive Decision
 

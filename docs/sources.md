@@ -1,7 +1,7 @@
 # Official-Source Plan
 
-Status: Lafayette City Council registry, checked gold set, and controlled production onboarding implemented; remaining launch sources are candidates
-Last verified: August 30, 2026
+Status: controlled launch-data batch published atomic records from Lafayette, Rapides, and East Baton Rouge; government-body coverage remains candidate until each body passes every gate
+Last verified: August 31, 2026
 
 This document supplies starting points, not a claim of complete coverage. Every
 URL must be checked during the Firecrawl source spike, and every public body must
@@ -11,24 +11,27 @@ supported.
 ## Implemented checkpoint
 
 Slice 1 seeded the Lafayette City Council registry with the council hub,
-document search, and schedule/research URLs. The checked gold set now covers
+document search, and schedule/research URLs. The first checked gold set covered
 four agendas, three corresponding minutes, and one ordinance packet.
 
-A controlled production run stored all eight PDFs as immutable raw artifacts
-with separate normalized Markdown hashes. None of the current snapshots is
-marked truncated. The publication workflow produced full current records for
-`CO-062-2026` as postponed, `CO-069-2026` as decided, and `CO-072-2026`
-as scheduled. The board-vacancy announcement produced a limited source-only
-record. Its deadline stayed unpublished because the source does not state the
-timezone offset required by the deadline contract. A conflicting CO-072 packet
-amount remains stored but does not replace the supported agenda amount.
+The August 31 launch batch promoted 26 cited atomic records from 17 official
+PDFs whose production content hashes matched the reviewed development inputs.
+The result is 15 Lafayette, 9 Rapides, and 2 East Baton Rouge records. Fifteen
+are full and 11 are limited. One Rapides negative control returned `not_found`,
+three targets stayed out after repeat exact-citation failures, and replay reused
+all 27 successful extraction run IDs without new model calls. The batch evidence
+lives in `docs/production-batches/launch-data-2026-08-31.v1.json`.
 
-This proof covers the selected Lafayette City Council PDF source family. It
-does not mark Lafayette planning and zoning, Youngsville, Rapides, or East Baton
-Rouge bodies supported. The resident decision-record views now open each
-accepted publication's official source. That satisfies the source-link
-requirement only. The City Council still must pass every other coverage gate
-below before Public Parish calls the body supported.
+The resident query currently exposes those publications plus one older
+duplicate Lafayette board-vacancy card. Its public count is 27 until a
+ledger-preserving withdrawal operation exists. This is a known projection
+defect, not another launch record.
+
+This proof covers selected official PDF source families. It does not mark any
+government body fully supported. The resident decision-record views open each
+accepted publication's official source, which satisfies the source-link
+requirement only. Lafayette, Rapides, and East Baton Rouge bodies must still
+pass every coverage gate below before Public Parish calls them supported.
 
 ## Source Policy
 

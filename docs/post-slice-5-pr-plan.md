@@ -1,13 +1,33 @@
 # Post-Slice-5 PR plan
 
-Status: approved scope split for build Slices 6 through 9
+Status: approved scope split for build Slices 6 through 9; the resident
+activation precursor to PR 9C is deployed, while core Slice 6 through 9
+capabilities remain
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
 hierarchy and interaction contracts remain in
 [`resident-interface-plan.md`](./resident-interface-plan.md).
 
-## Starting point
+## Current checkpoint
+
+Resident-interface Design Slices 1 through 8 are deployed through PR #43 as
+`85d6947`. The complete route hierarchy, responsive behavior, development
+fixtures, integration gates, and fixture-to-API handoff now exist. Production
+discovery reads accepted atomic publications, and anonymous product telemetry
+is live. Production does not yet have `@convex-dev/agent`, mounted Convex Auth,
+AgentMail, a coverage compiler, or the real detail and action adapters.
+
+The next planned capability is PR 6A, private evidence-scoped Ask threads. It
+starts the production resident loop without reopening the finished interface.
+Before filing it, remove the known duplicate board-vacancy projection through a
+ledger-preserving withdrawal operation. Then close the missing Slice 5 data
+prerequisite: run and review at least one production issue build, connect the
+accepted issue, decision, meeting, and citation projections to their finished
+routes, and prove one published change updates that open issue without refresh.
+This is correction, adapter, and data work, not another UI slice.
+
+## Original starting assumption
 
 This plan assumes Slice 5 has passed its exit gate:
 

@@ -1,6 +1,7 @@
 # Resident interface Design Slice 8
 
-Status: implemented for pull-request review on August 31, 2026
+Status: deployed through PR #43 as `85d6947` on August 31, 2026. Production
+workflow `33454522729` and the independent production smoke passed.
 
 ## What this slice closes
 
@@ -92,6 +93,15 @@ viewport-resize controls timed out during this review. Slice 7's existing
 browser record remains the latest six-width proof for the unchanged responsive
 grid and shared overlays. Pull-request CI owns automated tests, typecheck,
 build, prerender, and lint under the repository validation rule.
+
+The final PR checks passed on head `09cc5cb`. PR-Agent reported no major or
+security issues. Its one earlier continuity finding was real: a record-to-record
+detour preserved only one Back step. Commit `46ef84e` retained the bounded
+nested origin, and the shared browser replayed filtered Explore to decision to
+related issue and back to the exact filtered Explore state. The final follow-up
+kept the `update` evidence scenario across discovery and meeting links, held a
+wrapped Following link to a 44-pixel target, and aligned the degraded-row action
+with the written `Request coverage` vocabulary.
 
 ## Final critique
 

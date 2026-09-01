@@ -12,21 +12,20 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-08-31T23:21:00Z
+- **Last updated:** 2026-09-01T00:52:28Z
 
 ## Log
 
-### 2026-08-31 - Design Slice 8 review
+### 2026-09-01 - 85d6947
 
-Connected resident-interface Design Slice 8 across development fixtures. Issue,
-decision, meeting, and Ask routes now carry a bounded resident return path, so
-Explore filters, record context, and follow-list context survive route changes.
-Following opens the exact changed issue and degraded Coverage offers a written
-request action. A code-level handoff names the typed page contract, readiness
-gate, fixture owner, and future API owner for every sitemap destination. The
-shared browser completed the primary journeys at 1280 by 800 CSS pixels without
-page overflow. Production still ignores fixtures, and automated validation
-remains with pull-request CI (`src/features/resident-handoff/`,
+Deployed resident-interface Design Slice 8 through PR #43. Bounded return paths
+preserve Explore filters, record context, Ask scope, and Following context across
+route changes. Discovery and meeting links keep the matching development
+evidence scenario, and Coverage uses one written request vocabulary. The code
+handoff names the contract, readiness gate, fixture owner, and future API owner
+for every resident destination. GitHub Verify and PR-Agent passed on the final
+head. Production workflow `33454522729`, the independent production smoke, and a
+live fixture-boundary check passed (`src/features/resident-handoff/`,
 `docs/resident-interface-slice-8.md`).
 
 ### 2026-08-31 - c180659
