@@ -138,13 +138,18 @@ expand the promise.
   corpus.
 - Use `@convex-dev/agent` for durable chat threads and messages instead of
   parallel application message tables. Public Parish still owns accepted
-  evidence retrieval, thread authorization, and deterministic citation checks.
-- Run the chat Agent on `MODEL_FAST` through Convex AI Gateway. Do not add an
-  embedding model for the bounded launch corpus unless a checked retrieval
-  benchmark later proves it necessary.
-- Use `@convex-dev/rate-limiter` for atomic request-frequency limits. Keep model
-  token and spend reservations in the Public Parish domain because provider
-  usage must reconcile after each action.
+  evidence context, thread authorization, and deterministic citation checks.
+- Run the chat Agent on `MODEL_FAST` at high reasoning through Convex AI
+  Gateway.
+- For the launch corpus, let one high-reasoning Luna call choose issue, meeting,
+  or decision IDs from the complete current catalog and every accepted excerpt
+  in scope. Expand those targets in code, then give a second Luna call the
+  selected records and normalized official documents. Use the full scope for a
+  broad, empty, not-found, or invalid selection. Do not use lexical matching,
+  embeddings, or a fixed top-k as an answer gate.
+- Use `@convex-dev/rate-limiter` for atomic request-frequency limits. Record
+  provider token use and estimated cost as private telemetry. Do not reject a
+  question because of an application-owned token budget.
 - Use invisible rate limits first, then CAPTCHA or cooldown when abuse appears.
 - Chat never requires sign-in.
 - Chat can only use published and validated official-source evidence.
@@ -187,7 +192,10 @@ expand the promise.
   point of the second pass.
 - Use Chat Completions with strict JSON Schema in `response_format`.
 - Run every stage that produces or clears a published claim at high reasoning.
-  Discovery, ranking, and chat stay low.
+  Discovery and ranking stay low. Both chat passes run at high reasoning. The
+  first selects every plausible issue, meeting, or decision from the complete
+  accepted catalog. The second reasons over the expanded records and full
+  official documents.
 - There is no third model tier. A stage that misses its gate at `MODEL_STRONG`
   is fixed with a better prompt, schema, or excerpt window, or it withholds.
 - Benchmark every stage against the labeled source set. A stage moves down to

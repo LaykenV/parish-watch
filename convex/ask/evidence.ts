@@ -1,52 +1,25 @@
 import { ConvexError, v } from 'convex/values'
 
 import { api } from '../_generated/api'
+import type { Doc, Id } from '../_generated/dataModel'
 import type { QueryCtx } from '../_generated/server'
-import { query } from '../_generated/server'
-import type { AskEvidence, AskEvidenceResult } from './contracts'
-import { askEvidenceResult, storedScope } from './contracts'
+import { internalQuery, query } from '../_generated/server'
+import type {
+  AskEvidence,
+  AskEvidenceResult,
+  AskIssueCatalogItem,
+  AskMeetingCatalogItem,
+  AskRecordContext,
+} from './contracts'
+import {
+  askEvidenceResult,
+  MAX_ANSWER_EVIDENCE_IDS,
+  storedScope,
+} from './contracts'
 import { authorizeThreadRead } from './threads'
 
-const MAX_EVIDENCE_RECORDS = 8
-const MAX_EVIDENCE_ITEMS = 24
-
-const STOP_WORDS = new Set([
-  'and',
-  'about',
-  'after',
-  'again',
-  'are',
-  'been',
-  'before',
-  'did',
-  'could',
-  'does',
-  'from',
-  'happened',
-  'have',
-  'how',
-  'into',
-  'its',
-  'official',
-  'parish',
-  'public',
-  'record',
-  'records',
-  'that',
-  'the',
-  'their',
-  'there',
-  'these',
-  'this',
-  'was',
-  'were',
-  'what',
-  'when',
-  'where',
-  'which',
-  'with',
-  'would',
-])
+const MAX_SCOPE_RECORDS = 500
+const MAX_SCOPE_EVIDENCE_ITEMS = 8_000
 
 export const retrieveEvidence = query({
   args: {
@@ -65,38 +38,28 @@ export const retrieveEvidence = query({
     }
     const access = await authorizeThreadRead(ctx, args.token, args.threadId)
     const scope = storedScope(access.mapping.scopeKind, access.mapping.scopeKey)
-    const terms = searchTerms(question)
-    if (terms.length === 0) return { kind: 'no_evidence', scope, evidence: [] }
-
-    const decisions = await scopedDecisions(ctx, scope, terms)
-    const evidence = decisions
-      .flatMap((decision) =>
-        decision.citations.map((citation) => ({
-          evidenceId: citation.id,
-          recordKey: decision.recordKey,
-          fieldPath: citation.fieldPath,
-          documentTitle: citation.documentTitle,
-          bodyName: citation.bodyName,
-          sourceKind: citation.sourceKind,
-          officialUrl: citation.officialUrl,
-          excerpt: citation.excerpt,
-          page: citation.page,
-          section: citation.section,
-          retrievedAt: citation.retrievedAt,
-          sourceHref: `/decisions/${encodeURIComponent(decision.recordKey)}?source=${encodeURIComponent(citation.id)}`,
-        })),
-      )
-      .sort(
-        (left, right) =>
-          evidenceScore(right, terms) - evidenceScore(left, terms),
-      )
-      .slice(0, MAX_EVIDENCE_ITEMS)
+    const decisions = await scopedDecisions(ctx, scope)
+    const records = decisions.map(recordContext)
+    const meetings = meetingCatalog(decisions)
+    const issues = await issueCatalog(ctx, decisions)
+    const evidence = decisions.flatMap((decision) =>
+      decision.citations.map((citation) => projectEvidence(decision, citation)),
+    )
+    if (evidence.length > MAX_SCOPE_EVIDENCE_ITEMS) {
+      throw new ConvexError({
+        code: 'ask_scope_too_large',
+        message: 'This Ask scope has too many accepted evidence excerpts',
+      })
+    }
 
     const kind: AskEvidenceResult['kind'] =
       evidence.length > 0 ? 'evidence' : 'no_evidence'
     return {
       kind,
       scope,
+      issues,
+      meetings,
+      records,
       evidence,
     }
   },
@@ -112,7 +75,7 @@ export const retrieveEvidenceByIds = query({
   handler: async (ctx, args): Promise<AskEvidenceResult> => {
     if (
       args.evidenceIds.length === 0 ||
-      args.evidenceIds.length > 8 ||
+      args.evidenceIds.length > MAX_ANSWER_EVIDENCE_IDS ||
       new Set(args.evidenceIds).size !== args.evidenceIds.length
     ) {
       throw new ConvexError({
@@ -131,14 +94,103 @@ export const retrieveEvidenceByIds = query({
     const accepted = evidence.filter(
       (item): item is NonNullable<typeof item> => item !== null,
     )
+    const decisions = await loadDecisions(ctx, [
+      ...new Set(accepted.map((item) => item.recordKey)),
+    ])
     return {
       kind:
         accepted.length === args.evidenceIds.length
           ? 'evidence'
           : 'no_evidence',
       scope,
+      issues: await issueCatalog(ctx, decisions),
+      meetings: meetingCatalog(decisions),
+      records: decisions.map(recordContext),
       evidence: accepted,
     }
+  },
+})
+
+const publishedDocumentRef = v.object({
+  snapshotId: v.id('sourceSnapshots'),
+  normalizedStorageId: v.id('_storage'),
+  normalizedContentHash: v.string(),
+  normalizedByteLength: v.number(),
+  officialUrl: v.string(),
+  retrievedAt: v.number(),
+  recordKeys: v.array(v.string()),
+  evidenceIds: v.array(v.string()),
+})
+
+export type PublishedDocumentRef = typeof publishedDocumentRef.type
+
+export const retrievePublishedDocumentRefs = internalQuery({
+  args: {
+    token: v.string(),
+    threadId: v.string(),
+    evidenceIds: v.array(v.string()),
+  },
+  returns: v.array(publishedDocumentRef),
+  handler: async (ctx, args): Promise<PublishedDocumentRef[]> => {
+    const access = await authorizeThreadRead(ctx, args.token, args.threadId)
+    const scope = storedScope(access.mapping.scopeKind, access.mapping.scopeKey)
+    const issueKeys = await issueRecordKeys(ctx, scope)
+    const refs = await Promise.all(
+      [...new Set(args.evidenceIds)].map(async (evidenceId) => {
+        const source = await loadAcceptedEvidenceSource(
+          ctx,
+          scope,
+          issueKeys,
+          evidenceId,
+        )
+        if (!source) {
+          throw new ConvexError({
+            code: 'ask_evidence_changed',
+            message: 'Selected evidence is no longer current',
+          })
+        }
+        const snapshot = await ctx.db.get(source.snapshotId)
+        if (
+          !snapshot?.normalizedContentHash ||
+          snapshot.contentHashBasis !== 'raw_artifact_v2' ||
+          snapshot.truncation.truncated
+        ) {
+          throw new ConvexError({
+            code: 'ask_document_unavailable',
+            message: 'A selected official document is not fully available',
+          })
+        }
+        return {
+          snapshotId: snapshot._id,
+          normalizedStorageId: snapshot.normalizedStorageId,
+          normalizedContentHash: snapshot.normalizedContentHash,
+          normalizedByteLength: snapshot.normalizedByteLength,
+          officialUrl: source.evidence.officialUrl,
+          retrievedAt: source.evidence.retrievedAt,
+          recordKeys: [source.evidence.recordKey],
+          evidenceIds: [source.evidence.evidenceId],
+        }
+      }),
+    )
+    const bySnapshot = new Map<string, PublishedDocumentRef>()
+    for (const ref of refs) {
+      const existing = bySnapshot.get(ref.snapshotId)
+      bySnapshot.set(
+        ref.snapshotId,
+        existing
+          ? {
+              ...existing,
+              recordKeys: [
+                ...new Set([...existing.recordKeys, ...ref.recordKeys]),
+              ],
+              evidenceIds: [
+                ...new Set([...existing.evidenceIds, ...ref.evidenceIds]),
+              ],
+            }
+          : ref,
+      )
+    }
+    return [...bySnapshot.values()]
   },
 })
 
@@ -164,12 +216,36 @@ async function loadAcceptedEvidenceById(
   issueKeys: Set<string> | null,
   evidenceId: string,
 ) {
+  const source = await loadAcceptedEvidenceSource(
+    ctx,
+    scope,
+    issueKeys,
+    evidenceId,
+  )
+  return source?.evidence ?? null
+}
+
+async function loadAcceptedEvidenceSource(
+  ctx: QueryCtx,
+  scope: Scope,
+  issueKeys: Set<string> | null,
+  evidenceId: string,
+): Promise<{
+  evidence: AskEvidence
+  snapshotId: Id<'sourceSnapshots'>
+} | null> {
   const citationId = ctx.db.normalizeId('citations', evidenceId)
   if (!citationId) return null
   const citation = await ctx.db.get(citationId)
   if (!citation) return null
   const publication = await ctx.db.get(citation.publicationVersionId)
   if (!publication?.payload || publication.mode === 'withheld') return null
+  if (
+    citation.snapshotId !== publication.snapshotId ||
+    citation.snapshotId !== publication.payload.source.snapshotId
+  ) {
+    return null
+  }
   const record = await ctx.db.get(publication.recordId)
   if (
     !record ||
@@ -190,18 +266,21 @@ async function loadAcceptedEvidenceById(
         : !scope.areaKey || place.slug === scope.areaKey
   if (!inScope) return null
   return {
-    evidenceId: citation._id,
-    recordKey: record.recordKey,
-    fieldPath: citation.fieldPath,
-    documentTitle: publication.payload.title,
-    bodyName: body.name,
-    sourceKind: publication.payload.source.sourceKind,
-    officialUrl: citation.officialUrl,
-    excerpt: citation.excerpt,
-    page: citation.page ?? null,
-    section: citation.section ?? null,
-    retrievedAt: citation.retrievedAt,
-    sourceHref: `/decisions/${encodeURIComponent(record.recordKey)}?source=${encodeURIComponent(citation._id)}`,
+    evidence: {
+      evidenceId: citation._id,
+      recordKey: record.recordKey,
+      fieldPath: citation.fieldPath,
+      documentTitle: publication.payload.title,
+      bodyName: body.name,
+      sourceKind: publication.payload.source.sourceKind,
+      officialUrl: citation.officialUrl,
+      excerpt: citation.excerpt,
+      page: citation.page ?? null,
+      section: citation.section ?? null,
+      retrievedAt: citation.retrievedAt,
+      sourceHref: `/decisions/${encodeURIComponent(record.recordKey)}?source=${encodeURIComponent(citation._id)}`,
+    },
+    snapshotId: citation.snapshotId,
   }
 }
 
@@ -220,12 +299,55 @@ type EvidenceCitation = {
 
 type ScopedDecision = {
   recordKey: string
+  sourceRecordId: string
+  placeName: string
+  placeSlug: string
+  bodyName: string
+  mode: 'full' | 'limited'
+  title: string
+  recordType: string | null
+  lifecycleState: string | null
+  summary: string | null
+  meetingAt: string | null
+  meetingKey: string | null
+  affectedPlaces: string[]
+  amounts: Array<{
+    value: number
+    currency: 'USD'
+    context: string
+    citationIds: string[]
+  }>
+  publicActions: Array<{
+    type: string
+    deadline: string | null
+    instructions: string
+    instructionCitationIds: string[]
+    deadlineCitationIds: string[]
+  }>
+  issue: { slug: string; title: string } | null
+  versions: Array<{
+    version: number
+    mode: 'full' | 'limited'
+    reasonCode: string
+    createdAt: number
+  }>
+  changes: Array<{
+    id: string
+    classification: string
+    fieldPaths: string[]
+    createdAt: number
+  }>
   citations: EvidenceCitation[]
 }
 
 type IssueProjection = {
+  slug: string
+  placeName: string
+  placeSlug: string
+  bodyName: string
   title: string
   summary: string
+  lifecycleState: string | null
   topics: string[]
   links: Array<{
     recordKey: string
@@ -248,19 +370,9 @@ type MeetingProjection = {
   >
 }
 
-type DiscoveryProjection = {
-  recordKey: string
-  sourceRecordId: string
-  placeSlug: string
-  bodyName: string
-  title: string
-  summary: string | null
-}
-
 async function scopedDecisions(
   ctx: QueryCtx,
   scope: Scope,
-  terms: string[],
 ): Promise<ScopedDecision[]> {
   if (scope.kind === 'issue') {
     const issue: IssueProjection | null = await ctx.runQuery(
@@ -268,22 +380,7 @@ async function scopedDecisions(
       { slug: scope.issueSlug },
     )
     if (!issue) return []
-    const issueMatches = score(
-      `${issue.title} ${issue.summary} ${issue.topics.join(' ')}`,
-      terms,
-    )
-    const keys = issue.links
-      .map((link) => ({
-        key: link.recordKey,
-        score: score(
-          `${link.title} ${link.summary ?? ''} ${link.reason}`,
-          terms,
-        ),
-      }))
-      .filter((item) => issueMatches > 0 || item.score > 0)
-      .sort((left, right) => right.score - left.score)
-      .slice(0, MAX_EVIDENCE_RECORDS)
-      .map((item) => item.key)
+    const keys = issue.links.map((link) => link.recordKey)
     return await loadDecisions(ctx, keys)
   }
 
@@ -293,43 +390,73 @@ async function scopedDecisions(
       { meetingKey: scope.meetingId },
     )
     if (!meeting) return []
-    const meetingMatches = score(
-      `${meeting.bodyName} ${meeting.placeName} ${meeting.meetingAt}`,
-      terms,
-    )
     return meeting.decisions
-      .map((decision) => ({
-        decision,
-        score: score(
-          `${decision.title} ${decision.summary ?? ''} ${decision.sourceRecordId}`,
-          terms,
-        ),
-      }))
-      .filter((item) => meetingMatches > 0 || item.score > 0)
-      .sort((left, right) => right.score - left.score)
-      .slice(0, MAX_EVIDENCE_RECORDS)
-      .map((item) => item.decision)
   }
 
-  const published: DiscoveryProjection[] = await ctx.runQuery(
-    api.resident.discovery.listPublishedDecisions,
-    {},
-  )
-  const keys = published
-    .filter(
-      (decision) => !scope.areaKey || decision.placeSlug === scope.areaKey,
-    )
-    .map((decision) => ({
-      key: decision.recordKey,
-      score: score(
-        `${decision.title} ${decision.summary ?? ''} ${decision.sourceRecordId} ${decision.bodyName}`,
-        terms,
-      ),
-    }))
-    .filter((item) => item.score > 0)
-    .sort((left, right) => right.score - left.score)
-    .slice(0, MAX_EVIDENCE_RECORDS)
-    .map((item) => item.key)
+  let records: Array<Doc<'decisionRecords'>>
+  if (scope.areaKey) {
+    const areaKey = scope.areaKey
+    const jurisdiction = await ctx.db
+      .query('jurisdictions')
+      .withIndex('by_slug', (q) => q.eq('slug', areaKey))
+      .unique()
+    if (!jurisdiction) return []
+    const bodies = await ctx.db
+      .query('governmentBodies')
+      .withIndex('by_jurisdiction_and_status', (q) =>
+        q.eq('jurisdictionId', jurisdiction._id),
+      )
+      .take(101)
+    if (bodies.length > 100) {
+      throw new ConvexError({
+        code: 'ask_scope_too_large',
+        message: 'This Ask scope has too many government bodies',
+      })
+    }
+    records = (
+      await Promise.all(
+        bodies.flatMap((body) =>
+          (['full', 'limited'] as const).map((mode) =>
+            ctx.db
+              .query('decisionRecords')
+              .withIndex(
+                'by_government_body_and_current_mode_and_updated_at',
+                (q) =>
+                  q.eq('governmentBodyId', body._id).eq('currentMode', mode),
+              )
+              .order('desc')
+              .take(MAX_SCOPE_RECORDS + 1),
+          ),
+        ),
+      )
+    ).flat()
+  } else {
+    const [fullRecords, limitedRecords] = await Promise.all([
+      ctx.db
+        .query('decisionRecords')
+        .withIndex('by_current_mode_and_updated_at', (q) =>
+          q.eq('currentMode', 'full'),
+        )
+        .order('desc')
+        .take(MAX_SCOPE_RECORDS + 1),
+      ctx.db
+        .query('decisionRecords')
+        .withIndex('by_current_mode_and_updated_at', (q) =>
+          q.eq('currentMode', 'limited'),
+        )
+        .order('desc')
+        .take(MAX_SCOPE_RECORDS + 1),
+    ])
+    records = [...fullRecords, ...limitedRecords]
+  }
+  if (records.length > MAX_SCOPE_RECORDS) {
+    throw new ConvexError({
+      code: 'ask_scope_too_large',
+      message: 'This Ask scope is too large to load safely',
+    })
+  }
+  records.sort((left, right) => right.updatedAt - left.updatedAt)
+  const keys = records.map((record) => record.recordKey)
   return await loadDecisions(ctx, keys)
 }
 
@@ -347,35 +474,125 @@ async function loadDecisions(
   )
 }
 
-function searchTerms(question: string): string[] {
-  return [
-    ...new Set(
-      question
-        .toLowerCase()
-        .normalize('NFKD')
-        .split(/[^a-z0-9]+/)
-        .filter((term) => term.length >= 3 && !STOP_WORDS.has(term)),
-    ),
-  ].slice(0, 12)
+function projectEvidence(
+  decision: ScopedDecision,
+  citation: EvidenceCitation,
+): AskEvidence {
+  return {
+    evidenceId: citation.id,
+    recordKey: decision.recordKey,
+    fieldPath: citation.fieldPath,
+    documentTitle: citation.documentTitle,
+    bodyName: citation.bodyName,
+    sourceKind: citation.sourceKind,
+    officialUrl: citation.officialUrl,
+    excerpt: citation.excerpt,
+    page: citation.page,
+    section: citation.section,
+    retrievedAt: citation.retrievedAt,
+    sourceHref: `/decisions/${encodeURIComponent(decision.recordKey)}?source=${encodeURIComponent(citation.id)}`,
+  }
 }
 
-function score(value: string, terms: string[]): number {
-  const normalized = value.toLowerCase().normalize('NFKD')
-  return terms.reduce(
-    (total, term) => total + (normalized.includes(term) ? 1 : 0),
-    0,
+function recordContext(decision: ScopedDecision): AskRecordContext {
+  return {
+    recordKey: decision.recordKey,
+    sourceRecordId: decision.sourceRecordId,
+    placeName: decision.placeName,
+    placeSlug: decision.placeSlug,
+    bodyName: decision.bodyName,
+    mode: decision.mode,
+    title: decision.title,
+    recordType: decision.recordType,
+    lifecycleState: decision.lifecycleState,
+    summary: decision.summary,
+    meetingAt: decision.meetingAt,
+    meetingKey: decision.meetingKey,
+    affectedPlaces: decision.affectedPlaces,
+    amounts: decision.amounts.map((amount) => ({
+      value: amount.value,
+      currency: amount.currency,
+      context: amount.context,
+      evidenceIds: amount.citationIds,
+    })),
+    publicActions: decision.publicActions.map((action) => ({
+      type: action.type,
+      deadline: action.deadline,
+      instructions: action.instructions,
+      evidenceIds: [
+        ...action.instructionCitationIds,
+        ...action.deadlineCitationIds,
+      ],
+    })),
+    issue: decision.issue,
+    versions: decision.versions,
+    changes: decision.changes,
+    evidenceIds: decision.citations.map((citation) => citation.id),
+  }
+}
+
+async function issueCatalog(
+  ctx: QueryCtx,
+  decisions: ScopedDecision[],
+): Promise<AskIssueCatalogItem[]> {
+  const scopedRecordKeys = new Set(
+    decisions.map((decision) => decision.recordKey),
   )
+  const issueSlugs = [
+    ...new Set(
+      decisions.flatMap((decision) =>
+        decision.issue ? [decision.issue.slug] : [],
+      ),
+    ),
+  ]
+  const issues: Array<IssueProjection | null> = await Promise.all(
+    issueSlugs.map((slug) =>
+      ctx.runQuery(api.resident.evidence.getPublishedIssue, { slug }),
+    ),
+  )
+  return issues.flatMap((issue) => {
+    if (!issue) return []
+    const recordKeys = issue.links
+      .map((link) => link.recordKey)
+      .filter((recordKey) => scopedRecordKeys.has(recordKey))
+    if (recordKeys.length === 0) return []
+    return [
+      {
+        issueSlug: issue.slug,
+        placeName: issue.placeName,
+        placeSlug: issue.placeSlug,
+        bodyName: issue.bodyName,
+        title: issue.title,
+        summary: issue.summary,
+        lifecycleState: issue.lifecycleState,
+        topics: issue.topics,
+        recordKeys,
+      },
+    ]
+  })
 }
 
-function evidenceScore(
-  evidence: { fieldPath: string; documentTitle: string; excerpt: string },
-  terms: string[],
-): number {
-  return (
-    score(`${evidence.documentTitle} ${evidence.excerpt}`, terms) * 10 +
-    (evidence.fieldPath === '/title' ||
-    evidence.fieldPath === '/plainLanguageSummary'
-      ? 1
-      : 0)
+function meetingCatalog(decisions: ScopedDecision[]): AskMeetingCatalogItem[] {
+  const meetings = new Map<string, AskMeetingCatalogItem>()
+  for (const decision of decisions) {
+    if (!decision.meetingKey || !decision.meetingAt) continue
+    const current = meetings.get(decision.meetingKey)
+    if (current) {
+      current.recordKeys.push(decision.recordKey)
+      current.decisionTitles.push(decision.title)
+      continue
+    }
+    meetings.set(decision.meetingKey, {
+      meetingKey: decision.meetingKey,
+      placeName: decision.placeName,
+      placeSlug: decision.placeSlug,
+      bodyName: decision.bodyName,
+      meetingAt: decision.meetingAt,
+      recordKeys: [decision.recordKey],
+      decisionTitles: [decision.title],
+    })
+  }
+  return [...meetings.values()].sort((left, right) =>
+    left.meetingAt.localeCompare(right.meetingAt),
   )
 }

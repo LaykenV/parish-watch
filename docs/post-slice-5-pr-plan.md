@@ -29,6 +29,16 @@ evidence not found without citations for an unsupported question. Production
 does not yet have mounted Convex Auth, AgentMail, or a coverage compiler. PR 7A
 is the active capability.
 
+The working-tree Slice 6 quality follow-up supersedes the original retrieval
+and token-budget choices below. High-reasoning Luna first selects issue,
+meeting, or decision IDs from every current published record and accepted
+excerpt in scope. A second high-reasoning call receives the expanded records
+and hash-checked normalized official documents. Broad or invalid selections use
+the full scope. It keeps request-frequency limits and token telemetry, but
+removes lexical selection, fixed top-k retrieval, and application-owned input
+or output token budgets. The original PR sections remain as the historical
+delivery record. The quality follow-up is not deployed.
+
 ## Original starting assumption
 
 This plan assumes Slice 5 has passed its exit gate:

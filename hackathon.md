@@ -12,9 +12,20 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T16:57:20Z
+- **Last updated:** 2026-09-01T19:39:25Z
 
 ## Log
+
+### 2026-09-01 - working tree
+
+Reworked Ask answer quality without deploying it. One high-reasoning Luna call
+now selects issue, meeting, or decision IDs from the complete current catalog
+and every accepted citation excerpt. A second high-reasoning Luna call receives
+the expanded records and their hash-checked normalized official documents.
+Broad or invalid selections use the full scope. Removed lexical answer gating,
+fixed top-k retrieval, and application-owned token budgets while keeping
+request-frequency limits, citation validation, private usage telemetry, and
+Agent thread history (`convex/ask/`, `convex/ai/`).
 
 ### 2026-09-01 - 5679fa3
 
