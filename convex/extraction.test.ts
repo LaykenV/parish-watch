@@ -358,13 +358,13 @@ test('citation matching rejects joined CivicEngage-style agenda header lines', (
     'Wednesday, January 14, 2026 3:00 PM Presentations and Special Recognitions 4:00 PM Metropolitan Council Meeting',
   )
 
-  const joinedDateAndTime =
+  const fullThreeLineJoin =
     'Wednesday, January 14, 2026 3:00 PM Presentations and Special Recognitions 4:00 PM Metropolitan Council Meeting'
-  expect(locateExcerpt(source, joinedDateAndTime)).toBe(0)
+  expect(locateExcerpt(source, fullThreeLineJoin)).toBe(0)
 
-  const modelJoinedHeaderAndMeetingTime =
+  const skipMiddleJoin =
     'Wednesday, January 14, 2026 4:00 PM Metropolitan Council Meeting'
-  expect(locateExcerpt(source, modelJoinedHeaderAndMeetingTime)).toBe(-1)
+  expect(locateExcerpt(source, skipMiddleJoin)).toBe(-1)
 
   expect(
     locateExcerpt(source, 'Wednesday, January 14, 2026'),
@@ -866,7 +866,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
   expect(messages[0].content).toContain('JSON Pointer with a leading slash')
   expect(messages[0].content).toContain('Do not add JSON quotes')
   expect(messages[0].content).toContain(
-    'Set meetingAt only when one contiguous source span states the meeting date',
+    'For an agenda item, set meetingAt only when one contiguous source span',
   )
   expect(messages[0].content).toContain(
     'If the date and time appear in separate spans, do not join them',
