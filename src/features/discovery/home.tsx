@@ -26,6 +26,8 @@ import type { PublishedDecision, PublishedIssue } from './live-publications'
 import { Notice, SectionFailure, UpdateRow } from './notice'
 import { ResultRow } from './result-row'
 
+const HOME_SECTION_LIMIT = 6
+
 export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   const area = useArea()
   const activeScenario = getActiveDiscoveryFixture(scenario)
@@ -181,11 +183,13 @@ function HomeFeed({
         watching,
       )
   const decisionRows = fixturesEnabled
-    ? filterRows(
+    ? filterFixtureRows(
         EXPLORE_ROW_FIXTURES.filter((row) => row.kind === 'Decision record'),
         watching,
       )
-    : filterRows((publishedDecisions ?? []).map(toDecisionRow), watching)
+    : (publishedDecisions ?? [])
+        .filter((decision) => isWatched(decision.placeSlug, watching))
+        .map(toDecisionRow)
   const loading =
     !fixturesEnabled &&
     (publishedIssues === undefined || publishedDecisions === undefined)
@@ -283,7 +287,7 @@ function IssuesSection({
         </div>
       ) : issues.length > 0 ? (
         <div className="pp-card-grid">
-          {issues.map((issue) => (
+          {issues.slice(0, HOME_SECTION_LIMIT).map((issue) => (
             <IssueCard issue={issue} key={issue.slug} />
           ))}
         </div>
@@ -350,7 +354,7 @@ function DecisionRecordsSection({
         </div>
       ) : rows.length > 0 ? (
         <div className="pp-row-list">
-          {rows.slice(0, 6).map((row, index) => (
+          {rows.slice(0, HOME_SECTION_LIMIT).map((row, index) => (
             <ResultRow key={`${row.href}-${index}`} row={row} />
           ))}
         </div>
@@ -382,7 +386,12 @@ function filterIssues(issues: IssueCardData[], watching: AreaSlug[]) {
   )
 }
 
-function filterRows(rows: ResultRowData[], watching: AreaSlug[]) {
+function isWatched(placeSlug: string, watching: AreaSlug[]) {
+  return watching.length === 0 || watching.some((slug) => slug === placeSlug)
+}
+
+// Fixture rows carry no place slug, so dev-only scenarios match on the name.
+function filterFixtureRows(rows: ResultRowData[], watching: AreaSlug[]) {
   const names = watching.map(areaName)
   return rows.filter(
     (row) => names.length === 0 || (row.place && names.includes(row.place)),
