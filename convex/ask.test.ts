@@ -367,7 +367,57 @@ test('holds one answer at a time and releases failed token reservations', async 
   )
 })
 
-test('releases abandoned reservations and cools down repeated requests', async () => {
+test('charges the reservation when failed provider usage is unknown', async () => {
+  const t = initTest()
+  await seedEvidence(t)
+  const token = 'unknown-usage-session-token-000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+  const question = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'What changed about drainage?',
+    idempotencyKey: 'unknown-usage-question-0001',
+  })
+  const claim = await t.mutation(internal.ask.ledger.claimAnswer, {
+    token,
+    threadId: thread.threadId,
+    questionMessageId: question.messageId,
+  })
+  if (claim.kind !== 'ready') throw new Error('Expected a ready claim')
+  await t.mutation(internal.ask.ledger.recordModelAttempt, {
+    receiptId: claim.receiptId,
+    answerAttempt: claim.attempt,
+    route: 'ai_gateway',
+    modelId: 'openai/gpt-5.6-luna',
+    promptVersion: 'ask-answer-v1',
+    schemaVersion: 'ask-answer-v1',
+    attempt: 1,
+    status: 'failed',
+    latencyMs: 1,
+    errorClass: 'ai_gateway_unavailable',
+  })
+  await t.mutation(internal.ask.ledger.failAnswer, {
+    receiptId: claim.receiptId,
+    answerAttempt: claim.attempt,
+    errorClass: 'ai_gateway_unavailable',
+  })
+
+  const windows = await t.run(async (ctx) =>
+    ctx.db.query('askTokenWindows').collect(),
+  )
+  expect(windows).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ reservedTokens: 0, consumedTokens: 15_000 }),
+      expect.objectContaining({ reservedTokens: 0, consumedTokens: 15_000 }),
+    ]),
+  )
+})
+
+test('charges abandoned reservations and cools down repeated requests', async () => {
   const t = initTest()
   await seedEvidence(t)
   const token = 'cooldown-answer-session-token-0000000000000000000000'
@@ -427,6 +477,7 @@ test('releases abandoned reservations and cools down repeated requests', async (
     ctx.db.query('askTokenWindows').collect(),
   )
   expect(windows.every((window) => window.reservedTokens === 0)).toBe(true)
+  expect(windows.every((window) => window.consumedTokens === 15_000)).toBe(true)
 })
 
 test('fences a stale answer after its lease is retried', async () => {

@@ -739,11 +739,13 @@ answers.
 Fields: anonymous session, short or daily window, window start, reserved
 tokens, consumed tokens, and updated time. Index: session, kind, and window
 start. One mutation reserves both windows before a model call. A completed
-attempt replaces the reservation with actual provider usage. A failed attempt
-releases unused capacity, and a scheduled two-minute lease cleanup releases an
-abandoned reservation. The short window allows 30,000 tokens per minute. The
-daily window allows 150,000 tokens per session. The rate-limiter component
-separately caps three answer attempts per minute and 20 per day.
+attempt replaces the reservation with known provider usage. A failed attempt
+does the same when usage is known. Unknown failed work and abandoned work
+consume the full reservation so a late or unreported provider call cannot
+reopen that capacity. A no-evidence path that skips the model releases its
+reservation. The short window allows 30,000 tokens per minute. The daily window
+allows 150,000 tokens per session. The rate-limiter component separately caps
+three answer attempts per minute and 20 per day.
 
 #### Agent component threads and messages
 
@@ -1074,7 +1076,8 @@ affect ranking.
 
 - rate-limit answer attempts by opaque session;
 - reserve 15,000 tokens against 30,000-per-minute and 150,000-per-day budgets;
-- reconcile actual use and release failed or abandoned reservations;
+- reconcile known use, charge the reservation for unknown or abandoned work,
+  and release only work that skipped the model;
 - keep normal limits invisible;
 - return a cooldown at the request or token threshold;
 - keep the CAPTCHA adapter inactive until observed abuse justifies it;

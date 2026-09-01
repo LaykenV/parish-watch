@@ -115,7 +115,12 @@ export const claimAnswer = internalMutation({
           retryAt: receipt.startedAt + ASK_RUN_LEASE_MS,
         })
       }
-      await settleAskCapacity(ctx, receipt, 0, 'released')
+      await settleAskCapacity(
+        ctx,
+        receipt,
+        receipt.reservedTokens ?? ASK_TOKEN_RESERVATION,
+        'reconciled',
+      )
       await ctx.db.patch(receipt._id, {
         state: 'failed',
         completedAt: now,
@@ -124,7 +129,12 @@ export const claimAnswer = internalMutation({
     }
 
     if (existing?.reservationState === 'held') {
-      await settleAskCapacity(ctx, existing, 0, 'released')
+      await settleAskCapacity(
+        ctx,
+        existing,
+        existing.reservedTokens ?? ASK_TOKEN_RESERVATION,
+        'reconciled',
+      )
     }
     const reservation = await reserveAskCapacity(ctx, session._id, now)
     if (existing) {
@@ -256,13 +266,12 @@ export const persistAnswer = internalMutation({
       },
     })
     const usage = await currentAttemptUsage(ctx, receipt)
+    const consumedTokens = accountedUsage(receipt, usage)
     await settleAskCapacity(
       ctx,
       receipt,
-      usage.modelRan && usage.tokens === null
-        ? (receipt.reservedTokens ?? ASK_TOKEN_RESERVATION)
-        : (usage.tokens ?? 0),
-      usage.modelRan ? 'reconciled' : 'released',
+      consumedTokens,
+      usage.attempted ? 'reconciled' : 'released',
     )
     await ctx.db.patch(receipt._id, {
       state: 'succeeded',
@@ -288,11 +297,12 @@ export const failAnswer = internalMutation({
       receipt.attempt === args.answerAttempt
     ) {
       const usage = await currentAttemptUsage(ctx, receipt)
+      const consumedTokens = accountedUsage(receipt, usage)
       await settleAskCapacity(
         ctx,
         receipt,
-        usage.tokens ?? 0,
-        usage.tokens !== null && usage.tokens > 0 ? 'reconciled' : 'released',
+        consumedTokens,
+        usage.attempted ? 'reconciled' : 'released',
       )
       await ctx.db.patch(receipt._id, {
         state: 'failed',
@@ -324,8 +334,11 @@ export const releaseAbandonedAnswer = internalMutation({
     await settleAskCapacity(
       ctx,
       receipt,
-      usage.tokens ?? 0,
-      usage.tokens !== null && usage.tokens > 0 ? 'reconciled' : 'released',
+      Math.max(
+        accountedUsage(receipt, usage),
+        receipt.reservedTokens ?? ASK_TOKEN_RESERVATION,
+      ),
+      'reconciled',
     )
     await ctx.db.patch(receipt._id, {
       state: 'failed',
@@ -367,12 +380,26 @@ async function currentAttemptUsage(
     attempt.totalTokens === undefined ? [] : [attempt.totalTokens],
   )
   return {
-    modelRan: current.some((attempt) => attempt.status !== 'failed'),
-    tokens:
-      known.length > 0
-        ? known.reduce((total, value) => total + value, 0)
-        : null,
+    attempted: current.length > 0,
+    hasUnknownUsage: current.some(
+      (attempt) => attempt.totalTokens === undefined,
+    ),
+    tokens: known.reduce((total, value) => total + value, 0),
   }
+}
+
+function accountedUsage(
+  receipt: { reservedTokens?: number },
+  usage: {
+    attempted: boolean
+    hasUnknownUsage: boolean
+    tokens: number
+  },
+) {
+  if (!usage.attempted) return 0
+  return usage.hasUnknownUsage
+    ? Math.max(usage.tokens, receipt.reservedTokens ?? ASK_TOKEN_RESERVATION)
+    : usage.tokens
 }
 
 function askError(code: string, message: string) {

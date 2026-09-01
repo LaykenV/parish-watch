@@ -54,8 +54,9 @@ existing Source panel. It covers supported, not-found, expired, offline,
 cooldown, retryable, and terminal states. One mutation now claims one answer at
 a time, applies per-session request limits, and reserves 15,000 tokens against
 both a 30,000-token minute and a 150,000-token day before any model call.
-Successful attempts reconcile actual usage. Failed and abandoned attempts
-release their reservations. The CAPTCHA adapter remains inactive. Automated
+Successful attempts reconcile known usage. Unknown failed work and abandoned
+work consume the reservation. A no-evidence path releases it because that path
+skips the model. The CAPTCHA adapter remains inactive. Automated
 pull-request checks run in GitHub Actions. The exact stacked head reached the
 personal development deployment. At 375 pixels, a signed-out browser completed
 the real two-turn conversation, restored both turns from Agent history after a
