@@ -330,6 +330,13 @@ test('returns not found without a model call and limits gateway fallback', async
     citations: [],
     followUps: [],
   })
+  await expect(
+    t.action(api.ask.answer.answerQuestion, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: question.messageId,
+    }),
+  ).resolves.toMatchObject({ kind: 'not_found', replayed: true })
   expect(calls).toBe(0)
 
   expect(

@@ -98,6 +98,36 @@ export const answerQuestion = action({
       )
     }
 
+    if (claim.kind === 'replay') {
+      const stored = await loadStoredAnswer(ctx, claim.answerMessageId)
+      if (stored.kind === 'not_found') {
+        validateModelAnswer(stored, [])
+        return projectAnswer(stored, [], claim.answerMessageId, true)
+      }
+      const evidence: AskEvidenceResult = await ctx.runQuery(
+        api.ask.evidence.retrieveEvidenceByIds,
+        {
+          token: args.token,
+          threadId: args.threadId,
+          evidenceIds: stored.evidenceIds,
+        },
+      )
+      try {
+        validateModelAnswer(stored, evidence.evidence)
+      } catch {
+        throw askError(
+          'answer_evidence_changed',
+          'The evidence for this stored answer is no longer current',
+        )
+      }
+      return projectAnswer(
+        stored,
+        evidence.evidence,
+        claim.answerMessageId,
+        true,
+      )
+    }
+
     const context = await loadQuestionContext(
       ctx,
       args.threadId,
@@ -111,21 +141,6 @@ export const answerQuestion = action({
         question: context.question,
       },
     )
-
-    if (claim.kind === 'replay') {
-      const stored = await loadStoredAnswer(
-        ctx,
-        args.threadId,
-        claim.answerMessageId,
-      )
-      validateModelAnswer(stored, evidence.evidence)
-      return projectAnswer(
-        stored,
-        evidence.evidence,
-        claim.answerMessageId,
-        true,
-      )
-    }
 
     if (evidence.kind === 'no_evidence') {
       const notFound: AskModelAnswer = {
@@ -340,15 +355,16 @@ async function loadQuestionContext(
   threadId: string,
   questionMessageId: string,
 ): Promise<{ question: string; prior: Array<{ role: string; text: string }> }> {
+  const [question] = await ctx.runQuery(
+    components.agent.messages.getMessagesByIds,
+    { messageIds: [questionMessageId] },
+  )
   const messages = await listMessages(ctx, components.agent, {
     threadId,
     paginationOpts: { numItems: 40, cursor: null },
     excludeToolMessages: true,
     statuses: ['success'],
   })
-  const question = messages.page.find(
-    (message) => message._id === questionMessageId,
-  )
   if (
     !question ||
     question.message?.role !== 'user' ||
@@ -526,17 +542,11 @@ function projectAnswer(
 
 async function loadStoredAnswer(
   ctx: ActionCtx,
-  threadId: string,
   answerMessageId: string,
 ): Promise<AskModelAnswer> {
-  const messages = await listMessages(ctx, components.agent, {
-    threadId,
-    paginationOpts: { numItems: 40, cursor: null },
-    excludeToolMessages: true,
-    statuses: ['success'],
-  })
-  const stored = messages.page.find(
-    (message) => message._id === answerMessageId,
+  const [stored] = await ctx.runQuery(
+    components.agent.messages.getMessagesByIds,
+    { messageIds: [answerMessageId] },
   )
   if (!stored?.text || stored.message?.role !== 'assistant') {
     throw askError('answer_not_found', 'Stored answer is unavailable')
