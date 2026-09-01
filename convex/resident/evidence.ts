@@ -377,10 +377,10 @@ export const getPublishedMeeting = query({
         ),
       )
     ).filter((item): item is typeof decision.type => item !== null)
+    if (decisions.length !== records.length) return null
     const first = decisions[0]
     if (
-      !first?.meetingAt ||
-      decisions.length !== records.length ||
+      !first.meetingAt ||
       decisions.some(
         (item) =>
           item.bodyName !== first.bodyName ||

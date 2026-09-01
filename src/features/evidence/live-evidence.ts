@@ -484,7 +484,7 @@ function latestOutcome(
       (right.meetingAt ?? '').localeCompare(left.meetingAt ?? ''),
     )
   const latest = outcomes[0]
-  return latest?.meetingAt
+  return outcomes.length > 0 && latest.meetingAt
     ? {
         citationId: firstCitation(latest.citationIds),
         date: latest.meetingAt,
