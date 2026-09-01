@@ -80,7 +80,10 @@ threads and is open with green verification and review checks. PR #47 adds
 strict `MODEL_FAST` answers, exact current evidence replay, Agent message
 persistence, and private provider accounting. The stacked PR 6C working tree
 connects the approved resident interface and adds atomic request and token
-limits. Its pull-request checks and development runtime proof remain pending.
+limits. The exact stacked head reached the personal development deployment. A
+real two-turn gateway conversation returned current Lafayette citations, an
+unsupported question returned not found, and phone-width browser QA passed.
+Final pull-request checks remain pending.
 Production Ask stays unavailable until that PR merges. Account, follow,
 AgentMail, coverage, request, and private-report adapters remain in the
 post-Slice-5 implementation plan.

@@ -39,9 +39,13 @@ published evidence, and validates every returned evidence ID before the Agent
 component stores the assistant message. A private receipt and attempt ledger
 records route, model, tokens, latency, estimated cost, and bounded safe errors
 without copying resident questions or answers. Deterministic not-found answers
-skip the model call. The personal development deployment returned `408 Request
-Timeout` from `start_push`, so runtime proof and automated validation remain
-pending. Production Ask is still unavailable.
+skip the model call. The exact stacked answer head later reached the personal
+development deployment. A real `openai/gpt-5.6-luna` call returned a strict
+answer with current Lafayette citations. A follow-up first exposed retrieval
+that ignored its prior question. The corrected path combined that bounded prior
+question with the current turn and returned the same current pickup records.
+An unsupported volcano question returned not found without citations.
+Production Ask is still unavailable.
 
 Built the stacked PR 6C resident connection in the working tree. The real
 adapter keeps only opaque session and thread handles in browser storage, opens
@@ -52,9 +56,16 @@ a time, applies per-session request limits, and reserves 15,000 tokens against
 both a 30,000-token minute and a 150,000-token day before any model call.
 Successful attempts reconcile actual usage. Failed and abandoned attempts
 release their reservations. The CAPTCHA adapter remains inactive. Automated
-pull-request checks, a successful personal development push, the real two-turn
-gateway proof, and 375-pixel browser QA remain pending. Production Ask is still
-unavailable.
+pull-request checks run in GitHub Actions. The exact stacked head reached the
+personal development deployment. At 375 pixels, a signed-out browser completed
+the real two-turn conversation, restored both turns from Agent history after a
+refresh, and opened exact citation records in the mobile Source drawer. Escape
+returned focus to the Source control. Browser storage contained only the opaque
+session token and thread handles, not question or answer text. The not-found and
+offline states passed, live status announced the completed answer with its
+source count, and the page had no horizontal overflow. At 1280 pixels the same
+source opened in the 320-pixel docked evidence rail. Final replacement checks
+remain pending. Production Ask is still unavailable.
 
 ### 2026-09-01 - bdc0195
 

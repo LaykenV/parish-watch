@@ -355,8 +355,11 @@ evidence retrieval. PR 6B adds strict structured answers through Convex AI
 Gateway, validates every evidence ID before saving an assistant message, and
 records private usage and safe failure metadata. The stacked PR 6C working tree
 connects the approved resident interface and reserves request and token
-capacity before any model call. Production Ask stays unavailable until that PR
-passes its pull-request and runtime gates and merges.
+capacity before any model call. Its exact stacked head reached the personal
+development deployment. A real two-turn gateway conversation, an unsupported
+question, history restoration, phone-width Source handling, and offline
+behavior passed. Production Ask stays unavailable until the three Slice 6 PRs
+merge.
 
 ### Account Loop
 

@@ -52,10 +52,12 @@ This closes resident UI design and implementation, not the production adapters.
 Production keeps Ask, accounts, follows, AgentMail, coverage requests, and
 private reports unavailable until their backend paths pass. PR 6A establishes
 private evidence-scoped Ask threads and retrieval. PR 6B adds validated answers
-and exact current-evidence replay. The stacked PR 6C working tree connects Ask
-to the approved interface with request and token limits, but it has not passed
-its pull-request or runtime gates yet. Each integration must replace the
-matching typed adapter without changing the page hierarchy or visual system.
+and exact current-evidence replay. PR 6C connects Ask to the approved interface
+with request and token limits. The stacked development head passed a real
+two-turn gateway conversation, not-found, refresh restoration, offline, exact
+Source, and phone-width browser checks. Production Ask remains unavailable
+while the three Slice 6 PRs are open. Each integration must replace the matching
+typed adapter without changing the page hierarchy or visual system.
 
 ### Start With Consequence
 

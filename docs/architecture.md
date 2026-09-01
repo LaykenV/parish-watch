@@ -126,8 +126,13 @@ production smoke passed.
 The frontend contract is complete. Decision, meeting, issue, and realtime
 evidence gates are proved. PR 6A adds 24-hour anonymous sessions, private Agent
 threads, component-owned message history, and accepted-evidence retrieval.
-Model answers remain excluded until PR 6B. Auth, follow, AgentMail, coverage,
-request, and private-report adapters remain in the post-Slice-5 plan.
+PR 6B adds strict `MODEL_FAST` answers, deterministic citation validation, and
+exact current-evidence replay. PR 6C connects the resident interface and adds
+atomic request and token limits. Its development deployment passed a real
+two-turn conversation, not-found, refresh, offline, Source panel, and
+phone-width checks. Production Ask remains unavailable while the three PRs are
+open. Auth, follow, AgentMail, coverage, request, and private-report adapters
+remain in the post-Slice-5 plan.
 
 ## System Boundaries
 
