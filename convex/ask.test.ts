@@ -103,10 +103,32 @@ test('opaque sessions isolate Agent threads and detach expired access', async ()
     return session?._id
   })
   expect(sessionId).toBeDefined()
+  await t.run(async (ctx) => {
+    for (let index = 0; index < 30; index += 1) {
+      await ctx.db.insert('askTokenWindows', {
+        sessionId: sessionId as Id<'anonymousSessions'>,
+        kind: index === 29 ? 'daily' : 'short',
+        windowStart: index,
+        reservedTokens: 0,
+        consumedTokens: 1,
+        updatedAt: index,
+      })
+    }
+  })
   await t.mutation(internal.ask.sessions.expireSession, {
     sessionId: sessionId as Id<'anonymousSessions'>,
     expectedExpiresAt: aliceSession.expiresAt,
   })
+  await expect(
+    t.run(async (ctx) =>
+      ctx.db
+        .query('askTokenWindows')
+        .withIndex('by_session_kind_and_window', (q) =>
+          q.eq('sessionId', sessionId as Id<'anonymousSessions'>),
+        )
+        .collect(),
+    ),
+  ).resolves.toHaveLength(0)
   await expect(
     t.query(api.ask.threads.getHistory, {
       token: alice,
