@@ -79,12 +79,14 @@ issue build had run at that release.
 The later controlled production onboarding ran Terra extraction and Luna review
 for launch atomic records. The August 31 batch published 26 records from 17
 hash-matched official PDFs: 15 Lafayette, 9 Rapides, and 2 East Baton Rouge.
-Fifteen are full and 11 are limited. Production still has no issue build,
-issue-decision link, importance assessment, or ranked issue projection. A
-September 1 one-time production data correction cleared the current publication
-pointers from one older duplicate Lafayette board-vacancy record without
-deleting its evidence. The resident query now returns 26 publications and one
-canonical board-vacancy card.
+Fifteen are full and 11 are limited. Production now has two accepted issue
+builds. The first links the two Lafayette surplus-pickup donation ordinances.
+The second links the two Rapides 2026 millage records and arrived on an existing
+resident subscription 10.8 seconds after its initial empty result. A September
+1 one-time production data correction cleared the current publication pointers
+from one older duplicate Lafayette board-vacancy record without deleting its
+evidence. The resident query returns 26 publications and one canonical
+board-vacancy card.
 
 PR #24 merged resident-interface Design Slice 2 as `4e2ac67`. The application
 now has a responsive shell plus Home, For You, and Explore routes. Explicit
@@ -121,10 +123,11 @@ typed contract, current gate, fixture owner, and future API owner for every
 resident destination. Production workflow `33454522729` and the independent
 production smoke passed.
 
-The frontend contract is complete. Decision and meeting evidence adapters are
-implemented. Production still needs a fresh accepted issue build and realtime
-proof, then anonymous Ask, Auth, follow, AgentMail, coverage, request, and
-private-report adapters named in the post-Slice-5 plan.
+The frontend contract is complete. Decision, meeting, issue, and realtime
+evidence gates are proved. PR 6A adds 24-hour anonymous sessions, private Agent
+threads, component-owned message history, and accepted-evidence retrieval.
+Model answers remain excluded until PR 6B. Auth, follow, AgentMail, coverage,
+request, and private-report adapters remain in the post-Slice-5 plan.
 
 ## System Boundaries
 

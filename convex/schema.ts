@@ -791,4 +791,42 @@ export default defineSchema({
   })
     .index('by_issue_version_and_factor', ['issueVersionId', 'factor'])
     .index('by_issue_and_created_at', ['issueId', 'createdAt']),
+
+  anonymousSessions: defineTable({
+    tokenHash: v.string(),
+    state: v.union(v.literal('active'), v.literal('expired')),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    lastSeenAt: v.number(),
+  })
+    .index('by_token_hash', ['tokenHash'])
+    .index('by_state_and_expires_at', ['state', 'expiresAt']),
+
+  askThreadAccess: defineTable({
+    sessionId: v.id('anonymousSessions'),
+    threadId: v.string(),
+    scopeKind: v.union(
+      v.literal('corpus'),
+      v.literal('issue'),
+      v.literal('meeting'),
+    ),
+    scopeKey: v.string(),
+    createdAt: v.number(),
+    lastActivityAt: v.number(),
+    expiresAt: v.number(),
+    detachedAt: v.optional(v.number()),
+  })
+    .index('by_session_and_last_activity_at', ['sessionId', 'lastActivityAt'])
+    .index('by_session_and_thread_id', ['sessionId', 'threadId'])
+    .index('by_thread_id', ['threadId']),
+
+  askQuestionReceipts: defineTable({
+    sessionId: v.id('anonymousSessions'),
+    threadId: v.string(),
+    idempotencyKey: v.string(),
+    messageId: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_session_and_idempotency_key', ['sessionId', 'idempotencyKey'])
+    .index('by_thread_id_and_created_at', ['threadId', 'createdAt']),
 })

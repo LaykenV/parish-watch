@@ -1,4 +1,5 @@
 import firecrawl from '@firecrawl/firecrawl-convex/convex.config'
+import agent from '@convex-dev/agent/convex.config'
 import rateLimiter from '@convex-dev/rate-limiter/convex.config'
 import staticHosting from '@convex-dev/static-hosting/convex.config'
 import workflow from '@convex-dev/workflow/convex.config'
@@ -18,6 +19,8 @@ const app = defineApp({
 
 // App HTTP stays at the site root. Do not mount with httpPrefix: "/api".
 app.use(staticHosting)
+
+app.use(agent)
 
 app.use(workflow)
 

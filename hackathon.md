@@ -7,24 +7,40 @@
 - **Repo:** https://github.com/LaykenV/public-parish
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
-- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`
+- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`, `@convex-dev/agent`
 - **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, scheduled functions, durable workflows
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T02:19:33Z
+- **Last updated:** 2026-09-01T03:02:55Z
 
 ## Log
 
 ### 2026-09-01 - working tree
+
+Closed the Slice 5 data gate with two production issue builds. Terra linked
+the accepted records, Luna reviewed the proposed facts independently, and
+deterministic checks published full issue versions. The two builds used AI
+Gateway and cost an estimated $0.088413 combined. A live subscriber first
+received no Rapides millage issue, then received the accepted issue 10.8
+seconds later on the same connection.
+
+Added private evidence-scoped Ask threads for PR 6A. The browser keeps an opaque
+token while Convex stores its SHA-256 hash. Scheduled expiry detaches access
+after 24 hours. The Agent component owns threads and messages, while Public
+Parish authorizes each call and retrieves only bounded current citations. A
+development proof created a thread, saved one question, resumed its history,
+and returned the exact LOATF Source links. Model answers remain out of this PR.
+
+### 2026-09-01 - bdc0195
 
 Connected accepted decision publications and exact citations to the finished
 resident decision and meeting routes. Discovery now opens the Public Parish
 record before the original source. A bounded development backfill grouped three
 meeting-bearing records, and the Aug. 25 Rapides view resolved two current full
 decisions from one accepted meeting time. The issue query stays closed when an
-issue points at superseded decision versions. A fresh accepted issue build is
-still required before a production issue page can open.
+issue points at superseded decision versions. PR #44 deployed through workflow
+`33463800155`; its workflow smoke and the independent production smoke passed.
 
 ### 2026-09-01 - 070958e
 
