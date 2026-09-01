@@ -100,7 +100,106 @@ export const retrieveEvidence = query({
   },
 })
 
+export const retrieveEvidenceByIds = query({
+  args: {
+    token: v.string(),
+    threadId: v.string(),
+    evidenceIds: v.array(v.string()),
+  },
+  returns: askEvidenceResult,
+  handler: async (ctx, args): Promise<AskEvidenceResult> => {
+    if (
+      args.evidenceIds.length === 0 ||
+      args.evidenceIds.length > 8 ||
+      new Set(args.evidenceIds).size !== args.evidenceIds.length
+    ) {
+      throw new ConvexError({
+        code: 'evidence_id_bounds',
+        message: 'Answer evidence IDs are invalid',
+      })
+    }
+    const access = await authorizeThreadRead(ctx, args.token, args.threadId)
+    const scope = storedScope(access.mapping.scopeKind, access.mapping.scopeKey)
+    const issueKeys = await issueRecordKeys(ctx, scope)
+    const evidence = await Promise.all(
+      args.evidenceIds.map((evidenceId) =>
+        loadAcceptedEvidenceById(ctx, scope, issueKeys, evidenceId),
+      ),
+    )
+    const accepted = evidence.filter(
+      (item): item is NonNullable<typeof item> => item !== null,
+    )
+    return {
+      kind:
+        accepted.length === args.evidenceIds.length
+          ? 'evidence'
+          : 'no_evidence',
+      scope,
+      evidence: accepted,
+    }
+  },
+})
+
 type Scope = ReturnType<typeof storedScope>
+
+async function issueRecordKeys(
+  ctx: QueryCtx,
+  scope: Scope,
+): Promise<Set<string> | null> {
+  if (scope.kind !== 'issue') return null
+  const issue: IssueProjection | null = await ctx.runQuery(
+    api.resident.evidence.getPublishedIssue,
+    { slug: scope.issueSlug },
+  )
+  return issue
+    ? new Set(issue.links.map((link) => link.recordKey))
+    : new Set<string>()
+}
+
+async function loadAcceptedEvidenceById(
+  ctx: QueryCtx,
+  scope: Scope,
+  issueKeys: Set<string> | null,
+  evidenceId: string,
+) {
+  const citationId = ctx.db.normalizeId('citations', evidenceId)
+  if (!citationId) return null
+  const citation = await ctx.db.get(citationId)
+  if (!citation) return null
+  const publication = await ctx.db.get(citation.publicationVersionId)
+  if (!publication?.payload || publication.mode === 'withheld') return null
+  const record = await ctx.db.get(publication.recordId)
+  if (
+    !record ||
+    record.currentPublishedVersionId !== publication._id ||
+    record.currentMode !== publication.mode
+  ) {
+    return null
+  }
+  const body = await ctx.db.get(record.governmentBodyId)
+  if (!body) return null
+  const place = await ctx.db.get(body.jurisdictionId)
+  if (!place) return null
+  const inScope =
+    scope.kind === 'issue'
+      ? (issueKeys?.has(record.recordKey) ?? false)
+      : scope.kind === 'meeting'
+        ? record.currentMeetingKey === scope.meetingId
+        : !scope.areaKey || place.slug === scope.areaKey
+  if (!inScope) return null
+  return {
+    evidenceId: citation._id,
+    recordKey: record.recordKey,
+    fieldPath: citation.fieldPath,
+    documentTitle: publication.payload.title,
+    bodyName: body.name,
+    officialUrl: citation.officialUrl,
+    excerpt: citation.excerpt,
+    page: citation.page ?? null,
+    section: citation.section ?? null,
+    sourceHref: `/decisions/${encodeURIComponent(record.recordKey)}?source=${encodeURIComponent(citation._id)}`,
+  }
+}
 
 type EvidenceCitation = {
   id: string

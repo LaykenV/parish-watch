@@ -710,9 +710,22 @@ already recorded aggregate counters.
 
 #### `anonymousSessions`
 
-Fields: opaque session hash, Agent thread reference, issue or meeting or corpus
-scope, created time, expires time, abuse state.
-Indexes: opaque hash; expires time.
+Fields: opaque session hash, state, created time, expires time, last-seen time.
+Indexes: opaque hash; state plus expires time.
+
+#### `askThreadAccess`
+
+Fields: anonymous session, Agent thread reference, issue or meeting or corpus
+scope, created time, last activity time, expiry, detached time.
+Indexes: session plus activity; session plus thread; thread.
+
+#### `askAnswerReceipts` and `askModelAttempts`
+
+Answer receipts claim one saved user message at a time and record running,
+succeeded, or failed state without copying its content. Model attempts belong
+to a receipt and store the private route, model role, model ID, prompt and
+schema versions, token use, latency, estimated cost, and bounded safe failure
+metadata. They do not store resident questions or answers.
 
 #### Agent component threads and messages
 

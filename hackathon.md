@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T03:02:55Z
+- **Last updated:** 2026-09-01T03:55:09Z
 
 ## Log
 
@@ -31,6 +31,17 @@ after 24 hours. The Agent component owns threads and messages, while Public
 Parish authorizes each call and retrieves only bounded current citations. A
 development proof created a thread, saved one question, resumed its history,
 and returned the exact LOATF Source links. Model answers remain out of this PR.
+
+Built the stacked PR 6B answer path in the working tree. It pins
+`@convex-dev/ai-sdk-provider` 0.1.0 and AI SDK 7.0.34, calls `MODEL_FAST`
+through the Convex gateway, sends only bounded thread context and retrieved
+published evidence, and validates every returned evidence ID before the Agent
+component stores the assistant message. A private receipt and attempt ledger
+records route, model, tokens, latency, estimated cost, and bounded safe errors
+without copying resident questions or answers. Deterministic not-found answers
+skip the model call. The personal development deployment returned `408 Request
+Timeout` from `start_push`, so runtime proof and automated validation remain
+pending. Production Ask is still unavailable.
 
 ### 2026-09-01 - bdc0195
 

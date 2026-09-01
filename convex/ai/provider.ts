@@ -271,3 +271,35 @@ export async function completeStructured(
     attempts,
   }
 }
+
+export async function completeStructuredDirectFallback(
+  options: CompleteStructuredOptions,
+): Promise<StructuredOutcome> {
+  if (!isDirectFallbackEnabled()) {
+    throw new GatewayUnavailableError(
+      'direct_fallback_disabled',
+      'Direct OpenAI fallback is disabled',
+      null,
+      null,
+    )
+  }
+  const { request, responseValidator, contractCheck, onAttempt } = options
+  const gatewayModelId = modelIdForRole(request.role)
+  const attempts: AttemptRecord[] = []
+  const recordAttempt = async (attempt: AttemptRecord) => {
+    attempts.push(attempt)
+    if (onAttempt) await onAttempt(attempt)
+  }
+  const directResult = await runRoute(
+    'direct_openai',
+    gatewayModelId,
+    request,
+    responseValidator,
+    contractCheck,
+    recordAttempt,
+  )
+  if (directResult.kind === 'success') {
+    return { outcome: 'success', result: directResult.success, attempts }
+  }
+  return { outcome: 'failed', failure: directResult.failure, attempts }
+}
