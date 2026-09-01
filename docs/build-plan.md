@@ -370,7 +370,11 @@ Slice 6 quality revision replaces lexical selection with a high-reasoning Luna
 selector over the complete accepted catalog and a second high-reasoning answer
 call over the expanded records and verified official documents. It uses no
 fixed top-k or application-owned input or output token budget. This revision is
-not deployed. All three original PRs are deployed. On
+not deployed. Per-session limits remain, and app-wide limits of 60 requests per
+minute and 1,000 per day stop session rotation from creating unlimited model
+calls. A valid selector not-found result skips the second call. Oversized scopes
+fail before model generation instead of truncating evidence or documents. All
+three original PRs are deployed. On
 September 1, the production
 issue-scoped flow completed two related cited turns, opened the exact accepted
 minutes spans, and returned evidence not found without citations for an

@@ -186,14 +186,16 @@ export const answerQuestion = action({
       args.threadId,
       args.questionMessageId,
     )
-    const evidence: AskEvidenceResult = await ctx.runQuery(
-      api.ask.evidence.retrieveEvidence,
-      {
+    let evidence: AskEvidenceResult
+    try {
+      evidence = await ctx.runQuery(api.ask.evidence.retrieveEvidence, {
         token: args.token,
         threadId: args.threadId,
         question: context.question,
-      },
-    )
+      })
+    } catch (error) {
+      await failContextPreparation(ctx, claim, error)
+    }
 
     if (evidence.kind === 'no_evidence') {
       const notFound: AskModelAnswer = {
@@ -214,10 +216,9 @@ export const answerQuestion = action({
       return projectAnswer(notFound, evidence.evidence, messageId, false)
     }
 
-    let selectedEvidence: AskEvidenceResult
-    let documents: PublishedDocument[]
+    let selection: AskModelSelection
     try {
-      const selection = await selectPublishedContext(ctx, {
+      selection = await selectPublishedContext(ctx, {
         receiptId: claim.receiptId,
         answerAttempt: claim.attempt,
         threadId: args.threadId,
@@ -226,7 +227,31 @@ export const answerQuestion = action({
         prior: context.prior,
         catalog: evidence,
       })
-      selectedEvidence = applySelection(evidence, selection)
+    } catch (error) {
+      await failContextPreparation(ctx, claim, error)
+    }
+    if (selection.retrievalMode === 'not_found') {
+      const notFound: AskModelAnswer = {
+        kind: 'not_found',
+        answer:
+          'Public Parish could not find enough published evidence in this scope to answer that question.',
+        evidenceIds: [],
+        followUps: [],
+      }
+      const messageId = await ctx.runMutation(
+        internal.ask.ledger.persistAnswer,
+        {
+          receiptId: claim.receiptId,
+          answerAttempt: claim.attempt,
+          answer: notFound,
+        },
+      )
+      return projectAnswer(notFound, [], messageId, false)
+    }
+
+    const selectedEvidence = applySelection(evidence, selection)
+    let documents: PublishedDocument[]
+    try {
       const documentRefs: PublishedDocumentRef[] = await ctx.runQuery(
         internal.ask.evidence.retrievePublishedDocumentRefs,
         {
@@ -236,16 +261,8 @@ export const answerQuestion = action({
         },
       )
       documents = await loadPublishedDocuments(ctx, documentRefs)
-    } catch {
-      await ctx.runMutation(internal.ask.ledger.failAnswer, {
-        receiptId: claim.receiptId,
-        answerAttempt: claim.attempt,
-        errorClass: 'answer_context_failed',
-      })
-      throw askError(
-        'answer_context_failed',
-        'The published evidence context could not be verified',
-      )
+    } catch (error) {
+      await failContextPreparation(ctx, claim, error)
     }
     const prompt = buildPrompt(
       context.question,
@@ -1133,4 +1150,27 @@ async function recordAttempt(
 
 function askError(code: string, message: string) {
   return new ConvexError({ code, message })
+}
+
+async function failContextPreparation(
+  ctx: ActionCtx,
+  claim: { receiptId: Id<'askAnswerReceipts'>; attempt: number },
+  error: unknown,
+): Promise<never> {
+  const scopeTooLarge =
+    error instanceof ConvexError &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'code' in error.data &&
+    error.data.code === 'ask_scope_too_large'
+  await ctx.runMutation(internal.ask.ledger.failAnswer, {
+    receiptId: claim.receiptId,
+    answerAttempt: claim.attempt,
+    errorClass: scopeTooLarge ? 'ask_scope_too_large' : 'answer_context_failed',
+  })
+  if (scopeTooLarge) throw error
+  throw askError(
+    'answer_context_failed',
+    'The published evidence context could not be verified',
+  )
 }

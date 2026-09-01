@@ -18,8 +18,10 @@ import {
 } from './contracts'
 import { authorizeThreadRead } from './threads'
 
-const MAX_SCOPE_RECORDS = 500
-const MAX_SCOPE_EVIDENCE_ITEMS = 8_000
+const MAX_SCOPE_RECORDS = 75
+const MAX_SCOPE_EVIDENCE_ITEMS = 1_500
+const MAX_SELECTED_DOCUMENT_BYTES = 2_000_000
+const MAX_SCOPE_BODIES = 25
 
 export const retrieveEvidence = query({
   args: {
@@ -132,6 +134,16 @@ export const retrievePublishedDocumentRefs = internalQuery({
   },
   returns: v.array(publishedDocumentRef),
   handler: async (ctx, args): Promise<PublishedDocumentRef[]> => {
+    if (
+      args.evidenceIds.length === 0 ||
+      args.evidenceIds.length > MAX_SCOPE_EVIDENCE_ITEMS ||
+      new Set(args.evidenceIds).size !== args.evidenceIds.length
+    ) {
+      throw new ConvexError({
+        code: 'ask_scope_too_large',
+        message: 'The selected evidence set is too large to load safely',
+      })
+    }
     const access = await authorizeThreadRead(ctx, args.token, args.threadId)
     const scope = storedScope(access.mapping.scopeKind, access.mapping.scopeKey)
     const issueKeys = await issueRecordKeys(ctx, scope)
@@ -190,7 +202,18 @@ export const retrievePublishedDocumentRefs = internalQuery({
           : ref,
       )
     }
-    return [...bySnapshot.values()]
+    const documents = [...bySnapshot.values()]
+    const documentBytes = documents.reduce(
+      (total, document) => total + document.normalizedByteLength,
+      0,
+    )
+    if (documentBytes > MAX_SELECTED_DOCUMENT_BYTES) {
+      throw new ConvexError({
+        code: 'ask_scope_too_large',
+        message: 'The selected official documents are too large to load safely',
+      })
+    }
+    return documents
   },
 })
 
@@ -406,8 +429,8 @@ async function scopedDecisions(
       .withIndex('by_jurisdiction_and_status', (q) =>
         q.eq('jurisdictionId', jurisdiction._id),
       )
-      .take(101)
-    if (bodies.length > 100) {
+      .take(MAX_SCOPE_BODIES + 1)
+    if (bodies.length > MAX_SCOPE_BODIES) {
       throw new ConvexError({
         code: 'ask_scope_too_large',
         message: 'This Ask scope has too many government bodies',

@@ -476,6 +476,48 @@ test('fails the answer when a selected official document fails integrity checks'
   ])
 })
 
+test('preserves an oversized-scope error before loading document text', async () => {
+  const t = initTest()
+  const seeded = await seedEvidence(t)
+  const token = 'document-size-session-token-0000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+  const question = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'What happened to the drainage agreement?',
+    idempotencyKey: 'document-size-question-0001',
+  })
+  await t.run(async (ctx) => {
+    await ctx.db.patch(seeded.snapshotId, {
+      normalizedByteLength: 2_000_001,
+    })
+  })
+  let calls = 0
+  overrideAskGatewayForTests(async () => {
+    calls += 1
+    return gatewayResult({ retrievalMode: 'broad', targets: [] })
+  })
+
+  await expect(
+    t.action(api.ask.answer.answerQuestion, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: question.messageId,
+    }),
+  ).rejects.toThrow('ask_scope_too_large')
+  expect(calls).toBe(1)
+  const receipts = await t.run(async (ctx) =>
+    ctx.db.query('askAnswerReceipts').collect(),
+  )
+  expect(receipts).toMatchObject([
+    { state: 'failed', errorClass: 'ask_scope_too_large' },
+  ])
+})
+
 test('holds one answer at a time while usage telemetry remains available', async () => {
   const t = initTest()
   await seedEvidence(t)
@@ -649,11 +691,11 @@ test('releases abandoned answers and cools down repeated requests', async () => 
   expect(windows.every((window) => window.consumedTokens === 0)).toBe(true)
 })
 
-test('does not use token budgets to block rotated anonymous sessions', async () => {
+test('caps rotated anonymous sessions without using token budgets', async () => {
   const t = initTest()
   await seedEvidence(t)
 
-  for (let index = 0; index < 10; index += 1) {
+  for (let index = 0; index < 60; index += 1) {
     const token = `global-limit-session-${index.toString().padStart(2, '0')}-0000000000000000000000000000`
     await t.mutation(api.ask.threads.createSession, { token })
     const thread = await t.mutation(api.ask.threads.createThread, {
@@ -697,7 +739,7 @@ test('does not use token budgets to block rotated anonymous sessions', async () 
       threadId: thread.threadId,
       questionMessageId: question.messageId,
     }),
-  ).resolves.toMatchObject({ kind: 'ready' })
+  ).rejects.toThrow('Ask is taking a short pause')
 })
 
 test('fences a stale answer after its lease is retried', async () => {
@@ -837,7 +879,7 @@ test('rejects invented citations before an assistant message is saved', async ()
   ])
 })
 
-test('lets the model abstain after reviewing the full scope and limits fallback', async () => {
+test('lets the selector abstain after reviewing the full scope', async () => {
   const t = initTest()
   await seedEvidence(t)
   const token = 'not-found-answer-session-token-00000000000000000000000'
@@ -858,12 +900,7 @@ test('lets the model abstain after reviewing the full scope and limits fallback'
     if (args.stage === 'selector') {
       return gatewayResult({ retrievalMode: 'not_found', targets: [] })
     }
-    return gatewayResult({
-      kind: 'not_found',
-      answer: 'The published records do not address a volcano observatory.',
-      evidenceIds: [],
-      followUps: [],
-    })
+    throw new Error('The answer pass should not run after selector abstention')
   })
   const answer = await t.action(api.ask.answer.answerQuestion, {
     token,
@@ -882,7 +919,7 @@ test('lets the model abstain after reviewing the full scope and limits fallback'
       questionMessageId: question.messageId,
     }),
   ).resolves.toMatchObject({ kind: 'not_found', replayed: true })
-  expect(calls).toBe(2)
+  expect(calls).toBe(1)
 
   expect(
     allowsDirectFallback({

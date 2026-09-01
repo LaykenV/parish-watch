@@ -140,9 +140,10 @@ The working-tree quality revision removes those lexical and token-budget gates.
 It uses high-reasoning Luna first to select relevant targets from the complete
 current issue, meeting, decision, and accepted-excerpt catalog. A second Luna
 call receives the selected records and their hash-checked normalized official
-documents. Invalid, broad, empty, and not-found selections expand to the full
-scope. Request-frequency limits, private usage telemetry, and deterministic
-citation validation remain. This revision is not deployed.
+documents. Invalid, broad, and empty selections expand to the full scope. A
+valid not-found selection skips the second call. Per-session and app-wide
+request-frequency limits, private usage telemetry, and deterministic citation
+validation remain. This revision is not deployed.
 Auth, follow, AgentMail, coverage-request, and private-report adapters remain in
 the post-Slice-5 plan.
 
@@ -757,9 +758,10 @@ tokens, consumed tokens, and updated time. Index: session, kind, and window
 start. These rows are now a usage ledger, not an admission gate. A completed or
 failed provider attempt records known token use. Unknown or abandoned work
 records zero rather than an invented reservation. The rate-limiter component
-still caps three answer attempts per minute and 20 per day for each anonymous
-session. There is no application-owned input, output, per-session, or app-wide
-token ceiling for Ask.
+caps three answer attempts per minute and 20 per day for each anonymous session.
+App-wide request ceilings of 60 per minute and 1,000 per day prevent session
+rotation from creating unlimited model calls. There is no application-owned
+input, output, per-session, or app-wide token ceiling for Ask.
 
 #### Agent component threads and messages
 
@@ -775,10 +777,13 @@ and meeting targets into decision records and deduplicates their documents. The
 second internal call receives the selected records, accepted excerpts, full
 prior conversation, and normalized official documents. The action verifies
 each document's stored hash and byte count before adding its full text. Invalid,
-broad, empty, and not-found selector results use the complete scope. There is no
-lexical, embedding, or fixed top-k gate. Do not create parallel application
-message tables. Deterministic code validates every returned evidence reference
-before the answer becomes visible.
+broad, and empty selector results use the complete scope. A valid not-found
+result skips the second model call and stores the standard evidence-not-found
+answer. The service rejects an oversized scope before a model call instead of
+truncating records, excerpts, or documents. There is no lexical, embedding, or
+fixed top-k gate. Do not create parallel application message tables.
+Deterministic code validates every returned evidence reference before the
+answer becomes visible.
 
 #### `emailSubscribers`
 
@@ -1110,6 +1115,7 @@ affect ranking.
 
 - rate-limit answer attempts by opaque session;
 - allow three answer attempts per minute and 20 per day for each session;
+- allow 60 answer attempts per minute and 1,000 per day across the app;
 - record known provider tokens and estimated cost as private telemetry;
 - do not reject a question because of an application-owned input, output,
   per-session, or app-wide token budget;

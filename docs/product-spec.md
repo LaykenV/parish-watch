@@ -404,8 +404,12 @@ Do not position the meeting page as the main way residents discover information.
 - expand issue and meeting targets into current decision records in code;
 - give the answer call those records, their accepted excerpts, and their full
   hash-checked official documents;
-- use the complete scope when the selector returns broad, not found, no target,
-  or an invalid target;
+- use the complete scope when the selector returns broad, no target, or an
+  invalid target;
+- return the standard evidence-not-found answer after a valid not-found
+  selection without running the document-heavy answer pass;
+- reject a scope that cannot fit inside safe retrieval and document-size bounds
+  instead of truncating its context;
 - keep the selector output internal and save only the resident-visible answer.
 
 ### Failure Language

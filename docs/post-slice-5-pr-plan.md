@@ -34,10 +34,12 @@ and token-budget choices below. High-reasoning Luna first selects issue,
 meeting, or decision IDs from every current published record and accepted
 excerpt in scope. A second high-reasoning call receives the expanded records
 and hash-checked normalized official documents. Broad or invalid selections use
-the full scope. It keeps request-frequency limits and token telemetry, but
+the full scope. A valid not-found selection skips the second call. It keeps
+per-session and app-wide request-frequency limits and token telemetry, but
 removes lexical selection, fixed top-k retrieval, and application-owned input
-or output token budgets. The original PR sections remain as the historical
-delivery record. The quality follow-up is not deployed.
+or output token budgets. Oversized scopes fail instead of truncating evidence
+or documents. The original PR sections remain as the historical delivery
+record. The quality follow-up is not deployed.
 
 ## Original starting assumption
 

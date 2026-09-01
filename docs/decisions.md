@@ -145,11 +145,14 @@ expand the promise.
   or decision IDs from the complete current catalog and every accepted excerpt
   in scope. Expand those targets in code, then give a second Luna call the
   selected records and normalized official documents. Use the full scope for a
-  broad, empty, not-found, or invalid selection. Do not use lexical matching,
-  embeddings, or a fixed top-k as an answer gate.
+  broad, empty, or invalid selection. Return the standard evidence-not-found
+  answer after a valid not-found selection without running the second call. Do
+  not use lexical matching, embeddings, or a fixed top-k as an answer gate.
 - Use `@convex-dev/rate-limiter` for atomic request-frequency limits. Record
   provider token use and estimated cost as private telemetry. Do not reject a
   question because of an application-owned token budget.
+- Apply app-wide request-frequency limits so minting a new anonymous session
+  does not create unlimited model calls.
 - Use invisible rate limits first, then CAPTCHA or cooldown when abuse appears.
 - Chat never requires sign-in.
 - Chat can only use published and validated official-source evidence.

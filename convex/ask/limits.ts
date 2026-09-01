@@ -16,6 +16,8 @@ const DAILY_TOKEN_WINDOW_MS = DAY
 const askRequestLimiter = new RateLimiter(components.rateLimiter, {
   askRequestBurst: { kind: 'fixed window', rate: 3, period: MINUTE },
   askRequestDaily: { kind: 'fixed window', rate: 20, period: DAY },
+  askGlobalRequestBurst: { kind: 'fixed window', rate: 60, period: MINUTE },
+  askGlobalRequestDaily: { kind: 'fixed window', rate: 1_000, period: DAY },
 })
 
 type WindowKind = 'short' | 'daily'
@@ -45,6 +47,22 @@ export async function reserveAskCapacity(
     key: requestKey,
   })
   if (!daily.ok) throwCooldown('ask_daily_limited', now, daily.retryAfter)
+
+  const globalBurst = await askRequestLimiter.limit(
+    ctx,
+    'askGlobalRequestBurst',
+  )
+  if (!globalBurst.ok) {
+    throwCooldown('ask_global_request_limited', now, globalBurst.retryAfter)
+  }
+
+  const globalDaily = await askRequestLimiter.limit(
+    ctx,
+    'askGlobalRequestDaily',
+  )
+  if (!globalDaily.ok) {
+    throwCooldown('ask_global_daily_limited', now, globalDaily.retryAfter)
+  }
 
   const shortWindowStart = windowStart(now, SHORT_TOKEN_WINDOW_MS)
   const dailyWindowStart = windowStart(now, DAILY_TOKEN_WINDOW_MS)
@@ -164,7 +182,7 @@ function windowStart(now: number, duration: number) {
 function throwCooldown(code: string, now: number, retryAfter: number): never {
   throw new ConvexError({
     code,
-    message: 'Ask is taking a short pause on this device',
+    message: 'Ask is taking a short pause',
     retryAt: now + retryAfter,
   })
 }
