@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 
 import type { FileRoutesByFullPath } from '../../routeTree.gen'
@@ -32,6 +34,15 @@ const routeGraphIsComplete: Exclude<
   ? true
   : false = true
 
+const forYouRoute = readFileSync(
+  new URL('../../routes/for-you.tsx', import.meta.url),
+  'utf8',
+)
+const issuesRoute = readFileSync(
+  new URL('../../routes/issues_.tsx', import.meta.url),
+  'utf8',
+)
+
 describe('resident interface Slice 1 contracts', () => {
   it('accounts for every resident route outside the existing home page', () => {
     expect(EXPECTED_RESIDENT_ROUTES).toHaveLength(14)
@@ -50,4 +61,10 @@ describe('resident interface Slice 1 contracts', () => {
       expect(blueprint.states.length).toBeGreaterThan(0)
     },
   )
+
+  it('folds the legacy discovery indexes into Home', () => {
+    expect(forYouRoute).toContain("redirect({ replace: true, to: '/' })")
+    expect(issuesRoute).toContain("hash: 'current-issues'")
+    expect(issuesRoute).toContain("to: '/'")
+  })
 })

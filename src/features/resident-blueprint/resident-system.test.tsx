@@ -18,10 +18,6 @@ const homeSource = readFileSync(
   new URL('../discovery/home.tsx', import.meta.url),
   'utf8',
 )
-const forYouSource = readFileSync(
-  new URL('../discovery/for-you.tsx', import.meta.url),
-  'utf8',
-)
 const exploreSource = readFileSync(
   new URL('../discovery/explore.tsx', import.meta.url),
   'utf8',
@@ -64,7 +60,7 @@ describe('resident interface Slice 7 system', () => {
 
   it('names every resident route family for navigation announcements', () => {
     expect(residentRouteLabel('/')).toBe('Home')
-    expect(residentRouteLabel('/for-you')).toBe('For You')
+    expect(residentRouteLabel('/for-you')).toBe('Home')
     expect(residentRouteLabel('/coverage/request')).toBe('Request coverage')
     expect(residentRouteLabel('/issues/drainage-fee-credit-cap')).toBe('Issue')
     expect(residentRouteLabel('/decisions/CO-022-2026')).toBe('Decision record')
@@ -83,9 +79,8 @@ describe('resident interface Slice 7 system', () => {
     expect(shellSource).toContain('aria-atomic="true"')
   })
 
-  it('announces accepted feed refreshes from all discovery routes', () => {
-    expect(homeSource).toContain('Feed updated from the official record.')
-    expect(forYouSource).toContain('Your feed is updated.')
+  it('announces accepted updates from Home and Explore', () => {
+    expect(homeSource).toContain('Home updated from the official record.')
     expect(exploreSource).toContain('Explore results are updated.')
     expect(discoveryHooksSource).toContain("setAnnouncement('')")
     expect(discoveryHooksSource).toContain(

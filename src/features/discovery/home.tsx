@@ -1,33 +1,38 @@
 import { ArrowUpRightIcon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useRouterState } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
 import { LouisianaRelief } from '../landing/louisiana-relief'
-import { evidenceJourneySearch } from '../resident-handoff/navigation'
 import { AreaSelector } from './area-selector'
 import { useArea } from './area-store'
 import { areaName, getActiveDiscoveryFixture } from './contracts'
-import type { AreaSlug, HomeScenario } from './contracts'
-import {
-  ISSUE_FIXTURES,
-  UPDATE_FIXTURES,
-  UPDATE_REFRESH_FIXTURE,
-  UPCOMING_FIXTURES,
-} from './fixtures'
-import { formatDate } from './format'
-import { IssueCard, UpcomingCard } from './issue-card'
+import type {
+  AreaSlug,
+  HomeScenario,
+  IssueCardData,
+  ResultRowData,
+} from './contracts'
+import { EXPLORE_ROW_FIXTURES, PUBLISHED_ISSUE_FIXTURES } from './fixtures'
 import { useRepeatedAnnouncement } from './hooks'
-import { toDecisionCard, usePublishedDecisions } from './live-publications'
-import type { PublishedDecision } from './live-publications'
+import { IssueCard } from './issue-card'
+import {
+  toDecisionRow,
+  toIssueCard,
+  usePublishedDecisions,
+  usePublishedIssues,
+} from './live-publications'
+import type { PublishedDecision, PublishedIssue } from './live-publications'
 import { Notice, SectionFailure, UpdateRow } from './notice'
-import { Rail } from './rail'
 import { ResultRow } from './result-row'
+
+const HOME_SECTION_LIMIT = 6
 
 export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   const area = useArea()
   const activeScenario = getActiveDiscoveryFixture(scenario)
   const fixturesEnabled = activeScenario !== undefined
+  const publishedIssues = usePublishedIssues(!fixturesEnabled)
   const publishedDecisions = usePublishedDecisions(!fixturesEnabled)
   const signedIn = activeScenario === 'signed-in'
   const watching: AreaSlug[] = signedIn
@@ -38,80 +43,66 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
 
   const [refreshed, setRefreshed] = useState(false)
   const [refreshAnnouncement, announceRefresh] = useRepeatedAnnouncement(
-    'Feed updated from the official record.',
+    'Home updated from the official record.',
   )
-  const onRefresh = () => {
-    setRefreshed(true)
-    announceRefresh()
-  }
-
-  if (watching.length === 0) {
-    return (
-      <main className="pp-page" id="resident-main">
-        <FeedUpdateStatus announcement={refreshAnnouncement} />
-        <FirstVisitHero />
-        <HomeFeed
-          onRefresh={onRefresh}
-          refreshed={refreshed}
-          scenario={activeScenario}
-          fixturesEnabled={fixturesEnabled}
-          publishedDecisions={publishedDecisions}
-          watching={[]}
-        />
-      </main>
-    )
-  }
 
   return (
     <main className="pp-page" id="resident-main">
-      <FeedUpdateStatus announcement={refreshAnnouncement} />
-      <header className="pp-watching">
-        <div className="pp-watching-copy">
-          <h1 className="pp-watching-title">
-            <span>Watching</span>{' '}
-            {watching.length === 1
-              ? areaName(watching[0])
-              : `${watching.length} areas`}
-          </h1>
-          {watching.length > 1 ? (
-            <ul className="pp-watching-areas">
-              {watching.map((slug) => (
-                <li key={slug}>{areaName(slug)}</li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-        <AreaSelector
-          trigger={(props) => (
-            <Button
-              {...props}
-              className="pp-inline-action"
-              size="touch"
-              variant="ghost"
-            >
-              Change area
-            </Button>
-          )}
-        />
-      </header>
-
+      <p aria-live="polite" className="visually-hidden" role="status">
+        {refreshAnnouncement}
+      </p>
+      {watching.length === 0 ? (
+        <FirstVisitHero />
+      ) : (
+        <WatchingHeader watching={watching} />
+      )}
       <HomeFeed
-        onRefresh={onRefresh}
+        fixturesEnabled={fixturesEnabled}
+        onRefresh={() => {
+          setRefreshed(true)
+          announceRefresh()
+        }}
+        publishedDecisions={publishedDecisions}
+        publishedIssues={publishedIssues}
         refreshed={refreshed}
         scenario={activeScenario}
-        fixturesEnabled={fixturesEnabled}
-        publishedDecisions={publishedDecisions}
         watching={watching}
       />
     </main>
   )
 }
 
-function FeedUpdateStatus({ announcement }: { announcement: string }) {
+function WatchingHeader({ watching }: { watching: AreaSlug[] }) {
   return (
-    <p aria-live="polite" className="visually-hidden" role="status">
-      {announcement}
-    </p>
+    <header className="pp-watching">
+      <div className="pp-watching-copy">
+        <h1 className="pp-watching-title">
+          <span>Watching</span>{' '}
+          {watching.length === 1
+            ? areaName(watching[0])
+            : `${watching.length} areas`}
+        </h1>
+        {watching.length > 1 ? (
+          <ul className="pp-watching-areas">
+            {watching.map((slug) => (
+              <li key={slug}>{areaName(slug)}</li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+      <AreaSelector
+        trigger={(props) => (
+          <Button
+            {...props}
+            className="pp-inline-action"
+            size="touch"
+            variant="ghost"
+          >
+            Change area
+          </Button>
+        )}
+      />
+    </header>
   )
 }
 
@@ -123,12 +114,12 @@ function FirstVisitHero() {
           <p className="pp-hero-kicker">
             Louisiana local decisions, with receipts.
           </p>
-          <h1 id="home-title">See how local government is changing.</h1>
+          <h1 id="home-title">Follow the local issues taking shape.</h1>
         </div>
         <div className="pp-hero-details">
           <p className="pp-hero-lede">
-            Public Parish connects Louisiana decisions to the official record,
-            public deadlines, and what happens next.
+            Public Parish connects related government decisions into issue
+            timelines, with the official evidence beside every published fact.
           </p>
           <div className="pp-hero-actions">
             <AreaSelector
@@ -146,11 +137,11 @@ function FirstVisitHero() {
             />
             <Button
               className="pp-hero-skip"
-              render={<a href="#major-decisions" />}
+              render={<a href="#current-issues" />}
               size="touch"
               variant="link"
             >
-              Browse published records
+              Browse current issues
             </Button>
             <p className="pp-hero-note">
               Free. Open source. No account needed to read.
@@ -169,6 +160,7 @@ function HomeFeed({
   watching,
   scenario,
   fixturesEnabled,
+  publishedIssues,
   publishedDecisions,
   refreshed,
   onRefresh,
@@ -176,38 +168,44 @@ function HomeFeed({
   watching: AreaSlug[]
   scenario?: HomeScenario
   fixturesEnabled: boolean
+  publishedIssues: PublishedIssue[] | undefined
   publishedDecisions: PublishedDecision[] | undefined
   refreshed: boolean
   onRefresh: () => void
 }) {
-  if (!fixturesEnabled) {
-    return (
-      <PublishedHomeFeed decisions={publishedDecisions} watching={watching} />
-    )
-  }
-
-  const degraded = scenario === 'degraded'
+  const fixtureIssues = scenario === 'no-issues' ? [] : PUBLISHED_ISSUE_FIXTURES
+  const issues = fixturesEnabled
+    ? filterIssues(fixtureIssues, watching)
+    : filterIssues(
+        (publishedIssues ?? [])
+          .map(toIssueCard)
+          .filter((issue): issue is IssueCardData => issue !== null),
+        watching,
+      )
+  const decisionRows = fixturesEnabled
+    ? filterFixtureRows(
+        EXPLORE_ROW_FIXTURES.filter((row) => row.kind === 'Decision record'),
+        watching,
+      )
+    : (publishedDecisions ?? [])
+        .filter((decision) => isWatched(decision.placeSlug, watching))
+        .map(toDecisionRow)
+  const loading =
+    !fixturesEnabled &&
+    (publishedIssues === undefined || publishedDecisions === undefined)
   const showUpdateRow = scenario === 'update' && !refreshed
-
-  const updates = refreshed
-    ? [UPDATE_REFRESH_FIXTURE, ...UPDATE_FIXTURES]
-    : UPDATE_FIXTURES
-  const relevantUpdates = updates.filter(
-    (entry) =>
-      watching.length === 0 ||
-      updatePlaces(entry.issueSlug).some((slug) => watching.includes(slug)),
-  )
 
   return (
     <div className="pp-home-feed">
       {showUpdateRow ? <UpdateRow onRefresh={onRefresh} /> : null}
-      <MajorDecisionsSection scenario={scenario} watching={watching} />
-      <HappeningSoonSection watching={watching} />
-      <LatestUpdatesSection
-        entries={relevantUpdates}
-        evidenceScenario={refreshed ? 'update' : 'preview'}
+      <IssuesSection
+        issues={issues}
+        loading={loading}
+        scenario={scenario}
+        watching={watching}
       />
-      {degraded ? (
+      <DecisionRecordsSection loading={loading} rows={decisionRows} />
+      {scenario === 'degraded' ? (
         <Notice
           action={
             <Button
@@ -233,248 +231,170 @@ function HomeFeed({
   )
 }
 
-function PublishedHomeFeed({
-  decisions,
-  watching,
-}: {
-  decisions: PublishedDecision[] | undefined
-  watching: AreaSlug[]
-}) {
-  const cards = (decisions ?? [])
-    .map(toDecisionCard)
-    .filter((card): card is NonNullable<typeof card> => card !== null)
-    .filter(
-      (card) => watching.length === 0 || watching.includes(card.placeSlug),
-    )
-  const rest = cards.slice(1, 6)
-
-  return (
-    <div className="pp-home-feed">
-      <section
-        aria-labelledby="major-decisions-title"
-        className="pp-section"
-        id="major-decisions"
-      >
-        <div className="pp-section-head">
-          <h2 id="major-decisions-title">Published decision records</h2>
-          <Button
-            className="pp-section-link"
-            render={<Link to="/explore" />}
-            size="touch"
-            variant="ghost"
-          >
-            Explore all
-            <ArrowUpRightIcon aria-hidden="true" />
-          </Button>
-        </div>
-        {decisions === undefined ? (
-          <div className="pp-empty" role="status">
-            <p className="pp-empty-title">Loading published records...</p>
-          </div>
-        ) : cards.length > 0 ? (
-          <>
-            <IssueCard issue={cards[0]} variant="lead" />
-            {rest.length > 0 ? (
-              <Rail ariaLabel="More published decision records">
-                {rest.map((card) => (
-                  <IssueCard issue={card} key={card.slug} variant="rail" />
-                ))}
-              </Rail>
-            ) : null}
-          </>
-        ) : (
-          <div className="pp-empty">
-            <p className="pp-empty-title">
-              No published decision records are available for this area.
-            </p>
-            <p className="pp-empty-text">
-              New records appear after their official evidence passes the
-              publication checks.
-            </p>
-            <Button
-              render={<Link to="/coverage" />}
-              size="touch"
-              variant="outline"
-            >
-              View coverage
-            </Button>
-          </div>
-        )}
-      </section>
-      <VoterStrip />
-    </div>
-  )
-}
-
-function updatePlaces(issueSlug: string | undefined): AreaSlug[] {
-  const issue = ISSUE_FIXTURES.find((item) => item.slug === issueSlug)
-  return issue ? [issue.placeSlug] : ['lafayette-parish']
-}
-
-function MajorDecisionsSection({
-  watching,
+function IssuesSection({
+  issues,
+  loading,
   scenario,
+  watching,
 }: {
-  watching: AreaSlug[]
+  issues: IssueCardData[]
+  loading: boolean
   scenario?: HomeScenario
+  watching: AreaSlug[]
 }) {
   const [recovered, setRecovered] = useState(false)
   const showFailure = scenario === 'section-failure' && !recovered
-  const pool =
-    watching.length === 0
-      ? ISSUE_FIXTURES
-      : ISSUE_FIXTURES.filter((issue) => watching.includes(issue.placeSlug))
-  const showEmpty = scenario === 'no-issues' || pool.length === 0
-  const lead = pool[0]
-  const rest = pool.slice(1, watching.length === 0 ? 6 : 5)
+  const title =
+    watching.length === 1
+      ? `Issues in ${areaName(watching[0])}`
+      : watching.length > 1
+        ? 'Issues in your saved areas'
+        : 'Issues across launch areas'
 
   return (
     <section
-      aria-labelledby="major-decisions-title"
-      className="pp-section"
-      id="major-decisions"
+      aria-labelledby="current-issues-title"
+      className="pp-section pp-home-issues"
+      id="current-issues"
     >
       <div className="pp-section-head">
-        <h2 id="major-decisions-title">Major local decisions</h2>
+        <div>
+          <p className="pp-section-kicker">Connected decisions</p>
+          <h2 id="current-issues-title">{title}</h2>
+        </div>
         <Button
           className="pp-section-link"
-          render={<Link to="/explore" />}
+          render={<Link to="/explore" search={{ type: 'issue' }} />}
           size="touch"
           variant="ghost"
         >
-          Explore all
+          Search issues
           <ArrowUpRightIcon aria-hidden="true" />
         </Button>
       </div>
-
+      <p className="pp-section-copy">
+        Each timeline connects related government actions without replacing the
+        individual official records.
+      </p>
       {showFailure ? (
         <SectionFailure
-          label="Major local decisions"
+          label="Issue timelines"
           onRetry={() => setRecovered(true)}
         />
-      ) : showEmpty ? (
-        <EmptyDecisions watching={watching} />
+      ) : loading ? (
+        <div className="pp-empty" role="status">
+          <p className="pp-empty-title">Loading published issues...</p>
+        </div>
+      ) : issues.length > 0 ? (
+        <div className="pp-card-grid">
+          {issues.slice(0, HOME_SECTION_LIMIT).map((issue) => (
+            <IssueCard issue={issue} key={issue.slug} />
+          ))}
+        </div>
       ) : (
-        <>
-          <IssueCard issue={lead} variant="lead" />
-          {rest.length > 0 ? (
-            <Rail ariaLabel="More major decisions">
-              {rest.map((issue) => (
-                <IssueCard issue={issue} key={issue.slug} variant="rail" />
-              ))}
-            </Rail>
-          ) : null}
-        </>
+        <EmptyIssues watching={watching} />
       )}
     </section>
   )
 }
 
-function EmptyDecisions({ watching }: { watching: AreaSlug[] }) {
-  const place = watching.length === 1 ? areaName(watching[0]) : 'your area'
-
+function EmptyIssues({ watching }: { watching: AreaSlug[] }) {
+  const place = watching.length === 1 ? ` for ${areaName(watching[0])}` : ''
   return (
     <div className="pp-empty">
-      <p className="pp-empty-title">No current decisions in {place}.</p>
-      <p className="pp-empty-text">
-        Recent outcomes are below. New decisions appear here when they are
-        published.
+      <p className="pp-empty-title">
+        No published issue timeline is available{place} yet.
       </p>
-      <Button render={<Link to="/explore" />} size="touch" variant="outline">
-        Explore records
+      <p className="pp-empty-text">
+        Individual decision records appear below. Public Parish connects them
+        only after the relationship and citations pass review.
+      </p>
+      <Button
+        render={<Link to="/explore" search={{ type: 'issue' }} />}
+        size="touch"
+        variant="outline"
+      >
+        Search all issues
       </Button>
-      <div className="pp-empty-outcomes">
-        <h3>Recent outcomes</h3>
-        <div className="pp-row-list">
-          <ResultRow
-            row={{
-              date: '2026-04-21',
-              href: '/issues/surplus-pickup-donations',
-              kind: 'Decision record',
-              place: 'Lafayette Parish',
-              state: 'Decided',
-              title:
-                'Donate a surplus 2016 Crew Cab pickup to Terrebonne Parish',
-            }}
-          />
-          <ResultRow
-            row={{
-              date: '2026-08-18',
-              href: '/issues/downtown-late-night-permits',
-              kind: 'Decision record',
-              place: 'Lafayette Parish',
-              title: 'Later hours for downtown alcohol permits, postponed',
-            }}
-          />
-        </div>
-      </div>
     </div>
   )
 }
 
-function HappeningSoonSection({ watching }: { watching: AreaSlug[] }) {
-  const items = UPCOMING_FIXTURES.filter(
-    (item) => watching.length === 0 || watching.includes(item.placeSlug),
-  )
-  if (items.length === 0) return null
-
+function DecisionRecordsSection({
+  loading,
+  rows,
+}: {
+  loading: boolean
+  rows: ResultRowData[]
+}) {
   return (
-    <section aria-labelledby="happening-soon-title" className="pp-section">
+    <section aria-labelledby="decision-records-title" className="pp-section">
       <div className="pp-section-head">
-        <h2 id="happening-soon-title">Happening soon</h2>
+        <div>
+          <p className="pp-section-kicker">The official actions underneath</p>
+          <h2 id="decision-records-title">Latest decision records</h2>
+        </div>
+        <Button
+          className="pp-section-link"
+          render={<Link to="/explore" search={{ type: 'decision' }} />}
+          size="touch"
+          variant="ghost"
+        >
+          Explore records
+          <ArrowUpRightIcon aria-hidden="true" />
+        </Button>
       </div>
-      <Rail ariaLabel="Happening soon">
-        {items.map((item) => (
-          <UpcomingCard item={item} key={item.href} />
-        ))}
-      </Rail>
+      <p className="pp-section-copy">
+        These are the atomic government actions preserved from agendas, minutes,
+        and other official sources.
+      </p>
+      {loading ? (
+        <div className="pp-empty" role="status">
+          <p className="pp-empty-title">Loading decision records...</p>
+        </div>
+      ) : rows.length > 0 ? (
+        <div className="pp-row-list">
+          {rows.slice(0, HOME_SECTION_LIMIT).map((row, index) => (
+            <ResultRow key={`${row.href}-${index}`} row={row} />
+          ))}
+        </div>
+      ) : (
+        <div className="pp-empty">
+          <p className="pp-empty-title">
+            No published decision records are available for this area.
+          </p>
+          <p className="pp-empty-text">
+            New records appear after their official evidence passes the
+            publication checks.
+          </p>
+          <Button
+            render={<Link to="/coverage" />}
+            size="touch"
+            variant="outline"
+          >
+            View coverage
+          </Button>
+        </div>
+      )}
     </section>
   )
 }
 
-function LatestUpdatesSection({
-  entries,
-  evidenceScenario,
-}: {
-  entries: typeof UPDATE_FIXTURES
-  evidenceScenario: 'preview' | 'update'
-}) {
-  const currentHref = useRouterState({
-    select: (state) => state.location.href,
-  })
-  const detailSearch = evidenceJourneySearch({
-    currentHref,
-    scenario: evidenceScenario,
-  })
+function filterIssues(issues: IssueCardData[], watching: AreaSlug[]) {
+  return issues.filter(
+    (issue) => watching.length === 0 || watching.includes(issue.placeSlug),
+  )
+}
 
-  return (
-    <section aria-labelledby="latest-updates-title" className="pp-section">
-      <div className="pp-section-head">
-        <h2 id="latest-updates-title">Latest updates</h2>
-      </div>
-      <ol className="pp-updates">
-        {entries.map((entry, index) => (
-          <li className="pp-update-entry" key={`${entry.date}-${index}`}>
-            <time dateTime={entry.date}>{formatDate(entry.date)}</time>
-            <div>
-              <p className="pp-update-kind">{entry.kind}</p>
-              <p className="pp-update-text">
-                {entry.issueSlug ? (
-                  <Link
-                    search={detailSearch}
-                    to={'/issues/' + entry.issueSlug}
-                  >
-                    {entry.issueTitle}
-                  </Link>
-                ) : null}
-                {entry.issueSlug ? ' — ' : null}
-                {entry.text}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </section>
+function isWatched(placeSlug: string, watching: AreaSlug[]) {
+  return watching.length === 0 || watching.some((slug) => slug === placeSlug)
+}
+
+// Fixture rows carry no place slug, so dev-only scenarios match on the name.
+function filterFixtureRows(rows: ResultRowData[], watching: AreaSlug[]) {
+  const names = watching.map(areaName)
+  return rows.filter(
+    (row) => names.length === 0 || (row.place && names.includes(row.place)),
   )
 }
 

@@ -28,7 +28,12 @@ import { IssueCard } from './issue-card'
 import { SectionFailure, UpdateRow } from './notice'
 import { ResultRow } from './result-row'
 import { useMediaQuery, useRepeatedAnnouncement } from './hooks'
-import { toDecisionRow, usePublishedDecisions } from './live-publications'
+import {
+  toDecisionRow,
+  toIssueCard,
+  usePublishedDecisions,
+  usePublishedIssues,
+} from './live-publications'
 import { Sheet } from './sheet'
 
 export function ExplorePage({ search }: { search: ExploreSearch }) {
@@ -36,7 +41,15 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   const desktop = useMediaQuery('(min-width: 64.0625rem)')
   const activeFixture = getActiveDiscoveryFixture(search.fixture)
   const fixturesEnabled = activeFixture !== undefined
+  const publishedIssues = usePublishedIssues(!fixturesEnabled)
   const publishedDecisions = usePublishedDecisions(!fixturesEnabled)
+  const publishedIssueCards = useMemo(
+    () =>
+      (publishedIssues ?? [])
+        .map(toIssueCard)
+        .filter((issue): issue is IssueCardData => issue !== null),
+    [publishedIssues],
+  )
   const publishedRows = useMemo(
     () => (publishedDecisions ?? []).map(toDecisionRow),
     [publishedDecisions],
@@ -98,11 +111,11 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
     () =>
       getExploreEntries(
         effectiveSearch,
-        fixturesEnabled ? ISSUE_FIXTURES : [],
+        fixturesEnabled ? ISSUE_FIXTURES : publishedIssueCards,
         fixturesEnabled ? EXPLORE_ROW_FIXTURES : publishedRows,
         { includeUnfiltered: !fixturesEnabled },
       ),
-    [effectiveSearch, fixturesEnabled, publishedRows],
+    [effectiveSearch, fixturesEnabled, publishedIssueCards, publishedRows],
   )
 
   const browse = useMemo(() => {
@@ -191,9 +204,8 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
       <header className="pp-page-head">
         <h1>Explore</h1>
         <p className="pp-page-lede">
-          Search published decision records from the official sources Public
-          Parish has checked. <Link to="/issues">Browse issue timelines</Link>{' '}
-          to see related decisions together.
+          Search published issues and individual decision records from the
+          official sources Public Parish has checked.
         </p>
       </header>
 
@@ -334,24 +346,33 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   }
 
   function resultsBody() {
-    if (!fixturesEnabled && publishedDecisions === undefined) {
+    if (
+      !fixturesEnabled &&
+      (publishedIssues === undefined || publishedDecisions === undefined)
+    ) {
       return (
         <div className="pp-empty" role="status">
-          <p className="pp-empty-title">Loading published records...</p>
+          <p className="pp-empty-title">
+            Loading published issues and records...
+          </p>
         </div>
       )
     }
 
     if (viewMode === 'empty') {
-      if (!fixturesEnabled && publishedRows.length === 0) {
+      if (
+        !fixturesEnabled &&
+        publishedIssueCards.length === 0 &&
+        publishedRows.length === 0
+      ) {
         return (
           <div className="pp-empty">
             <p className="pp-empty-title">
-              No published decision records are available yet.
+              No published issues or decision records are available yet.
             </p>
             <p className="pp-empty-text">
-              Explore lists records after their official evidence passes the
-              publication checks.
+              Explore lists issues and records after their official evidence
+              passes the publication checks.
             </p>
             <Button
               render={<Link to="/coverage" />}

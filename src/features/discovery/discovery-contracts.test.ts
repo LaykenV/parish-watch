@@ -118,4 +118,16 @@ describe('resident interface Slice 2 discovery contracts', () => {
     expect(entries).toHaveLength(1)
     expect(entries[0]?.kind).toBe('Decision record')
   })
+
+  it('leads mixed Explore results with issue timelines', () => {
+    const entries = getExploreEntries(
+      {},
+      ISSUE_FIXTURES.slice(0, 1),
+      EXPLORE_ROW_FIXTURES.slice(0, 1),
+      { includeUnfiltered: true },
+    )
+
+    expect(entries).toHaveLength(2)
+    expect(entries[0]?.kind).toBe('issue')
+  })
 })

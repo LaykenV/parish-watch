@@ -16,9 +16,9 @@ import {
 describe('resident implementation handoff', () => {
   it('keeps one contract for every approved sitemap destination', () => {
     expect(RESIDENT_ROUTE_HANDOFFS).toHaveLength(14)
-    expect(new Set(RESIDENT_ROUTE_HANDOFFS.map((item) => item.route)).size).toBe(
-      14,
-    )
+    expect(
+      new Set(RESIDENT_ROUTE_HANDOFFS.map((item) => item.route)).size,
+    ).toBe(14)
     expect(
       RESIDENT_ROUTE_HANDOFFS.every(
         (item) => item.contract.length > 0 && item.owner.length > 0,
@@ -49,18 +49,20 @@ describe('resident implementation handoff', () => {
     expect(parseResidentReturnTo('/issues/example?fixture=preview')).toBe(
       '/issues/example?fixture=preview',
     )
+    expect(parseResidentReturnTo('/for-you?fixture=update')).toBe('/')
+    expect(parseResidentReturnTo('/issues')).toBe('/#current-issues')
     expect(parseResidentReturnTo('https://example.com/explore')).toBeUndefined()
     expect(parseResidentReturnTo('//example.com/explore')).toBeUndefined()
     expect(parseResidentReturnTo('/explore\\evil')).toBeUndefined()
     expect(parseResidentReturnTo('/admin')).toBeUndefined()
-    expect(parseResidentReturnTo(`/explore?q=${'x'.repeat(800)}`)).toBeUndefined()
+    expect(
+      parseResidentReturnTo(`/explore?q=${'x'.repeat(800)}`),
+    ).toBeUndefined()
   })
 
   it('labels return controls from the route they restore', () => {
     expect(residentReturnLabel('/')).toBe('Back to Home')
-    expect(residentReturnLabel('/for-you?fixture=update')).toBe(
-      'Back to For You',
-    )
+    expect(residentReturnLabel('/for-you?fixture=update')).toBe('Back to Home')
     expect(residentReturnLabel('/decisions/CO-022-2026')).toBe(
       'Back to decision record',
     )

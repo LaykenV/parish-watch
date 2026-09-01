@@ -89,17 +89,21 @@ evidence. The resident query returns 26 publications and one canonical
 board-vacancy card.
 
 PR #24 merged resident-interface Design Slice 2 as `4e2ac67`. The application
-now has a responsive shell plus Home, For You, and Explore routes. Explicit
+shipped a responsive shell plus Home, For You, and Explore routes. Explicit
 fixture query parameters drive deterministic QA states in development builds
 without adding a resident-facing banner. Production ignores fixture parameters
-and uses the accepted-publication query for Home, For You, and Explore. The area
+and uses accepted-publication queries for the issue-led Home and Explore. The area
 store, offline notice, URL-restored filters, result sorting, share fallback, and
 responsive navigation run in the browser. The fixture adapter remains isolated
 from production records and runs only from explicit development QA URLs.
 
+The current route contract makes Home the resident's single local-news
+destination. `/for-you` redirects to `/`, and `/issues` redirects to Home's
+issue section. `/issues/$issueSlug` remains the stable cited timeline route.
+
 PR #25 deployed the owner phone-review refinements as `b22e321`. The production
 workflow and independent smoke passed. Production now ignores every fixture
-scenario before Home, For You, or Explore derives page state, so fixture records,
+scenario before Home or Explore derives page state, so fixture records,
 signed-in areas, update rows, degraded notices, and failure states remain
 development-only.
 
@@ -272,10 +276,10 @@ development proof for unfinished APIs. Production never treats them as data.
 
 | Route                   | Purpose                                            |
 | ----------------------- | -------------------------------------------------- |
-| `/`                     | Area setup and major issues                        |
-| `/for-you`              | Personalized issue feed                            |
-| `/explore`              | Browse and search published resident evidence      |
-| `/issues`               | Browse current published issue timelines           |
+| `/`                     | Issue-led local home and area setup                |
+| `/for-you`              | Legacy redirect to Home                            |
+| `/explore`              | Issue-first search of published resident evidence  |
+| `/issues`               | Legacy redirect to the issue section on Home       |
 | `/issues/$issueSlug`    | Cited issue timeline                               |
 | `/decisions/$recordKey` | Atomic decision record and publication history     |
 | `/meetings/$meetingId`  | Meeting and source records                         |
@@ -297,7 +301,7 @@ Keep route files small:
 ```text
 src/routes/issues_.tsx
 src/routes/issues.$issueSlug.tsx
-src/features/discovery/issues-index.tsx
+src/features/discovery/home.tsx
 src/features/evidence/issue-page.tsx
 src/features/chat/
 src/features/follows/

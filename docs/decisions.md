@@ -123,7 +123,12 @@ expand the promise.
 - Do not ask for a street address.
 - Ask for parish or municipality and optional topics.
 - Signed-in users may save multiple areas.
-- The main feeds are “For You” and “Major local decisions.”
+- Home is the main feed. It leads with issue timelines for saved or anonymous
+  areas, then shows the atomic decision records underneath.
+- Explore searches issues before decision records. It does not imply an
+  unsupported importance ranking.
+- `/for-you` and the `/issues` index are legacy redirects to Home. Stable issue
+  detail routes remain unchanged.
 
 ## Chat
 
@@ -258,9 +263,8 @@ expand the promise.
 - Keep fixture query scenarios as internal, development-only QA hooks. Do not put
   a fixture or prototype banner at the top of resident pages. Production must
   ignore fixture parameters and must not render fixture records.
-- Primary navigation is For You, Explore, Ask, and Coverage. The double-P mark
-  and live-text name link to Home from every page, and the same shell appears on
-  Home.
+- Primary navigation is Home, Explore, Ask, and Coverage. The double-P mark and
+  live-text name also link to Home from every page.
 - Keep the existing first-visit hero and place area selection inside it. Return
   visits use a compact area header.
 - Use the issue as the main resident object. Call an atomic record a Decision

@@ -66,6 +66,7 @@ export function getExploreEntries(
       !matches(issue.title) &&
       !matches(issue.body) &&
       !matches(issue.place) &&
+      !matches(issue.whyMatter) &&
       !issue.topics.some(matches)
     ) {
       return false
@@ -113,9 +114,11 @@ export function getExploreEntries(
     }
   }
 
-  return entries.sort((left, right) =>
-    compareExploreDates(left.date, right.date, search.sort ?? 'newest'),
-  )
+  return entries.sort((left, right) => {
+    if (left.kind === 'issue' && right.kind !== 'issue') return -1
+    if (left.kind !== 'issue' && right.kind === 'issue') return 1
+    return compareExploreDates(left.date, right.date, search.sort ?? 'newest')
+  })
 }
 
 export function compareExploreDates(

@@ -12,18 +12,24 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T14:51:37Z
+- **Last updated:** 2026-09-01T16:16:08Z
 
 ## Log
 
 ### 2026-09-01 - working tree
 
-Added a resident-facing `/issues` index for the accepted Lafayette and Rapides
-timelines. Its bounded Convex query reuses the issue page's fail-closed
-projection, so stale decision links or missing required citations remove an
-issue from discovery. Explore links to the index, and issue pages return there
-(`convex/resident/evidence.ts`, `convex/schema.ts`, `src/routes/issues_.tsx`,
-`src/features/discovery/issues-index.tsx`).
+Folded the resident-facing issue index and For You destination into one
+issue-led Home in the working tree. Home reads the bounded accepted-issue and
+decision queries, shows Lafayette and Rapides timelines before compact atomic
+records, and keeps equal-weight issue cards because no resident-facing
+importance score is published. Explore now searches accepted issues before
+individual records. Primary navigation is Home, Explore, Ask, and Coverage.
+`/for-you` redirects to Home, `/issues` redirects to Home's issue section, and
+the cited issue detail routes remain stable. Development fixtures passed browser
+inspection at 375 and 1280 CSS pixels with no horizontal overflow
+(`src/features/discovery/home.tsx`, `src/features/discovery/explore.tsx`,
+`src/features/discovery/explore-model.ts`, `src/routes/for-you.tsx`,
+`src/routes/issues_.tsx`).
 
 Closed the Slice 5 data gate with two production issue builds. Terra linked
 the accepted records, Luna reviewed the proposed facts independently, and

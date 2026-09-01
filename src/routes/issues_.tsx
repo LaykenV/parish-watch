@@ -1,20 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-
-import { parseIssuesSearch } from '../features/discovery/contracts'
-import { IssuesIndexPage } from '../features/discovery/issues-index'
-import { ResidentShell } from '../features/resident-blueprint/resident-shell'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/issues_')({
-  component: ResidentIssues,
-  validateSearch: parseIssuesSearch,
+  beforeLoad: () => {
+    throw redirect({ hash: 'current-issues', replace: true, to: '/' })
+  },
 })
-
-function ResidentIssues() {
-  const search = Route.useSearch()
-
-  return (
-    <ResidentShell>
-      <IssuesIndexPage search={search} />
-    </ResidentShell>
-  )
-}

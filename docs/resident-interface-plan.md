@@ -171,7 +171,7 @@ Global requirements:
 
 ### Desktop
 
-The desktop header contains the double-P mark and live-text name, For You,
+The desktop header contains the double-P mark and live-text name, Home,
 Explore, Ask, Coverage, the current area control, and the account control. The
 mark and name link to Home from every route, including Home itself. Keep the
 header available while scrolling, but do not let it cover anchored claims or
@@ -181,7 +181,7 @@ headings.
 
 The mobile top bar contains the compact mark and name, current area control, and
 account control. The mark and name link to Home. A persistent bottom bar
-contains For You, Explore, Ask, and Coverage. Hide the bottom bar while the
+contains Home, Explore, Ask, and Coverage. Hide the bottom bar while the
 keyboard is open and while a full-screen sheet or dialog owns focus.
 
 The top bar scrolls with the page. Do not pin both bars around a narrow reading
@@ -194,7 +194,7 @@ header.
 
 ### Top-level navigation behavior
 
-Treat For You, Explore, Ask, and Coverage as stable top-level destinations.
+Treat Home, Explore, Ask, and Coverage as stable top-level destinations.
 Preserve each destination's nested route and scroll position while the resident
 moves among them. Tapping the active destination again scrolls its current page
 to the top. Keep icon labels visible, and never put contextual actions such as
@@ -272,7 +272,6 @@ result. A toast is a last resort for a result with no natural location.
 
 ```text
 /
-|-- /for-you
 |-- /explore
 |-- /ask
 |-- /coverage
@@ -353,43 +352,35 @@ First visit order:
 
 1. Existing hero headline and Louisiana relief
 2. Searchable `Choose a parish or city` control
-3. `Browse major decisions` skip action
-4. Major local decisions
-5. Happening soon
-6. Latest updates
-7. Conditional coverage warning
-8. Voter information strip
+3. `Browse current issues` skip action
+4. Issue timelines for the selected or saved areas
+5. Latest atomic decision records
+6. Conditional coverage warning
+7. Voter information strip
 
 Keep the relief as the visual, not the required selection control. On mobile,
 place the area control before a shorter relief so the first useful control stays
-near the top. Ask only for location in the hero. Topic selection belongs in For
-You after the resident has seen useful records. The searchable area field opens
+near the top. Ask only for location in the hero. Topic selection belongs in the
+saved-interest controls after the resident has seen useful records. The searchable area field opens
 the selector directly; do not stack a second button that opens the same dialog.
 
 After the browser stores an area, replace the full hero with a compact
 `Watching [area]` header and Change area action. The feed follows immediately.
 
-Major local decisions contains one lead issue and a finite rail of other major
-issues. The lead earns its size through deterministic importance and time
-relevance. Do not frame it as an editorial endorsement. Happening soon uses a
-finite rail. Latest updates combines recent material changes and outcomes in a
-chronological list.
+Issue timelines use equal-weight cards because the live projection does not yet
+publish a resident-facing importance score. Decision records use compact rows
+underneath. A record remains discoverable even when Public Parish has not
+validated its relationship to an issue.
 
 The voter strip remains below the decision content. It follows the exact scope
 and verification rules in [`product-spec.md`](./product-spec.md).
 
-### For You
+### Legacy discovery routes
 
-For You is one ranked feed, not a copy of the Home sections. Eligibility,
-saved or local preferences, deterministic importance, and time determine order.
-Each item says why it appears in plain language.
-
-A direct signed-out visit without preferences stays on the page. Show a compact
-area selector and a preview of major decisions. Store one active signed-out
-area on the device. A signed-in resident may save several areas.
-
-Temporary filters do not rewrite saved preferences. Put Edit saved interests in
-the account area.
+`/for-you` redirects to Home. `/issues` redirects to the issue section on Home.
+The cited `/issues/:issueSlug` detail routes remain stable. Store one active
+signed-out area on the device. A signed-in resident may save several areas.
+Temporary Explore filters do not rewrite saved preferences.
 
 ### Explore
 
@@ -398,9 +389,9 @@ upcoming decisions, recent outcomes, and routine searchable records. Search
 across issues, decision records, meetings, bodies, official source titles, and
 accepted text fields.
 
-Use one result sequence with a visible type label. Issues get the richest
-treatment. Decision records and meetings use compact rows. Body results link to
-Coverage.
+Use one result sequence with a visible type label. Issues appear before
+individual records and get the richest treatment. Decision records and meetings
+use compact rows. Body results link to Coverage.
 
 Show Place, Topic, and Date near the search field. Put Body, Lifecycle, Record
 type, and Source status in More filters. Mobile uses a sheet. Desktop uses a
@@ -422,9 +413,9 @@ Every promoted issue card shows:
 6. Evidence status and last checked time
 7. View issue action
 
-For You adds one reason that explains the match. Do not show the numeric
-importance score, model confidence, completeness percentage, source kind, or a
-row of topic metadata.
+Home makes the selected or saved area visible. Do not show a numeric importance
+score, model confidence, completeness percentage, source kind, or a row of
+topic metadata.
 
 The title and View issue control navigate. The rest of the card is not one giant
 link. This leaves a separate action row for Follow and Share without nested
@@ -594,7 +585,7 @@ Unavailable. Do not show Following before the backend confirms it.
 Place follow actions where the target makes sense:
 
 - issue follow on issue pages and promoted cards;
-- topic follow in For You and saved interests;
+- topic follow in saved interests;
 - body follow in Coverage;
 - municipality follow in area selection and saved areas.
 
@@ -659,7 +650,7 @@ may be missing.
 The area selector lists supported places first. Defined launch areas still
 being validated appear as unavailable rows with written status. End with `Not
 seeing your area? Request coverage.` Do not select an unsupported area into an
-empty For You feed.
+empty Home feed.
 
 The request form asks for parish or municipality, optional official government
 homepage, and optional email for a launch notice. Record the request before
@@ -701,7 +692,7 @@ The design agent owns the composition and variants for these components:
 | Area selector      | Supported, validating, unsupported, signed-out stored area, multiple signed-in areas |
 | Route spinner      | Immediate, fixed region, stable through redirects, accessible busy state             |
 | Action spinner     | Fixed icon slot, stable label and width, duplicate prevention                        |
-| Issue card         | Lead, standard, rail, For You reason, limited, delayed, following                    |
+| Issue card         | Standard, limited, delayed, following                                                |
 | Compact result row | Decision, meeting, body, routine record                                              |
 | Filter pill        | Default, hover, focus, selected, disabled, removable                                 |
 | Status treatment   | Lifecycle, evidence, coverage, follow, artifact availability                         |
@@ -716,7 +707,7 @@ The design agent owns the composition and variants for these components:
 | Coverage row       | Supported, degraded, validating, paused, not supported                               |
 | Notice             | Offline, limited, delayed, live update, expired, private confirmation                |
 | Inline success     | Copied, saved, followed, reported, undo                                              |
-| Empty state        | Home, For You, Explore, Following, meeting artifacts                                 |
+| Empty state        | Home, Explore, Following, meeting artifacts                                          |
 | Error state        | Section, route, provider, form, expired management link                              |
 
 Use cards only for promoted issues, focused actions, and overlays. Use spacing
@@ -726,20 +717,19 @@ for overlays that need separation.
 
 ## Cross-page state matrix
 
-| Page             | Loading                 | Empty                                  | Limited or degraded                               | Signed out                         | Signed in                                    | Live change                           |
-| ---------------- | ----------------------- | -------------------------------------- | ------------------------------------------------- | ---------------------------------- | -------------------------------------------- | ------------------------------------- |
-| Home             | Immediate route spinner | Recent outcomes, Explore, Coverage     | Conditional source warning                        | One stored area or skip            | Compact multi-area summary                   | Simple Update available row           |
-| For You          | Immediate route spinner | Area setup and major decisions preview | Keep dated matches with warning                   | Local preferences                  | Saved areas, topics, and follows             | Simple Update available row           |
-| Explore          | Immediate route spinner | Clear filters or search another area   | Result-level evidence state                       | Full access                        | Full access                                  | Refresh row, no automatic reorder     |
-| Issue            | Immediate route spinner | Route not found recovery               | Omit unsupported sections and date accepted facts | Full reading, Ask, email follow    | Managed follow                               | Inline update line and What changed   |
-| Decision         | Immediate route spinner | Search records recovery                | Current limited version and dated history         | Full reading                       | Full reading                                 | History updates in place              |
-| Meeting          | Immediate route spinner | Coverage body recovery                 | Missing artifacts with expected state             | Full reading and Ask               | Full reading and Ask                         | Artifact and decision update in place |
-| Ask              | Immediate route spinner | Question composer and examples         | Not-found answer                                  | 24-hour local thread               | Same answer access without requiring account | New evidence applies to later answer  |
-| Following        | Immediate route spinner | Browse current issues                  | Follow-level coverage warning                     | Google or email verification entry | Managed list and preferences                 | Rows update without jumping           |
-| Coverage         | Immediate route spinner | Defined launch coverage explanation    | Degraded body keeps dated records                 | Full access                        | Full access and body follow                  | Row updates in place                  |
-| Coverage request | Immediate route spinner | Form                                   | Provider failure preserves request                | No account required                | Account remains optional                     | Not applicable                        |
-| How it works     | Immediate route spinner | Not applicable                         | Current method language                           | Full access                        | Full access                                  | Not applicable                        |
-| Email management | Immediate route spinner | Expired-link verification              | Delivery failure with recovery                    | Secure scoped access               | Secure scoped access                         | Preference result inline              |
+| Page             | Loading                 | Empty                                | Limited or degraded                               | Signed out                         | Signed in                                    | Live change                           |
+| ---------------- | ----------------------- | ------------------------------------ | ------------------------------------------------- | ---------------------------------- | -------------------------------------------- | ------------------------------------- |
+| Home             | Immediate route spinner | Recent outcomes, Explore, Coverage   | Conditional source warning                        | One stored area or skip            | Compact multi-area summary                   | Simple Update available row           |
+| Explore          | Immediate route spinner | Clear filters or search another area | Result-level evidence state                       | Full access                        | Full access                                  | Refresh row, no automatic reorder     |
+| Issue            | Immediate route spinner | Route not found recovery             | Omit unsupported sections and date accepted facts | Full reading, Ask, email follow    | Managed follow                               | Inline update line and What changed   |
+| Decision         | Immediate route spinner | Search records recovery              | Current limited version and dated history         | Full reading                       | Full reading                                 | History updates in place              |
+| Meeting          | Immediate route spinner | Coverage body recovery               | Missing artifacts with expected state             | Full reading and Ask               | Full reading and Ask                         | Artifact and decision update in place |
+| Ask              | Immediate route spinner | Question composer and examples       | Not-found answer                                  | 24-hour local thread               | Same answer access without requiring account | New evidence applies to later answer  |
+| Following        | Immediate route spinner | Browse current issues                | Follow-level coverage warning                     | Google or email verification entry | Managed list and preferences                 | Rows update without jumping           |
+| Coverage         | Immediate route spinner | Defined launch coverage explanation  | Degraded body keeps dated records                 | Full access                        | Full access and body follow                  | Row updates in place                  |
+| Coverage request | Immediate route spinner | Form                                 | Provider failure preserves request                | No account required                | Account remains optional                     | Not applicable                        |
+| How it works     | Immediate route spinner | Not applicable                       | Current method language                           | Full access                        | Full access                                  | Not applicable                        |
+| Email management | Immediate route spinner | Expired-link verification            | Delivery failure with recovery                    | Secure scoped access               | Secure scoped access                         | Preference result inline              |
 
 ## Global state rules
 
@@ -899,7 +889,7 @@ Status: deployed through PR #24 as `4e2ac67` and refined through PR #25 as
 
 #### Objective
 
-Finish the responsive shell, hero transition, Home, For You, Explore, issue
+Finish the responsive shell, hero transition, Home, Explore, issue
 cards, result rows, filters, and feed update behavior.
 
 #### Prerequisites
@@ -912,9 +902,8 @@ cards, result rows, filters, and feed update behavior.
 
 - Preserve the current hero character while adding area selection.
 - Design first-visit and returning Home.
-- Design lead, standard, rail, limited, delayed, and For You issue cards.
-- Design Happening soon and Latest updates.
-- Design one continuous For You feed with match reasons.
+- Design standard, limited, and delayed issue cards.
+- Design the issue-led Home and compact decision-record rows.
 - Design Explore before search, during search, mixed results, filters, and URL
   restoration.
 - Design desktop header, mobile header, and four-item bottom navigation.
@@ -925,7 +914,7 @@ cards, result rows, filters, and feed update behavior.
 
 - no area, one local area, and several signed-in areas;
 - no current issues;
-- no personalized matches;
+- no published issue timelines;
 - no search results;
 - limited and delayed cards;
 - loading, offline, and section failure;
@@ -933,7 +922,7 @@ cards, result rows, filters, and feed update behavior.
 
 #### Deliverables
 
-- High-fidelity Home, For You, and Explore frames
+- High-fidelity Home and Explore frames
 - Responsive shell specification
 - Issue-card and result-row component set
 - Filter and rail interaction specification
@@ -1248,7 +1237,7 @@ page contracts, not direct table shapes.
 
 1. Implement the shell, tokens, routing, immediate stable spinner, responsive
    structure, and local fixture boundary.
-2. Implement Home, For You, Explore, shared cards, filters, and inline feedback.
+2. Implement Home, Explore, shared cards, filters, and inline feedback.
 3. Implement Issue, Decision, Meeting, evidence gutter, citation viewer,
    timelines, and update history.
 4. Implement Ask pages, thread behavior, answer layouts, and error states against

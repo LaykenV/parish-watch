@@ -20,7 +20,7 @@ export type ResidentBlueprint = {
 }
 
 export type BlueprintKey =
-  | 'for-you'
+  | 'home'
   | 'explore'
   | 'ask'
   | 'coverage'
@@ -35,11 +35,11 @@ export type BlueprintKey =
   | 'email-management'
 
 const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
-  'for-you': {
-    eyebrow: 'For You',
-    title: 'Decisions matched to your places and interests',
+  home: {
+    eyebrow: 'Home',
+    title: 'Local issues for the places you watch',
     description:
-      'One ranked feed explains why each issue appears. Temporary filters never change saved interests.',
+      'Home leads with published issue timelines, then preserves the individual decision records underneath them.',
     actions: [
       { label: 'Choose an area', treatment: 'primary' },
       { href: '/following/areas-and-topics', label: 'Edit saved interests' },
@@ -47,13 +47,13 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     states: [
       'Signed out with one local area',
       'Signed in with several areas',
-      'No personalized matches',
+      'No published issue timelines',
       'Coverage degraded',
       'Update available',
     ],
     sections: [
       {
-        title: 'Your current match settings',
+        title: 'Watching area',
         items: [
           'Lafayette Parish',
           'Topics are optional',
@@ -61,11 +61,11 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
         ],
       },
       {
-        title: 'Ranked issue feed',
+        title: 'Issue timelines',
         items: [
-          'Match reason beside every item',
           'Plain-language title, body, state, date, consequence, and evidence status',
-          'Follow and Share remain separate from View issue',
+          'Equal-weight cards do not imply an unsupported importance ranking',
+          'Related decisions stay available on each issue timeline',
         ],
         actions: [
           { href: '/issues/surplus-pickup-donations', label: 'View issue' },
@@ -73,8 +73,11 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
         ],
       },
       {
-        title: 'Feed refresh',
-        items: ['Realtime changes wait behind one quiet Update available row'],
+        title: 'Latest decision records',
+        items: [
+          'Compact rows preserve the atomic government actions behind issues',
+          'Records without a validated issue relationship remain discoverable',
+        ],
       },
     ],
   },
@@ -510,7 +513,7 @@ const BLUEPRINTS: Record<BlueprintKey, ResidentBlueprint> = {
     eyebrow: 'Following',
     title: 'Areas and topics',
     description:
-      'Saved interests affect For You. Temporary Explore filters stay separate.',
+      'Saved interests affect Home. Temporary Explore filters stay separate.',
     actions: [{ label: 'Save interests', treatment: 'primary' }],
     states: [
       'One signed-out area',
@@ -629,7 +632,7 @@ export function getResidentBlueprint(key: BlueprintKey): ResidentBlueprint {
 }
 
 export const RESIDENT_BLUEPRINT_KEYS = [
-  'for-you',
+  'home',
   'explore',
   'ask',
   'coverage',

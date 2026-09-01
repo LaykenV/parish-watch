@@ -29,6 +29,10 @@ publications. These views call them published decision records, open the
 accepted official source, and do not imply issue ranking or complete place
 coverage. Withheld versions remain private.
 
+The current information architecture folds For You and the issue index into one
+issue-led Home. Explore searches accepted issue timelines before individual
+decision records.
+
 PR #27 deployed Design Slice 3 as `3a59e45`. It implements the issue, atomic
 decision, meeting, and citation-level evidence pages. Source controls keep
 citation selection in the URL, open a Coss drawer on mobile or a docked rail on
@@ -105,7 +109,7 @@ bottom bars consume no more than 8 rem before safe-area padding on a
 
 Primary navigation:
 
-- For You
+- Home
 - Explore
 - Ask
 - Coverage
@@ -121,7 +125,6 @@ Account area:
 
 Contextual paths:
 
-- published issue index;
 - issue timeline;
 - atomic decision;
 - meeting;
@@ -131,10 +134,9 @@ Contextual paths:
 The product defaults to issues for comprehension while keeping underlying
 decisions and sources inspectable.
 
-The `/issues` index lists only current full or limited issue versions whose
-linked decisions and required citations still pass the same fail-closed
-projection as the issue detail page. It shows the number of linked official
-decisions and sends residents to `/explore` when they need atomic records.
+Home lists only current full or limited issue versions whose linked decisions
+and required citations still pass the same fail-closed projection as the issue
+detail page. The old `/issues` index and `/for-you` routes redirect to Home.
 
 ## First Visit
 
@@ -150,7 +152,7 @@ Inputs:
 - optional topics such as land use, roads and drainage, public money,
   environment, housing, utilities, public safety, or boards and appointments.
 
-No exact address. Allow skip to “Major local decisions.”
+No exact address. Allow skip to "Browse current issues."
 
 ### Immediate Result
 
@@ -186,14 +188,12 @@ with an explanation.
 
 Routine valid items can use a compact searchable row instead of a promoted card.
 
-## Home and Major Decisions
+## Issue-led Home
 
 ### Main Sections
 
-- Major local decisions
-- Happening soon
-- Recently changed
-- Recently decided
+- Issue timelines for the selected or saved areas
+- Latest atomic decision records
 - Coverage status when a followed source is degraded
 - Voter information strip
 
@@ -201,7 +201,7 @@ Routine valid items can use a compact searchable row instead of a promoted card.
 
 - useful before location setup;
 - filterable by supported region and topic;
-- sorted by deterministic importance and relevant time;
+- issue cards have equal visual weight unless a deterministic rank is shown;
 - no popularity ranking;
 - every card opens a published record;
 - empty states link to coverage or another supported place.
@@ -236,7 +236,7 @@ contains:
 - the strip never appears inside a decision card, issue page, feed ranking, or
   chat answer.
 
-## For You
+## Home relevance
 
 Inputs:
 
@@ -245,12 +245,13 @@ Inputs:
 - followed bodies or issues;
 - current and upcoming time window.
 
-Ranking uses eligibility and relevance after the global importance score. It
-does not infer a resident's politics.
+Eligibility uses the resident's selected or saved areas. Optional topics and
+follows may refine Home later, but the interface does not infer politics or
+claim an importance order without a validated score.
 
 ### Acceptance
 
-- explain why an item appears, such as “Youngsville” or “Land use”;
+- make the selected or saved area visible;
 - allow temporary filter changes without editing saved preferences;
 - keep all valid decisions available through search;
 - prompt sign-in only when the user asks to persist the feed.
