@@ -349,6 +349,31 @@ test('citation matching ignores forced-fresh Firecrawl star emphasis', () => {
   expect(locateExcerpt(source, forcedFreshMarkdown)).toBe(0)
 })
 
+test('citation matching rejects joined CivicEngage-style agenda header lines', () => {
+  const civicEngageAgendaHeader =
+    'Wednesday, January 14, 2026\n3:00 PM Presentations and Special Recognitions\n4:00 PM Metropolitan Council Meeting'
+  const source = normalizeForMatch(civicEngageAgendaHeader)
+
+  expect(source).toBe(
+    'Wednesday, January 14, 2026 3:00 PM Presentations and Special Recognitions 4:00 PM Metropolitan Council Meeting',
+  )
+
+  const joinedDateAndTime =
+    'Wednesday, January 14, 2026 3:00 PM Presentations and Special Recognitions 4:00 PM Metropolitan Council Meeting'
+  expect(locateExcerpt(source, joinedDateAndTime)).toBe(0)
+
+  const modelJoinedHeaderAndMeetingTime =
+    'Wednesday, January 14, 2026 4:00 PM Metropolitan Council Meeting'
+  expect(locateExcerpt(source, modelJoinedHeaderAndMeetingTime)).toBe(-1)
+
+  expect(
+    locateExcerpt(source, 'Wednesday, January 14, 2026'),
+  ).toBeGreaterThanOrEqual(0)
+  expect(
+    locateExcerpt(source, '4:00 PM Metropolitan Council Meeting'),
+  ).toBeGreaterThanOrEqual(0)
+})
+
 test('citation matching preserves non-emphasis asterisks', () => {
   const source =
     '* Board vacancy\n* * *\n***\n**bold stays marked**\nKeep 5 * 4 and case*number.\nKeep *unfinished and finished*.'
@@ -733,7 +758,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     ['validate', 'succeeded'],
   ])
   expect(stages[0].attempt).toBe(1)
-  expect(stages[0].promptVersion).toBe('v1.6')
+  expect(stages[0].promptVersion).toBe('v1.7')
   expect(stages[0].schemaVersion).toBe('v1')
 
   const extraction = await extractionByRun(t, start.runId)
@@ -743,9 +768,9 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     modelRole: 'MODEL_STRONG',
     modelId: MODEL_ID,
     route: 'ai_gateway',
-    promptVersion: 'v1.6',
+    promptVersion: 'v1.7',
     schemaVersion: 'v1',
-    processorVersion: 'v1.17',
+    processorVersion: 'v1.18',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
@@ -840,6 +865,12 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
   expect(messages[0].content).toContain('untrusted data')
   expect(messages[0].content).toContain('JSON Pointer with a leading slash')
   expect(messages[0].content).toContain('Do not add JSON quotes')
+  expect(messages[0].content).toContain(
+    'Set meetingAt only when one contiguous source span states the meeting date',
+  )
+  expect(messages[0].content).toContain(
+    'If the date and time appear in separate spans, do not join them',
+  )
   expect(messages[0].content).toContain(
     'one contiguous source span states both the meeting date and time',
   )
@@ -1117,7 +1148,7 @@ test('an old processor run cannot persist under the new processor label', async 
       targetRecordId: TARGET_RECORD_ID,
       sourceRecordIdProvenance: 'source_printed',
       modelRole: 'MODEL_STRONG',
-      promptVersion: 'v1.6',
+      promptVersion: 'v1.7',
       schemaVersion: 'v1',
       errorClass: 'forced',
       errorDetail: 'must reject mixed processor versions',
