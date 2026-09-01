@@ -10,10 +10,8 @@ import { api, components, internal } from '../_generated/api'
 import type { Id } from '../_generated/dataModel'
 import type { ActionCtx } from '../_generated/server'
 import { action, env } from '../_generated/server'
-import {
-  completeStructuredDirectFallback,
-  type CompleteStructuredOptions,
-} from '../ai/provider'
+import { completeStructuredDirectFallback } from '../ai/provider'
+import type { CompleteStructuredOptions } from '../ai/provider'
 import type { AttemptRecord, ModelUsage } from '../ai/types'
 import { askAnswerResult, askModelAnswer } from './contracts'
 import type {
