@@ -135,12 +135,12 @@ test('fixed validators reject unsupported saved targets', async () => {
     alice.mutation(api.follows.savedSetup.saveArea, {
       area: 'unsupported-parish' as never,
     }),
-  ).rejects.toThrow('ArgumentValidationError')
+  ).rejects.toThrow('Validator error')
   await expect(
     alice.mutation(api.follows.savedSetup.saveTopic, {
       topic: 'anything-at-all' as never,
     }),
-  ).rejects.toThrow('ArgumentValidationError')
+  ).rejects.toThrow('Validator error')
 })
 
 test('Google callbacks require a verified matching profile and refresh it', async () => {
