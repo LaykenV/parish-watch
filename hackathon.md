@@ -53,7 +53,12 @@ Agent history after refresh, and projects accepted citation records into the
 existing Source panel. It covers supported, not-found, expired, offline,
 cooldown, retryable, and terminal states. One mutation now claims one answer at
 a time, applies per-session request limits, and reserves 15,000 tokens against
-both a 30,000-token minute and a 150,000-token day before any model call.
+both a 30,000-token minute and a 150,000-token day before any model call. The
+same reservation counts against app-wide ceilings of 150,000 tokens per minute
+and 1,500,000 tokens per day, so rotating browser sessions cannot remove the
+production spend bound. The app-wide counter keeps the full reservation after
+an accepted claim, including no-evidence results. That trades some daily
+capacity for a simple hard ceiling.
 Successful attempts reconcile known usage. Unknown failed work and abandoned
 work consume the reservation. A no-evidence path releases it because that path
 skips the model. The CAPTCHA adapter remains inactive. Automated

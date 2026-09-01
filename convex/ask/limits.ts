@@ -12,10 +12,22 @@ const SHORT_TOKEN_WINDOW_MS = MINUTE
 const DAILY_TOKEN_WINDOW_MS = DAY
 const SHORT_TOKEN_LIMIT = 30_000
 const DAILY_TOKEN_LIMIT = 150_000
+const GLOBAL_SHORT_TOKEN_LIMIT = 150_000
+const GLOBAL_DAILY_TOKEN_LIMIT = 1_500_000
 
 const askRequestLimiter = new RateLimiter(components.rateLimiter, {
   askRequestBurst: { kind: 'fixed window', rate: 3, period: MINUTE },
   askRequestDaily: { kind: 'fixed window', rate: 20, period: DAY },
+  askGlobalTokenBurst: {
+    kind: 'fixed window',
+    rate: GLOBAL_SHORT_TOKEN_LIMIT,
+    period: MINUTE,
+  },
+  askGlobalTokenDaily: {
+    kind: 'fixed window',
+    rate: GLOBAL_DAILY_TOKEN_LIMIT,
+    period: DAY,
+  },
 })
 
 type WindowKind = 'short' | 'daily'
@@ -45,6 +57,22 @@ export async function reserveAskCapacity(
     key: requestKey,
   })
   if (!daily.ok) throwCooldown('ask_daily_limited', now, daily.retryAfter)
+
+  const globalBurst = await askRequestLimiter.limit(
+    ctx,
+    'askGlobalTokenBurst',
+    { count: ASK_TOKEN_RESERVATION },
+  )
+  if (!globalBurst.ok)
+    throwCooldown('ask_token_limited', now, globalBurst.retryAfter)
+
+  const globalDaily = await askRequestLimiter.limit(
+    ctx,
+    'askGlobalTokenDaily',
+    { count: ASK_TOKEN_RESERVATION },
+  )
+  if (!globalDaily.ok)
+    throwCooldown('ask_token_limited', now, globalDaily.retryAfter)
 
   const shortWindowStart = windowStart(now, SHORT_TOKEN_WINDOW_MS)
   const dailyWindowStart = windowStart(now, DAILY_TOKEN_WINDOW_MS)

@@ -480,6 +480,57 @@ test('charges abandoned reservations and cools down repeated requests', async ()
   expect(windows.every((window) => window.consumedTokens === 15_000)).toBe(true)
 })
 
+test('caps model reservations across rotated anonymous sessions', async () => {
+  const t = initTest()
+  await seedEvidence(t)
+
+  for (let index = 0; index < 10; index += 1) {
+    const token = `global-limit-session-${index.toString().padStart(2, '0')}-0000000000000000000000000000`
+    await t.mutation(api.ask.threads.createSession, { token })
+    const thread = await t.mutation(api.ask.threads.createThread, {
+      token,
+      scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+    })
+    const question = await t.mutation(api.ask.threads.appendQuestion, {
+      token,
+      threadId: thread.threadId,
+      question: `What changed about drainage, global request ${index + 1}?`,
+      idempotencyKey: `global-limit-question-${index.toString().padStart(2, '0')}`,
+    })
+    const claim = await t.mutation(internal.ask.ledger.claimAnswer, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: question.messageId,
+    })
+    if (claim.kind !== 'ready') throw new Error('Expected a ready claim')
+    await t.mutation(internal.ask.ledger.failAnswer, {
+      receiptId: claim.receiptId,
+      answerAttempt: claim.attempt,
+      errorClass: 'provider_failed',
+    })
+  }
+
+  const token = 'global-limit-session-blocked-000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+  const question = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'What changed about drainage after the global limit?',
+    idempotencyKey: 'global-limit-question-blocked',
+  })
+  await expect(
+    t.mutation(internal.ask.ledger.claimAnswer, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: question.messageId,
+    }),
+  ).rejects.toThrow('Ask is taking a short pause')
+})
+
 test('fences a stale answer after its lease is retried', async () => {
   const t = initTest()
   await seedEvidence(t)

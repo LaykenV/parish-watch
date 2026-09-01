@@ -745,7 +745,12 @@ consume the full reservation so a late or unreported provider call cannot
 reopen that capacity. A no-evidence path that skips the model releases its
 reservation. The short window allows 30,000 tokens per minute. The daily window
 allows 150,000 tokens per session. The rate-limiter component separately caps
-three answer attempts per minute and 20 per day.
+three answer attempts per minute and 20 per day. It also reserves the full
+15,000-token allowance against app-wide ceilings of 150,000 tokens per minute
+and 1,500,000 tokens per day. Rotating an anonymous session cannot bypass those
+ceilings. This app-wide allowance is conservative. An accepted answer claim
+keeps its full app-wide reservation even when a no-evidence result later
+releases the per-session reservation.
 
 #### Agent component threads and messages
 
@@ -1076,6 +1081,10 @@ affect ranking.
 
 - rate-limit answer attempts by opaque session;
 - reserve 15,000 tokens against 30,000-per-minute and 150,000-per-day budgets;
+- reserve the same allowance against app-wide 150,000-per-minute and
+  1,500,000-per-day ceilings;
+- keep the app-wide reservation conservative after a claim, including
+  no-evidence results, so model spend always stays below the ceiling;
 - reconcile known use, charge the reservation for unknown or abandoned work,
   and release only work that skipped the model;
 - keep normal limits invisible;
