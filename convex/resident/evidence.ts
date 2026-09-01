@@ -482,7 +482,7 @@ export const listPublishedIssues = query({
             .map((link) => link.meetingAt)
             .filter((value): value is string => value !== null)
             .sort()
-            .at(-1) ?? null,
+            .pop() ?? null,
         decisionCount: issue.links.length,
       }))
   },
