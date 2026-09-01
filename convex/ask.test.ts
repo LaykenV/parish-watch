@@ -368,7 +368,7 @@ test('releases abandoned reservations and cools down repeated requests', async (
   const abandoned = await t.mutation(internal.ask.ledger.claimAnswer, {
     token,
     threadId: thread.threadId,
-    questionMessageId: messageIds[0]!,
+    questionMessageId: messageIds[0],
   })
   if (abandoned.kind !== 'ready') throw new Error('Expected a ready claim')
   await t.run(async (ctx) => {
@@ -396,7 +396,7 @@ test('releases abandoned reservations and cools down repeated requests', async (
     t.mutation(internal.ask.ledger.claimAnswer, {
       token,
       threadId: thread.threadId,
-      questionMessageId: messageIds[3]!,
+      questionMessageId: messageIds[3],
     }),
   ).rejects.toThrow('Ask is taking a short pause')
   const windows = await t.run(async (ctx) =>

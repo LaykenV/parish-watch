@@ -490,7 +490,7 @@ export function AskPage({
                   <AskExpiredNotice
                     onRestart={() => {
                       setExpired(false)
-                      void adapter?.startNew(viewScope)
+                      void adapter.startNew(viewScope)
                     }}
                   />
                 ) : null}

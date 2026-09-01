@@ -1,6 +1,6 @@
 export interface AskChallengeAdapter {
-  challengeBeforeRequest(): Promise<{ challengeId: string } | null>
-  resolve(challengeId: string): Promise<boolean>
+  challengeBeforeRequest: () => Promise<{ challengeId: string } | null>
+  resolve: (challengeId: string) => Promise<boolean>
 }
 
 export const inactiveAskChallengeAdapter: AskChallengeAdapter = {
