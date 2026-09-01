@@ -279,8 +279,8 @@ test('answers follow-ups with retrieved citations and replays the Agent message'
   expect(stored.tokenWindows).toHaveLength(2)
   expect(stored.tokenWindows).toEqual(
     expect.arrayContaining([
-      expect.objectContaining({ reservedTokens: 0, consumedTokens: 15 }),
-      expect.objectContaining({ reservedTokens: 0, consumedTokens: 15 }),
+      expect.objectContaining({ reservedTokens: 0, consumedTokens: 30 }),
+      expect.objectContaining({ reservedTokens: 0, consumedTokens: 30 }),
     ]),
   )
 })
