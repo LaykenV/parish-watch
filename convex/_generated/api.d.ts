@@ -20,6 +20,7 @@ import type * as ask_answer from "../ask/answer.js";
 import type * as ask_contracts from "../ask/contracts.js";
 import type * as ask_evidence from "../ask/evidence.js";
 import type * as ask_ledger from "../ask/ledger.js";
+import type * as ask_limits from "../ask/limits.js";
 import type * as ask_sessions from "../ask/sessions.js";
 import type * as ask_threads from "../ask/threads.js";
 import type * as changes_material from "../changes/material.js";
@@ -94,6 +95,7 @@ declare const fullApi: ApiFromModules<{
   "ask/contracts": typeof ask_contracts;
   "ask/evidence": typeof ask_evidence;
   "ask/ledger": typeof ask_ledger;
+  "ask/limits": typeof ask_limits;
   "ask/sessions": typeof ask_sessions;
   "ask/threads": typeof ask_threads;
   "changes/material": typeof changes_material;
