@@ -330,6 +330,16 @@ async function generateWithGateway(
       providerOptions: {
         convexGateway: {
           max_completion_tokens: MAX_OUTPUT_TOKENS,
+          reasoningEffort: 'low',
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'public_parish_ask_answer',
+              strict: true,
+              schema: ASK_ANSWER_JSON_SCHEMA,
+            },
+          },
+          store: false,
         },
       },
     },
