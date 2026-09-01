@@ -14,18 +14,20 @@ import { completeStructuredDirectFallback } from '../ai/provider'
 import type { CompleteStructuredOptions } from '../ai/provider'
 import type { AttemptRecord, ModelUsage } from '../ai/types'
 import { sha256HexOfText } from '../sources/hashing'
-import {
+import * as AskContracts from './contracts'
+import type { PublishedDocumentRef } from './evidence'
+
+const {
   askAnswerResult,
   askModelAnswer,
   askModelSelection,
   MAX_ANSWER_EVIDENCE_IDS,
-  type AskAnswerResult,
-  type AskEvidence,
-  type AskEvidenceResult,
-  type AskModelAnswer,
-  type AskModelSelection,
-} from './contracts'
-import type { PublishedDocumentRef } from './evidence'
+} = AskContracts
+type AskAnswerResult = AskContracts.AskAnswerResult
+type AskEvidence = AskContracts.AskEvidence
+type AskEvidenceResult = AskContracts.AskEvidenceResult
+type AskModelAnswer = AskContracts.AskModelAnswer
+type AskModelSelection = AskContracts.AskModelSelection
 
 export const ASK_PROMPT_VERSION = 'ask-answer-v3'
 export const ASK_SCHEMA_VERSION = 'ask-answer-v3'
