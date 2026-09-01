@@ -40,16 +40,15 @@ export const ASK_ANSWER_JSON_SCHEMA: JSONSchema7 & Record<string, unknown> = {
   additionalProperties: false,
   properties: {
     kind: { type: 'string', enum: ['answer', 'not_found'] },
-    answer: { type: 'string', minLength: 1, maxLength: 2_000 },
+    answer: { type: 'string' },
     evidenceIds: {
       type: 'array',
-      items: { type: 'string', minLength: 1 },
+      items: { type: 'string' },
       maxItems: 8,
-      uniqueItems: true,
     },
     followUps: {
       type: 'array',
-      items: { type: 'string', minLength: 1, maxLength: 160 },
+      items: { type: 'string' },
       maxItems: 3,
     },
   },
