@@ -31,11 +31,7 @@ export async function requireUser(ctx: AuthzCtx): Promise<Doc<'users'>> {
 
 export function isOwner(user: Doc<'users'>): boolean {
   const configuredEmail = normalizeEmail(env.ADMIN_EMAIL)
-  return (
-    configuredEmail !== null &&
-    user.emailVerified === true &&
-    user.email === configuredEmail
-  )
+  return configuredEmail !== null && user.email === configuredEmail
 }
 
 export async function requireOwner(ctx: AuthzCtx): Promise<Doc<'users'>> {
