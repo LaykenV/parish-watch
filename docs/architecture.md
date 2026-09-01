@@ -144,8 +144,9 @@ resident citation-display correction as `13f735b` through workflow
 `33562735003`, so answer prose no longer exposes raw internal evidence IDs.
 Production tests proved cited issue and corpus answers, exact Source controls,
 evidence not found, and thread restoration.
-Auth, follow, AgentMail, coverage-request, and private-report adapters remain in
-the post-Slice-5 plan.
+Google account sessions and saved setup use the pinned Convex Auth v2 alpha.
+Follow, AgentMail, coverage-request, and private-report adapters remain in the
+post-Slice-5 plan.
 
 ## System Boundaries
 

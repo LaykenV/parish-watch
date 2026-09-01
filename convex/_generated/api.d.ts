@@ -23,6 +23,9 @@ import type * as ask_ledger from "../ask/ledger.js";
 import type * as ask_limits from "../ask/limits.js";
 import type * as ask_sessions from "../ask/sessions.js";
 import type * as ask_threads from "../ask/threads.js";
+import type * as auth from "../auth.js";
+import type * as auth_authorization from "../auth/authorization.js";
+import type * as auth_users from "../auth/users.js";
 import type * as changes_material from "../changes/material.js";
 import type * as changes_source from "../changes/source.js";
 import type * as crons from "../crons.js";
@@ -34,6 +37,8 @@ import type * as extraction_promptV1 from "../extraction/promptV1.js";
 import type * as extraction_textMatch from "../extraction/textMatch.js";
 import type * as extraction_validate from "../extraction/validate.js";
 import type * as extraction_workflow from "../extraction/workflow.js";
+import type * as follows_contracts from "../follows/contracts.js";
+import type * as follows_savedSetup from "../follows/savedSetup.js";
 import type * as http from "../http.js";
 import type * as issues_build from "../issues/build.js";
 import type * as issues_contractV1 from "../issues/contractV1.js";
@@ -98,6 +103,9 @@ declare const fullApi: ApiFromModules<{
   "ask/limits": typeof ask_limits;
   "ask/sessions": typeof ask_sessions;
   "ask/threads": typeof ask_threads;
+  auth: typeof auth;
+  "auth/authorization": typeof auth_authorization;
+  "auth/users": typeof auth_users;
   "changes/material": typeof changes_material;
   "changes/source": typeof changes_source;
   crons: typeof crons;
@@ -109,6 +117,8 @@ declare const fullApi: ApiFromModules<{
   "extraction/textMatch": typeof extraction_textMatch;
   "extraction/validate": typeof extraction_validate;
   "extraction/workflow": typeof extraction_workflow;
+  "follows/contracts": typeof follows_contracts;
+  "follows/savedSetup": typeof follows_savedSetup;
   http: typeof http;
   "issues/build": typeof issues_build;
   "issues/contractV1": typeof issues_contractV1;
@@ -179,6 +189,8 @@ export declare const internal: FilterApi<
 >;
 
 export declare const components: {
+  auth: import("@convex-dev/auth/core/_generated/component.js").ComponentApi<"auth">;
+  oauthGoogle: import("@convex-dev/auth/providers/oauth/_generated/component.js").ComponentApi<"oauthGoogle">;
   staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
   agent: import("@convex-dev/agent/_generated/component.js").ComponentApi<"agent">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;

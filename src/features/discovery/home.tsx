@@ -1,6 +1,7 @@
 import { ArrowUpRightIcon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useConvexAuth } from '@convex-dev/auth/react'
 
 import { Button } from '../../components/ui/button'
 import { LouisianaRelief } from '../landing/louisiana-relief'
@@ -16,6 +17,7 @@ import type {
 import { EXPLORE_ROW_FIXTURES, PUBLISHED_ISSUE_FIXTURES } from './fixtures'
 import { useRepeatedAnnouncement } from './hooks'
 import { IssueCard } from './issue-card'
+import { useSavedSetup } from '../following/live-saved-setup'
 import {
   toDecisionRow,
   toIssueCard,
@@ -32,14 +34,18 @@ export function HomePage({ scenario }: { scenario?: HomeScenario }) {
   const area = useArea()
   const activeScenario = getActiveDiscoveryFixture(scenario)
   const fixturesEnabled = activeScenario !== undefined
+  const auth = useConvexAuth()
+  const savedSetup = useSavedSetup(!fixturesEnabled && auth.isAuthenticated)
   const publishedIssues = usePublishedIssues(!fixturesEnabled)
   const publishedDecisions = usePublishedDecisions(!fixturesEnabled)
-  const signedIn = activeScenario === 'signed-in'
-  const watching: AreaSlug[] = signedIn
-    ? ['lafayette-parish', 'east-baton-rouge-parish']
-    : area
-      ? [area]
-      : []
+  const watching: AreaSlug[] =
+    activeScenario === 'signed-in'
+      ? ['lafayette-parish', 'east-baton-rouge-parish']
+      : auth.isAuthenticated && savedSetup?.areas.length
+        ? savedSetup.areas
+        : area
+          ? [area]
+          : []
 
   const [refreshed, setRefreshed] = useState(false)
   const [refreshAnnouncement, announceRefresh] = useRepeatedAnnouncement(

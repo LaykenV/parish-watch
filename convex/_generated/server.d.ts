@@ -30,6 +30,11 @@ import type { DataModel } from "./dataModel.js";
 type Env = {
   readonly CONVEX_CLOUD_URL: string;
   readonly CONVEX_SITE_URL: string;
+  readonly ADMIN_EMAIL: string | undefined;
+  readonly AUTH_GOOGLE_CLIENT_ID: string;
+  readonly AUTH_GOOGLE_CLIENT_SECRET: string;
+  readonly AUTH_JWKS: string;
+  readonly AUTH_PRIVATE_KEY: string;
   readonly DIRECT_OPENAI_FALLBACK_ENABLED: string | undefined;
   readonly FIRECRAWL_API_KEY: string;
   readonly FIRECRAWL_WEBHOOK_SECRET: string | undefined;

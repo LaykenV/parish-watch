@@ -1,3 +1,5 @@
+import { parseResidentReturnTo } from '../resident-handoff/navigation'
+
 export const FOLLOWING_SCENARIOS = [
   'signed-out',
   'active',
@@ -18,6 +20,33 @@ export type EmailManagementScenario =
 export type DeliveryFrequency = 'immediate' | 'weekly' | 'both'
 export type FollowKind = 'Issue' | 'Topic' | 'Government body' | 'Place'
 export type FollowStatus = 'Following' | 'Muted' | 'Verification needed'
+
+export const SAVED_AREA_SLUGS = [
+  'lafayette-parish',
+  'east-baton-rouge-parish',
+  'rapides-parish',
+] as const
+
+export const SAVED_TOPIC_SLUGS = [
+  'public-money',
+  'public-assets',
+  'public-safety',
+  'housing',
+  'drainage',
+  'land-use',
+] as const
+
+export type SavedAreaSlug = (typeof SAVED_AREA_SLUGS)[number]
+export type SavedTopicSlug = (typeof SAVED_TOPIC_SLUGS)[number]
+
+export const SAVED_TOPIC_LABELS: Record<SavedTopicSlug, string> = {
+  'public-money': 'Public money',
+  'public-assets': 'Public assets',
+  'public-safety': 'Public safety',
+  housing: 'Housing',
+  drainage: 'Drainage',
+  'land-use': 'Land use',
+}
 
 export type FollowTarget = {
   kind: FollowKind
@@ -52,8 +81,12 @@ function pick<T extends string>(
 
 export function parseFollowingSearch(search: Record<string, unknown>): {
   fixture?: FollowingScenario
+  returnTo?: string
 } {
-  return { fixture: pick(search.fixture, FOLLOWING_SCENARIOS) }
+  return {
+    fixture: pick(search.fixture, FOLLOWING_SCENARIOS),
+    returnTo: parseResidentReturnTo(search.returnTo),
+  }
 }
 
 export function parseEmailManagementSearch(search: Record<string, unknown>): {

@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { DeliveryReceipt, FrequencyOptions } from './follow-action'
 import { EmailManagementPage } from './email-management-page'
 import { FollowingPage } from './following-page'
+import { loadFollowingPageData } from './following-page.data'
 import type { FollowingPageData } from './following-page.data'
 import {
   EMAIL_SUBSCRIPTION_FIXTURE,
@@ -37,6 +38,8 @@ const followSource = readFileSync(
 const active: FollowingPageData = {
   areas: SAVED_AREAS,
   available: true,
+  mode: 'fixture',
+  notificationsAvailable: true,
   scenario: 'active',
   signedIn: true,
   targets: FOLLOWED_TARGET_FIXTURES,
@@ -49,6 +52,17 @@ describe('resident following interface', () => {
     expect(loaderSource.indexOf('if (!active)')).toBeLessThan(
       loaderSource.indexOf('await import('),
     )
+  })
+
+  it('loads the real account adapter without a development fixture', async () => {
+    await expect(loadFollowingPageData()).resolves.toMatchObject({
+      areas: [],
+      available: true,
+      mode: 'live',
+      notificationsAvailable: false,
+      targets: [],
+      topics: [],
+    })
   })
 
   it('shows the target, cadence, and destination together', () => {
@@ -108,6 +122,8 @@ describe('resident following interface', () => {
         data={{
           areas: [],
           available: false,
+          mode: 'unavailable',
+          notificationsAvailable: false,
           signedIn: false,
           targets: [],
           topics: [],

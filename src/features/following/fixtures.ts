@@ -1,4 +1,4 @@
-import type { FollowedTarget } from './contracts'
+import type { FollowedTarget, SavedAreaSlug, SavedTopicSlug } from './contracts'
 
 /*
   Development-only resident ownership fixtures. Routes load these through a
@@ -51,20 +51,26 @@ export const FOLLOWED_TARGET_FIXTURES: FollowedTarget[] = [
 
 export const EMAIL_SUBSCRIPTION_FIXTURE = FOLLOWED_TARGET_FIXTURES[0]
 
-export const SAVED_AREAS = [
+export const SAVED_AREAS: Array<{
+  detail: string
+  name: string
+  slug: SavedAreaSlug
+}> = [
   {
+    slug: 'lafayette-parish',
     name: 'Lafayette Parish',
     detail: 'Watching current decisions and meetings',
   },
   {
+    slug: 'east-baton-rouge-parish',
     name: 'East Baton Rouge Parish',
     detail: 'Saved to this Google account',
   },
 ]
 
-export const SAVED_TOPICS = [
-  'Public money',
-  'Public assets',
-  'Drainage',
-  'Land use',
-] as const
+export const SAVED_TOPICS: SavedTopicSlug[] = [
+  'public-money',
+  'public-assets',
+  'drainage',
+  'land-use',
+]

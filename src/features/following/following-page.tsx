@@ -10,20 +10,31 @@ import {
   Volume2Icon,
   VolumeXIcon,
 } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
+import { useGoogleAuth } from '../auth/google-auth'
+import { areaName } from '../discovery/contracts'
 import { Sheet } from '../discovery/sheet'
+import { parseResidentReturnTo } from '../resident-handoff/navigation'
 import type {
   DeliveryFrequency,
   FollowKind,
   FollowedTarget,
   FollowingScenario,
+  SavedAreaSlug,
+  SavedTopicSlug,
 } from './contracts'
-import { frequencyLabel } from './contracts'
+import {
+  frequencyLabel,
+  SAVED_AREA_SLUGS,
+  SAVED_TOPIC_LABELS,
+  SAVED_TOPIC_SLUGS,
+} from './contracts'
 import { FrequencyOptions } from './follow-action'
 import type { FollowingPageData, SavedArea } from './following-page.data'
+import { useSavedSetup, useSavedSetupMutations } from './live-saved-setup'
 
 import './following.css'
 
@@ -43,14 +54,127 @@ const VIEW_PATHS = {
 
 export function FollowingPage({
   data,
+  returnTo,
   view,
 }: {
   data: FollowingPageData
+  returnTo?: string
   view: FollowingView
 }) {
   if (!data.available) return <FollowingUnavailable />
-  if (!data.signedIn) return <FollowingSignedOut scenario={data.scenario} />
+  if (data.mode === 'live') {
+    return <LiveFollowingPage returnTo={returnTo} view={view} />
+  }
+  if (!data.signedIn) {
+    return <FixtureFollowingSignedOut scenario={data.scenario} />
+  }
 
+  return <FollowingDashboard data={data} view={view} />
+}
+
+const AUTH_RETURN_KEY = 'public-parish:google-return-to'
+
+function LiveFollowingPage({
+  returnTo,
+  view,
+}: {
+  returnTo?: string
+  view: FollowingView
+}) {
+  const auth = useGoogleAuth()
+  const setup = useSavedSetup(auth.isAuthenticated)
+  const mutations = useSavedSetupMutations()
+
+  useEffect(() => {
+    if (!auth.isAuthenticated) return
+    const pendingReturn = window.sessionStorage.getItem(AUTH_RETURN_KEY)
+    if (!pendingReturn) return
+    window.sessionStorage.removeItem(AUTH_RETURN_KEY)
+    const safeReturn = parseResidentReturnTo(pendingReturn)
+    if (safeReturn) window.location.replace(safeReturn)
+  }, [auth.isAuthenticated])
+
+  if (auth.isLoading || (auth.isAuthenticated && setup === undefined)) {
+    return <FollowingLoading />
+  }
+
+  if (!auth.isAuthenticated) {
+    return (
+      <FollowingSignedOut
+        busy={auth.isSigningIn}
+        error={auth.error}
+        onGoogle={async () => {
+          if (returnTo) window.sessionStorage.setItem(AUTH_RETURN_KEY, returnTo)
+          else window.sessionStorage.removeItem(AUTH_RETURN_KEY)
+          await auth.signInGoogle()
+        }}
+      />
+    )
+  }
+
+  const liveData: FollowingPageData = {
+    areas: (setup?.areas ?? []).map((slug) => ({
+      detail: 'Saved to this Google account',
+      name: areaName(slug),
+      slug,
+    })),
+    available: true,
+    mode: 'live',
+    notificationsAvailable: false,
+    signedIn: true,
+    targets: [],
+    topics: setup?.topics ?? [],
+  }
+
+  return (
+    <FollowingDashboard
+      areaActions={{ remove: mutations.removeArea, save: mutations.saveArea }}
+      data={liveData}
+      onSignOut={auth.signOut}
+      topicActions={{
+        remove: mutations.removeTopic,
+        save: mutations.saveTopic,
+      }}
+      view={view}
+    />
+  )
+}
+
+function FollowingLoading() {
+  return (
+    <main className="following-page" id="resident-main">
+      <div aria-live="polite" className="following-return" role="status">
+        <p className="following-kicker">Following</p>
+        <h1>Loading your saved setup</h1>
+        <p>Checking this browser's Google session.</p>
+      </div>
+    </main>
+  )
+}
+
+type AreaActions = {
+  remove: (area: SavedAreaSlug) => Promise<unknown>
+  save: (area: SavedAreaSlug) => Promise<unknown>
+}
+
+type TopicActions = {
+  remove: (topic: SavedTopicSlug) => Promise<unknown>
+  save: (topic: SavedTopicSlug) => Promise<unknown>
+}
+
+function FollowingDashboard({
+  areaActions,
+  data,
+  onSignOut,
+  topicActions,
+  view,
+}: {
+  areaActions?: AreaActions
+  data: FollowingPageData
+  onSignOut?: () => Promise<void>
+  topicActions?: TopicActions
+  view: FollowingView
+}) {
   return (
     <main className="following-page" id="resident-main">
       <header className="following-head">
@@ -58,18 +182,45 @@ export function FollowingPage({
         <h1>{VIEW_LABELS[view]}</h1>
         <p>
           {view === 'following'
-            ? 'Every target, delivery schedule, and destination you manage.'
+            ? data.mode === 'live'
+              ? 'Saved setup works now. Issue follows arrive with verified email delivery.'
+              : 'Every target, delivery schedule, and destination you manage.'
             : view === 'areas'
-              ? 'Saved interests shape For You. Explore filters stay temporary.'
-              : 'Choose when useful changes reach you. Empty roundups are never sent.'}
+              ? 'Saved areas shape Home. Explore filters stay temporary.'
+              : data.notificationsAvailable
+                ? 'Choose when useful changes reach you. Empty roundups are never sent.'
+                : 'Email delivery will appear here after verified subscriptions ship.'}
         </p>
+        {onSignOut ? (
+          <Button onClick={() => void onSignOut()} size="touch" variant="ghost">
+            Sign out
+          </Button>
+        ) : null}
       </header>
 
       <FollowingNavigation scenario={data.scenario} view={view} />
 
-      {view === 'following' ? <FollowingList data={data} /> : null}
-      {view === 'areas' ? <AreasAndTopics data={data} /> : null}
-      {view === 'notifications' ? <Notifications /> : null}
+      {view === 'following' ? (
+        data.mode === 'live' ? (
+          <FollowsUnavailable />
+        ) : (
+          <FollowingList data={data} />
+        )
+      ) : null}
+      {view === 'areas' ? (
+        <AreasAndTopics
+          areaActions={areaActions}
+          data={data}
+          topicActions={topicActions}
+        />
+      ) : null}
+      {view === 'notifications' ? (
+        data.notificationsAvailable ? (
+          <Notifications />
+        ) : (
+          <NotificationsUnavailable />
+        )
+      ) : null}
     </main>
   )
 }
@@ -107,7 +258,11 @@ function FollowingUnavailable() {
   )
 }
 
-function FollowingSignedOut({ scenario }: { scenario?: FollowingScenario }) {
+function FixtureFollowingSignedOut({
+  scenario,
+}: {
+  scenario?: FollowingScenario
+}) {
   const [googleComplete, setGoogleComplete] = useState(false)
 
   if (googleComplete) {
@@ -135,41 +290,84 @@ function FollowingSignedOut({ scenario }: { scenario?: FollowingScenario }) {
   }
 
   return (
+    <FollowingSignedOut
+      onGoogle={() => setGoogleComplete(true)}
+      scenario={scenario}
+    />
+  )
+}
+
+function FollowingSignedOut({
+  busy = false,
+  error,
+  onGoogle,
+  scenario,
+}: {
+  busy?: boolean
+  error?: string | null
+  onGoogle: () => void | Promise<void>
+  scenario?: FollowingScenario
+}) {
+  const fixture = scenario !== undefined
+
+  return (
     <main className="following-page" id="resident-main">
       <header className="following-head">
         <p className="following-kicker">Following</p>
         <h1>Keep track of what changes</h1>
         <p>
-          Google manages a full following list. Email-only links manage one
-          verified subscription without creating an account.
+          {fixture
+            ? 'Google manages a full following list. Email-only links manage one verified subscription without creating an account.'
+            : 'Google saves your launch areas and topics. Reading, search, and Ask still work without an account.'}
         </p>
       </header>
       <div className="following-entry-grid">
         <section className="following-entry-card">
-          <p className="following-entry-label">Full dashboard</p>
+          <p className="following-entry-label">
+            {fixture ? 'Full dashboard' : 'Saved setup'}
+          </p>
           <h2>Continue with Google</h2>
           <p>
-            Save several issues, places, and topics. Manage them together from
-            this page.
+            {fixture
+              ? 'Save several issues, places, and topics. Manage them together from this page.'
+              : 'Save launch areas and topics now. Issue follows arrive with verified email delivery.'}
           </p>
-          <Button onClick={() => setGoogleComplete(true)} size="touch">
-            Continue with Google
+          <Button disabled={busy} onClick={() => void onGoogle()} size="touch">
+            {busy ? 'Opening Google...' : 'Continue with Google'}
           </Button>
+          {error ? (
+            <p
+              aria-live="polite"
+              className="following-area-status"
+              role="alert"
+            >
+              {error}
+            </p>
+          ) : null}
         </section>
         <section className="following-entry-card">
-          <p className="following-entry-label">One subscription</p>
+          <p className="following-entry-label">
+            {fixture ? 'One subscription' : 'Coming next'}
+          </p>
           <h2>Use email only</h2>
           <p>
-            Start from a Follow button. Verify a code, then manage that follow
-            through its private email link.
+            {fixture
+              ? 'Start from a Follow button. Verify a code, then manage that follow through its private email link.'
+              : 'Email-only subscriptions are not connected yet.'}
           </p>
-          <Button
-            render={<Link to="/explore" />}
-            size="touch"
-            variant="outline"
-          >
-            Find something to follow
-          </Button>
+          {fixture ? (
+            <Button
+              render={<Link to="/explore" />}
+              size="touch"
+              variant="outline"
+            >
+              Find something to follow
+            </Button>
+          ) : (
+            <Button disabled size="touch" variant="outline">
+              Email subscriptions coming next
+            </Button>
+          )}
         </section>
       </div>
       <p className="following-private-note">
@@ -177,6 +375,28 @@ function FollowingSignedOut({ scenario }: { scenario?: FollowingScenario }) {
       </p>
       <span className="visually-hidden">Fixture state: {scenario}</span>
     </main>
+  )
+}
+
+function FollowsUnavailable() {
+  return (
+    <section
+      aria-labelledby="follows-next-title"
+      className="following-unavailable"
+    >
+      <BellRingIcon aria-hidden="true" />
+      <div>
+        <h2 id="follows-next-title">Issue follows are not connected yet</h2>
+        <p>
+          This account can save areas and topics. Public Parish will not create
+          a follow or promise an alert until ownership and verified email
+          delivery are connected.
+        </p>
+        <Button render={<Link to="/following/areas-and-topics" />} size="touch">
+          Manage saved setup
+        </Button>
+      </div>
+    </section>
   )
 }
 
@@ -555,30 +775,42 @@ function ManageFollowSheet({
   )
 }
 
-function AreasAndTopics({ data }: { data: FollowingPageData }) {
+function AreasAndTopics({
+  areaActions,
+  data,
+  topicActions,
+}: {
+  areaActions?: AreaActions
+  data: FollowingPageData
+  topicActions?: TopicActions
+}) {
   const addAreaButtonRef = useRef<HTMLButtonElement>(null)
   const [areas, setAreas] = useState(data.areas)
   const [areaAction, setAreaAction] = useState<
     { mode: 'add' } | { area: SavedArea; mode: 'manage' } | null
   >(null)
-  const [topics, setTopics] = useState(new Set(data.topics))
-  const [saved, setSaved] = useState(false)
+  const [topics, setTopics] = useState(
+    () => new Set<SavedTopicSlug>(data.topics),
+  )
+  const [topicStatus, setTopicStatus] = useState('')
   const [areaStatus, setAreaStatus] = useState('')
-  const availableArea = areas.some((area) => area.name === 'Rapides Parish')
-    ? null
-    : {
-        detail: 'Follow current decisions and meetings',
-        name: 'Rapides Parish',
-      }
+  const [areaError, setAreaError] = useState(false)
+  const [topicError, setTopicError] = useState(false)
+  const [working, setWorking] = useState(false)
+  const savedAreaSlugs = new Set(areas.map((area) => area.slug))
+  const availableAreas = SAVED_AREA_SLUGS.filter(
+    (slug) => !savedAreaSlugs.has(slug),
+  )
   const selectedArea =
     areaAction?.mode === 'manage' ? areaAction.area : undefined
-  const options = [
-    'Public money',
-    'Public assets',
-    'Drainage',
-    'Land use',
-    'Housing',
-  ]
+
+  const reportFailure = (
+    setStatus: (value: string) => void,
+    setError: (value: boolean) => void,
+  ) => {
+    setError(true)
+    setStatus('That change did not save. Check your connection and try again.')
+  }
 
   return (
     <div className="following-preferences">
@@ -594,6 +826,7 @@ function AreasAndTopics({ data }: { data: FollowingPageData }) {
           <Button
             id="add-saved-area"
             onClick={() => {
+              setAreaError(false)
               setAreaStatus('')
               setAreaAction({ mode: 'add' })
             }}
@@ -614,8 +847,9 @@ function AreasAndTopics({ data }: { data: FollowingPageData }) {
               </div>
               <Button
                 aria-label={`Manage ${area.name}`}
-                id={`manage-saved-area-${area.name.toLowerCase().replaceAll(' ', '-')}`}
+                id={`manage-saved-area-${area.slug}`}
                 onClick={() => {
+                  setAreaError(false)
                   setAreaStatus('')
                   setAreaAction({ area, mode: 'manage' })
                 }}
@@ -632,7 +866,12 @@ function AreasAndTopics({ data }: { data: FollowingPageData }) {
           <Link to="/coverage/request">Request coverage.</Link>
         </p>
         {areaStatus ? (
-          <p aria-live="polite" className="following-area-status">
+          <p
+            aria-live="polite"
+            className="following-area-status"
+            data-error={areaError ? '' : undefined}
+            role={areaError ? 'alert' : undefined}
+          >
             {areaStatus}
           </p>
         ) : null}
@@ -640,7 +879,7 @@ function AreasAndTopics({ data }: { data: FollowingPageData }) {
           description={
             selectedArea
               ? 'Change one saved area without affecting your other interests.'
-              : 'Save a launch area to shape For You. No street address is needed.'
+              : 'Save a launch area to shape Home. No street address is needed.'
           }
           onOpenChange={(open) => {
             if (!open) setAreaAction(null)
@@ -653,7 +892,7 @@ function AreasAndTopics({ data }: { data: FollowingPageData }) {
           }
           triggerId={
             selectedArea
-              ? `manage-saved-area-${selectedArea.name.toLowerCase().replaceAll(' ', '-')}`
+              ? `manage-saved-area-${selectedArea.slug}`
               : 'add-saved-area'
           }
         >
@@ -664,47 +903,89 @@ function AreasAndTopics({ data }: { data: FollowingPageData }) {
                 <strong>{selectedArea.name}</strong>
               </div>
               <p>
-                {selectedArea.detail}. Removing it changes For You but does not
+                {selectedArea.detail}. Removing it changes Home but does not
                 remove any separately followed issue.
               </p>
               <Button
+                disabled={working}
                 onClick={() => {
-                  const name = selectedArea.name
-                  setAreas((current) =>
-                    current.filter((area) => area.name !== name),
-                  )
-                  setAreaStatus(`${name} removed from saved areas.`)
-                  setAreaAction(null)
-                  setTimeout(() => addAreaButtonRef.current?.focus(), 0)
+                  void (async () => {
+                    setWorking(true)
+                    setAreaError(false)
+                    setAreaStatus('')
+                    try {
+                      await areaActions?.remove(selectedArea.slug)
+                      setAreas((current) =>
+                        current.filter(
+                          (area) => area.slug !== selectedArea.slug,
+                        ),
+                      )
+                      setAreaStatus(
+                        `${selectedArea.name} removed from saved areas.`,
+                      )
+                      setAreaAction(null)
+                      setTimeout(() => addAreaButtonRef.current?.focus(), 0)
+                    } catch {
+                      reportFailure(setAreaStatus, setAreaError)
+                    } finally {
+                      setWorking(false)
+                    }
+                  })()
                 }}
                 size="touch"
                 variant="destructive-outline"
               >
-                Remove saved area
+                {working ? 'Removing...' : 'Remove saved area'}
               </Button>
             </div>
           ) : areaAction?.mode === 'add' ? (
             <div className="manage-follow manage-saved-area">
-              {availableArea ? (
-                <>
-                  <div className="manage-destination">
-                    <span>Available launch area</span>
-                    <strong>{availableArea.name}</strong>
-                  </div>
-                  <p>{availableArea.detail}. No street address is collected.</p>
-                  <Button
-                    onClick={() => {
-                      setAreas((current) => [...current, availableArea])
-                      setAreaStatus(
-                        `${availableArea.name} added to saved areas.`,
-                      )
-                      setAreaAction(null)
-                    }}
-                    size="touch"
-                  >
-                    Save {availableArea.name}
-                  </Button>
-                </>
+              {availableAreas.length > 0 ? (
+                <ul className="following-simple-list">
+                  {availableAreas.map((slug) => {
+                    const name = areaName(slug)
+                    return (
+                      <li key={slug}>
+                        <div>
+                          <strong>{name}</strong>
+                          <span>Current decisions and meetings</span>
+                        </div>
+                        <Button
+                          disabled={working}
+                          onClick={() => {
+                            void (async () => {
+                              setWorking(true)
+                              setAreaError(false)
+                              setAreaStatus('')
+                              try {
+                                await areaActions?.save(slug)
+                                setAreas((current) => [
+                                  ...current,
+                                  {
+                                    detail: areaActions
+                                      ? 'Saved to this Google account'
+                                      : 'Watching current decisions and meetings',
+                                    name,
+                                    slug,
+                                  },
+                                ])
+                                setAreaStatus(`${name} added to saved areas.`)
+                                setAreaAction(null)
+                              } catch {
+                                reportFailure(setAreaStatus, setAreaError)
+                              } finally {
+                                setWorking(false)
+                              }
+                            })()
+                          }}
+                          size="touch"
+                        >
+                          Save {name}
+                        </Button>
+                      </li>
+                    )
+                  })}
+                </ul>
               ) : (
                 <p>All currently supported launch areas are already saved.</p>
               )}
@@ -729,12 +1010,13 @@ function AreasAndTopics({ data }: { data: FollowingPageData }) {
         </div>
         <fieldset className="following-topic-grid">
           <legend className="visually-hidden">Choose saved topics</legend>
-          {options.map((topic) => (
+          {SAVED_TOPIC_SLUGS.map((topic) => (
             <label key={topic}>
               <input
                 checked={topics.has(topic)}
                 onChange={() => {
-                  setSaved(false)
+                  setTopicError(false)
+                  setTopicStatus('')
                   setTopics((current) => {
                     const next = new Set(current)
                     if (next.has(topic)) next.delete(topic)
@@ -744,20 +1026,75 @@ function AreasAndTopics({ data }: { data: FollowingPageData }) {
                 }}
                 type="checkbox"
               />
-              <span>{topic}</span>
+              <span>{SAVED_TOPIC_LABELS[topic]}</span>
             </label>
           ))}
         </fieldset>
         <div className="following-save-row">
-          <Button onClick={() => setSaved(true)} size="touch">
-            Save interests
+          <Button
+            disabled={working}
+            onClick={() => {
+              void (async () => {
+                setWorking(true)
+                setTopicError(false)
+                setTopicStatus('')
+                try {
+                  if (topicActions) {
+                    const savedTopics = new Set(data.topics)
+                    const additions = SAVED_TOPIC_SLUGS.filter(
+                      (topic) => topics.has(topic) && !savedTopics.has(topic),
+                    )
+                    const removals = SAVED_TOPIC_SLUGS.filter(
+                      (topic) => !topics.has(topic) && savedTopics.has(topic),
+                    )
+                    await Promise.all([
+                      ...additions.map((topic) => topicActions.save(topic)),
+                      ...removals.map((topic) => topicActions.remove(topic)),
+                    ])
+                  }
+                  setTopicStatus('Saved.')
+                } catch {
+                  reportFailure(setTopicStatus, setTopicError)
+                } finally {
+                  setWorking(false)
+                }
+              })()
+            }}
+            size="touch"
+          >
+            {working ? 'Saving...' : 'Save interests'}
           </Button>
-          <p aria-live="polite">
-            {saved ? 'Saved.' : 'These choices affect For You.'}
+          <p
+            aria-live="polite"
+            data-error={topicError ? '' : undefined}
+            role={topicError ? 'alert' : undefined}
+          >
+            {topicStatus || 'Topics stay with this Google account.'}
           </p>
         </div>
       </section>
     </div>
+  )
+}
+
+function NotificationsUnavailable() {
+  return (
+    <section
+      aria-labelledby="notification-unavailable-title"
+      className="following-unavailable"
+    >
+      <BellRingIcon aria-hidden="true" />
+      <div>
+        <h2 id="notification-unavailable-title">
+          Verified email delivery is next
+        </h2>
+        <p>
+          Saved areas and topics work now. Public Parish will not claim an alert
+          exists until email verification, delivery, and private management are
+          connected.
+        </p>
+      </div>
+    </section>
   )
 }
 

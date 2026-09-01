@@ -13,6 +13,7 @@ import { AreaSelector } from '../discovery/area-selector'
 import { useArea } from '../discovery/area-store'
 import { areaName } from '../discovery/contracts'
 import { useKeyboardOpen, useOnline, useOverlayOpen } from '../discovery/hooks'
+import { parseResidentReturnTo } from '../resident-handoff/navigation'
 
 import { Spinner } from '../../components/ui/spinner'
 import { LOUISIANA_OUTLINE_PATH } from '../landing/louisiana-path'
@@ -156,8 +157,11 @@ export function RouteLoadingRegion() {
 }
 
 export function ResidentShell({ children }: { children: ReactNode }) {
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
+  const { currentHref, pathname } = useRouterState({
+    select: (state) => ({
+      currentHref: state.location.href,
+      pathname: state.location.pathname,
+    }),
   })
   const area = useArea()
   const keyboardOpen = useKeyboardOpen()
@@ -214,6 +218,11 @@ export function ResidentShell({ children }: { children: ReactNode }) {
             />
             <Link
               className="resident-account-control"
+              search={{
+                returnTo: pathname.startsWith('/following')
+                  ? undefined
+                  : parseResidentReturnTo(currentHref),
+              }}
               to="/following"
               aria-label="Open account and following"
             >

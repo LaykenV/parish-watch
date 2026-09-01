@@ -13,9 +13,15 @@ export const Route = createFileRoute('/following')({
 })
 
 function FollowingRoute() {
+  const { returnTo } = Route.useSearch()
+
   return (
     <ResidentShell>
-      <FollowingPage data={Route.useLoaderData()} view="following" />
+      <FollowingPage
+        data={Route.useLoaderData()}
+        returnTo={returnTo}
+        view="following"
+      />
     </ResidentShell>
   )
 }

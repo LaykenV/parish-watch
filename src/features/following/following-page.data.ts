@@ -2,21 +2,26 @@ import type {
   EmailManagementScenario,
   FollowedTarget,
   FollowingScenario,
+  SavedAreaSlug,
+  SavedTopicSlug,
 } from './contracts'
 import { getActiveFollowingFixture } from './contracts'
 
 export type FollowingPageData = {
   available: boolean
   areas: SavedArea[]
+  mode: 'fixture' | 'live' | 'unavailable'
+  notificationsAvailable: boolean
   signedIn: boolean
   targets: FollowedTarget[]
-  topics: string[]
+  topics: SavedTopicSlug[]
   scenario?: FollowingScenario
 }
 
 export type SavedArea = {
   detail: string
   name: string
+  slug: SavedAreaSlug
 }
 
 export type EmailManagementData = {
@@ -32,7 +37,9 @@ export async function loadFollowingPageData(
   if (!active) {
     return {
       areas: [],
-      available: false,
+      available: true,
+      mode: 'live',
+      notificationsAvailable: false,
       signedIn: false,
       targets: [],
       topics: [],
@@ -42,6 +49,8 @@ export async function loadFollowingPageData(
     return {
       areas: [],
       available: true,
+      mode: 'fixture',
+      notificationsAvailable: true,
       signedIn: false,
       scenario: active,
       targets: [],
@@ -53,6 +62,8 @@ export async function loadFollowingPageData(
   return {
     areas: SAVED_AREAS,
     available: true,
+    mode: 'fixture',
+    notificationsAvailable: true,
     signedIn: true,
     scenario: active,
     targets:

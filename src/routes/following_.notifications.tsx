@@ -13,9 +13,15 @@ export const Route = createFileRoute('/following_/notifications')({
 })
 
 function NotificationsRoute() {
+  const { returnTo } = Route.useSearch()
+
   return (
     <ResidentShell>
-      <FollowingPage data={Route.useLoaderData()} view="notifications" />
+      <FollowingPage
+        data={Route.useLoaderData()}
+        returnTo={returnTo}
+        view="notifications"
+      />
     </ResidentShell>
   )
 }

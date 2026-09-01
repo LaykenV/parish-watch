@@ -1,6 +1,9 @@
+import { ConvexAuthProvider } from '@convex-dev/auth/react'
 import { ConvexQueryClient } from '@convex-dev/react-query'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ConvexProvider, ConvexReactClient } from 'convex/react'
+import { ConvexReactClient } from 'convex/react'
+
+import { api } from '../../../convex/_generated/api'
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL
 
@@ -42,10 +45,16 @@ export default function AppConvexProvider({
   }
 
   return (
-    <ConvexProvider client={clients.convexClient}>
+    <ConvexAuthProvider
+      api={{
+        refreshSession: api.auth.refreshSession,
+        signOut: api.auth.signOut,
+      }}
+      client={clients.convexClient}
+    >
       <QueryClientProvider client={clients.queryClient}>
         {children}
       </QueryClientProvider>
-    </ConvexProvider>
+    </ConvexAuthProvider>
   )
 }
