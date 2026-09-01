@@ -760,7 +760,7 @@ test('two atomic decisions publish one cited issue, score, timeline, and materia
         decision.changes.some(
           (change) => change.classification === 'decided' && change.material,
         ) &&
-        decision.citations.length === 4,
+        decision.citations.length === 6,
     ),
   ).toBe(true)
   expect(requests[0]).toMatchObject({
