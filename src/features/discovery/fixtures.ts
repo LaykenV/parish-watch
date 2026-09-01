@@ -142,6 +142,46 @@ export const ISSUE_FIXTURES: IssueCardData[] = [
   },
 ]
 
+export const PUBLISHED_ISSUE_FIXTURES: IssueCardData[] = [
+  {
+    body: 'Lafayette City-Parish Council',
+    evidence: {
+      checked: '2026-08-31',
+      note: 'Built from 2 linked official decision records.',
+      status: 'Evidence available',
+    },
+    href: '/issues/surplus-2016-crew-cab-pickup-donations-to-terrebonne-parish-consolidat-9c21a0b1',
+    latestOutcome: { date: '2026-04-21', label: 'Latest record' },
+    place: 'Lafayette Parish',
+    placeSlug: 'lafayette-parish',
+    slug: 'surplus-2016-crew-cab-pickup-donations-to-terrebonne-parish-consolidat-9c21a0b1',
+    state: 'Decided',
+    title:
+      'Surplus 2016 crew-cab pickup donations to Terrebonne Parish Consolidated Government',
+    topics: ['Public assets'],
+    whyMatter:
+      'Two related council actions document Lafayette donating a surplus public vehicle to Terrebonne Parish.',
+  },
+  {
+    body: 'Rapides Parish Police Jury',
+    evidence: {
+      checked: '2026-08-31',
+      note: 'Built from 2 linked official decision records.',
+      status: 'Evidence available',
+    },
+    href: '/issues/2026-millage-levy-on-the-rapides-parish-tax-roll-755c2f58',
+    latestOutcome: { date: '2026-06-09', label: 'Latest record' },
+    place: 'Rapides Parish',
+    placeSlug: 'rapides-parish',
+    slug: '2026-millage-levy-on-the-rapides-parish-tax-roll-755c2f58',
+    state: 'Decided',
+    title: '2026 millage levy on the Rapides Parish tax roll',
+    topics: ['Public money'],
+    whyMatter:
+      'The timeline connects the parish actions that set the 2026 property-tax millage levy.',
+  },
+]
+
 export const UPCOMING_FIXTURES: UpcomingItemData[] = [
   {
     body: 'Lafayette Planning Commission',

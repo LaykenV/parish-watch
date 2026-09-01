@@ -192,7 +192,8 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
         <h1>Explore</h1>
         <p className="pp-page-lede">
           Search published decision records from the official sources Public
-          Parish has checked.
+          Parish has checked. <Link to="/issues">Browse issue timelines</Link>{' '}
+          to see related decisions together.
         </p>
       </header>
 

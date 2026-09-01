@@ -44,6 +44,7 @@ const STATIC_ROUTE_LABELS: Record<string, string> = {
   '/following/notifications': 'Notifications',
   '/for-you': 'For You',
   '/how-it-works': 'How Public Parish works',
+  '/issues': 'Issues',
 }
 
 export function residentRouteLabel(pathname: string): string {

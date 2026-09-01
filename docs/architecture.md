@@ -275,6 +275,7 @@ development proof for unfinished APIs. Production never treats them as data.
 | `/`                     | Area setup and major issues                        |
 | `/for-you`              | Personalized issue feed                            |
 | `/explore`              | Browse and search published resident evidence      |
+| `/issues`               | Browse current published issue timelines           |
 | `/issues/$issueSlug`    | Cited issue timeline                               |
 | `/decisions/$recordKey` | Atomic decision record and publication history     |
 | `/meetings/$meetingId`  | Meeting and source records                         |
@@ -294,9 +295,10 @@ possible. Direct refreshes to dynamic routes must be tested on the final
 Keep route files small:
 
 ```text
-src/routes/issues/$issueSlug.tsx
-src/routes/issues/$issueSlug.data.ts
-src/features/issues/
+src/routes/issues_.tsx
+src/routes/issues.$issueSlug.tsx
+src/features/discovery/issues-index.tsx
+src/features/evidence/issue-page.tsx
 src/features/chat/
 src/features/follows/
 src/lib/convex/

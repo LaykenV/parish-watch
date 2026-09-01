@@ -26,6 +26,55 @@
   line-height: 1.55;
 }
 
+.pp-issues-kicker {
+  margin: 0 0 0.8rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pp-issues-docket {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 30rem;
+  margin: 2rem 0 0;
+  border-block: 1px solid var(--border);
+}
+
+.pp-issues-docket div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem 0.9rem 0;
+}
+
+.pp-issues-docket div + div {
+  padding-left: 1rem;
+  border-left: 1px solid var(--border);
+}
+
+.pp-issues-docket dt {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: var(--pp-text-caption);
+}
+
+.pp-issues-docket dd {
+  margin: 0;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.pp-issues-loading,
+.pp-issues-empty {
+  margin-top: 2rem;
+}
+
 .pp-offline-bar {
   padding: 0.6rem 1rem;
   border-bottom: 1px solid var(--border);
@@ -1761,6 +1810,10 @@ button.pp-area-row:hover {
 
   .pp-card-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pp-issues-index .pp-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .pp-rail-track {

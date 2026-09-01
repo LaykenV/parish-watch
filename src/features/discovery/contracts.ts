@@ -118,6 +118,12 @@ export type ForYouScenario =
 
 export type ExploreScenario = 'no-results' | 'section-failure' | 'update'
 
+export type IssuesScenario = 'empty' | 'published'
+
+export type IssuesSearch = {
+  fixture?: IssuesScenario
+}
+
 export const HOME_SCENARIOS: readonly HomeScenario[] = [
   'no-issues',
   'degraded',
@@ -139,6 +145,11 @@ export const EXPLORE_SCENARIOS: readonly ExploreScenario[] = [
   'no-results',
   'section-failure',
   'update',
+]
+
+export const ISSUES_SCENARIOS: readonly IssuesScenario[] = [
+  'empty',
+  'published',
 ]
 
 export const TOPIC_OPTIONS = [
@@ -213,6 +224,12 @@ export function getActiveDiscoveryFixture<T extends string>(
   scenario: T | undefined,
 ): T | undefined {
   return isDiscoveryFixtureEnabled(scenario) ? scenario : undefined
+}
+
+export function parseIssuesSearch(
+  search: Record<string, unknown>,
+): IssuesSearch {
+  return { fixture: pick(search.fixture, ISSUES_SCENARIOS) }
 }
 
 function pick<T extends string>(

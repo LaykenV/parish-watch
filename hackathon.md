@@ -12,11 +12,18 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T04:28:00Z
+- **Last updated:** 2026-09-01T14:51:37Z
 
 ## Log
 
 ### 2026-09-01 - working tree
+
+Added a resident-facing `/issues` index for the accepted Lafayette and Rapides
+timelines. Its bounded Convex query reuses the issue page's fail-closed
+projection, so stale decision links or missing required citations remove an
+issue from discovery. Explore links to the index, and issue pages return there
+(`convex/resident/evidence.ts`, `convex/schema.ts`, `src/routes/issues_.tsx`,
+`src/features/discovery/issues-index.tsx`).
 
 Closed the Slice 5 data gate with two production issue builds. Terra linked
 the accepted records, Luna reviewed the proposed facts independently, and

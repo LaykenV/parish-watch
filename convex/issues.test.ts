@@ -1070,9 +1070,24 @@ test('a published decision refresh creates one new issue version and replays wit
   expect(firstResidentIssue?.links).toHaveLength(2)
   expect(firstResidentIssue?.citations.length).toBeGreaterThan(0)
   expect(JSON.stringify(firstResidentIssue)).not.toContain('reviewId')
+  const publishedIssues = await t.query(
+    api.resident.evidence.listPublishedIssues,
+    {},
+  )
+  expect(publishedIssues).toEqual([
+    expect.objectContaining({
+      revision: firstEvidence.issueVersion?._id,
+      slug: firstEvidence.issue?.slug,
+      decisionCount: 2,
+      mode: 'full',
+    }),
+  ])
   vi.unstubAllGlobals()
 
   const refreshedInput = await advanceCurrentVersions(t, seeded)
+  expect(
+    await t.query(api.resident.evidence.listPublishedIssues, {}),
+  ).toEqual([])
   const refreshedCandidate = issueCandidate(refreshedInput)
   const refreshFetch = stubIssueFetch([
     { model: TERRA_MODEL, content: refreshedCandidate },
@@ -1104,6 +1119,14 @@ test('a published decision refresh creates one new issue version and replays wit
   expect(refreshedResidentIssue?.revision).not.toBe(
     firstResidentIssue?.revision,
   )
+  expect(
+    await t.query(api.resident.evidence.listPublishedIssues, {}),
+  ).toEqual([
+    expect.objectContaining({
+      revision: refreshedResidentIssue?.revision,
+      decisionCount: 2,
+    }),
+  ])
 
   await t.mutation(internal.operations.issues.refreshLinkedIssues, {
     recordId: seeded.recordIds[1],

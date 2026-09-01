@@ -121,6 +121,7 @@ Account area:
 
 Contextual paths:
 
+- published issue index;
 - issue timeline;
 - atomic decision;
 - meeting;
@@ -129,6 +130,11 @@ Contextual paths:
 
 The product defaults to issues for comprehension while keeping underlying
 decisions and sources inspectable.
+
+The `/issues` index lists only current full or limited issue versions whose
+linked decisions and required citations still pass the same fail-closed
+projection as the issue detail page. It shows the number of linked official
+decisions and sends residents to `/explore` when they need atomic records.
 
 ## First Visit
 
