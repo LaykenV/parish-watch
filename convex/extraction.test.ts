@@ -2175,6 +2175,10 @@ test('deterministic date and amount helpers reject malformed values', () => {
   expect(midnightWithSeconds).not.toBeNull()
   expect(textSupportsZonedDateTime('April 21, 2026', midnight!)).toBe(true)
   expect(
+    textSupportsZonedDateTime('DATE: April 21,2026', midnight!),
+  ).toBe(true)
+  expect(textSupportsDate('April 212026', midnight!)).toBe(false)
+  expect(
     textSupportsZonedDateTime('April 21, 2026', midnightWithSeconds!),
   ).toBe(false)
   const threePm = parseZonedIsoDateTime('2026-07-13T15:00:00-05:00')

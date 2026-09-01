@@ -183,7 +183,7 @@ export function datesInText(text: string): CalendarDate[] {
   }
 
   const monthNamePattern =
-    /([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})/g
+    /([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?(?:,\s*|\s+)(\d{4})\b/g
   for (const match of normalized.matchAll(monthNamePattern)) {
     const month = monthNumberFromName(match[1])
     if (month !== null) {
