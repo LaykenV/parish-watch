@@ -207,7 +207,7 @@ describe('resident interface Slice 3 pages', () => {
   })
 
   it('offers recovery instead of guessing an unknown record', () => {
-    expect(issue('not-a-real-issue')).toContain('Browse issues')
+    expect(issue('not-a-real-issue')).toContain('Back to Home')
     expect(decision('not-a-real-record')).toContain('Search records')
     expect(meeting('not-a-real-meeting')).toContain('Check coverage')
   })
