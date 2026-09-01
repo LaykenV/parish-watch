@@ -25,6 +25,7 @@ export type AskRouteData = {
 export async function loadAskPageData(
   fixture: AskScenario | undefined,
   scopeKey: string,
+  returnTo?: string,
 ): Promise<AskRouteData> {
   if (!import.meta.env.DEV) {
     return {
@@ -40,7 +41,10 @@ export async function loadAskPageData(
   const scenario = fixture ?? defaultAskScenario(scopeKey)
   const { getAskFixtureAdapter } = await import('../features/ask/fixtures')
   const adapter = getAskFixtureAdapter(scenario)
-  const scope = await adapter.resolveScope(routeSearchFromScopeKey(scopeKey))
+  const scope = await adapter.resolveScope({
+    ...routeSearchFromScopeKey(scopeKey),
+    returnTo,
+  })
 
   return { availability: { kind: 'available' }, scenario, scope }
 }

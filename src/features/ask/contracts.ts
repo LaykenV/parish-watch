@@ -1,6 +1,7 @@
 import type { AreaSlug } from '../discovery/contracts'
 import { areaName } from '../discovery/contracts'
 import type { CitationData, CitationMap } from '../evidence/contracts'
+import { parseResidentReturnTo } from '../resident-handoff/navigation'
 
 /*
   Ask consumes a normalized projection owned by a typed adapter. The route and
@@ -81,10 +82,11 @@ export type AskAvailability =
   the selected citation. A question is private conversation content and never
   enters the URL, history state, analytics, or server logs.
 */
-export type AskRouteSearch =
+export type AskRouteSearch = (
   | { scope?: 'corpus'; area?: AreaSlug; source?: string }
   | { scope: 'issue'; issue: string; source?: string }
   | { scope: 'meeting'; meeting: string; source?: string }
+) & { returnTo?: string }
 
 /*
   Development presentation scenarios. They prove layout and state behavior
@@ -228,6 +230,7 @@ function pickText(value: unknown): string | undefined {
 
 export function parseAskSearch(search: Record<string, unknown>): AskSearch {
   const source = pickText(search.source)
+  const returnTo = parseResidentReturnTo(search.returnTo)
   const fixture =
     typeof search.fixture === 'string' &&
     (ASK_SCENARIOS as readonly string[]).includes(search.fixture)
@@ -241,12 +244,14 @@ export function parseAskSearch(search: Record<string, unknown>): AskSearch {
 
   if (scope === 'issue') {
     const issue = pickText(search.issue)
-    if (issue) return { scope: 'issue', issue, source, fixture }
+    if (issue)
+      return { scope: 'issue', issue, returnTo, source, fixture }
   }
 
   if (scope === 'meeting') {
     const meeting = pickText(search.meeting)
-    if (meeting) return { scope: 'meeting', meeting, source, fixture }
+    if (meeting)
+      return { scope: 'meeting', meeting, returnTo, source, fixture }
   }
 
   const area =
@@ -258,6 +263,7 @@ export function parseAskSearch(search: Record<string, unknown>): AskSearch {
   return {
     scope: scope === 'corpus' ? 'corpus' : undefined,
     area,
+    returnTo,
     source,
     fixture,
   }

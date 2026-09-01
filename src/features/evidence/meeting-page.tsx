@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '../../components/ui/button'
 import { formatDate, formatTime } from '../discovery/format'
 import { IssueCard } from '../discovery/issue-card'
+import { evidenceRouteHref } from '../resident-handoff/navigation'
 import {
   AskBlock,
   BackLink,
@@ -40,6 +41,10 @@ export function MeetingPage({
   const { fixture, issues } = data
   const { citations, meeting } = fixture
   const selected = resolveCitationId(citations, search.source)
+  const currentMeetingHref = evidenceRouteHref(
+    `/meetings/${meeting.id}`,
+    search,
+  )
 
   return (
     <EvidenceProvider
@@ -48,7 +53,11 @@ export function MeetingPage({
       selected={selected}
     >
       <main className="ev-page" id="resident-main">
-        <BackLink label="Back to Explore" to="/explore" />
+        <BackLink
+          label="Back to Explore"
+          returnTo={search.returnTo}
+          to="/explore"
+        />
 
         <header className="ev-head">
           <p className="ev-kicker">
@@ -143,6 +152,7 @@ export function MeetingPage({
               {meeting.decisions.length > 0 ? (
                 <DecisionRows
                   fixture={search.fixture}
+                  returnTo={currentMeetingHref}
                   rows={meeting.decisions}
                 />
               ) : null}
@@ -157,6 +167,7 @@ export function MeetingPage({
                   </summary>
                   <DecisionRows
                     fixture={search.fixture}
+                    returnTo={currentMeetingHref}
                     rows={meeting.routine}
                   />
                 </details>
@@ -196,9 +207,11 @@ export function MeetingPage({
 
 function DecisionRows({
   fixture,
+  returnTo,
   rows,
 }: {
   fixture: EvidenceSearch['fixture']
+  returnTo?: string
   rows: MeetingDecisionRow[]
 }) {
   return (
@@ -208,7 +221,7 @@ function DecisionRows({
           <p className="ev-decision-title">
             <Link
               params={{ recordKey: row.recordKey }}
-              search={{ fixture }}
+              search={{ fixture, returnTo }}
               to="/decisions/$recordKey"
             >
               {row.title}

@@ -4,6 +4,10 @@ import { Link, useRouterState } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
 import { FollowAction } from '../following/follow-action'
+import {
+  evidenceJourneySearch,
+  evidenceScenarioFromRouteSearch,
+} from '../resident-handoff/navigation'
 import { formatDate, formatDay, formatTime } from './format'
 import type {
   EvidenceStatus,
@@ -53,15 +57,19 @@ export function IssueCard({
   reason,
   variant = 'standard',
 }: IssueCardProps) {
-  const hasDevelopmentFixture = useRouterState({
-    select: (state) =>
-      Boolean(
-        (state.location.search as Record<string, unknown> | undefined)?.fixture,
-      ),
+  const journey = useRouterState({
+    select: (state) => ({
+      currentHref: state.location.href,
+      scenario: evidenceScenarioFromRouteSearch(state.location.search),
+    }),
   })
   const href = issue.href ?? '/issues/' + issue.slug
   const external = href.startsWith('https://') || href.startsWith('http://')
   const showSecondaryActions = issue.showSecondaryActions ?? true
+  const detailSearch = evidenceJourneySearch({
+    currentHref: journey.currentHref,
+    scenario: journey.scenario,
+  })
 
   const dateLine = issue.nextDate
     ? `${issue.nextDate.label} · ${formatDate(issue.nextDate.date)}`
@@ -91,7 +99,9 @@ export function IssueCard({
               {issue.title}
             </a>
           ) : (
-            <Link to={href}>{issue.title}</Link>
+            <Link search={detailSearch} to={href}>
+              {issue.title}
+            </Link>
           )}
         </h3>
         <p className="pp-card-date">{dateLine}</p>
@@ -120,7 +130,7 @@ export function IssueCard({
               external ? (
                 <a href={href} rel="noreferrer" target="_blank" />
               ) : (
-                <Link to={href} />
+                <Link search={detailSearch} to={href} />
               )
             }
             size="touch"
@@ -132,7 +142,7 @@ export function IssueCard({
             <>
               <FollowAction
                 available={
-                  import.meta.env.DEV && hasDevelopmentFixture && !external
+                  import.meta.env.DEV && Boolean(journey.scenario) && !external
                 }
                 className="pp-inline-action"
                 target={{
@@ -151,6 +161,17 @@ export function IssueCard({
 }
 
 export function UpcomingCard({ item }: { item: UpcomingItemData }) {
+  const journey = useRouterState({
+    select: (state) => ({
+      currentHref: state.location.href,
+      scenario: evidenceScenarioFromRouteSearch(state.location.search),
+    }),
+  })
+  const detailSearch = evidenceJourneySearch({
+    currentHref: journey.currentHref,
+    scenario: journey.scenario,
+  })
+
   return (
     <article className="pp-upcoming">
       <p className="pp-upcoming-date">
@@ -160,7 +181,9 @@ export function UpcomingCard({ item }: { item: UpcomingItemData }) {
       <div className="pp-upcoming-main">
         <p className="pp-upcoming-body">{item.body}</p>
         <h3 className="pp-upcoming-title">
-          <Link to={item.href}>{item.title}</Link>
+          <Link search={detailSearch} to={item.href}>
+            {item.title}
+          </Link>
         </h3>
         <p className="pp-upcoming-detail">{item.detail}</p>
       </div>

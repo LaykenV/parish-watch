@@ -286,6 +286,18 @@
   overflow-wrap: anywhere;
 }
 
+.following-row-open {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 2.75rem;
+  margin-top: 0.35rem;
+  color: var(--info-foreground);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 .following-coverage-warning,
 .email-delivery-warning {
   display: flex;

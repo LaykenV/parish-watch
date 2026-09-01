@@ -61,14 +61,16 @@ describe('resident interface Slice 3 evidence contracts', () => {
   it('validates the citation and development scenario URL state', () => {
     expect(parseEvidenceSearch({ fixture: 'preview' })).toEqual({
       fixture: 'preview',
+      returnTo: undefined,
       source: undefined,
     })
     expect(parseEvidenceSearch({ fixture: 'update', source: ' x ' })).toEqual({
       fixture: 'update',
+      returnTo: undefined,
       source: 'x',
     })
     expect(parseEvidenceSearch({ fixture: 'invented', source: '   ' })).toEqual(
-      { fixture: undefined, source: undefined },
+      { fixture: undefined, returnTo: undefined, source: undefined },
     )
   })
 

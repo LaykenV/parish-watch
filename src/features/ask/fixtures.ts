@@ -126,7 +126,10 @@ function unknownQuestionAnswer(question: string): AskNotFoundAnswer {
 
 /* Scopes */
 
-function issueScope(slug: string = ISSUE_SLUG): AskScope | null {
+function issueScope(
+  slug: string = ISSUE_SLUG,
+  returnTo?: string,
+): AskScope | null {
   const record = Object.values(DECISION_DETAIL_FIXTURES).find(
     (fixture) => fixture.decision.issue?.slug === slug,
   )
@@ -137,11 +140,14 @@ function issueScope(slug: string = ISSUE_SLUG): AskScope | null {
     issueSlug: slug,
     label: 'Answering from this issue',
     recordTitle: issue.title,
-    returnTo: `/issues/${slug}`,
+    returnTo: returnTo ?? `/issues/${slug}`,
   }
 }
 
-function meetingScope(meetingId: string = MEETING_ID): AskScope | null {
+function meetingScope(
+  meetingId: string = MEETING_ID,
+  returnTo?: string,
+): AskScope | null {
   if (!Object.hasOwn(MEETING_DETAIL_FIXTURES, meetingId)) return null
   const record = MEETING_DETAIL_FIXTURES[meetingId]
   return {
@@ -149,7 +155,7 @@ function meetingScope(meetingId: string = MEETING_ID): AskScope | null {
     meetingId,
     label: 'Answering from this meeting',
     recordTitle: record.meeting.title,
-    returnTo: `/meetings/${meetingId}`,
+    returnTo: returnTo ?? `/meetings/${meetingId}`,
   }
 }
 
@@ -438,9 +444,11 @@ function createAskFixtureAdapter(scenario: AskScenario): AskAdapter {
   return {
     async resolveScope(input: AskRouteSearch): Promise<AskScope> {
       if (input.scope === 'issue')
-        return issueScope(input.issue) ?? fixtureCorpusScope()
+        return issueScope(input.issue, input.returnTo) ?? fixtureCorpusScope()
       if (input.scope === 'meeting')
-        return meetingScope(input.meeting) ?? fixtureCorpusScope()
+        return (
+          meetingScope(input.meeting, input.returnTo) ?? fixtureCorpusScope()
+        )
       if (input.scope === 'corpus' || input.area) {
         return fixtureCorpusScope(input.area)
       }

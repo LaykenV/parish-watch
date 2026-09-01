@@ -67,7 +67,7 @@ export async function loadMeetingPageData(
     .filter((issue): issue is IssueCardData => Boolean(issue))
     .map((issue) => ({
       ...issue,
-      href: `/issues/${issue.slug}?fixture=${scenario}`,
+      href: `/issues/${issue.slug}`,
     }))
 
   return { fixture, issues }

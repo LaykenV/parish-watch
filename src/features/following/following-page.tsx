@@ -308,6 +308,7 @@ function FollowingList({ data }: { data: FollowingPageData }) {
             <FollowRow
               key={target.id}
               onManage={() => setSelected(target)}
+              returnTo={`/following?fixture=${data.scenario ?? 'active'}`}
               target={target}
             />
           ))}
@@ -390,9 +391,11 @@ function FollowingList({ data }: { data: FollowingPageData }) {
 
 function FollowRow({
   onManage,
+  returnTo,
   target,
 }: {
   onManage: () => void
+  returnTo: string
   target: FollowedTarget
 }) {
   return (
@@ -418,7 +421,23 @@ function FollowRow({
       <dl className="following-row-ledger">
         <div>
           <dt>Latest change</dt>
-          <dd>{target.latestChange}</dd>
+          <dd>
+            {target.latestChange}
+            {target.href ? (
+              <Link
+                className="following-row-open"
+                search={{
+                  fixture: target.evidenceScenario,
+                  returnTo,
+                }}
+                to={target.href}
+              >
+                {target.evidenceScenario === 'update'
+                  ? 'Open changed issue'
+                  : 'Open issue'}
+              </Link>
+            ) : null}
+          </dd>
         </div>
         <div>
           <dt>Next date</dt>
