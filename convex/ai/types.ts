@@ -25,7 +25,7 @@ export type StructuredRequest = {
   schemaName: string
   jsonSchema: Record<string, unknown>
   reasoningEffort: 'high' | 'low'
-  maxCompletionTokens: number
+  maxCompletionTokens?: number
 }
 
 export type ModelUsage = {

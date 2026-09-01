@@ -136,6 +136,14 @@ connected the resident interface and added atomic per-session and app-wide
 request and token limits. The production issue-scoped flow completed two cited
 turns, opened the exact `CO-022-2026` and `CO-023-2026` minutes spans, and
 returned evidence not found without citations for an unsupported question.
+The working-tree quality revision removes those lexical and token-budget gates.
+It uses high-reasoning Luna first to select relevant targets from the complete
+current issue, meeting, decision, and accepted-excerpt catalog. A second Luna
+call receives the selected records and their hash-checked normalized official
+documents. Invalid, broad, and empty selections expand to the full scope. A
+valid not-found selection skips the second call. Per-session and app-wide
+request-frequency limits, private usage telemetry, and deterministic citation
+validation remain. This revision is not deployed.
 Auth, follow, AgentMail, coverage-request, and private-report adapters remain in
 the post-Slice-5 plan.
 
@@ -177,8 +185,8 @@ layer.
 | Hosting       | `@convex-dev/static-hosting` on `convex.site` | Public no-invite hackathon URL on the required stack                                   |
 | Retrieval     | `@firecrawl/firecrawl-convex`                 | Durable source discovery, crawling, and change-aware ingestion                         |
 | AI            | Convex AI Gateway to OpenAI Chat Completions  | Convex-scoped credentials, strict structured outputs, and per-function spend           |
-| Chat history  | `@convex-dev/agent`                           | Durable threads and messages with application-owned evidence retrieval                 |
-| Rate limits   | `@convex-dev/rate-limiter`                    | Atomic request limits paired with application-owned model token budgets                |
+| Chat history  | `@convex-dev/agent`                           | Durable threads and messages with application-owned published context                  |
+| Rate limits   | `@convex-dev/rate-limiter`                    | Atomic request-frequency limits with private provider-usage telemetry                  |
 | Strong model  | `openai/gpt-5.6-terra`                        | Record extraction, consequence factors, and issue linking                              |
 | Fast model    | `openai/gpt-5.6-luna`                         | Discovery classification, ranking, independent review, and chat                        |
 | Email         | `@agentmail/convex`                           | Verification, durable inbound threads, replies, and alerts                             |
@@ -641,7 +649,9 @@ Indexes: body plus scheduled time; publication state plus scheduled time.
 Fields: stable record key, registry, government body, source record ID, current
 published version, current mode, and creation and update times. Issue links
 refer to these records without replacing them.
-Indexes: stable record key; registry plus source record ID.
+Indexes: stable record key; current mode plus update time; government body plus
+current mode plus update time; current meeting key; registry plus source record
+ID.
 
 #### `issueBuilds`, `issueBuildReviews`, and `issueBuildReviewChecks`
 
@@ -734,8 +744,8 @@ Indexes: session plus activity; session plus thread; thread.
 #### `askAnswerReceipts` and `askModelAttempts`
 
 Answer receipts claim one saved user message at a time and record running,
-succeeded, or failed state without copying its content. Each running receipt
-holds one 15,000-token reservation in both the immediate and daily windows.
+succeeded, or failed state without copying its content. A running receipt
+fences retries and prevents another answer from running for the same session.
 Model attempts belong to a receipt and store the private route, model role,
 model ID, prompt and schema versions, token use, latency, estimated cost, and
 bounded safe failure metadata. They do not store resident questions or
@@ -745,29 +755,35 @@ answers.
 
 Fields: anonymous session, short or daily window, window start, reserved
 tokens, consumed tokens, and updated time. Index: session, kind, and window
-start. One mutation reserves both windows before a model call. A completed
-attempt replaces the reservation with known provider usage. A failed attempt
-does the same when usage is known. Unknown failed work and abandoned work
-consume the full reservation so a late or unreported provider call cannot
-reopen that capacity. A no-evidence path that skips the model releases its
-reservation. The short window allows 30,000 tokens per minute. The daily window
-allows 150,000 tokens per session. The rate-limiter component separately caps
-three answer attempts per minute and 20 per day. It also reserves the full
-15,000-token allowance against app-wide ceilings of 150,000 tokens per minute
-and 1,500,000 tokens per day. Rotating an anonymous session cannot bypass those
-ceilings. This app-wide allowance is conservative. An accepted answer claim
-keeps its full app-wide reservation even when a no-evidence result later
-releases the per-session reservation.
+start. These rows are now a usage ledger, not an admission gate. A completed or
+failed provider attempt records known token use. Unknown or abandoned work
+records zero rather than an invented reservation. The rate-limiter component
+caps three answer attempts per minute and 20 per day for each anonymous session.
+App-wide request ceilings of 60 per minute and 1,000 per day prevent session
+rotation from creating unlimited model calls. There is no application-owned
+input, output, per-session, or app-wide token ceiling for Ask.
 
 #### Agent component threads and messages
 
 `@convex-dev/agent` owns durable thread and message storage. Public Parish maps
 each thread to an anonymous session and scope, authorizes access before every
 component operation, and supplies its own accepted evidence context. The Agent
-uses `MODEL_FAST` through `convexGateway` and Convex AI Gateway. Do not configure
-an embedding model for the launch corpus or create parallel application message
-tables. Deterministic code validates every returned evidence reference before
-the answer becomes visible.
+uses `MODEL_FAST` at high reasoning through `convexGateway` and Convex AI
+Gateway. The first internal call receives the complete current issue, meeting,
+and decision catalog for the thread scope, every accepted citation excerpt, and
+the full prior conversation. It returns strict issue, meeting, or decision IDs
+without writing a resident-visible message. Deterministic code expands issue
+and meeting targets into decision records and deduplicates their documents. The
+second internal call receives the selected records, accepted excerpts, full
+prior conversation, and normalized official documents. The action verifies
+each document's stored hash and byte count before adding its full text. Invalid,
+broad, and empty selector results use the complete scope. A valid not-found
+result skips the second model call and stores the standard evidence-not-found
+answer. The service rejects an oversized scope before a model call instead of
+truncating records, excerpts, or documents. There is no lexical, embedding, or
+fixed top-k gate. Do not create parallel application message tables.
+Deterministic code validates every returned evidence reference before the
+answer becomes visible.
 
 #### `emailSubscribers`
 
@@ -918,14 +934,14 @@ problem to fix, not a stage to buy a larger model for.
 
 ### Stage assignment
 
-| Stage                                       | Executor           | Reasoning | Why                                                                              |
-| ------------------------------------------- | ------------------ | --------- | -------------------------------------------------------------------------------- |
-| Source discovery and document-type routing  | `MODEL_FAST`       | low       | Real classification over short inputs, and the highest call volume in the system |
-| Record extraction and citation grounding    | `MODEL_STRONG`     | high      | Generative, long OCR-quality input, and the origin of every published claim      |
-| Consequence factors and issue-link proposal | `MODEL_STRONG`     | high      | Both jobs must stay inside cited evidence and affect multiple public views       |
-| Independent publication and issue review    | `MODEL_FAST`       | high      | Verification over cited facts after deterministic source checks have run         |
-| Importance score and ordering               | Deterministic code | not used  | Fixed weights make the same accepted factors produce the same score              |
-| Resident chat                               | `MODEL_FAST`       | low       | Grounded answering over retrieved evidence, and the only latency-sensitive stage |
+| Stage                                       | Executor           | Reasoning | Why                                                                               |
+| ------------------------------------------- | ------------------ | --------- | --------------------------------------------------------------------------------- |
+| Source discovery and document-type routing  | `MODEL_FAST`       | low       | Real classification over short inputs, and the highest call volume in the system  |
+| Record extraction and citation grounding    | `MODEL_STRONG`     | high      | Generative, long OCR-quality input, and the origin of every published claim       |
+| Consequence factors and issue-link proposal | `MODEL_STRONG`     | high      | Both jobs must stay inside cited evidence and affect multiple public views        |
+| Independent publication and issue review    | `MODEL_FAST`       | high      | Verification over cited facts after deterministic source checks have run          |
+| Importance score and ordering               | Deterministic code | not used  | Fixed weights make the same accepted factors produce the same score               |
+| Resident chat selector and answer           | `MODEL_FAST`       | high      | It selects from the full accepted catalog, then reasons over the chosen documents |
 
 The strong tier sits on generation rather than on review because the two jobs
 fail differently. Extraction originates the record, and a reviewer can reject a
@@ -948,11 +964,15 @@ expect roughly double the per-document cost of a medium-effort pass. That is
 accepted deliberately: extraction is the stage where an error becomes a cited
 claim in front of a resident, and there is no larger tier behind it.
 
-Extraction is also where input volume concentrates, since it reads whole packets
-while every other stage reads excerpts or finished records. Cache the fixed
-system prompt and schema, where cached input on `MODEL_STRONG` is $0.20 per 1M
-against $2.00 fresh, and send excerpt windows rather than entire packets
-wherever the document structure allows it.
+Extraction and the Ask answer pass are where input volume concentrates because
+they read official documents. Cache the fixed extraction system prompt and
+schema, where cached input on `MODEL_STRONG` is $0.20 per 1M against $2.00
+fresh. Extraction may use excerpt windows where document structure allows it.
+
+Ask places the stable scoped catalog and accepted excerpts before the prior
+thread and current question in the selector prompt. This keeps the reusable
+prefix identical while the published scope is unchanged. The answer prompt
+uses the same ordering for the selected evidence and documents.
 
 ### Before locking the split
 
@@ -1066,14 +1086,21 @@ affect ranking.
 
 ### Retrieval
 
-1. Resolve jurisdiction, body, issue, and time scope from the current page and
-   question.
-2. Search only published decisions, issues, meetings, and citations.
-3. Retrieve the smallest source-backed context set.
-4. Ask OpenAI for an answer whose claims cite the supplied evidence IDs.
-5. Verify every returned citation before display.
-6. If evidence is insufficient, return a not-found response and official next
-   step.
+1. Resolve the issue, meeting, jurisdiction, or corpus scope from the thread.
+2. Load every current full or limited decision publication in that scope.
+3. Give high-reasoning Luna the complete issue, meeting, and decision catalog,
+   every accepted citation excerpt, the prior thread, and the new question.
+4. Require strict issue, meeting, or decision targets. Expand issue and meeting
+   targets deterministically into current decision records. A broad,
+   not-found, empty, or invalid selection expands to the whole scope.
+5. Load and hash-check the normalized official documents for the selected
+   records.
+6. Ask a second high-reasoning Luna call on the same private thread for an
+   answer whose factual claims cite the selected accepted evidence IDs.
+7. Verify every returned citation ID against the selected current evidence
+   before display. The answer model may still return not found.
+8. Return not found without a model call only when the published scope itself
+   is empty.
 
 ### Continuity
 
@@ -1087,15 +1114,13 @@ affect ranking.
 ### Abuse control
 
 - rate-limit answer attempts by opaque session;
-- reserve 15,000 tokens against 30,000-per-minute and 150,000-per-day budgets;
-- reserve the same allowance against app-wide 150,000-per-minute and
-  1,500,000-per-day ceilings;
-- keep the app-wide reservation conservative after a claim, including
-  no-evidence results, so model spend always stays below the ceiling;
-- reconcile known use, charge the reservation for unknown or abandoned work,
-  and release only work that skipped the model;
+- allow three answer attempts per minute and 20 per day for each session;
+- allow 60 answer attempts per minute and 1,000 per day across the app;
+- record known provider tokens and estimated cost as private telemetry;
+- do not reject a question because of an application-owned input, output,
+  per-session, or app-wide token budget;
 - keep normal limits invisible;
-- return a cooldown at the request or token threshold;
+- return a cooldown at the request-frequency threshold;
 - keep the CAPTCHA adapter inactive until observed abuse justifies it;
 - block prompt attempts to escape the validated corpus;
 - log safe error and cost metadata, not private content in public operations.

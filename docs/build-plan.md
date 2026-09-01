@@ -271,6 +271,14 @@ token limits. The production issue-scoped flow completed two related cited
 turns, opened the exact `CO-022-2026` and `CO-023-2026` Source spans, and
 returned evidence not found without citations for an unsupported question.
 
+The working-tree quality follow-up changes the answer path, not the Slice 6
+resident contract. High-reasoning Luna first selects relevant issue, meeting,
+or decision IDs from the complete accepted catalog. A second high-reasoning
+call receives the expanded records and their full verified source documents.
+Broad or invalid selections fall back to the whole scope. The revision removes
+lexical selection and application token budgets while keeping
+request-frequency limits plus private usage telemetry. It is not deployed.
+
 Design Slice 5 replaces the Following and email-management blueprints with the
 finished page hierarchy and interactions. It uses development-only typed
 fixtures for Google return, email verification, ownership, preferences, and
@@ -350,15 +358,24 @@ Dates: September 3 through September 9
 - multi-turn conversation;
 - citation validation on every answer;
 - explicit evidence-not-found response;
-- invisible token and abuse limits;
+- invisible request-frequency limits and private token telemetry;
 - CAPTCHA or cooldown fallback.
 
-PR #45 provides private 24-hour Agent threads and bounded published-evidence
-retrieval. PR #47 adds strict structured answers through Convex AI Gateway,
+PR #45 provides private 24-hour Agent threads and published-evidence access.
+PR #47 adds strict structured answers through Convex AI Gateway,
 validates every evidence ID before saving an assistant message, and records
 private usage and safe failure metadata. PR #49 connects the approved resident
-interface and reserves per-session and app-wide request and token capacity
-before any model call. All three are deployed. On September 1, the production
+interface and applies per-session request-frequency limits. The working-tree
+Slice 6 quality revision replaces lexical selection with a high-reasoning Luna
+selector over the complete accepted catalog and a second high-reasoning answer
+call over the expanded records and verified official documents. It uses no
+fixed top-k or application-owned input or output token budget. This revision is
+not deployed. Per-session limits remain, and app-wide limits of 60 requests per
+minute and 1,000 per day stop session rotation from creating unlimited model
+calls. A valid selector not-found result skips the second call. Oversized scopes
+fail before model generation instead of truncating evidence or documents. All
+three original PRs are deployed. On
+September 1, the production
 issue-scoped flow completed two related cited turns, opened the exact accepted
 minutes spans, and returned evidence not found without citations for an
 unsupported question. Reopening the preserved recent conversation after a

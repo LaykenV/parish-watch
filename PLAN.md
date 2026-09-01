@@ -93,6 +93,19 @@ restored all three turns. Account, follow, AgentMail, coverage-request, and
 private-report adapters remain in implementation Slices 7 through 9. PR 7A is
 the next packet.
 
+A Slice 6 quality follow-up is in the working tree. It runs Luna at high
+reasoning and replaces lexical retrieval with two model passes on the same
+private thread. The selector sees every current issue, meeting, decision, and
+accepted citation excerpt in scope. Deterministic code expands its targets, and
+the answer pass receives those records plus their hash-checked normalized
+official documents. Invalid, broad, and empty selections expand to the full
+scope so the selector cannot hide evidence. A valid not-found selection returns
+the safe not-found answer without paying for a document-heavy second pass.
+Per-session and app-wide request-frequency limits remain, while provider token
+use becomes telemetry instead of an application-owned input or output budget.
+Hard record-count and document-byte checks fail visibly instead of truncating
+model context. This follow-up is not deployed yet.
+
 ## Executive Decision
 
 Enter the hackathon with Public Parish, a fresh application built around one

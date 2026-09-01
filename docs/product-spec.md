@@ -55,7 +55,12 @@ handoff. PR #43 deployed that final interface as `85d6947`; production workflow
 This closes resident UI design, but not every production adapter. Implementation
 Slice 6 is deployed through PRs #45, #47, and #49. Production Ask now uses
 private 24-hour Agent threads, validated current evidence, deterministic
-citation checks, and per-session plus app-wide request and token limits. A
+citation checks, and per-session plus app-wide request and token limits. The
+working-tree quality revision uses high-reasoning Luna to select relevant
+targets from the complete published catalog, then asks a second high-reasoning
+Luna call with the expanded records and verified official documents. Broad or
+invalid selections use the full scope. Token use remains private telemetry
+instead of an answer budget. It is not deployed yet. A
 production issue-scoped test completed two related cited turns, opened the exact
 `CO-022-2026` and `CO-023-2026` Source spans, and returned evidence not found
 without citations for an unsupported question. Accounts, follows, AgentMail,
@@ -388,6 +393,24 @@ Do not position the meeting page as the main way residents discover information.
 - quiet notice that answers use official sources and may be incomplete;
 - Google sign-in offer only for saved areas or managed follows;
 - separate AgentMail email verification only when the resident requests alerts.
+
+### Evidence selection
+
+- keep both internal Luna calls on the resident's existing private thread;
+- give the selector every current issue, meeting, decision, and accepted
+  citation excerpt in scope plus the complete prior conversation;
+- let the selector name every plausible issue, meeting, or decision without a
+  fixed top-k;
+- expand issue and meeting targets into current decision records in code;
+- give the answer call those records, their accepted excerpts, and their full
+  hash-checked official documents;
+- use the complete scope when the selector returns broad, no target, or an
+  invalid target;
+- return the standard evidence-not-found answer after a valid not-found
+  selection without running the document-heavy answer pass;
+- reject a scope that cannot fit inside safe retrieval and document-size bounds
+  instead of truncating its context;
+- keep the selector output internal and save only the resident-visible answer.
 
 ### Failure Language
 

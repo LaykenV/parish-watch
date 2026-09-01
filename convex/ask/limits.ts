@@ -5,29 +5,19 @@ import { components } from '../_generated/api'
 import type { Doc, Id } from '../_generated/dataModel'
 import type { MutationCtx } from '../_generated/server'
 
-export const ASK_TOKEN_RESERVATION = 15_000
-export const ASK_RUN_LEASE_MS = 2 * MINUTE
+// Token windows remain an exact usage ledger. They no longer deny a resident's
+// answer before the provider reports actual use.
+export const ASK_TOKEN_RESERVATION = 0
+export const ASK_RUN_LEASE_MS = 10 * MINUTE
 
 const SHORT_TOKEN_WINDOW_MS = MINUTE
 const DAILY_TOKEN_WINDOW_MS = DAY
-const SHORT_TOKEN_LIMIT = 30_000
-const DAILY_TOKEN_LIMIT = 150_000
-const GLOBAL_SHORT_TOKEN_LIMIT = 150_000
-const GLOBAL_DAILY_TOKEN_LIMIT = 1_500_000
 
 const askRequestLimiter = new RateLimiter(components.rateLimiter, {
   askRequestBurst: { kind: 'fixed window', rate: 3, period: MINUTE },
   askRequestDaily: { kind: 'fixed window', rate: 20, period: DAY },
-  askGlobalTokenBurst: {
-    kind: 'fixed window',
-    rate: GLOBAL_SHORT_TOKEN_LIMIT,
-    period: MINUTE,
-  },
-  askGlobalTokenDaily: {
-    kind: 'fixed window',
-    rate: GLOBAL_DAILY_TOKEN_LIMIT,
-    period: DAY,
-  },
+  askGlobalRequestBurst: { kind: 'fixed window', rate: 60, period: MINUTE },
+  askGlobalRequestDaily: { kind: 'fixed window', rate: 1_000, period: DAY },
 })
 
 type WindowKind = 'short' | 'daily'
@@ -60,19 +50,19 @@ export async function reserveAskCapacity(
 
   const globalBurst = await askRequestLimiter.limit(
     ctx,
-    'askGlobalTokenBurst',
-    { count: ASK_TOKEN_RESERVATION },
+    'askGlobalRequestBurst',
   )
-  if (!globalBurst.ok)
-    throwCooldown('ask_token_limited', now, globalBurst.retryAfter)
+  if (!globalBurst.ok) {
+    throwCooldown('ask_global_request_limited', now, globalBurst.retryAfter)
+  }
 
   const globalDaily = await askRequestLimiter.limit(
     ctx,
-    'askGlobalTokenDaily',
-    { count: ASK_TOKEN_RESERVATION },
+    'askGlobalRequestDaily',
   )
-  if (!globalDaily.ok)
-    throwCooldown('ask_token_limited', now, globalDaily.retryAfter)
+  if (!globalDaily.ok) {
+    throwCooldown('ask_global_daily_limited', now, globalDaily.retryAfter)
+  }
 
   const shortWindowStart = windowStart(now, SHORT_TOKEN_WINDOW_MS)
   const dailyWindowStart = windowStart(now, DAILY_TOKEN_WINDOW_MS)
@@ -80,16 +70,12 @@ export async function reserveAskCapacity(
     sessionId,
     kind: 'short',
     windowStart: shortWindowStart,
-    limit: SHORT_TOKEN_LIMIT,
-    duration: SHORT_TOKEN_WINDOW_MS,
     now,
   })
   await reserveWindow(ctx, {
     sessionId,
     kind: 'daily',
     windowStart: dailyWindowStart,
-    limit: DAILY_TOKEN_LIMIT,
-    duration: DAILY_TOKEN_WINDOW_MS,
     now,
   })
   return { shortWindowStart, dailyWindowStart }
@@ -133,8 +119,6 @@ async function reserveWindow(
     sessionId: Id<'anonymousSessions'>
     kind: WindowKind
     windowStart: number
-    limit: number
-    duration: number
     now: number
   },
 ) {
@@ -147,14 +131,6 @@ async function reserveWindow(
         .eq('windowStart', args.windowStart),
     )
     .unique()
-  const used = (existing?.reservedTokens ?? 0) + (existing?.consumedTokens ?? 0)
-  if (used + ASK_TOKEN_RESERVATION > args.limit) {
-    throw new ConvexError({
-      code: 'ask_token_limited',
-      message: 'Ask has reached its model budget for this device',
-      retryAt: args.windowStart + args.duration,
-    })
-  }
   if (existing) {
     await ctx.db.patch(existing._id, {
       reservedTokens: existing.reservedTokens + ASK_TOKEN_RESERVATION,
@@ -206,7 +182,7 @@ function windowStart(now: number, duration: number) {
 function throwCooldown(code: string, now: number, retryAfter: number): never {
   throw new ConvexError({
     code,
-    message: 'Ask is taking a short pause on this device',
+    message: 'Ask is taking a short pause',
     retryAt: now + retryAfter,
   })
 }

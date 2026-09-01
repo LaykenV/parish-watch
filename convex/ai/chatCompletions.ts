@@ -126,7 +126,9 @@ function buildRequestBody(
       },
     },
     reasoning_effort: request.reasoningEffort,
-    max_completion_tokens: request.maxCompletionTokens,
+    ...(request.maxCompletionTokens === undefined
+      ? {}
+      : { max_completion_tokens: request.maxCompletionTokens }),
     store: false,
   }
 }

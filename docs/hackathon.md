@@ -532,7 +532,7 @@ other contested project.
 | Statewide ambition dilutes quality   | named body cannot pass the gate                       | narrow public coverage, keep shared compiler                                   |
 | AI publishes unsupported facts       | citation or labeled-set failure                       | withhold, strengthen validation, move stage to benchmark winner                |
 | Product feels like a council digest  | users browse but do not ask or follow                 | center issue consequence, action, change, and outcome                          |
-| Chat consumes time and money         | high tokens without useful answers                    | smaller retrieval sets, budgets, cached evidence, stronger abstention          |
+| Chat consumes time and money         | high tokens without useful answers                    | usage telemetry, request limits, prompt caching, and checked answer quality    |
 | AI Gateway is unavailable            | service token returns a disabled or unavailable error | confirm paid-team access early and keep a tested direct OpenAI fallback        |
 | Static hosting breaks dynamic routes | direct refresh or webhook fails                       | fix root route ownership early, before UI polish                               |
 | Auth v2 alpha changes                | package or API changes break Google login             | pin the exact version, isolate auth code, and keep the anonymous path complete |
