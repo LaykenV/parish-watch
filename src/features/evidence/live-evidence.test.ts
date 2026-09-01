@@ -59,7 +59,7 @@ const publishedIssue: PublishedIssue = {
   placeName: 'Rapides Parish',
   placeSlug: 'rapides-parish',
   publicActions: [],
-  revision: 'issue-version-1' as Id<'issueVersions'>,
+  revision: 'issue-version-1',
   slug: 'millage-levy',
   summary: 'The jury set the 2026 millage levy.',
   title: '2026 millage levy',
