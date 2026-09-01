@@ -70,10 +70,14 @@ fixtures in production.
 The resident UI design and implementation track is complete. The production
 resident loop is not. The resident-evidence integration connects current
 accepted decisions, grouped meeting evidence, exact citations, and fail-closed
-issue subscriptions to the finished routes. A fresh production issue build and
-realtime change proof still gate issue availability and PR 6A. Ask, account,
-follow, AgentMail, coverage, request, and private-report adapters remain in the
-post-Slice-5 implementation plan.
+issue subscriptions to the finished routes. Production issue runs
+`jd7eeb84pv1rzdmp6jf3dg161d8djvz0` and
+`jd76dkmjgyz6rf4temt03cefgx8dj27m` passed linking, independent review,
+deterministic validation, and publication. A subscriber received the second
+issue on its existing connection 10.8 seconds after an initial empty result.
+The Slice 5 data gate is closed. Private anonymous Ask threads are the active
+Slice 6 capability. Account, follow, AgentMail, coverage, request, and
+private-report adapters remain in the post-Slice-5 implementation plan.
 
 ## Executive Decision
 

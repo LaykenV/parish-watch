@@ -254,16 +254,20 @@ and citation-level evidence pages against explicit development fixtures. The
 resident-evidence integration replaces the production decision and meeting
 recovery states with bounded current accepted projections and exact citations.
 Issue reads subscribe to the accepted pointer and fail closed when any link is
-stale. A fresh production issue build and realtime change proof still gate the
-full Slice 5 exit. This work does not change publication or ranking policy.
+stale. Two bounded production issue builds passed AI Gateway linking,
+independent review, deterministic validation, and publication. A live Convex
+subscriber received the Rapides millage issue 10.8 seconds after its initial
+empty result without reconnecting. The full Slice 5 exit is closed.
 
 Design Slice 4 implements Ask Public Parish against the same development
 fixtures and the shipped evidence viewer. It includes
 focused Ask tests for route privacy, scope restoration, draft consumption,
 citation accounting, production fixture gating, duplicate-submit protection,
 the compact thread composer, and named official contacts. Production keeps Ask
-in navigation behind the honest unavailable state because no chat backend
-exists yet.
+in navigation behind the honest unavailable state while PR 6A is under review.
+The PR 6A backend uses hashed 24-hour sessions, application-owned thread access,
+Agent component history, and bounded retrieval over accepted evidence. It does
+not call a model or expose the unfinished adapter in production.
 
 Design Slice 5 replaces the Following and email-management blueprints with the
 finished page hierarchy and interactions. It uses development-only typed

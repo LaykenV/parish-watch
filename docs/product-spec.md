@@ -34,9 +34,11 @@ decision, meeting, and citation-level evidence pages. Source controls keep
 citation selection in the URL, open a Coss drawer on mobile or a docked rail on
 desktop, and return focus when closed. The resident-evidence adapter now maps
 current accepted decisions and grouped meeting records into those pages and
-subscribes issue pages to the accepted issue pointer. Issue routes still fail
-closed until a fresh accepted issue version points at every current decision
-publication.
+subscribes issue pages to the accepted issue pointer. Issue routes fail closed
+when an accepted issue version does not point at every current decision
+publication. Production now has accepted Lafayette surplus-pickup and Rapides
+millage issues. The latter appeared through one live subscription without a
+refresh.
 
 Design Slices 4 through 6 completed Ask, Follow and account-entry, email
 management, Coverage, coverage request, public method, and private-report
@@ -48,10 +50,10 @@ handoff. PR #43 deployed that final interface as `85d6947`; production workflow
 
 This closes resident UI design and implementation, not the production adapters.
 Production keeps Ask, accounts, follows, AgentMail, coverage requests, and
-private reports unavailable until their backend paths pass. The issue route
-also stays unavailable until a fresh accepted issue build passes its gate.
-Those integrations must replace the matching typed adapter without changing
-the page hierarchy or visual system.
+private reports unavailable until their backend paths pass. PR 6A establishes
+private evidence-scoped Ask threads and retrieval but does not activate answers.
+Each integration must replace the matching typed adapter without changing the
+page hierarchy or visual system.
 
 ### Start With Consequence
 

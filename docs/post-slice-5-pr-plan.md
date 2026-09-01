@@ -15,20 +15,20 @@ Resident-interface Design Slices 1 through 8 are deployed through PR #43 as
 `85d6947`. The complete route hierarchy, responsive behavior, development
 fixtures, integration gates, and fixture-to-API handoff now exist. Production
 discovery reads accepted atomic publications, and anonymous product telemetry
-is live. Production does not yet have `@convex-dev/agent`, mounted Convex Auth,
-AgentMail, a coverage compiler, or the real action adapters. The
+is live. Production does not yet have mounted Convex Auth, AgentMail, a coverage
+compiler, or the real action adapters. PR 6A pins and registers
+`@convex-dev/agent` for private Ask history. The
 resident-evidence integration connects current accepted decisions, grouped
 meeting evidence, and exact citations to the finished routes. Its issue query
 subscribes to the accepted pointer and withholds any issue whose links no longer
 match every current decision publication.
 
-The next planned capability is PR 6A, private evidence-scoped Ask threads. It
-starts the production resident loop without reopening the finished interface.
-The known duplicate board-vacancy projection is corrected. Before filing PR
-6A, close the remaining Slice 5 data prerequisite: run and review at least one
-production issue build and prove one published change updates that open issue
-without refresh. The decision, meeting, citation, and fail-closed issue adapter
-work is implemented. The production data and realtime proof remain before 6A.
+PR 6A is the active capability. It starts the production resident loop without
+reopening the finished interface. The known duplicate board-vacancy projection
+is corrected. The Slice 5 data prerequisite is closed. Two bounded production
+issue builds passed linking, independent review, validation, and publication.
+The Rapides millage issue reached an existing subscriber 10.8 seconds after an
+initial empty result. PR 6A keeps model calls and resident-visible answers out.
 
 ## Original starting assumption
 
