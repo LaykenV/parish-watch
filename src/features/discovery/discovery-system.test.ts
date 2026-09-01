@@ -11,7 +11,6 @@ const contracts = readFileSync(
   'utf8',
 )
 const home = readFileSync(new URL('./home.tsx', import.meta.url), 'utf8')
-const forYou = readFileSync(new URL('./for-you.tsx', import.meta.url), 'utf8')
 const explore = readFileSync(new URL('./explore.tsx', import.meta.url), 'utf8')
 const issueCard = readFileSync(
   new URL('./issue-card.tsx', import.meta.url),
@@ -60,19 +59,17 @@ describe('resident interface control system', () => {
 
   it('offers one area-selection trigger in first-visit setup', () => {
     expect(home).not.toContain('Show local decisions')
-    expect(forYou).not.toContain('Show local decisions')
   })
 
   it('keeps fixture scenarios as QA hooks without visible fixture banners', () => {
     expect(home).not.toContain('FixtureBanner')
-    expect(forYou).not.toContain('FixtureBanner')
     expect(explore).not.toContain('FixtureBanner')
     expect(notice).not.toContain('Design fixture')
     expect(blueprint).not.toContain('blueprint-fixture-notice')
     expect(contracts).toContain('import.meta.env.DEV')
-    expect(home).toContain('PublishedHomeFeed')
     expect(home).toContain('usePublishedDecisions')
-    expect(forYou).toContain('fixturesEnabled')
+    expect(home).toContain('usePublishedIssues')
+    expect(home).toContain('IssuesSection')
     expect(explore).toContain('fixturesEnabled')
   })
 

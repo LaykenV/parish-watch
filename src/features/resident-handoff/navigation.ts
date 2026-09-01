@@ -38,6 +38,8 @@ export function parseResidentReturnTo(value: unknown): string | undefined {
   }
 
   if (url.origin !== 'https://public-parish.local') return undefined
+  if (url.pathname === '/for-you') return '/'
+  if (url.pathname === '/issues') return '/#current-issues'
   if (!RESIDENT_ROUTES.some((route) => matchesRoute(url.pathname, route))) {
     return undefined
   }
@@ -99,12 +101,10 @@ export function evidenceRouteHref(
 }
 
 export function residentReturnLabel(returnTo: string): string {
-  const pathname = new URL(
-    returnTo,
-    'https://public-parish.local',
-  ).pathname
-  if (pathname === '/') return 'Back to Home'
-  if (pathname === '/for-you') return 'Back to For You'
+  const pathname = new URL(returnTo, 'https://public-parish.local').pathname
+  if (pathname === '/' || pathname === '/for-you' || pathname === '/issues') {
+    return 'Back to Home'
+  }
   if (pathname === '/explore') return 'Back to Explore'
   if (pathname === '/following') return 'Back to Following'
   if (pathname.startsWith('/issues/')) return 'Back to issue'
@@ -115,7 +115,10 @@ export function residentReturnLabel(returnTo: string): string {
   return 'Back'
 }
 
-function matchesRoute(pathname: string, route: (typeof RESIDENT_ROUTES)[number]) {
+function matchesRoute(
+  pathname: string,
+  route: (typeof RESIDENT_ROUTES)[number],
+) {
   return route.endsWith('/') && route !== '/'
     ? pathname.startsWith(route)
     : pathname === route

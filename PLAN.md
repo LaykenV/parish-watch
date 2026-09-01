@@ -15,13 +15,14 @@ published 26 cited atomic records after Terra extraction, Luna review, and
 deterministic policy: 15 Lafayette, 9 Rapides, and 2 East Baton Rouge records.
 Fifteen are full and 11 are limited. Three targets stayed out after exact-citation
 validation failures, and one negative control returned `not_found`. The
-resident integration reads current full and limited atomic publications through
-one bounded public query. Home, For You, and Explore label them as published
-decision records and open the accepted official source. Withheld versions stay
-hidden. Lafayette and Rapides now have accepted production issue builds. The
-`/issues` index lists only issue timelines that still pass the issue page's
-current-link and citation checks. Publication counts do not prove complete body
-coverage.
+resident integration reads current full and limited atomic publications and
+accepted issue timelines through bounded public queries. The approved resident
+information architecture uses one issue-led Home. It shows accepted Lafayette
+and Rapides issue timelines first, then the atomic decision records underneath.
+Explore searches issues before decision records. The old `/for-you` and
+`/issues` index routes redirect to Home, while issue detail routes remain
+stable. Withheld versions stay hidden. Publication counts do not prove complete
+body coverage.
 
 Resident-interface Design Slice 1 established the complete route blueprint.
 Design Slice 2 then shipped the responsive shell plus fixture-backed Home, For
@@ -192,14 +193,15 @@ records demand and an optional notification address. It never starts a crawl.
 The resident selects a parish or municipality and optional topics. No street
 address is requested. Signed-in users can save multiple areas.
 
-### 2. Discover Decisions
+### 2. Discover Issues and Decisions
 
 The home experience has:
 
-- **For You:** decisions matching saved areas and topics;
-- **Major local decisions:** consequential current decisions in supported areas;
-- **Search:** every published decision and source record, including items that
-  are not promoted.
+- **Issue timelines:** related decisions for the resident's selected areas;
+- **Latest decision records:** the atomic government actions beneath those
+  issues, including records without a validated issue relationship;
+- **Explore:** issue-first search across every published issue and decision
+  record.
 
 ### 3. Understand an Issue
 

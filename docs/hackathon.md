@@ -172,10 +172,11 @@ production smoke passed the direct Convex host, canonical domain, apex redirect,
 and readiness query.
 
 PR #26 deployed the bounded resident publication query and discovery
-integration as `409a3e1`. No production issue build, importance assessment, or
-ranked issue projection has run. Home, For You, and Explore read current full
-and limited atomic publications, label them as decision records, and open the
-official source. Withheld publications stay hidden.
+integration as `409a3e1`. At that checkpoint, no production issue build,
+importance assessment, or ranked issue projection had run. Home, For You, and
+Explore read current full and limited atomic publications, labeled them as
+decision records, and opened the official source. Withheld publications stayed
+hidden.
 
 PR #27 deployed Design Slice 3 as `3a59e45`. It implements issue, atomic
 decision, meeting, and citation-level evidence views against explicit
@@ -335,8 +336,8 @@ local decisions are public, but spread across packets, portals, and updates.
 
 ### 0:15 to 0:45: Find What Matters
 
-Show “For You” and “Major local decisions.” Open one real, current consequential
-issue. Point to "Why this may matter," the next date, and remaining public action.
+Show the issue-led Home and choose Lafayette. Open one accepted issue timeline.
+Point to "Why this may matter," the latest official action, and its sources.
 
 ### 0:45 to 1:15: Inspect the Receipts
 

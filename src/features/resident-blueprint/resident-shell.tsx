@@ -1,6 +1,6 @@
 import {
   CircleUserRoundIcon,
-  ListFilterIcon,
+  HouseIcon,
   MapPinIcon,
   MessageCircleQuestionIcon,
   SearchIcon,
@@ -27,7 +27,7 @@ type NavigationItem = {
 }
 
 const PRIMARY_NAVIGATION: NavigationItem[] = [
-  { href: '/for-you', icon: ListFilterIcon, label: 'For You' },
+  { href: '/', icon: HouseIcon, label: 'Home' },
   { href: '/explore', icon: SearchIcon, label: 'Explore' },
   { href: '/ask', icon: MessageCircleQuestionIcon, label: 'Ask' },
   { href: '/coverage', icon: LouisianaIcon, label: 'Coverage' },
@@ -42,9 +42,9 @@ const STATIC_ROUTE_LABELS: Record<string, string> = {
   '/following': 'Following',
   '/following/areas-and-topics': 'Areas and topics',
   '/following/notifications': 'Notifications',
-  '/for-you': 'For You',
+  '/for-you': 'Home',
   '/how-it-works': 'How Public Parish works',
-  '/issues': 'Issues',
+  '/issues': 'Home',
 }
 
 export function residentRouteLabel(pathname: string): string {

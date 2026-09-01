@@ -11,17 +11,16 @@ export type ResidentRouteHandoff = {
 export const RESIDENT_ROUTE_HANDOFFS = [
   {
     route: '/',
-    contract: 'discovery contracts and accepted publication projection',
+    contract: 'issue-led home with accepted issue and decision projections',
     fixtureOwner: 'features/discovery/fixtures.ts',
     gate: 'partial',
-    owner: 'discovery and public publication queries',
+    owner: 'public issue and decision queries plus saved areas',
   },
   {
     route: '/for-you',
-    contract: 'ranked resident feed projection',
-    fixtureOwner: 'features/discovery/fixtures.ts',
-    gate: 'partial',
-    owner: 'discovery and saved interests',
+    contract: 'legacy redirect to the issue-led home',
+    gate: 'live',
+    owner: 'resident navigation',
   },
   {
     route: '/explore',

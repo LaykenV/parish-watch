@@ -237,17 +237,17 @@ independent production smoke passed. The complete interface remains
 fixture-backed where account, email, detail, Ask, follow, coverage, request, and
 private-report adapters have not passed their integration gates.
 
-The deployed Slice 2 release includes the responsive shell plus Home, For You,
+The deployed Slice 2 release introduced the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
 tests across 19 files, typecheck, production builds, prerender, and lint.
 Production workflow `33324166404` and the independent production smoke passed
 for `b22e321`. Explicit fixture URL scenarios remain available only in
 development builds, and resident pages do not reserve a visible banner for them.
 Production ignores every fixture scenario before deriving page state and shows
-current accepted atomic publications through a bounded realtime query. Home,
-For You, and Explore identify these as decision records and open the official
-source. The integration does not create issues, scores, or complete coverage
-claims.
+current accepted publications through bounded realtime queries. The current
+information architecture uses one issue-led Home and an issue-first Explore.
+Legacy `/for-you` and `/issues` index routes redirect to Home. The interface
+does not claim complete coverage or an unsupported issue ranking.
 
 The deployed Design Slice 3 code implements issue, atomic decision, meeting,
 and citation-level evidence pages against explicit development fixtures. The
@@ -330,7 +330,7 @@ Dates: September 3 through September 9
 ### Product Surfaces
 
 - location and topic setup without an address;
-- “For You” and “Major local decisions” feeds;
+- one issue-led Home for saved or anonymous areas;
 - searchable decisions;
 - issue timeline;
 - meeting and source page;

@@ -108,21 +108,7 @@ export type ExploreSearch = {
 export type HomeScenario =
   'no-issues' | 'degraded' | 'signed-in' | 'section-failure' | 'update'
 
-export type ForYouScenario =
-  | 'no-area'
-  | 'no-matches'
-  | 'signed-in'
-  | 'degraded'
-  | 'section-failure'
-  | 'update'
-
 export type ExploreScenario = 'no-results' | 'section-failure' | 'update'
-
-export type IssuesScenario = 'empty' | 'published'
-
-export type IssuesSearch = {
-  fixture?: IssuesScenario
-}
 
 export const HOME_SCENARIOS: readonly HomeScenario[] = [
   'no-issues',
@@ -132,24 +118,10 @@ export const HOME_SCENARIOS: readonly HomeScenario[] = [
   'update',
 ]
 
-export const FOR_YOU_SCENARIOS: readonly ForYouScenario[] = [
-  'no-area',
-  'no-matches',
-  'signed-in',
-  'degraded',
-  'section-failure',
-  'update',
-]
-
 export const EXPLORE_SCENARIOS: readonly ExploreScenario[] = [
   'no-results',
   'section-failure',
   'update',
-]
-
-export const ISSUES_SCENARIOS: readonly IssuesScenario[] = [
-  'empty',
-  'published',
 ]
 
 export const TOPIC_OPTIONS = [
@@ -171,6 +143,7 @@ export const BODY_OPTIONS = [
   'Lafayette City-Parish Council',
   'Lafayette City Council',
   'Baton Rouge Metropolitan Council',
+  'Rapides Parish Police Jury',
 ] as const
 
 export const LIFECYCLE_OPTIONS = [
@@ -196,6 +169,7 @@ export const PLACE_OPTIONS = [
   { label: 'All places', value: '' },
   { label: 'Lafayette Parish', value: 'Lafayette Parish' },
   { label: 'East Baton Rouge Parish', value: 'East Baton Rouge Parish' },
+  { label: 'Rapides Parish', value: 'Rapides Parish' },
 ] as const
 
 export const SORT_OPTIONS = [
@@ -226,12 +200,6 @@ export function getActiveDiscoveryFixture<T extends string>(
   return isDiscoveryFixtureEnabled(scenario) ? scenario : undefined
 }
 
-export function parseIssuesSearch(
-  search: Record<string, unknown>,
-): IssuesSearch {
-  return { fixture: pick(search.fixture, ISSUES_SCENARIOS) }
-}
-
 function pick<T extends string>(
   value: unknown,
   allowed: readonly T[],
@@ -251,12 +219,6 @@ export function parseHomeSearch(search: Record<string, unknown>): {
   fixture?: HomeScenario
 } {
   return { fixture: pick(search.fixture, HOME_SCENARIOS) }
-}
-
-export function parseForYouSearch(search: Record<string, unknown>): {
-  fixture?: ForYouScenario
-} {
-  return { fixture: pick(search.fixture, FOR_YOU_SCENARIOS) }
 }
 
 export function parseExploreSearch(
