@@ -328,7 +328,11 @@ async function generateWithGateway(
         description: 'A source-grounded Public Parish answer',
       }),
       maxRetries: 1,
-      maxOutputTokens: MAX_OUTPUT_TOKENS,
+      providerOptions: {
+        convexGateway: {
+          max_completion_tokens: MAX_OUTPUT_TOKENS,
+        },
+      },
     },
     {
       contextOptions: { recentMessages: 0 },
@@ -614,7 +618,7 @@ async function recordGatewayFailure(
       usage: null,
       retryAfterMs: null,
       errorClass: classifyGatewayError(error),
-      errorDetail: 'AI Gateway did not return a usable structured answer',
+      errorDetail: gatewayErrorDetail(error),
     },
     1,
   )
@@ -625,6 +629,26 @@ function classifyGatewayError(error: unknown): string {
   if (apiError?.statusCode) return `ai_gateway_http_${apiError.statusCode}`
   if (apiError?.isRetryable) return 'ai_gateway_unavailable'
   return 'ai_gateway_response_invalid'
+}
+
+function gatewayErrorDetail(error: unknown): string {
+  const body = findApiError(error)?.responseBody
+  if (!body) return 'AI Gateway did not return a usable structured answer'
+  try {
+    const parsed = JSON.parse(body) as {
+      error?: { code?: unknown; message?: unknown; param?: unknown }
+    }
+    const detail = [
+      parsed.error?.code,
+      parsed.error?.param,
+      parsed.error?.message,
+    ]
+      .filter((value): value is string => typeof value === 'string')
+      .join(': ')
+    return detail.slice(0, 500) || 'AI Gateway rejected the answer request'
+  } catch {
+    return 'AI Gateway returned an unreadable error response'
+  }
 }
 
 async function recordAttempt(
