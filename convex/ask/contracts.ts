@@ -24,6 +24,8 @@ export const askEvidence = v.object({
   sourceHref: v.string(),
 })
 
+export type AskEvidence = typeof askEvidence.type
+
 export const askEvidenceResult = v.object({
   kind: v.union(v.literal('evidence'), v.literal('no_evidence')),
   scope: askScope,
@@ -31,6 +33,26 @@ export const askEvidenceResult = v.object({
 })
 
 export type AskEvidenceResult = typeof askEvidenceResult.type
+
+export const askModelAnswer = v.object({
+  kind: v.union(v.literal('answer'), v.literal('not_found')),
+  answer: v.string(),
+  evidenceIds: v.array(v.string()),
+  followUps: v.array(v.string()),
+})
+
+export type AskModelAnswer = typeof askModelAnswer.type
+
+export const askAnswerResult = v.object({
+  kind: v.union(v.literal('answer'), v.literal('not_found')),
+  answer: v.string(),
+  citations: v.array(askEvidence),
+  followUps: v.array(v.string()),
+  messageId: v.string(),
+  replayed: v.boolean(),
+})
+
+export type AskAnswerResult = typeof askAnswerResult.type
 
 export function scopeKey(scope: AskScope): string {
   if (scope.kind === 'issue') return scope.issueSlug

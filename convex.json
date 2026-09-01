@@ -1,0 +1,9 @@
+{
+  "node": {
+    "externalPackages": [
+      "@convex-dev/agent",
+      "@convex-dev/ai-sdk-provider",
+      "ai"
+    ]
+  }
+}

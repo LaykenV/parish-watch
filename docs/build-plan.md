@@ -350,6 +350,13 @@ Dates: September 3 through September 9
 - invisible token and abuse limits;
 - CAPTCHA or cooldown fallback.
 
+PR 6A now provides the private 24-hour Agent threads and bounded published
+evidence retrieval. The stacked PR 6B working tree adds strict structured
+answers through Convex AI Gateway, validates every evidence ID before saving an
+assistant message, and records private usage and safe failure metadata. The
+resident Ask route stays unavailable until PR 6C adds atomic request and token
+limits and connects this backend to the approved interface.
+
 ### Account Loop
 
 - pin and install Convex Auth v2 alpha;

@@ -828,5 +828,53 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_session_and_idempotency_key', ['sessionId', 'idempotencyKey'])
+    .index('by_session_and_message_id', ['sessionId', 'messageId'])
     .index('by_thread_id_and_created_at', ['threadId', 'createdAt']),
+
+  askAnswerReceipts: defineTable({
+    sessionId: v.id('anonymousSessions'),
+    threadId: v.string(),
+    questionMessageId: v.string(),
+    state: v.union(
+      v.literal('running'),
+      v.literal('succeeded'),
+      v.literal('failed'),
+    ),
+    attempt: v.number(),
+    answerMessageId: v.optional(v.string()),
+    errorClass: v.optional(v.string()),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_session_and_question_message_id', [
+      'sessionId',
+      'questionMessageId',
+    ])
+    .index('by_thread_id_and_started_at', ['threadId', 'startedAt']),
+
+  askModelAttempts: defineTable({
+    answerReceiptId: v.id('askAnswerReceipts'),
+    sessionId: v.id('anonymousSessions'),
+    threadId: v.string(),
+    route: aiRoutes,
+    modelRole: v.literal('MODEL_FAST'),
+    modelId: v.string(),
+    promptVersion: v.string(),
+    schemaVersion: v.string(),
+    attempt: v.number(),
+    status: v.string(),
+    latencyMs: v.number(),
+    requestId: v.optional(v.string()),
+    promptTokens: v.optional(v.number()),
+    completionTokens: v.optional(v.number()),
+    totalTokens: v.optional(v.number()),
+    cachedTokens: v.optional(v.number()),
+    reasoningTokens: v.optional(v.number()),
+    estimatedCostUsd: v.optional(v.number()),
+    errorClass: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_answer_receipt_and_attempt', ['answerReceiptId', 'attempt'])
+    .index('by_session_and_created_at', ['sessionId', 'createdAt']),
 })

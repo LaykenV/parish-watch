@@ -124,6 +124,9 @@ after 24 hours, and normal use cannot create unbounded provider cost.
 
 ### PR 6A: establish private evidence-scoped Ask threads
 
+Status on September 1: PR #45 is open with green verification and PR-Agent
+checks.
+
 Suggested title: `feat: establish private evidence-scoped ask threads`
 
 Outcome: a browser can create an opaque 24-hour session, start an issue,
@@ -168,6 +171,10 @@ Proof: two anonymous browsers cannot access each other's threads, and a labeled
 question retrieves only its accepted citations.
 
 ### PR 6B: answer Ask with validated published evidence
+
+Status on September 1: implementation is in a stacked working tree. Runtime
+proof is pending because the personal Convex development deployment returned
+`408 Request Timeout` from `start_push` during this work session.
 
 Suggested title: `feat: answer ask with validated published evidence`
 

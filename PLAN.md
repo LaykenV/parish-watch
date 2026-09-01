@@ -75,9 +75,13 @@ issue subscriptions to the finished routes. Production issue runs
 `jd76dkmjgyz6rf4temt03cefgx8dj27m` passed linking, independent review,
 deterministic validation, and publication. A subscriber received the second
 issue on its existing connection 10.8 seconds after an initial empty result.
-The Slice 5 data gate is closed. Private anonymous Ask threads are the active
-Slice 6 capability. Account, follow, AgentMail, coverage, request, and
-private-report adapters remain in the post-Slice-5 implementation plan.
+The Slice 5 data gate is closed. PR #45 establishes private anonymous Ask
+threads and is open with green verification and review checks. The stacked PR
+6B working tree adds strict `MODEL_FAST` answers, exact evidence-ID validation,
+Agent message persistence, and private provider accounting. Production Ask
+remains unavailable until PR 6C adds atomic limits and connects the resident
+interface. Account, follow, AgentMail, coverage, request, and private-report
+adapters remain in the post-Slice-5 implementation plan.
 
 ## Executive Decision
 

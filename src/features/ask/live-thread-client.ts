@@ -74,6 +74,16 @@ export class LiveAskThreadClient {
     })
   }
 
+  async answer(threadId: string, questionMessageId: string) {
+    const result = await this.client.action(api.ask.answer.answerQuestion, {
+      token: this.sessionToken(),
+      threadId,
+      questionMessageId,
+    })
+    this.touch(threadId)
+    return result
+  }
+
   recent(): LiveAskThreadHandle[] {
     const now = Date.now()
     const handles = parseHandles(this.storage.getItem(THREAD_STORAGE_KEY))
