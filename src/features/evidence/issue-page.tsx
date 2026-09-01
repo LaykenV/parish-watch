@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
+import { Spinner } from '../../components/ui/spinner'
 import { formatDate } from '../discovery/format'
 import { Notice } from '../discovery/notice'
 import { ShareButton } from '../discovery/share'
@@ -38,6 +39,7 @@ import type {
   MarkedDate,
 } from './contracts'
 import type { IssuePageData } from './evidence-page.data'
+import { toIssueFixture, usePublishedIssue } from './live-evidence'
 
 export function IssuePage({
   data,
@@ -50,8 +52,38 @@ export function IssuePage({
   search: EvidenceSearch
   slug: string
 }) {
-  const fixture = data?.fixture
-  const liveUpdate = data?.liveUpdate ?? null
+  if (data?.fixture) {
+    return (
+      <FixtureIssuePage
+        data={data}
+        onSelectSource={onSelectSource}
+        search={search}
+        slug={slug}
+      />
+    )
+  }
+  return (
+    <PublishedIssuePage
+      onSelectSource={onSelectSource}
+      search={search}
+      slug={slug}
+    />
+  )
+}
+
+function FixtureIssuePage({
+  data,
+  onSelectSource,
+  search,
+  slug,
+}: {
+  data: IssuePageData
+  onSelectSource: (id: string | null) => void
+  search: EvidenceSearch
+  slug: string
+}) {
+  const fixture = data.fixture
+  const liveUpdate = data.liveUpdate
   const live = Boolean(liveUpdate) && supportsLiveUpdate(slug)
   const [updated, setUpdated] = useState(false)
 
@@ -64,11 +96,8 @@ export function IssuePage({
     return () => window.clearTimeout(timer)
   }, [live])
 
-  if (!fixture) return <IssueNotFound slug={slug} />
-
   const current =
     updated && liveUpdate ? applyLiveUpdate(fixture, liveUpdate) : fixture
-
   return (
     <IssueDetail
       fixture={current}
@@ -76,6 +105,55 @@ export function IssuePage({
       search={search}
       updated={updated}
     />
+  )
+}
+
+function PublishedIssuePage({
+  onSelectSource,
+  search,
+  slug,
+}: {
+  onSelectSource: (id: string | null) => void
+  search: EvidenceSearch
+  slug: string
+}) {
+  const published = usePublishedIssue(slug)
+  const publishedFixture = published ? toIssueFixture(published) : null
+  const [updated, setUpdated] = useState(false)
+  const previousRevision = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!published) return
+    if (
+      previousRevision.current !== null &&
+      previousRevision.current !== published.revision
+    ) {
+      setUpdated(true)
+    }
+    previousRevision.current = published.revision
+  }, [published])
+
+  if (published === undefined) return <EvidenceLoading />
+  if (!publishedFixture) return <IssueNotFound slug={slug} />
+
+  return (
+    <IssueDetail
+      fixture={publishedFixture}
+      onSelectSource={onSelectSource}
+      search={{ ...search, fixture: undefined }}
+      updated={updated}
+    />
+  )
+}
+
+function EvidenceLoading() {
+  return (
+    <main className="ev-page" id="resident-main">
+      <div className="ev-loading" role="status">
+        <Spinner aria-hidden="true" />
+        <span>Loading published evidence</span>
+      </div>
+    </main>
   )
 }
 
@@ -230,10 +308,10 @@ function IssueDetail({
             {sections.publicActions ? (
               <Section id="public-actions" title="What the public can still do">
                 <ul className="ev-actions">
-                  {issue.publicActions.map((action) => (
+                  {issue.publicActions.map((action, index) => (
                     <Claim
                       citationId={action.citationId}
-                      key={action.label}
+                      key={`${action.label}-${index}`}
                       tag="li"
                     >
                       <p className="ev-action-label">{action.label}</p>
@@ -243,6 +321,11 @@ function IssueDetail({
                           <time dateTime={action.deadline}>
                             {formatDate(action.deadline)}
                           </time>
+                          {action.deadlineCitationId ? (
+                            <SourceControl
+                              citationId={action.deadlineCitationId}
+                            />
+                          ) : null}
                         </p>
                       ) : null}
                       <p className="ev-action-text">{action.instructions}</p>

@@ -55,6 +55,7 @@ export type ConsequenceFactor = {
 export type PublicActionData = {
   citationId: string
   deadline?: string
+  deadlineCitationId?: string
   instructions: string
   label: string
 }
@@ -159,6 +160,7 @@ export type DecisionDetailData = {
   issue?: { slug: string; title: string }
   latest?: MarkedDate
   limitedNote?: string
+  meeting?: { id: string; title: string }
   mode: 'full' | 'limited'
   officialTitle: string
   officialTitleCitationId?: string
@@ -215,6 +217,7 @@ export type MeetingDetailData = {
   placeSlug: AreaSlug
   routine: MeetingDecisionRow[]
   status: string
+  timeKnown?: boolean
   title: string
   versions: PublishedVersion[]
 }

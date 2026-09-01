@@ -20,6 +20,10 @@ vi.mock('@tanstack/react-router', () => ({
   }) => select({ location: { search: { fixture: 'preview' } } }),
 }))
 
+vi.mock('convex/react', () => ({
+  useQuery: () => null,
+}))
+
 const { DecisionPage } = await import('./decision-page')
 const { IssuePage } = await import('./issue-page')
 const { MeetingPage } = await import('./meeting-page')

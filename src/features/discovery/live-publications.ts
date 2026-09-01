@@ -37,12 +37,12 @@ export function toDecisionCard(
       status:
         decision.mode === 'full' ? 'Evidence available' : 'Limited information',
     },
-    href: decision.source.officialUrl,
+    href: `/decisions/${encodeURIComponent(decision.recordKey)}`,
     latestOutcome: outcomeDate(decision),
     nextDate: nextDate(decision),
     place: decision.placeName,
     placeSlug,
-    primaryActionLabel: 'View source',
+    primaryActionLabel: 'View decision',
     showSecondaryActions: false,
     slug: decision.recordKey,
     state: toLifecycleState(decision.lifecycleState),
@@ -56,7 +56,7 @@ export function toDecisionRow(decision: PublishedDecision): ResultRowData {
   return {
     body: decision.bodyName,
     date: decision.meetingAt ?? undefined,
-    href: decision.source.officialUrl,
+    href: `/decisions/${encodeURIComponent(decision.recordKey)}`,
     id: decision.sourceRecordId,
     kind: 'Decision record',
     place: decision.placeName,

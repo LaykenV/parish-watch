@@ -14,6 +14,7 @@ import {
 import type { IndependentReviewV1 } from '../review/contractV1'
 import { reviewContextValidator } from '../review/prepare'
 import { sha256HexOfText } from '../sources/hashing'
+import { residentMeetingKey } from '../resident/meetingKey'
 import { CORE_PUBLICATION_FIELD_PATHS } from './evidenceRulesV1'
 import { applyPublicationPolicyV1 } from './policyV1'
 
@@ -286,6 +287,17 @@ export const finalizePublication = internalMutation({
         createdAt: now,
       })
     }
+    const body = await ctx.db.get(record.governmentBodyId)
+    if (!body) {
+      throw new ConvexError({
+        code: 'publication_body_missing',
+        message: 'Published record must belong to an existing government body',
+      })
+    }
+    const currentMeetingKey =
+      payload?.kind === 'full' && payload.meetingAt
+        ? residentMeetingKey(body.slug, payload.meetingAt)
+        : undefined
     await ctx.db.patch(
       record._id,
       policy.mode === 'withheld'
@@ -293,6 +305,7 @@ export const finalizePublication = internalMutation({
         : {
             currentPublishedVersionId: publicationVersionId,
             currentMode: policy.mode,
+            currentMeetingKey,
             updatedAt: now,
           },
     )

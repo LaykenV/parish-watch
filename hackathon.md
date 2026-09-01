@@ -12,9 +12,19 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T01:29:11Z
+- **Last updated:** 2026-09-01T02:19:33Z
 
 ## Log
+
+### 2026-09-01 - working tree
+
+Connected accepted decision publications and exact citations to the finished
+resident decision and meeting routes. Discovery now opens the Public Parish
+record before the original source. A bounded development backfill grouped three
+meeting-bearing records, and the Aug. 25 Rapides view resolved two current full
+decisions from one accepted meeting time. The issue query stays closed when an
+issue points at superseded decision versions. A fresh accepted issue build is
+still required before a production issue page can open.
 
 ### 2026-09-01 - 070958e
 
@@ -88,8 +98,7 @@ Rouge. Fifteen are full and 11 are limited. The Rapides negative control
 returned `not_found`, and replay reused all 27 successful extraction run IDs
 without new model calls. Three targets stayed out after repeat exact-citation
 validation failures. At promotion time, the resident query also exposed one
-older duplicate Lafayette board-vacancy card, which raised the public count to
-27. The September 1 production-data correction above removed that stale
+older duplicate Lafayette board-vacancy card, which raised the public count to 27. The September 1 production-data correction above removed that stale
 projection while preserving its record and evidence
 (`docs/production-batches/launch-data-2026-08-31.v1.json`,
 `convex/operations/seed.ts`).

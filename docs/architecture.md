@@ -62,10 +62,12 @@ fixed importance score, and writes a full, limited, or withheld immutable issue
 version. A withheld version remains in history and cannot replace the current
 full or limited pointer.
 
-The extraction, publication, and issue ledgers remain internal. The public
-decision query exposes only current accepted fields and source metadata. The
-resident issue and chat interfaces are deployed, but production has no real
-issue-detail or anonymous-chat adapter yet. PR #13 merged as
+The extraction, publication, and issue ledgers remain internal. Resident-safe
+queries expose only current accepted fields, exact public citations, bounded
+history, and meeting groups derived from accepted meeting times. Issue reads
+verify that every link still points at the linked decision's current accepted
+publication before returning. The resident chat interface remains unavailable.
+PR #13 merged as
 `c162543`; production workflow `33273984552` deployed the Slice 4
 backend and frontend, applied the registry seed, and passed smoke. The
 independent production smoke then passed the direct Convex host, canonical
@@ -119,9 +121,10 @@ typed contract, current gate, fixture owner, and future API owner for every
 resident destination. Production workflow `33454522729` and the independent
 production smoke passed.
 
-The frontend contract is complete. Production still needs the public issue,
-decision-detail, meeting, anonymous Ask, Auth, follow, AgentMail, coverage,
-request, and private-report adapters named in the post-Slice-5 plan.
+The frontend contract is complete. Decision and meeting evidence adapters are
+implemented. Production still needs a fresh accepted issue build and realtime
+proof, then anonymous Ask, Auth, follow, AgentMail, coverage, request, and
+private-report adapters named in the post-Slice-5 plan.
 
 ## System Boundaries
 

@@ -30,9 +30,9 @@ describe('live publication discovery adapter', () => {
     expect(toDecisionCard(fullDecision)).toMatchObject({
       body: 'Lafayette City Council',
       evidence: { status: 'Evidence available' },
-      href: 'https://apps.lafayettela.gov/record.pdf',
+      href: '/decisions/record-key',
       place: 'Lafayette Parish',
-      primaryActionLabel: 'View source',
+      primaryActionLabel: 'View decision',
       showSecondaryActions: false,
       state: 'Postponed',
       topics: [],
@@ -58,7 +58,7 @@ describe('live publication discovery adapter', () => {
 
   it('labels Explore results as decision records with source status', () => {
     expect(toDecisionRow(fullDecision)).toMatchObject({
-      href: 'https://apps.lafayettela.gov/record.pdf',
+      href: '/decisions/record-key',
       id: 'CO-062-2026',
       kind: 'Decision record',
       sourceStatus: 'Evidence available',

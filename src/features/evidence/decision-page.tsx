@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
+import { Spinner } from '../../components/ui/spinner'
 import { formatDate } from '../discovery/format'
 import { Notice } from '../discovery/notice'
 import { evidenceRouteHref } from '../resident-handoff/navigation'
@@ -22,6 +23,7 @@ import {
 } from './evidence-surface'
 import { resolveCitationId } from './contracts'
 import type { DecisionDetailFixture, EvidenceSearch } from './contracts'
+import { toDecisionFixture, usePublishedDecision } from './live-evidence'
 
 export function DecisionPage({
   fixture,
@@ -34,8 +36,64 @@ export function DecisionPage({
   recordKey: string
   search: EvidenceSearch
 }) {
-  if (!fixture) return <DecisionNotFound recordKey={recordKey} />
+  if (fixture) {
+    return (
+      <DecisionView
+        fixture={fixture}
+        onSelectSource={onSelectSource}
+        search={search}
+      />
+    )
+  }
+  return (
+    <PublishedDecisionPage
+      onSelectSource={onSelectSource}
+      recordKey={recordKey}
+      search={search}
+    />
+  )
+}
 
+function PublishedDecisionPage({
+  onSelectSource,
+  recordKey,
+  search,
+}: {
+  onSelectSource: (id: string | null) => void
+  recordKey: string
+  search: EvidenceSearch
+}) {
+  const published = usePublishedDecision(recordKey)
+  const currentFixture = published ? toDecisionFixture(published) : null
+  if (published === undefined) {
+    return (
+      <main className="ev-page" id="resident-main">
+        <div className="ev-loading" role="status">
+          <Spinner aria-hidden="true" />
+          <span>Loading published evidence</span>
+        </div>
+      </main>
+    )
+  }
+  if (!currentFixture) return <DecisionNotFound recordKey={recordKey} />
+  return (
+    <DecisionView
+      fixture={currentFixture}
+      onSelectSource={onSelectSource}
+      search={{ ...search, fixture: undefined }}
+    />
+  )
+}
+
+function DecisionView({
+  fixture,
+  onSelectSource,
+  search,
+}: {
+  fixture: DecisionDetailFixture
+  onSelectSource: (id: string | null) => void
+  search: EvidenceSearch
+}) {
   const { citations, decision } = fixture
   const selected = resolveCitationId(citations, search.source)
   const currentDecisionHref = evidenceRouteHref(
@@ -68,6 +126,22 @@ export function DecisionPage({
               to="/issues/$issueSlug"
             >
               {decision.issue.title}
+            </Link>
+          </p>
+        ) : null}
+
+        {decision.meeting ? (
+          <p className="ev-parent">
+            <span className="ev-parent-label">Discussed at</span>
+            <Link
+              params={{ meetingId: decision.meeting.id }}
+              search={{
+                fixture: search.fixture,
+                returnTo: currentDecisionHref,
+              }}
+              to="/meetings/$meetingId"
+            >
+              {decision.meeting.title}
             </Link>
           </p>
         ) : null}
