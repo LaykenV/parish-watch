@@ -88,6 +88,51 @@ test('shows the first question immediately and completes two cited turns', async
   )
 })
 
+test('hides validated evidence IDs repeated in answer prose', async () => {
+  const mutation = vi
+    .fn()
+    .mockResolvedValueOnce({ expiresAt: 2_000_000_000_000 })
+    .mockResolvedValueOnce({
+      threadId: 'agent-thread-citation-markers',
+      expiresAt: 2_000_000_000_000,
+      scope: { kind: 'corpus' },
+    })
+    .mockResolvedValueOnce({
+      messageId: 'question-citation-markers',
+      replayed: false,
+    })
+  const adapter = new LiveAskAdapter(
+    {
+      mutation,
+      action: vi.fn().mockResolvedValue(
+        answerResult({
+          answer:
+            'Decision [CO-066-2026] approved the drainage agreement. [citation-1] [citation-2]',
+          citations: [citation(), citation('citation-2')],
+        }),
+      ),
+      query: vi.fn(),
+    } as unknown as ConvexReactClient,
+    memoryStorage(),
+  )
+  const updates: AskUpdate[] = []
+  adapter.subscribe((update) => updates.push(update))
+
+  await adapter.submit({
+    scope: corpusScope(),
+    question: 'What drainage decision was approved?',
+    idempotencyKey: 'question-key-citation-markers-1',
+  })
+
+  expect(latestConversation(updates)?.turns[0]?.answer).toMatchObject({
+    kind: 'supported',
+    lead: {
+      text: 'Decision [CO-066-2026] approved the drainage agreement.',
+      citationIds: ['citation-1', 'citation-2'],
+    },
+  })
+})
+
 test('rejects an online failure before acceptance and removes the optimistic turn', async () => {
   const mutation = vi
     .fn()
@@ -284,9 +329,9 @@ function answerResult(
   }
 }
 
-function citation() {
+function citation(evidenceId = 'citation-1') {
   return {
-    evidenceId: 'citation-1',
+    evidenceId,
     recordKey: 'CO-100-2026',
     fieldPath: '/plainLanguageSummary',
     documentTitle: 'Drainage agreement',
@@ -297,7 +342,7 @@ function citation() {
     page: 4,
     section: null,
     retrievedAt: 1_900_000_000_000,
-    sourceHref: '/decisions/CO-100-2026?source=citation-1',
+    sourceHref: `/decisions/CO-100-2026?source=${evidenceId}`,
   }
 }
 
