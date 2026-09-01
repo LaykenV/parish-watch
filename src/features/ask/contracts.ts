@@ -189,7 +189,8 @@ export class AskRequestError extends Error {
     readonly failure:
       | { kind: 'cooldown'; retryAt: string }
       | { kind: 'captcha'; challengeId: string }
-      | { kind: 'offline' },
+      | { kind: 'offline' }
+      | { kind: 'not_sent' },
   ) {
     super(`Ask request not accepted: ${failure.kind}`)
     this.name = 'AskRequestError'

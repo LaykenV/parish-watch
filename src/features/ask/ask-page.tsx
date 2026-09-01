@@ -394,6 +394,10 @@ export function AskPage({
       // A refusal carries the state that caused it. Apply it here instead of
       // waiting for the adapter to push, so the page can never leave an
       // enabled composer whose Send silently does nothing. Keep the draft.
+      if (error.failure.kind === 'not_sent') {
+        setStatus('Question was not sent. Try again.')
+        return
+      }
       handleAvailability(error.failure)
       return
     } finally {
@@ -421,6 +425,10 @@ export function AskPage({
         await adapter.retry({ conversationId: conversation.id, turnId })
       } catch (error) {
         if (!(error instanceof AskRequestError)) throw error
+        if (error.failure.kind === 'not_sent') {
+          setStatus('Question was not sent. Try again.')
+          return
+        }
         handleAvailability(error.failure)
         return
       }

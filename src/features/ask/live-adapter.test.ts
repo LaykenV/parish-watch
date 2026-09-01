@@ -88,6 +88,34 @@ test('shows the first question immediately and completes two cited turns', async
   )
 })
 
+test('rejects an online failure before acceptance and removes the optimistic turn', async () => {
+  const mutation = vi
+    .fn()
+    .mockResolvedValueOnce({ expiresAt: 2_000_000_000_000 })
+    .mockRejectedValueOnce(new Error('Convex request failed'))
+  const adapter = new LiveAskAdapter(
+    {
+      mutation,
+      action: vi.fn(),
+      query: vi.fn(),
+    } as unknown as ConvexReactClient,
+    memoryStorage(),
+  )
+  const updates: AskUpdate[] = []
+  adapter.subscribe((update) => updates.push(update))
+
+  const submission = adapter.submit({
+    scope: corpusScope('lafayette-parish'),
+    question: 'What changed about drainage?',
+    idempotencyKey: 'question-key-not-sent-0001',
+  })
+  await expect(submission).rejects.toMatchObject({
+    name: 'AskRequestError',
+    failure: { kind: 'not_sent' },
+  })
+  expect(latestConversation(updates)).toBeNull()
+})
+
 test('rebuilds a refreshed conversation from Agent history and exact citations', async () => {
   const storage = memoryStorage()
   const mutation = vi

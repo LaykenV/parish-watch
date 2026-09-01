@@ -189,9 +189,11 @@ export class LiveAskAdapter implements AskAdapter {
       await this.pushRecent()
     } catch (error) {
       this.handleRequestFailure(questionMessageId, error)
-      if (!accepted && isOfflineError(error)) {
+      if (!accepted) {
         this.removeTurn(questionMessageId)
-        throw new AskRequestError({ kind: 'offline' })
+        throw new AskRequestError(
+          isOfflineError(error) ? { kind: 'offline' } : { kind: 'not_sent' },
+        )
       }
     }
   }
