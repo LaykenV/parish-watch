@@ -172,9 +172,11 @@ question retrieves only its accepted citations.
 
 ### PR 6B: answer Ask with validated published evidence
 
-Status on September 1: implementation is in a stacked working tree. Runtime
-proof is pending because the personal Convex development deployment returned
-`408 Request Timeout` from `start_push` during this work session.
+Status on September 1: PR #47 is open. Its exact stacked implementation reached
+the personal development deployment. A real `MODEL_FAST` call returned a
+strict answer with current Lafayette citations. A second turn used the prior
+question to retrieve the same current records, and an unsupported question
+returned not found without citations. Final replacement checks remain pending.
 
 Suggested title: `feat: answer ask with validated published evidence`
 
@@ -220,6 +222,14 @@ Proof: one labeled question returns a cited answer, one unsupported question
 returns not found, and an invented citation fails closed.
 
 ### PR 6C: ship the bounded anonymous Ask experience
+
+Status on September 1: PR #49 is open and stacked on PR #47. The exact head
+reached the personal development deployment. A real two-turn conversation and
+an unsupported question passed. Browser QA at 375 pixels proved refresh
+restoration, private local storage, exact Source controls, focus return,
+not-found, offline behavior, live answer announcements, and no horizontal
+overflow. The desktop evidence rail also passed. Final replacement checks
+remain pending.
 
 Suggested title: `feat: ship bounded anonymous ask`
 

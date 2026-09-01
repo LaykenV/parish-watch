@@ -28,7 +28,10 @@ const contactCitation: CitationData = {
 
 describe('Ask page ship boundaries', () => {
   it('compile-time gates the fixture import from production', () => {
-    expect(page).toContain('if (!import.meta.env.DEV || !data.scenario) return')
+    expect(page).toContain('if (!import.meta.env.DEV || !data.scenario) {')
+    expect(page).toContain(
+      'setAdapter(createLiveAskAdapter(convex, window.localStorage))',
+    )
     expect(page.indexOf('!import.meta.env.DEV')).toBeLessThan(
       page.indexOf("import('./fixtures')"),
     )
@@ -40,6 +43,23 @@ describe('Ask page ship boundaries', () => {
     )
     expect(page).toContain('if (!adapter || !canSubmit || submitLock.current)')
     expect(page).toContain('checking || submitting')
+  })
+
+  it('announces checking before an answer can replace that status', () => {
+    const submit = page.slice(
+      page.indexOf('const handleSubmit'),
+      page.indexOf('const handleRetry'),
+    )
+    const retry = page.slice(
+      page.indexOf('const handleRetry'),
+      page.indexOf('const handleDismiss'),
+    )
+    expect(
+      submit.indexOf("setStatus('Checking the official record')"),
+    ).toBeLessThan(submit.indexOf('await adapter.submit'))
+    expect(
+      retry.indexOf("setStatus('Checking the official record')"),
+    ).toBeLessThan(retry.indexOf('await adapter.retry'))
   })
 
   it('uses one compact active-thread control instead of covering the answer', () => {

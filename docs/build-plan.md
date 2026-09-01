@@ -351,11 +351,15 @@ Dates: September 3 through September 9
 - CAPTCHA or cooldown fallback.
 
 PR 6A now provides the private 24-hour Agent threads and bounded published
-evidence retrieval. The stacked PR 6B working tree adds strict structured
-answers through Convex AI Gateway, validates every evidence ID before saving an
-assistant message, and records private usage and safe failure metadata. The
-resident Ask route stays unavailable until PR 6C adds atomic request and token
-limits and connects this backend to the approved interface.
+evidence retrieval. PR 6B adds strict structured answers through Convex AI
+Gateway, validates every evidence ID before saving an assistant message, and
+records private usage and safe failure metadata. The stacked PR 6C working tree
+connects the approved resident interface and reserves request and token
+capacity before any model call. Its exact stacked head reached the personal
+development deployment. A real two-turn gateway conversation, an unsupported
+question, history restoration, phone-width Source handling, and offline
+behavior passed. Production Ask stays unavailable until the three Slice 6 PRs
+merge.
 
 ### Account Loop
 

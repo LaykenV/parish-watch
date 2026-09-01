@@ -126,8 +126,13 @@ production smoke passed.
 The frontend contract is complete. Decision, meeting, issue, and realtime
 evidence gates are proved. PR 6A adds 24-hour anonymous sessions, private Agent
 threads, component-owned message history, and accepted-evidence retrieval.
-Model answers remain excluded until PR 6B. Auth, follow, AgentMail, coverage,
-request, and private-report adapters remain in the post-Slice-5 plan.
+PR 6B adds strict `MODEL_FAST` answers, deterministic citation validation, and
+exact current-evidence replay. PR 6C connects the resident interface and adds
+atomic request and token limits. Its development deployment passed a real
+two-turn conversation, not-found, refresh, offline, Source panel, and
+phone-width checks. Production Ask remains unavailable while the three PRs are
+open. Auth, follow, AgentMail, coverage, request, and private-report adapters
+remain in the post-Slice-5 plan.
 
 ## System Boundaries
 
@@ -722,10 +727,30 @@ Indexes: session plus activity; session plus thread; thread.
 #### `askAnswerReceipts` and `askModelAttempts`
 
 Answer receipts claim one saved user message at a time and record running,
-succeeded, or failed state without copying its content. Model attempts belong
-to a receipt and store the private route, model role, model ID, prompt and
-schema versions, token use, latency, estimated cost, and bounded safe failure
-metadata. They do not store resident questions or answers.
+succeeded, or failed state without copying its content. Each running receipt
+holds one 15,000-token reservation in both the immediate and daily windows.
+Model attempts belong to a receipt and store the private route, model role,
+model ID, prompt and schema versions, token use, latency, estimated cost, and
+bounded safe failure metadata. They do not store resident questions or
+answers.
+
+#### `askTokenWindows`
+
+Fields: anonymous session, short or daily window, window start, reserved
+tokens, consumed tokens, and updated time. Index: session, kind, and window
+start. One mutation reserves both windows before a model call. A completed
+attempt replaces the reservation with known provider usage. A failed attempt
+does the same when usage is known. Unknown failed work and abandoned work
+consume the full reservation so a late or unreported provider call cannot
+reopen that capacity. A no-evidence path that skips the model releases its
+reservation. The short window allows 30,000 tokens per minute. The daily window
+allows 150,000 tokens per session. The rate-limiter component separately caps
+three answer attempts per minute and 20 per day. It also reserves the full
+15,000-token allowance against app-wide ceilings of 150,000 tokens per minute
+and 1,500,000 tokens per day. Rotating an anonymous session cannot bypass those
+ceilings. This app-wide allowance is conservative. An accepted answer claim
+keeps its full app-wide reservation even when a no-evidence result later
+releases the per-session reservation.
 
 #### Agent component threads and messages
 
@@ -1052,12 +1077,19 @@ affect ranking.
 - Expire or detach anonymous conversation access after the window.
 - Never use a fingerprint as identity.
 
-### Abuse Control
+### Abuse control
 
-- rate-limit by opaque session and coarse network abuse signals;
-- set per-minute and daily token budgets;
+- rate-limit answer attempts by opaque session;
+- reserve 15,000 tokens against 30,000-per-minute and 150,000-per-day budgets;
+- reserve the same allowance against app-wide 150,000-per-minute and
+  1,500,000-per-day ceilings;
+- keep the app-wide reservation conservative after a claim, including
+  no-evidence results, so model spend always stays below the ceiling;
+- reconcile known use, charge the reservation for unknown or abandoned work,
+  and release only work that skipped the model;
 - keep normal limits invisible;
-- introduce cooldown or CAPTCHA only after a threshold;
+- return a cooldown at the request or token threshold;
+- keep the CAPTCHA adapter inactive until observed abuse justifies it;
 - block prompt attempts to escape the validated corpus;
 - log safe error and cost metadata, not private content in public operations.
 

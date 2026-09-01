@@ -1,14 +1,19 @@
 import { saveMessage } from '@convex-dev/agent'
 import { ConvexError, v } from 'convex/values'
 
-import { components } from '../_generated/api'
+import { components, internal } from '../_generated/api'
 import type { Id } from '../_generated/dataModel'
 import { internalMutation } from '../_generated/server'
 import { aiRoutes, estimateCostUsd } from '../ai/types'
 import { sha256HexOfText } from '../sources/hashing'
 import { askModelAnswer } from './contracts'
+import {
+  ASK_RUN_LEASE_MS,
+  ASK_TOKEN_RESERVATION,
+  reserveAskCapacity,
+  settleAskCapacity,
+} from './limits'
 
-const RUN_LEASE_MS = 2 * 60 * 1000
 const MAX_ANSWER_ATTEMPTS = 2
 
 export const claimAnswer = internalMutation({
@@ -28,7 +33,7 @@ export const claimAnswer = internalMutation({
       receiptId: v.id('askAnswerReceipts'),
       answerMessageId: v.string(),
     }),
-    v.object({ kind: v.literal('in_progress') }),
+    v.object({ kind: v.literal('in_progress'), retryAt: v.number() }),
     v.object({ kind: v.literal('failed') }),
   ),
   handler: async (ctx, args) => {
@@ -84,13 +89,54 @@ export const claimAnswer = internalMutation({
     }
     if (
       existing?.state === 'running' &&
-      existing.startedAt + RUN_LEASE_MS > now
+      existing.startedAt + ASK_RUN_LEASE_MS > now
     ) {
-      return { kind: 'in_progress' as const }
+      return {
+        kind: 'in_progress' as const,
+        retryAt: existing.startedAt + ASK_RUN_LEASE_MS,
+      }
     }
     if (existing && existing.attempt >= MAX_ANSWER_ATTEMPTS) {
       return { kind: 'failed' as const }
     }
+
+    const running = await ctx.db
+      .query('askAnswerReceipts')
+      .withIndex('by_session_and_state', (q) =>
+        q.eq('sessionId', session._id).eq('state', 'running'),
+      )
+      .take(3)
+    for (const receipt of running) {
+      if (receipt._id === existing?._id) continue
+      if (receipt.startedAt + ASK_RUN_LEASE_MS > now) {
+        throw new ConvexError({
+          code: 'answer_concurrent',
+          message: 'Another answer is already running for this device',
+          retryAt: receipt.startedAt + ASK_RUN_LEASE_MS,
+        })
+      }
+      await settleAskCapacity(
+        ctx,
+        receipt,
+        receipt.reservedTokens ?? ASK_TOKEN_RESERVATION,
+        'reconciled',
+      )
+      await ctx.db.patch(receipt._id, {
+        state: 'failed',
+        completedAt: now,
+        errorClass: 'answer_abandoned',
+      })
+    }
+
+    if (existing?.reservationState === 'held') {
+      await settleAskCapacity(
+        ctx,
+        existing,
+        existing.reservedTokens ?? ASK_TOKEN_RESERVATION,
+        'reconciled',
+      )
+    }
+    const reservation = await reserveAskCapacity(ctx, session._id, now)
     if (existing) {
       const attempt = existing.attempt + 1
       await ctx.db.patch(existing._id, {
@@ -99,7 +145,11 @@ export const claimAnswer = internalMutation({
         startedAt: now,
         completedAt: undefined,
         errorClass: undefined,
+        reservationState: 'held',
+        reservedTokens: ASK_TOKEN_RESERVATION,
+        ...reservation,
       })
+      await scheduleAbandonedRelease(ctx, existing._id, now)
       return { kind: 'ready' as const, receiptId: existing._id, attempt }
     }
 
@@ -110,7 +160,11 @@ export const claimAnswer = internalMutation({
       state: 'running',
       attempt: 1,
       startedAt: now,
+      reservationState: 'held',
+      reservedTokens: ASK_TOKEN_RESERVATION,
+      ...reservation,
     })
+    await scheduleAbandonedRelease(ctx, receiptId, now)
     return { kind: 'ready' as const, receiptId, attempt: 1 }
   },
 })
@@ -118,6 +172,7 @@ export const claimAnswer = internalMutation({
 export const recordModelAttempt = internalMutation({
   args: {
     receiptId: v.id('askAnswerReceipts'),
+    answerAttempt: v.number(),
     route: aiRoutes,
     modelId: v.string(),
     promptVersion: v.string(),
@@ -137,7 +192,11 @@ export const recordModelAttempt = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const receipt = await ctx.db.get(args.receiptId)
-    if (!receipt || receipt.state !== 'running') {
+    if (
+      !receipt ||
+      receipt.state !== 'running' ||
+      receipt.attempt !== args.answerAttempt
+    ) {
       throw askError('answer_state_mismatch', 'Answer attempt is not running')
     }
     const usage = {
@@ -156,6 +215,7 @@ export const recordModelAttempt = internalMutation({
       modelId: args.modelId,
       promptVersion: args.promptVersion,
       schemaVersion: args.schemaVersion,
+      answerAttempt: args.answerAttempt,
       attempt: args.attempt,
       status: args.status,
       latencyMs: args.latencyMs,
@@ -177,6 +237,7 @@ export const recordModelAttempt = internalMutation({
 export const persistAnswer = internalMutation({
   args: {
     receiptId: v.id('askAnswerReceipts'),
+    answerAttempt: v.number(),
     answer: askModelAnswer,
     modelId: v.optional(v.string()),
     provider: v.optional(v.string()),
@@ -184,7 +245,11 @@ export const persistAnswer = internalMutation({
   returns: v.string(),
   handler: async (ctx, args) => {
     const receipt = await ctx.db.get(args.receiptId)
-    if (!receipt || receipt.state !== 'running') {
+    if (
+      !receipt ||
+      receipt.state !== 'running' ||
+      receipt.attempt !== args.answerAttempt
+    ) {
       throw askError('answer_state_mismatch', 'Answer attempt is not running')
     }
     const saved = await saveMessage(ctx, components.agent, {
@@ -200,6 +265,14 @@ export const persistAnswer = internalMutation({
         ...(args.provider ? { provider: args.provider } : {}),
       },
     })
+    const usage = await currentAttemptUsage(ctx, receipt)
+    const consumedTokens = accountedUsage(receipt, usage)
+    await settleAskCapacity(
+      ctx,
+      receipt,
+      consumedTokens,
+      usage.attempted ? 'reconciled' : 'released',
+    )
     await ctx.db.patch(receipt._id, {
       state: 'succeeded',
       answerMessageId: saved.messageId,
@@ -213,12 +286,24 @@ export const persistAnswer = internalMutation({
 export const failAnswer = internalMutation({
   args: {
     receiptId: v.id('askAnswerReceipts'),
+    answerAttempt: v.number(),
     errorClass: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     const receipt = await ctx.db.get(args.receiptId)
-    if (receipt?.state === 'running') {
+    if (
+      receipt?.state === 'running' &&
+      receipt.attempt === args.answerAttempt
+    ) {
+      const usage = await currentAttemptUsage(ctx, receipt)
+      const consumedTokens = accountedUsage(receipt, usage)
+      await settleAskCapacity(
+        ctx,
+        receipt,
+        consumedTokens,
+        usage.attempted ? 'reconciled' : 'released',
+      )
       await ctx.db.patch(receipt._id, {
         state: 'failed',
         errorClass: args.errorClass.slice(0, 100),
@@ -228,6 +313,94 @@ export const failAnswer = internalMutation({
     return null
   },
 })
+
+export const releaseAbandonedAnswer = internalMutation({
+  args: {
+    receiptId: v.id('askAnswerReceipts'),
+    expectedStartedAt: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const receipt = await ctx.db.get(args.receiptId)
+    if (
+      !receipt ||
+      receipt.state !== 'running' ||
+      receipt.startedAt !== args.expectedStartedAt ||
+      receipt.startedAt + ASK_RUN_LEASE_MS > Date.now()
+    ) {
+      return null
+    }
+    const usage = await currentAttemptUsage(ctx, receipt)
+    await settleAskCapacity(
+      ctx,
+      receipt,
+      Math.max(
+        accountedUsage(receipt, usage),
+        receipt.reservedTokens ?? ASK_TOKEN_RESERVATION,
+      ),
+      'reconciled',
+    )
+    await ctx.db.patch(receipt._id, {
+      state: 'failed',
+      completedAt: Date.now(),
+      errorClass: 'answer_abandoned',
+    })
+    return null
+  },
+})
+
+async function scheduleAbandonedRelease(
+  ctx: Parameters<typeof reserveAskCapacity>[0],
+  receiptId: Id<'askAnswerReceipts'>,
+  expectedStartedAt: number,
+) {
+  await ctx.scheduler.runAfter(
+    ASK_RUN_LEASE_MS + 1_000,
+    internal.ask.ledger.releaseAbandonedAnswer,
+    { receiptId, expectedStartedAt },
+  )
+}
+
+async function currentAttemptUsage(
+  ctx: Parameters<typeof reserveAskCapacity>[0],
+  receipt: { _id: Id<'askAnswerReceipts'>; attempt: number },
+) {
+  const attempts = await ctx.db
+    .query('askModelAttempts')
+    .withIndex('by_answer_receipt_and_attempt', (q) =>
+      q.eq('answerReceiptId', receipt._id),
+    )
+    .take(10)
+  const current = attempts.filter(
+    (attempt) =>
+      attempt.answerAttempt === receipt.attempt ||
+      (attempt.answerAttempt === undefined && receipt.attempt === 1),
+  )
+  const known = current.flatMap((attempt) =>
+    attempt.totalTokens === undefined ? [] : [attempt.totalTokens],
+  )
+  return {
+    attempted: current.length > 0,
+    hasUnknownUsage: current.some(
+      (attempt) => attempt.totalTokens === undefined,
+    ),
+    tokens: known.reduce((total, value) => total + value, 0),
+  }
+}
+
+function accountedUsage(
+  receipt: { reservedTokens?: number },
+  usage: {
+    attempted: boolean
+    hasUnknownUsage: boolean
+    tokens: number
+  },
+) {
+  if (!usage.attempted) return 0
+  return usage.hasUnknownUsage
+    ? Math.max(usage.tokens, receipt.reservedTokens ?? ASK_TOKEN_RESERVATION)
+    : usage.tokens
+}
 
 function askError(code: string, message: string) {
   return new ConvexError({ code, message })

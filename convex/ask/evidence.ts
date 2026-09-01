@@ -3,7 +3,7 @@ import { ConvexError, v } from 'convex/values'
 import { api } from '../_generated/api'
 import type { QueryCtx } from '../_generated/server'
 import { query } from '../_generated/server'
-import type { AskEvidenceResult } from './contracts'
+import type { AskEvidence, AskEvidenceResult } from './contracts'
 import { askEvidenceResult, storedScope } from './contracts'
 import { authorizeThreadRead } from './threads'
 
@@ -77,10 +77,12 @@ export const retrieveEvidence = query({
           fieldPath: citation.fieldPath,
           documentTitle: citation.documentTitle,
           bodyName: citation.bodyName,
+          sourceKind: citation.sourceKind,
           officialUrl: citation.officialUrl,
           excerpt: citation.excerpt,
           page: citation.page,
           section: citation.section,
+          retrievedAt: citation.retrievedAt,
           sourceHref: `/decisions/${encodeURIComponent(decision.recordKey)}?source=${encodeURIComponent(citation.id)}`,
         })),
       )
@@ -193,10 +195,12 @@ async function loadAcceptedEvidenceById(
     fieldPath: citation.fieldPath,
     documentTitle: publication.payload.title,
     bodyName: body.name,
+    sourceKind: publication.payload.source.sourceKind,
     officialUrl: citation.officialUrl,
     excerpt: citation.excerpt,
     page: citation.page ?? null,
     section: citation.section ?? null,
+    retrievedAt: citation.retrievedAt,
     sourceHref: `/decisions/${encodeURIComponent(record.recordKey)}?source=${encodeURIComponent(citation._id)}`,
   }
 }
@@ -206,10 +210,12 @@ type EvidenceCitation = {
   fieldPath: string
   documentTitle: string
   bodyName: string
+  sourceKind: AskEvidence['sourceKind']
   officialUrl: string
   excerpt: string
   page: number | null
   section: string | null
+  retrievedAt: number
 }
 
 type ScopedDecision = {

@@ -113,15 +113,8 @@ export type AskScenario = (typeof ASK_SCENARIOS)[number]
 
 export type AskSearch = AskRouteSearch & { fixture?: AskScenario }
 
-/*
-  The anonymous chat adapter has not passed its integration gate, so only a
-  development fixture session can answer a question. The route uses this to
-  resolve the honest unavailable state, and the record pages use it to show
-  the same message instead of inviting a question the product would drop on
-  the way to /ask.
-*/
 export function askCanAnswer(): boolean {
-  return import.meta.env.DEV
+  return true
 }
 
 /*
@@ -133,18 +126,6 @@ export function getActiveAskFixture(
   fixture: AskScenario | undefined,
 ): AskScenario | undefined {
   return import.meta.env.DEV ? fixture : undefined
-}
-
-/*
-  A resident arriving from a record page carries no scenario parameter, so a
-  development visit resolves the empty scenario for its scope. Without this the
-  record blocks would offer a composer whose question the route then drops, and
-  the handoff those blocks exist to exercise could never be tested.
-*/
-export function defaultAskScenario(scopeKey: string): AskScenario {
-  if (scopeKey.startsWith('issue:')) return 'empty-issue'
-  if (scopeKey.startsWith('meeting:')) return 'empty-meeting'
-  return 'empty-corpus'
 }
 
 export type AskRecentConversation = {
@@ -184,6 +165,7 @@ export type AskUpdate =
   | { kind: 'conversation'; conversation: AskConversationView | null }
   | { kind: 'availability'; availability: AskAvailability }
   | { kind: 'recent'; recent: AskRecentConversation[] }
+  | { kind: 'expired' }
 
 export interface AskAdapter {
   resolveScope: (input: AskRouteSearch) => Promise<AskScope>
@@ -207,7 +189,8 @@ export class AskRequestError extends Error {
     readonly failure:
       | { kind: 'cooldown'; retryAt: string }
       | { kind: 'captcha'; challengeId: string }
-      | { kind: 'offline' },
+      | { kind: 'offline' }
+      | { kind: 'not_sent' },
   ) {
     super(`Ask request not accepted: ${failure.kind}`)
     this.name = 'AskRequestError'
@@ -244,14 +227,12 @@ export function parseAskSearch(search: Record<string, unknown>): AskSearch {
 
   if (scope === 'issue') {
     const issue = pickText(search.issue)
-    if (issue)
-      return { scope: 'issue', issue, returnTo, source, fixture }
+    if (issue) return { scope: 'issue', issue, returnTo, source, fixture }
   }
 
   if (scope === 'meeting') {
     const meeting = pickText(search.meeting)
-    if (meeting)
-      return { scope: 'meeting', meeting, returnTo, source, fixture }
+    if (meeting) return { scope: 'meeting', meeting, returnTo, source, fixture }
   }
 
   const area =

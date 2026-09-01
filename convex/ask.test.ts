@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import agentTest from '@convex-dev/agent/test'
+import rateLimiterTest from '@convex-dev/rate-limiter/test'
 import { convexTest } from 'convex-test'
 import type { TestConvexForDataModelAndIdentity } from 'convex-test'
 import { afterEach, expect, test } from 'vitest'
@@ -22,6 +23,7 @@ type TestCtx = Parameters<Parameters<TestConvex['run']>[0]>[0]
 function initTest(): TestConvex {
   const t = convexTest(schema, modules)
   agentTest.register(t)
+  rateLimiterTest.register(t)
   return t
 }
 
@@ -101,10 +103,32 @@ test('opaque sessions isolate Agent threads and detach expired access', async ()
     return session?._id
   })
   expect(sessionId).toBeDefined()
+  await t.run(async (ctx) => {
+    for (let index = 0; index < 30; index += 1) {
+      await ctx.db.insert('askTokenWindows', {
+        sessionId: sessionId as Id<'anonymousSessions'>,
+        kind: index === 29 ? 'daily' : 'short',
+        windowStart: index,
+        reservedTokens: 0,
+        consumedTokens: 1,
+        updatedAt: index,
+      })
+    }
+  })
   await t.mutation(internal.ask.sessions.expireSession, {
     sessionId: sessionId as Id<'anonymousSessions'>,
     expectedExpiresAt: aliceSession.expiresAt,
   })
+  await expect(
+    t.run(async (ctx) =>
+      ctx.db
+        .query('askTokenWindows')
+        .withIndex('by_session_kind_and_window', (q) =>
+          q.eq('sessionId', sessionId as Id<'anonymousSessions'>),
+        )
+        .collect(),
+    ),
+  ).resolves.toHaveLength(0)
   await expect(
     t.query(api.ask.threads.getHistory, {
       token: alice,
@@ -252,6 +276,7 @@ test('answers follow-ups with retrieved citations and replays the Agent message'
   const stored = await t.run(async (ctx) => ({
     attempts: await ctx.db.query('askModelAttempts').collect(),
     receipts: await ctx.db.query('askAnswerReceipts').collect(),
+    tokenWindows: await ctx.db.query('askTokenWindows').collect(),
   }))
   expect(stored.attempts).toHaveLength(2)
   expect(stored.attempts).toEqual(
@@ -273,6 +298,319 @@ test('answers follow-ups with retrieved citations and replays the Agent message'
       }),
     ]),
   )
+  expect(stored.tokenWindows).toHaveLength(2)
+  expect(stored.tokenWindows).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ reservedTokens: 0, consumedTokens: 30 }),
+      expect.objectContaining({ reservedTokens: 0, consumedTokens: 30 }),
+    ]),
+  )
+})
+
+test('holds one answer at a time and releases failed token reservations', async () => {
+  const t = initTest()
+  await seedEvidence(t)
+  const token = 'bounded-answer-session-token-00000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+  const first = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'What changed about drainage?',
+    idempotencyKey: 'bounded-answer-question-0001',
+  })
+  const second = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'Which body approved it?',
+    idempotencyKey: 'bounded-answer-question-0002',
+  })
+  const claim = await t.mutation(internal.ask.ledger.claimAnswer, {
+    token,
+    threadId: thread.threadId,
+    questionMessageId: first.messageId,
+  })
+  expect(claim.kind).toBe('ready')
+  if (claim.kind !== 'ready') throw new Error('Expected a ready answer claim')
+
+  await expect(
+    t.mutation(internal.ask.ledger.claimAnswer, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: second.messageId,
+    }),
+  ).rejects.toThrow('Another answer is already running')
+
+  await t.mutation(internal.ask.ledger.failAnswer, {
+    receiptId: claim.receiptId,
+    answerAttempt: claim.attempt,
+    errorClass: 'provider_failed',
+  })
+  await expect(
+    t.mutation(internal.ask.ledger.claimAnswer, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: second.messageId,
+    }),
+  ).resolves.toMatchObject({ kind: 'ready' })
+  const windows = await t.run(async (ctx) =>
+    ctx.db.query('askTokenWindows').collect(),
+  )
+  expect(windows).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ reservedTokens: 15_000, consumedTokens: 0 }),
+      expect.objectContaining({ reservedTokens: 15_000, consumedTokens: 0 }),
+    ]),
+  )
+})
+
+test('charges the reservation when failed provider usage is unknown', async () => {
+  const t = initTest()
+  await seedEvidence(t)
+  const token = 'unknown-usage-session-token-000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+  const question = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'What changed about drainage?',
+    idempotencyKey: 'unknown-usage-question-0001',
+  })
+  const claim = await t.mutation(internal.ask.ledger.claimAnswer, {
+    token,
+    threadId: thread.threadId,
+    questionMessageId: question.messageId,
+  })
+  if (claim.kind !== 'ready') throw new Error('Expected a ready claim')
+  await t.mutation(internal.ask.ledger.recordModelAttempt, {
+    receiptId: claim.receiptId,
+    answerAttempt: claim.attempt,
+    route: 'ai_gateway',
+    modelId: 'openai/gpt-5.6-luna',
+    promptVersion: 'ask-answer-v1',
+    schemaVersion: 'ask-answer-v1',
+    attempt: 1,
+    status: 'failed',
+    latencyMs: 1,
+    errorClass: 'ai_gateway_unavailable',
+  })
+  await t.mutation(internal.ask.ledger.failAnswer, {
+    receiptId: claim.receiptId,
+    answerAttempt: claim.attempt,
+    errorClass: 'ai_gateway_unavailable',
+  })
+
+  const windows = await t.run(async (ctx) =>
+    ctx.db.query('askTokenWindows').collect(),
+  )
+  expect(windows).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ reservedTokens: 0, consumedTokens: 15_000 }),
+      expect.objectContaining({ reservedTokens: 0, consumedTokens: 15_000 }),
+    ]),
+  )
+})
+
+test('charges abandoned reservations and cools down repeated requests', async () => {
+  const t = initTest()
+  await seedEvidence(t)
+  const token = 'cooldown-answer-session-token-0000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+
+  const messageIds: string[] = []
+  for (let index = 0; index < 4; index += 1) {
+    const question = await t.mutation(api.ask.threads.appendQuestion, {
+      token,
+      threadId: thread.threadId,
+      question: `What changed about drainage, request ${index + 1}?`,
+      idempotencyKey: `cooldown-answer-question-000${index + 1}`,
+    })
+    messageIds.push(question.messageId)
+  }
+
+  const abandoned = await t.mutation(internal.ask.ledger.claimAnswer, {
+    token,
+    threadId: thread.threadId,
+    questionMessageId: messageIds[0],
+  })
+  if (abandoned.kind !== 'ready') throw new Error('Expected a ready claim')
+  await t.run(async (ctx) => {
+    await ctx.db.patch(abandoned.receiptId, { startedAt: 0 })
+  })
+  await t.mutation(internal.ask.ledger.releaseAbandonedAnswer, {
+    receiptId: abandoned.receiptId,
+    expectedStartedAt: 0,
+  })
+
+  for (const messageId of messageIds.slice(1, 3)) {
+    const claim = await t.mutation(internal.ask.ledger.claimAnswer, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: messageId,
+    })
+    if (claim.kind !== 'ready') throw new Error('Expected a ready claim')
+    await t.mutation(internal.ask.ledger.failAnswer, {
+      receiptId: claim.receiptId,
+      answerAttempt: claim.attempt,
+      errorClass: 'provider_failed',
+    })
+  }
+
+  await expect(
+    t.mutation(internal.ask.ledger.claimAnswer, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: messageIds[3],
+    }),
+  ).rejects.toThrow('Ask is taking a short pause')
+  const windows = await t.run(async (ctx) =>
+    ctx.db.query('askTokenWindows').collect(),
+  )
+  expect(windows.every((window) => window.reservedTokens === 0)).toBe(true)
+  expect(windows.every((window) => window.consumedTokens === 15_000)).toBe(true)
+})
+
+test('caps model reservations across rotated anonymous sessions', async () => {
+  const t = initTest()
+  await seedEvidence(t)
+
+  for (let index = 0; index < 10; index += 1) {
+    const token = `global-limit-session-${index.toString().padStart(2, '0')}-0000000000000000000000000000`
+    await t.mutation(api.ask.threads.createSession, { token })
+    const thread = await t.mutation(api.ask.threads.createThread, {
+      token,
+      scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+    })
+    const question = await t.mutation(api.ask.threads.appendQuestion, {
+      token,
+      threadId: thread.threadId,
+      question: `What changed about drainage, global request ${index + 1}?`,
+      idempotencyKey: `global-limit-question-${index.toString().padStart(2, '0')}`,
+    })
+    const claim = await t.mutation(internal.ask.ledger.claimAnswer, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: question.messageId,
+    })
+    if (claim.kind !== 'ready') throw new Error('Expected a ready claim')
+    await t.mutation(internal.ask.ledger.failAnswer, {
+      receiptId: claim.receiptId,
+      answerAttempt: claim.attempt,
+      errorClass: 'provider_failed',
+    })
+  }
+
+  const token = 'global-limit-session-blocked-000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+  const question = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'What changed about drainage after the global limit?',
+    idempotencyKey: 'global-limit-question-blocked',
+  })
+  await expect(
+    t.mutation(internal.ask.ledger.claimAnswer, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: question.messageId,
+    }),
+  ).rejects.toThrow('Ask is taking a short pause')
+})
+
+test('fences a stale answer after its lease is retried', async () => {
+  const t = initTest()
+  await seedEvidence(t)
+  const token = 'stale-answer-session-token-00000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+  const question = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'What changed about drainage?',
+    idempotencyKey: 'stale-answer-question-0001',
+  })
+  const first = await t.mutation(internal.ask.ledger.claimAnswer, {
+    token,
+    threadId: thread.threadId,
+    questionMessageId: question.messageId,
+  })
+  if (first.kind !== 'ready') throw new Error('Expected a ready claim')
+
+  await t.run(async (ctx) => {
+    await ctx.db.patch(first.receiptId, { startedAt: 0 })
+  })
+  await t.mutation(internal.ask.ledger.releaseAbandonedAnswer, {
+    receiptId: first.receiptId,
+    expectedStartedAt: 0,
+  })
+  const retry = await t.mutation(internal.ask.ledger.claimAnswer, {
+    token,
+    threadId: thread.threadId,
+    questionMessageId: question.messageId,
+  })
+  if (retry.kind !== 'ready') throw new Error('Expected a retry claim')
+
+  await expect(
+    t.mutation(internal.ask.ledger.persistAnswer, {
+      receiptId: first.receiptId,
+      answerAttempt: first.attempt,
+      answer: {
+        kind: 'not_found',
+        answer: 'No current evidence supports an answer.',
+        evidenceIds: [],
+        followUps: [],
+      },
+    }),
+  ).rejects.toThrow('Answer attempt is not running')
+  await expect(
+    t.mutation(internal.ask.ledger.recordModelAttempt, {
+      receiptId: first.receiptId,
+      answerAttempt: first.attempt,
+      route: 'ai_gateway',
+      modelId: 'openai/gpt-5.6-luna',
+      promptVersion: 'ask-answer-v1',
+      schemaVersion: 'ask-answer-v1',
+      attempt: 1,
+      status: 'success',
+      latencyMs: 1,
+    }),
+  ).rejects.toThrow('Answer attempt is not running')
+  await expect(
+    t.mutation(internal.ask.ledger.failAnswer, {
+      receiptId: first.receiptId,
+      answerAttempt: first.attempt,
+      errorClass: 'stale_failure',
+    }),
+  ).resolves.toBeNull()
+
+  const receipt = await t.run(async (ctx) => ctx.db.get(retry.receiptId))
+  expect(receipt).toMatchObject({
+    state: 'running',
+    attempt: retry.attempt,
+    reservationState: 'held',
+  })
+  await t.mutation(internal.ask.ledger.failAnswer, {
+    receiptId: retry.receiptId,
+    answerAttempt: retry.attempt,
+    errorClass: 'provider_failed',
+  })
 })
 
 test('rejects invented citations before an assistant message is saved', async () => {

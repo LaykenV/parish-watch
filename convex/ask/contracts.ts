@@ -1,5 +1,7 @@
 import { v } from 'convex/values'
 
+import { sourceKindUnion } from '../pipeline/state'
+
 export const askScope = v.union(
   v.object({
     kind: v.literal('corpus'),
@@ -17,10 +19,12 @@ export const askEvidence = v.object({
   fieldPath: v.string(),
   documentTitle: v.string(),
   bodyName: v.string(),
+  sourceKind: sourceKindUnion,
   officialUrl: v.string(),
   excerpt: v.string(),
   page: v.union(v.number(), v.null()),
   section: v.union(v.string(), v.null()),
+  retrievedAt: v.number(),
   sourceHref: v.string(),
 })
 

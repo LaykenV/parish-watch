@@ -843,6 +843,16 @@ export default defineSchema({
     attempt: v.number(),
     answerMessageId: v.optional(v.string()),
     errorClass: v.optional(v.string()),
+    reservationState: v.optional(
+      v.union(
+        v.literal('held'),
+        v.literal('reconciled'),
+        v.literal('released'),
+      ),
+    ),
+    reservedTokens: v.optional(v.number()),
+    shortWindowStart: v.optional(v.number()),
+    dailyWindowStart: v.optional(v.number()),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
   })
@@ -850,7 +860,17 @@ export default defineSchema({
       'sessionId',
       'questionMessageId',
     ])
-    .index('by_thread_id_and_started_at', ['threadId', 'startedAt']),
+    .index('by_thread_id_and_started_at', ['threadId', 'startedAt'])
+    .index('by_session_and_state', ['sessionId', 'state']),
+
+  askTokenWindows: defineTable({
+    sessionId: v.id('anonymousSessions'),
+    kind: v.union(v.literal('short'), v.literal('daily')),
+    windowStart: v.number(),
+    reservedTokens: v.number(),
+    consumedTokens: v.number(),
+    updatedAt: v.number(),
+  }).index('by_session_kind_and_window', ['sessionId', 'kind', 'windowStart']),
 
   askModelAttempts: defineTable({
     answerReceiptId: v.id('askAnswerReceipts'),
@@ -861,6 +881,7 @@ export default defineSchema({
     modelId: v.string(),
     promptVersion: v.string(),
     schemaVersion: v.string(),
+    answerAttempt: v.optional(v.number()),
     attempt: v.number(),
     status: v.string(),
     latencyMs: v.number(),
