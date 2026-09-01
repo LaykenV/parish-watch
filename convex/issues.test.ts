@@ -258,6 +258,14 @@ async function seedIssueInput(t: TestConvex): Promise<SeededIssueInput> {
           sourceSnapshotId: snapshotId,
           excerpt: title,
         })
+        const bodyFactId = await ctx.db.insert('candidateFacts', {
+          candidateId,
+          extractionId,
+          fieldPath: '/bodyName',
+          value: 'Lafayette City Council',
+          sourceSnapshotId: snapshotId,
+          excerpt: 'Lafayette City Council',
+        })
         const lifecycleFactId = await ctx.db.insert('candidateFacts', {
           candidateId,
           extractionId,
@@ -275,6 +283,17 @@ async function seedIssueInput(t: TestConvex): Promise<SeededIssueInput> {
           excerpt: title,
           normalizedStartOffset: 0,
           normalizedEndOffset: title.length,
+          retrievedAt: 1_788_000_000_000 + versionNumber,
+        })
+        await ctx.db.insert('citations', {
+          publicationVersionId,
+          candidateFactId: bodyFactId,
+          fieldPath: '/bodyName',
+          snapshotId,
+          officialUrl: `https://apps.lafayettela.gov/obcouncil/${sourceKind}/${sourceRecordId}`,
+          excerpt: 'Lafayette City Council',
+          normalizedStartOffset: 0,
+          normalizedEndOffset: 'Lafayette City Council'.length,
           retrievedAt: 1_788_000_000_000 + versionNumber,
         })
         const lifecycleCitationId = await ctx.db.insert('citations', {
