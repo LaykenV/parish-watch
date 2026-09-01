@@ -324,6 +324,7 @@ test('holds one answer at a time and releases failed token reservations', async 
 
   await t.mutation(internal.ask.ledger.failAnswer, {
     receiptId: claim.receiptId,
+    answerAttempt: claim.attempt,
     errorClass: 'provider_failed',
   })
   await expect(
@@ -388,6 +389,7 @@ test('releases abandoned reservations and cools down repeated requests', async (
     if (claim.kind !== 'ready') throw new Error('Expected a ready claim')
     await t.mutation(internal.ask.ledger.failAnswer, {
       receiptId: claim.receiptId,
+      answerAttempt: claim.attempt,
       errorClass: 'provider_failed',
     })
   }
@@ -403,6 +405,88 @@ test('releases abandoned reservations and cools down repeated requests', async (
     ctx.db.query('askTokenWindows').collect(),
   )
   expect(windows.every((window) => window.reservedTokens === 0)).toBe(true)
+})
+
+test('fences a stale answer after its lease is retried', async () => {
+  const t = initTest()
+  await seedEvidence(t)
+  const token = 'stale-answer-session-token-00000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, {
+    token,
+    scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+  })
+  const question = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'What changed about drainage?',
+    idempotencyKey: 'stale-answer-question-0001',
+  })
+  const first = await t.mutation(internal.ask.ledger.claimAnswer, {
+    token,
+    threadId: thread.threadId,
+    questionMessageId: question.messageId,
+  })
+  if (first.kind !== 'ready') throw new Error('Expected a ready claim')
+
+  await t.run(async (ctx) => {
+    await ctx.db.patch(first.receiptId, { startedAt: 0 })
+  })
+  await t.mutation(internal.ask.ledger.releaseAbandonedAnswer, {
+    receiptId: first.receiptId,
+    expectedStartedAt: 0,
+  })
+  const retry = await t.mutation(internal.ask.ledger.claimAnswer, {
+    token,
+    threadId: thread.threadId,
+    questionMessageId: question.messageId,
+  })
+  if (retry.kind !== 'ready') throw new Error('Expected a retry claim')
+
+  await expect(
+    t.mutation(internal.ask.ledger.persistAnswer, {
+      receiptId: first.receiptId,
+      answerAttempt: first.attempt,
+      answer: {
+        kind: 'not_found',
+        answer: 'No current evidence supports an answer.',
+        evidenceIds: [],
+        followUps: [],
+      },
+    }),
+  ).rejects.toThrow('Answer attempt is not running')
+  await expect(
+    t.mutation(internal.ask.ledger.recordModelAttempt, {
+      receiptId: first.receiptId,
+      answerAttempt: first.attempt,
+      route: 'ai_gateway',
+      modelId: 'openai/gpt-5.6-luna',
+      promptVersion: 'ask-answer-v1',
+      schemaVersion: 'ask-answer-v1',
+      attempt: 1,
+      status: 'success',
+      latencyMs: 1,
+    }),
+  ).rejects.toThrow('Answer attempt is not running')
+  await expect(
+    t.mutation(internal.ask.ledger.failAnswer, {
+      receiptId: first.receiptId,
+      answerAttempt: first.attempt,
+      errorClass: 'stale_failure',
+    }),
+  ).resolves.toBeNull()
+
+  const receipt = await t.run(async (ctx) => ctx.db.get(retry.receiptId))
+  expect(receipt).toMatchObject({
+    state: 'running',
+    attempt: retry.attempt,
+    reservationState: 'held',
+  })
+  await t.mutation(internal.ask.ledger.failAnswer, {
+    receiptId: retry.receiptId,
+    answerAttempt: retry.attempt,
+    errorClass: 'provider_failed',
+  })
 })
 
 test('rejects invented citations before an assistant message is saved', async () => {

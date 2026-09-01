@@ -162,6 +162,7 @@ export const claimAnswer = internalMutation({
 export const recordModelAttempt = internalMutation({
   args: {
     receiptId: v.id('askAnswerReceipts'),
+    answerAttempt: v.number(),
     route: aiRoutes,
     modelId: v.string(),
     promptVersion: v.string(),
@@ -181,7 +182,11 @@ export const recordModelAttempt = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const receipt = await ctx.db.get(args.receiptId)
-    if (!receipt || receipt.state !== 'running') {
+    if (
+      !receipt ||
+      receipt.state !== 'running' ||
+      receipt.attempt !== args.answerAttempt
+    ) {
       throw askError('answer_state_mismatch', 'Answer attempt is not running')
     }
     const usage = {
@@ -200,7 +205,7 @@ export const recordModelAttempt = internalMutation({
       modelId: args.modelId,
       promptVersion: args.promptVersion,
       schemaVersion: args.schemaVersion,
-      answerAttempt: receipt.attempt,
+      answerAttempt: args.answerAttempt,
       attempt: args.attempt,
       status: args.status,
       latencyMs: args.latencyMs,
@@ -222,6 +227,7 @@ export const recordModelAttempt = internalMutation({
 export const persistAnswer = internalMutation({
   args: {
     receiptId: v.id('askAnswerReceipts'),
+    answerAttempt: v.number(),
     answer: askModelAnswer,
     modelId: v.optional(v.string()),
     provider: v.optional(v.string()),
@@ -229,7 +235,11 @@ export const persistAnswer = internalMutation({
   returns: v.string(),
   handler: async (ctx, args) => {
     const receipt = await ctx.db.get(args.receiptId)
-    if (!receipt || receipt.state !== 'running') {
+    if (
+      !receipt ||
+      receipt.state !== 'running' ||
+      receipt.attempt !== args.answerAttempt
+    ) {
       throw askError('answer_state_mismatch', 'Answer attempt is not running')
     }
     const saved = await saveMessage(ctx, components.agent, {
@@ -267,12 +277,16 @@ export const persistAnswer = internalMutation({
 export const failAnswer = internalMutation({
   args: {
     receiptId: v.id('askAnswerReceipts'),
+    answerAttempt: v.number(),
     errorClass: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     const receipt = await ctx.db.get(args.receiptId)
-    if (receipt?.state === 'running') {
+    if (
+      receipt?.state === 'running' &&
+      receipt.attempt === args.answerAttempt
+    ) {
       const usage = await currentAttemptUsage(ctx, receipt)
       await settleAskCapacity(
         ctx,

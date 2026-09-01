@@ -157,6 +157,7 @@ export const answerQuestion = action({
         internal.ask.ledger.persistAnswer,
         {
           receiptId: claim.receiptId,
+          answerAttempt: claim.attempt,
           answer: notFound,
         },
       )
@@ -173,9 +174,15 @@ export const answerQuestion = action({
       })
     } catch (gatewayError) {
       if (!allowsDirectFallback(gatewayError)) {
-        await recordGatewayFailure(ctx, claim.receiptId, gatewayError)
+        await recordGatewayFailure(
+          ctx,
+          claim.receiptId,
+          claim.attempt,
+          gatewayError,
+        )
         await ctx.runMutation(internal.ask.ledger.failAnswer, {
           receiptId: claim.receiptId,
+          answerAttempt: claim.attempt,
           errorClass: classifyGatewayError(gatewayError),
         })
         throw askError(
@@ -184,18 +191,30 @@ export const answerQuestion = action({
         )
       }
 
-      await recordGatewayFailure(ctx, claim.receiptId, gatewayError)
+      await recordGatewayFailure(
+        ctx,
+        claim.receiptId,
+        claim.attempt,
+        gatewayError,
+      )
       let direct: Awaited<ReturnType<typeof runDirectFallback>>
       try {
         direct = await runDirectFallback(
           prompt,
           evidence.evidence,
           async (attempt) =>
-            await recordAttempt(ctx, claim.receiptId, attempt, 2),
+            await recordAttempt(
+              ctx,
+              claim.receiptId,
+              claim.attempt,
+              attempt,
+              2,
+            ),
         )
       } catch {
         await ctx.runMutation(internal.ask.ledger.failAnswer, {
           receiptId: claim.receiptId,
+          answerAttempt: claim.attempt,
           errorClass: 'direct_fallback_failed',
         })
         throw askError(
@@ -206,6 +225,7 @@ export const answerQuestion = action({
       if (direct.outcome !== 'success') {
         await ctx.runMutation(internal.ask.ledger.failAnswer, {
           receiptId: claim.receiptId,
+          answerAttempt: claim.attempt,
           errorClass: 'direct_fallback_invalid',
         })
         throw askError(
@@ -219,6 +239,7 @@ export const answerQuestion = action({
       )
       const messageId = await persistValidatedAnswer(ctx, {
         receiptId: claim.receiptId,
+        answerAttempt: claim.attempt,
         answer,
         modelId: direct.result.modelId,
         provider: 'openai',
@@ -233,6 +254,7 @@ export const answerQuestion = action({
       await recordAttempt(
         ctx,
         claim.receiptId,
+        claim.attempt,
         {
           route: 'ai_gateway',
           modelId: generated.modelId,
@@ -249,6 +271,7 @@ export const answerQuestion = action({
       )
       await ctx.runMutation(internal.ask.ledger.failAnswer, {
         receiptId: claim.receiptId,
+        answerAttempt: claim.attempt,
         errorClass: 'schema_invalid',
       })
       throw askError(
@@ -259,6 +282,7 @@ export const answerQuestion = action({
     await recordAttempt(
       ctx,
       claim.receiptId,
+      claim.attempt,
       {
         route: 'ai_gateway',
         modelId: generated.modelId,
@@ -275,6 +299,7 @@ export const answerQuestion = action({
     )
     const messageId = await persistValidatedAnswer(ctx, {
       receiptId: claim.receiptId,
+      answerAttempt: claim.attempt,
       answer,
       modelId: generated.modelId,
       provider: 'convexGateway',
@@ -287,6 +312,7 @@ async function persistValidatedAnswer(
   ctx: ActionCtx,
   args: {
     receiptId: Id<'askAnswerReceipts'>
+    answerAttempt: number
     answer: AskModelAnswer
     modelId: string
     provider: string
@@ -297,6 +323,7 @@ async function persistValidatedAnswer(
   } catch {
     await ctx.runMutation(internal.ask.ledger.failAnswer, {
       receiptId: args.receiptId,
+      answerAttempt: args.answerAttempt,
       errorClass: 'answer_storage_failed',
     })
     throw askError('answer_storage_failed', 'The answer could not be saved')
@@ -629,12 +656,14 @@ function findApiError(error: unknown, depth = 0): ApiErrorShape | null {
 async function recordGatewayFailure(
   ctx: ActionCtx,
   receiptId: Id<'askAnswerReceipts'>,
+  answerAttempt: number,
   error: unknown,
 ): Promise<void> {
   const modelId = env.MODEL_FAST_ID ?? 'MODEL_FAST'
   await recordAttempt(
     ctx,
     receiptId,
+    answerAttempt,
     {
       route: 'ai_gateway',
       modelId,
@@ -681,11 +710,13 @@ function gatewayErrorDetail(error: unknown): string {
 async function recordAttempt(
   ctx: ActionCtx,
   receiptId: Id<'askAnswerReceipts'>,
+  answerAttempt: number,
   attempt: AttemptRecord,
   sequence: number,
 ): Promise<void> {
   await ctx.runMutation(internal.ask.ledger.recordModelAttempt, {
     receiptId,
+    answerAttempt,
     route: attempt.route,
     modelId: attempt.modelId,
     promptVersion: ASK_PROMPT_VERSION,
