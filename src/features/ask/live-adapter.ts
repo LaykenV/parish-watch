@@ -425,13 +425,36 @@ function projectAnswer(
     kind: 'supported',
     lead: {
       id: result.messageId,
-      text: result.answer,
+      text: residentAnswerText(result.answer, citationIds),
       citationIds: citationIds as [string, ...string[]],
     },
     claims: [],
     citations: citationMap(result.citations),
     suggestions: result.followUps,
   }
+}
+
+function residentAnswerText(answer: string, citationIds: readonly string[]) {
+  const allowed = new Set(citationIds)
+  const text = answer
+    .replace(/[ \t]*\[([^\]\r\n]+)\]/g, (reference, contents: string) => {
+      const ids = contents
+        .split(/[\s,]+/)
+        .map((id) => id.trim())
+        .filter(Boolean)
+      return ids.length > 0 && ids.every((id) => allowed.has(id))
+        ? ''
+        : reference
+    })
+    .replace(/[ \t]+([,.;:!?])/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
+    .trim()
+
+  if (!text) {
+    throw new Error('A supported Ask answer did not include visible text')
+  }
+  return text
 }
 
 function citationMap(values: AskEvidence[]): CitationMap {
