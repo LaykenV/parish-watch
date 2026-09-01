@@ -142,13 +142,18 @@ export const retrieveEvidenceByIds = query({
 
 type Scope = ReturnType<typeof storedScope>
 
-async function issueRecordKeys(ctx: QueryCtx, scope: Scope) {
+async function issueRecordKeys(
+  ctx: QueryCtx,
+  scope: Scope,
+): Promise<Set<string> | null> {
   if (scope.kind !== 'issue') return null
   const issue: IssueProjection | null = await ctx.runQuery(
     api.resident.evidence.getPublishedIssue,
     { slug: scope.issueSlug },
   )
-  return issue ? new Set(issue.links.map((link) => link.recordKey)) : new Set()
+  return issue
+    ? new Set(issue.links.map((link) => link.recordKey))
+    : new Set<string>()
 }
 
 async function loadAcceptedEvidenceById(
