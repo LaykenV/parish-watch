@@ -722,10 +722,23 @@ Indexes: session plus activity; session plus thread; thread.
 #### `askAnswerReceipts` and `askModelAttempts`
 
 Answer receipts claim one saved user message at a time and record running,
-succeeded, or failed state without copying its content. Model attempts belong
-to a receipt and store the private route, model role, model ID, prompt and
-schema versions, token use, latency, estimated cost, and bounded safe failure
-metadata. They do not store resident questions or answers.
+succeeded, or failed state without copying its content. Each running receipt
+holds one 15,000-token reservation in both the immediate and daily windows.
+Model attempts belong to a receipt and store the private route, model role,
+model ID, prompt and schema versions, token use, latency, estimated cost, and
+bounded safe failure metadata. They do not store resident questions or
+answers.
+
+#### `askTokenWindows`
+
+Fields: anonymous session, short or daily window, window start, reserved
+tokens, consumed tokens, and updated time. Index: session, kind, and window
+start. One mutation reserves both windows before a model call. A completed
+attempt replaces the reservation with actual provider usage. A failed attempt
+releases unused capacity, and a scheduled two-minute lease cleanup releases an
+abandoned reservation. The short window allows 30,000 tokens per minute. The
+daily window allows 150,000 tokens per session. The rate-limiter component
+separately caps three answer attempts per minute and 20 per day.
 
 #### Agent component threads and messages
 
@@ -1052,12 +1065,14 @@ affect ranking.
 - Expire or detach anonymous conversation access after the window.
 - Never use a fingerprint as identity.
 
-### Abuse Control
+### Abuse control
 
-- rate-limit by opaque session and coarse network abuse signals;
-- set per-minute and daily token budgets;
+- rate-limit answer attempts by opaque session;
+- reserve 15,000 tokens against 30,000-per-minute and 150,000-per-day budgets;
+- reconcile actual use and release failed or abandoned reservations;
 - keep normal limits invisible;
-- introduce cooldown or CAPTCHA only after a threshold;
+- return a cooldown at the request or token threshold;
+- keep the CAPTCHA adapter inactive until observed abuse justifies it;
 - block prompt attempts to escape the validated corpus;
 - log safe error and cost metadata, not private content in public operations.
 

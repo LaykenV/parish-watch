@@ -28,7 +28,10 @@ const contactCitation: CitationData = {
 
 describe('Ask page ship boundaries', () => {
   it('compile-time gates the fixture import from production', () => {
-    expect(page).toContain('if (!import.meta.env.DEV || !data.scenario) return')
+    expect(page).toContain('if (!import.meta.env.DEV || !data.scenario) {')
+    expect(page).toContain(
+      'setAdapter(createLiveAskAdapter(convex, window.localStorage))',
+    )
     expect(page.indexOf('!import.meta.env.DEV')).toBeLessThan(
       page.indexOf("import('./fixtures')"),
     )

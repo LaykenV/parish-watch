@@ -88,7 +88,11 @@ export const answerQuestion = action({
   handler: async (ctx, args): Promise<AskAnswerResult> => {
     const claim = await ctx.runMutation(internal.ask.ledger.claimAnswer, args)
     if (claim.kind === 'in_progress') {
-      throw askError('answer_in_progress', 'This question is being answered')
+      throw new ConvexError({
+        code: 'answer_in_progress',
+        message: 'This question is being answered',
+        retryAt: claim.retryAt,
+      })
     }
     if (claim.kind === 'failed') {
       throw askError(

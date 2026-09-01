@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useConvex } from 'convex/react'
 import { ArrowLeftIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
@@ -26,6 +27,7 @@ import type {
 } from './contracts'
 import { setAskDraftHandoff, takeAskDraftHandoff } from './draft-handoff'
 import { AskComposer } from './ask-composer'
+import { createLiveAskAdapter } from './live-adapter'
 import { AskThread } from './ask-thread'
 import {
   AskCaptchaNotice,
@@ -43,10 +45,9 @@ import './ask.css'
 
 /*
   Ask Public Parish. Composition owns the availability gate, the state model,
-  and the draft; it does not own provider calls. Production without a proven
-  chat adapter shows the honest unavailable state while Ask stays a stable
-  navigation destination. Development scenarios load through a dev-only
-  dynamic import and never ship.
+  and the draft; it does not own provider calls. The live adapter owns private
+  session and provider work. Explicit development scenarios still load through
+  a dev-only dynamic import and never ship.
 */
 
 const ASK_EXAMPLES = [
@@ -68,6 +69,7 @@ export function AskPage({
   source?: string
 }) {
   const kbInset = useKeyboardInset()
+  const convex = useConvex()
   const online = useOnline()
   const wide = useMediaQuery('(min-width: 64.0625rem)')
 
@@ -132,11 +134,11 @@ export function AskPage({
     })
   }, [data.scope])
 
-  // Development scenarios load through a dynamic import; production never
-  // reaches or bundles this branch. The loader's null scenario remains the
-  // runtime backstop.
   useEffect(() => {
-    if (!import.meta.env.DEV || !data.scenario) return
+    if (!import.meta.env.DEV || !data.scenario) {
+      setAdapter(createLiveAskAdapter(convex, window.localStorage))
+      return
+    }
     let cancelled = false
     import('./fixtures').then(({ getAskFixtureAdapter }) => {
       if (!cancelled) setAdapter(getAskFixtureAdapter(data.scenario!))
@@ -144,7 +146,31 @@ export function AskPage({
     return () => {
       cancelled = true
     }
-  }, [data.scenario])
+  }, [convex, data.scenario])
+
+  useEffect(() => {
+    if (!adapter) return
+    let cancelled = false
+    void adapter
+      .resolveScope(data.routeSearch)
+      .then((resolved) => {
+        if (cancelled) return
+        const activeConversation = previousConversation.current
+        if (shouldConfirmAskScopeChange(activeConversation, resolved)) {
+          setPendingScope((current) =>
+            current ? { ...current, scope: resolved } : current,
+          )
+          return
+        }
+        setViewScope(resolved)
+      })
+      .catch(() => {
+        if (!cancelled) setAvailability({ kind: 'offline' })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [adapter, data.routeSearch])
 
   const handleAvailability = useCallback((next: AskAvailability) => {
     setAvailability(next)
@@ -195,7 +221,13 @@ export function AskPage({
         handleConversation(update.conversation)
       else if (update.kind === 'availability')
         handleAvailability(update.availability)
-      else setRecent(update.recent)
+      else if (update.kind === 'recent') setRecent(update.recent)
+      else {
+        previousConversation.current = null
+        setConversation(null)
+        setExpired(true)
+        setDraft('')
+      }
     })
   }, [adapter, handleConversation, handleAvailability])
 
@@ -242,6 +274,12 @@ export function AskPage({
     )
     return () => window.clearTimeout(timer)
   }, [availability])
+
+  useEffect(() => {
+    if (online && availability.kind === 'offline') {
+      setAvailability({ kind: 'available' })
+    }
+  }, [availability.kind, online])
 
   // Expiry removes private content from the page and the recent handles.
   useEffect(() => {
@@ -432,7 +470,7 @@ export function AskPage({
 
       {data.availability.kind === 'unavailable' && !data.scenario ? (
         <AskUnavailable />
-      ) : data.scenario && !adapter ? (
+      ) : !adapter ? (
         <div className="ask-waiting" role="status">
           <Spinner aria-hidden="true" />
           <span className="visually-hidden">Preparing Ask</span>

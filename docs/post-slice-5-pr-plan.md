@@ -221,6 +221,10 @@ returns not found, and an invented citation fails closed.
 
 ### PR 6C: ship the bounded anonymous Ask experience
 
+Status on September 1: implementation is in a stacked working tree. Pull-request
+validation, a successful personal development push, the real two-turn gateway
+proof, and 375-pixel browser QA remain pending.
+
 Suggested title: `feat: ship bounded anonymous ask`
 
 Outcome: the approved Ask interface uses the real thread and answer path, while

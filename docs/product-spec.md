@@ -51,9 +51,11 @@ handoff. PR #43 deployed that final interface as `85d6947`; production workflow
 This closes resident UI design and implementation, not the production adapters.
 Production keeps Ask, accounts, follows, AgentMail, coverage requests, and
 private reports unavailable until their backend paths pass. PR 6A establishes
-private evidence-scoped Ask threads and retrieval but does not activate answers.
-Each integration must replace the matching typed adapter without changing the
-page hierarchy or visual system.
+private evidence-scoped Ask threads and retrieval. PR 6B adds validated answers
+and exact current-evidence replay. The stacked PR 6C working tree connects Ask
+to the approved interface with request and token limits, but it has not passed
+its pull-request or runtime gates yet. Each integration must replace the
+matching typed adapter without changing the page hierarchy or visual system.
 
 ### Start With Consequence
 

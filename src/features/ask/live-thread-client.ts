@@ -74,13 +74,17 @@ export class LiveAskThreadClient {
     })
   }
 
-  async answer(threadId: string, questionMessageId: string) {
+  async answer(
+    threadId: string,
+    questionMessageId: string,
+    touchActivity = true,
+  ) {
     const result = await this.client.action(api.ask.answer.answerQuestion, {
       token: this.sessionToken(),
       threadId,
       questionMessageId,
     })
-    this.touch(threadId)
+    if (touchActivity) this.touch(threadId)
     return result
   }
 
@@ -96,6 +100,13 @@ export class LiveAskThreadClient {
 
   clearRecent() {
     this.storage.removeItem(THREAD_STORAGE_KEY)
+  }
+
+  forget(threadId: string) {
+    const handles = this.recent().filter(
+      (handle) => handle.threadId !== threadId,
+    )
+    this.storage.setItem(THREAD_STORAGE_KEY, JSON.stringify(handles))
   }
 
   private sessionToken(): string {

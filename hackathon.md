@@ -12,7 +12,7 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T03:55:09Z
+- **Last updated:** 2026-09-01T04:28:00Z
 
 ## Log
 
@@ -42,6 +42,19 @@ without copying resident questions or answers. Deterministic not-found answers
 skip the model call. The personal development deployment returned `408 Request
 Timeout` from `start_push`, so runtime proof and automated validation remain
 pending. Production Ask is still unavailable.
+
+Built the stacked PR 6C resident connection in the working tree. The real
+adapter keeps only opaque session and thread handles in browser storage, opens
+Agent history after refresh, and projects accepted citation records into the
+existing Source panel. It covers supported, not-found, expired, offline,
+cooldown, retryable, and terminal states. One mutation now claims one answer at
+a time, applies per-session request limits, and reserves 15,000 tokens against
+both a 30,000-token minute and a 150,000-token day before any model call.
+Successful attempts reconcile actual usage. Failed and abandoned attempts
+release their reservations. The CAPTCHA adapter remains inactive. Automated
+pull-request checks, a successful personal development push, the real two-turn
+gateway proof, and 375-pixel browser QA remain pending. Production Ask is still
+unavailable.
 
 ### 2026-09-01 - bdc0195
 

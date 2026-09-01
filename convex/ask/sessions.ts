@@ -28,6 +28,13 @@ export const expireSession = internalMutation({
     for (const mapping of mappings) {
       if (!mapping.detachedAt) await ctx.db.patch(mapping._id, { detachedAt })
     }
+    const tokenWindows = await ctx.db
+      .query('askTokenWindows')
+      .withIndex('by_session_kind_and_window', (q) =>
+        q.eq('sessionId', session._id),
+      )
+      .take(25)
+    for (const window of tokenWindows) await ctx.db.delete(window._id)
     await ctx.db.patch(session._id, { state: 'expired' })
     return null
   },
