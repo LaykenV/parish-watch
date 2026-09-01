@@ -194,7 +194,7 @@ export const answerQuestion = action({
         question: context.question,
       })
     } catch (error) {
-      await failContextPreparation(ctx, claim, error)
+      return await failContextPreparation(ctx, claim, error)
     }
 
     if (evidence.kind === 'no_evidence') {
@@ -228,7 +228,7 @@ export const answerQuestion = action({
         catalog: evidence,
       })
     } catch (error) {
-      await failContextPreparation(ctx, claim, error)
+      return await failContextPreparation(ctx, claim, error)
     }
     if (selection.retrievalMode === 'not_found') {
       const notFound: AskModelAnswer = {
@@ -262,7 +262,7 @@ export const answerQuestion = action({
       )
       documents = await loadPublishedDocuments(ctx, documentRefs)
     } catch (error) {
-      await failContextPreparation(ctx, claim, error)
+      return await failContextPreparation(ctx, claim, error)
     }
     const prompt = buildPrompt(
       context.question,
