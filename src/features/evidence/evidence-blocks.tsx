@@ -141,7 +141,11 @@ export function Timeline({
               data-marker={settled ? 'settled' : 'pending'}
             >
               <p className="ev-timeline-date">
-                <time dateTime={entry.date}>{formatDate(entry.date)}</time>
+                {entry.date ? (
+                  <time dateTime={entry.date}>{formatDate(entry.date)}</time>
+                ) : (
+                  'Date not stated'
+                )}
               </p>
               <div className="ev-timeline-main">
                 <p className="ev-timeline-type">
