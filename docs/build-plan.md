@@ -266,18 +266,18 @@ the shipped evidence viewer. Implementation Slice 6 replaced that adapter in
 production. PR #45 uses hashed 24-hour sessions, application-owned thread
 access, Agent component history, and bounded accepted-evidence retrieval. PR
 #47 adds strict `MODEL_FAST` answers and deterministic citation validation. PR
-#49 connects the interface and enforces per-session plus app-wide request and
-token limits. The production issue-scoped flow completed two related cited
-turns, opened the exact `CO-022-2026` and `CO-023-2026` Source spans, and
-returned evidence not found without citations for an unsupported question.
-
-The working-tree quality follow-up changes the answer path, not the Slice 6
-resident contract. High-reasoning Luna first selects relevant issue, meeting,
-or decision IDs from the complete accepted catalog. A second high-reasoning
-call receives the expanded records and their full verified source documents.
-Broad or invalid selections fall back to the whole scope. The revision removes
-lexical selection and application token budgets while keeping
-request-frequency limits plus private usage telemetry. It is not deployed.
+#49 connects the interface. PR #56 deployed the current answer path as
+`adc0a34` through production workflow `33560561545`. High-reasoning Luna first
+selects relevant issue, meeting, or decision IDs from the complete accepted
+catalog. A second high-reasoning call receives the expanded records and their
+full verified source documents. Broad or invalid selections use the whole
+scope, while a valid not-found selection skips the second call. The deployed
+path uses request-frequency limits plus private usage telemetry. It does not use
+lexical selection or application-owned input or output token budgets. PR #57
+deployed the citation-display correction as `13f735b` through workflow
+`33562735003`. Production tests proved a related issue conversation, a corpus
+question spanning two decisions, exact Source controls, evidence not found,
+thread restoration, and answer prose without raw internal evidence IDs.
 
 Design Slice 5 replaces the Following and email-management blueprints with the
 finished page hierarchy and interactions. It uses development-only typed
@@ -365,21 +365,20 @@ PR #45 provides private 24-hour Agent threads and published-evidence access.
 PR #47 adds strict structured answers through Convex AI Gateway,
 validates every evidence ID before saving an assistant message, and records
 private usage and safe failure metadata. PR #49 connects the approved resident
-interface and applies per-session request-frequency limits. The working-tree
-Slice 6 quality revision replaces lexical selection with a high-reasoning Luna
-selector over the complete accepted catalog and a second high-reasoning answer
-call over the expanded records and verified official documents. It uses no
-fixed top-k or application-owned input or output token budget. This revision is
-not deployed. Per-session limits remain, and app-wide limits of 60 requests per
-minute and 1,000 per day stop session rotation from creating unlimited model
-calls. A valid selector not-found result skips the second call. Oversized scopes
-fail before model generation instead of truncating evidence or documents. All
-three original PRs are deployed. On
-September 1, the production
-issue-scoped flow completed two related cited turns, opened the exact accepted
-minutes spans, and returned evidence not found without citations for an
-unsupported question. Reopening the preserved recent conversation after a
-refresh restored all three turns. Implementation Slice 6 is closed.
+interface and applies per-session request-frequency limits. PR #56 replaces
+lexical selection with a high-reasoning Luna selector over the complete
+accepted catalog and a second high-reasoning answer call over the expanded
+records and verified official documents. It uses no fixed top-k or
+application-owned input or output token budget. Per-session limits remain, and
+app-wide limits of 60 requests per minute and 1,000 per day stop session
+rotation from creating unlimited model calls. A valid selector not-found result
+skips the second call. Oversized scopes fail before model generation instead of
+truncating evidence or documents. PR #57 removes raw internal citation IDs from
+resident answer prose while preserving Source controls. All five Slice 6 PRs
+are deployed. On September 1, production tests proved related issue turns, a
+corpus question spanning two decisions, exact accepted Source spans, evidence
+not found, thread restoration, and corrected citation display. Implementation
+Slice 6 is closed.
 
 ### Account Loop
 

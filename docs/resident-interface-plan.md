@@ -1001,9 +1001,9 @@ viewer, timeline, and update history from real evidence.
 
 ### Design slice 4: Ask Public Parish
 
-Implementation checkpoint: implemented in PR #28, green on its checks, not
-merged and not deployed. The implementation, the fixture boundary, and the
-three additions to the adapter contract are recorded in
+Implementation checkpoint: deployed through PR #28 as `ff36c1b`. Production
+workflow `33389489990` passed. The implementation, the fixture boundary, and
+the three additions to the adapter contract are recorded in
 [`resident-interface-slice-4.md`](./resident-interface-slice-4.md).
 
 #### Objective

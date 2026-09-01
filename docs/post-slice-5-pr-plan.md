@@ -20,26 +20,25 @@ production issue builds passed linking, independent review, validation, and
 publication. The Rapides millage issue reached an existing subscriber 10.8
 seconds after an initial empty result.
 
-Implementation Slice 6 is closed. PRs #45, #47, and #49 deployed private
-24-hour Agent threads, bounded accepted-evidence retrieval, validated
-`MODEL_FAST` answers, and the real Ask interface with per-session and app-wide
-request and token limits. A production issue-scoped conversation completed two
-related cited turns, opened the exact accepted minutes spans, and returned
-evidence not found without citations for an unsupported question. Production
-does not yet have mounted Convex Auth, AgentMail, or a coverage compiler. PR 7A
-is the active capability.
-
-The working-tree Slice 6 quality follow-up supersedes the original retrieval
-and token-budget choices below. High-reasoning Luna first selects issue,
-meeting, or decision IDs from every current published record and accepted
-excerpt in scope. A second high-reasoning call receives the expanded records
-and hash-checked normalized official documents. Broad or invalid selections use
-the full scope. A valid not-found selection skips the second call. It keeps
-per-session and app-wide request-frequency limits and token telemetry, but
-removes lexical selection, fixed top-k retrieval, and application-owned input
-or output token budgets. Oversized scopes fail instead of truncating evidence
-or documents. The original PR sections remain as the historical delivery
-record. The quality follow-up is not deployed.
+Implementation Slice 6 is closed. PRs #45, #47, #49, #56, and #57 deployed
+private 24-hour Agent threads, bounded accepted-evidence retrieval, the real Ask
+interface, the high-reasoning selector and answer flow, and corrected resident
+citation display. Luna first selects issue, meeting, or decision IDs from every
+current published record and accepted excerpt in scope. A second
+high-reasoning call receives the expanded records and hash-checked normalized
+official documents. Broad or invalid selections use the full scope. A valid
+not-found selection skips the second call. Per-session and app-wide
+request-frequency limits remain. Token use is private telemetry, not an
+application-owned input or output budget. Oversized scopes fail instead of
+truncating evidence or documents. Production tests proved related issue turns,
+a corpus answer spanning two decisions, exact Source controls, evidence not
+found, thread restoration, and answer prose without raw internal evidence IDs.
+The original PR sections below remain as the historical delivery record.
+Production does not yet have mounted Convex Auth, AgentMail, or a coverage
+compiler. Controlled corpus QA also found that one answer displayed Markdown
+emphasis markers as literal text. That presentation defect does not affect the
+grounded answer path or block Slice 7, but it remains a pre-demo correction. PR
+7A is the active capability.
 
 ## Original starting assumption
 

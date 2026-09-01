@@ -205,13 +205,15 @@ test traffic, not resident adoption.
 The UI track, Slice 5 data gate, and implementation Slice 6 are complete.
 Resident-safe decision, meeting, and issue projections map accepted
 publications and exact citations into the finished routes, and the issue query
-fails closed on stale decision links. PRs #45, #47, and #49 deployed private
-24-hour Agent threads, validated `MODEL_FAST` answers, and bounded anonymous
-Ask. A production issue-scoped test completed two related cited turns, opened
-the exact `CO-022-2026` and `CO-023-2026` minutes spans, and returned evidence
-not found without citations for an unsupported question. Mounted Convex Auth,
-follows, AgentMail, coverage integration, the owner compiler, resident proof,
-the demo, and the vibeapps.dev submission remain pending.
+fails closed on stale decision links. PRs #45, #47, #49, #56, and #57 deployed
+private 24-hour Agent threads, the high-reasoning selector and answer flow,
+request-frequency limits, deterministic citation validation, and corrected
+resident citation display. Controlled production tests proved related issue
+turns, a corpus answer spanning two decisions, exact Source controls, evidence
+not found, thread restoration, and answer prose without raw internal evidence
+IDs. Mounted Convex Auth, follows, AgentMail, coverage integration, the owner
+compiler, resident proof, the demo, and the vibeapps.dev submission remain
+pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

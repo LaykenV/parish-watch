@@ -12,24 +12,30 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T20:28:23Z
+- **Last updated:** 2026-09-01T22:17:03Z
 
 ## Log
 
-### 2026-09-01 - working tree
+### 2026-09-01 - 13f735b
 
-Reworked Ask answer quality without deploying it. One high-reasoning Luna call
-now selects issue, meeting, or decision IDs from the complete current catalog
-and every accepted citation excerpt. A second high-reasoning Luna call receives
-the expanded records and their hash-checked normalized official documents.
-Broad or invalid selections use the full scope. Removed lexical answer gating,
-fixed top-k retrieval, and application-owned token budgets while keeping
-per-session request limits. Added app-wide limits of 60 requests per minute and
-1,000 per day so rotating anonymous sessions cannot create unlimited calls. A
-valid selector not-found result now skips the second call. Record, excerpt, and
+PR #56 deployed the high-reasoning Luna selector and answer flow as `adc0a34`
+through production workflow `33560561545`. The selector sees the complete
+current catalog and every accepted excerpt in scope. Code expands its selected
+records, then the answer call receives their hash-checked normalized official
+documents. Broad or invalid selections use the full scope, while a valid
+not-found selection skips the answer call. App-wide request limits prevent
+anonymous session rotation from creating unlimited calls. Record, excerpt, and
 document-byte guards fail before model generation instead of truncating the
-prompt. Citation validation, private usage telemetry, and Agent thread history
-remain (`convex/ask/`, `convex/ai/`).
+prompt. Provider token use remains private telemetry, not an answer limit.
+
+PR #57 deployed the citation-display correction as `13f735b` through workflow
+`33562735003`. A controlled production corpus question selected both Lafayette
+surplus-pickup decisions and named Terrebonne Parish Consolidated Government
+from accepted evidence. Four Source controls opened official evidence, and the
+answer showed no raw internal evidence IDs. The exact issue Ask path and the
+production smoke passed again. One answer rendered Markdown emphasis markers as
+literal text, so that pre-demo display correction remains. This was test
+traffic, not resident adoption.
 
 ### 2026-09-01 - 5679fa3
 

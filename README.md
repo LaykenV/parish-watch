@@ -31,15 +31,18 @@ decision records underneath. Explore searches issues before individual records.
 Legacy `/for-you` and `/issues` index routes redirect to Home, while stable issue
 detail routes retain their citations and Source controls.
 
-Implementation Slice 6 is deployed through PRs #45, #47, and #49. Signed-out
-residents can hold a private 24-hour issue, meeting, or corpus conversation.
-`MODEL_FAST` receives only bounded accepted evidence, and deterministic code
-rejects unsupported citation IDs before display. Per-session and app-wide
-request and token ceilings bound provider spend. A production issue-scoped test
-completed two cited turns, opened the exact `CO-022-2026` and `CO-023-2026`
-minutes spans, and returned evidence not found without citations for an
-unsupported question. Authentication, follows, AgentMail, coverage requests,
-and private source reports remain unfinished.
+Implementation Slice 6 is deployed through PRs #45, #47, #49, #56, and #57.
+Signed-out residents can hold a private 24-hour issue, meeting, or corpus
+conversation. One high-reasoning Luna call selects relevant records from the
+complete current catalog and accepted excerpts. A second call receives the
+expanded records and verified official documents. Deterministic code rejects
+unsupported citation IDs before display. Per-session and app-wide request
+limits bound call frequency. Provider token use and estimated cost remain
+private telemetry rather than an answer limit. Production tests proved cited
+issue and corpus answers, exact Source controls, evidence not found, thread
+restoration, and the removal of raw internal evidence IDs from resident-facing
+answer text. Authentication, follows, AgentMail, coverage requests, and private
+source reports remain unfinished.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)

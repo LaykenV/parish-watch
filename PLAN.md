@@ -81,30 +81,30 @@ The Slice 5 data gate is closed.
 Implementation Slice 6 is also closed. PR #45 deployed private 24-hour Agent
 threads as `c9ea441`, PR #47 deployed validated `MODEL_FAST` answers as
 `9ae0467`, and PR #49 deployed the bounded anonymous Ask interface as
-`30dc267`. Their exact production workflows passed. The final PR #49 head
-`e1cd4b1` adds app-wide minute and daily token ceilings that survive anonymous
-session rotation. On September 1, the production issue-scoped flow completed
-two related turns against the Lafayette surplus-pickup issue. Both answers used
-the two accepted citations, and the Source controls opened the exact
-`CO-022-2026` and `CO-023-2026` minutes spans. An unsupported question first
-reached the safe retry state; its fenced retry returned evidence not found with
-no citations. After refresh, reopening the preserved recent conversation
-restored all three turns. Account, follow, AgentMail, coverage-request, and
-private-report adapters remain in implementation Slices 7 through 9. PR 7A is
-the next packet.
+`30dc267`. PR #56 then deployed the high-reasoning Luna selector and answer
+flow as `adc0a34` through production workflow `33560561545`. The selector sees
+every current issue, meeting, decision, and accepted citation excerpt in scope.
+Deterministic code expands its targets, and the answer pass receives those
+records plus their hash-checked normalized official documents. Invalid, broad,
+and empty selections expand to the full scope. A valid not-found selection
+returns the safe not-found answer without running the document-heavy second
+call. Per-session and app-wide request-frequency limits remain. Provider token
+use is private telemetry, not an application-owned input or output budget. Hard
+record-count and document-byte checks fail visibly instead of truncating model
+context.
 
-A Slice 6 quality follow-up is in the working tree. It runs Luna at high
-reasoning and replaces lexical retrieval with two model passes on the same
-private thread. The selector sees every current issue, meeting, decision, and
-accepted citation excerpt in scope. Deterministic code expands its targets, and
-the answer pass receives those records plus their hash-checked normalized
-official documents. Invalid, broad, and empty selections expand to the full
-scope so the selector cannot hide evidence. A valid not-found selection returns
-the safe not-found answer without paying for a document-heavy second pass.
-Per-session and app-wide request-frequency limits remain, while provider token
-use becomes telemetry instead of an application-owned input or output budget.
-Hard record-count and document-byte checks fail visibly instead of truncating
-model context. This follow-up is not deployed yet.
+Production tests proved both issue and corpus Ask. The issue flow completed two
+related cited turns and opened the exact `CO-022-2026` and `CO-023-2026`
+minutes spans. The corpus flow selected both surplus-pickup decisions and named
+Terrebonne Parish Consolidated Government from the accepted evidence. PR #57
+deployed the citation-display correction as `13f735b` through workflow
+`33562735003`; a fresh production answer showed resident-facing Source controls
+without raw internal evidence IDs. Account, follow, AgentMail,
+coverage-request, and private-report adapters remain in implementation Slices
+7 through 9. One controlled corpus answer rendered Luna's Markdown emphasis
+markers as literal text. That presentation defect does not affect grounding or
+block Slice 7, but it should be corrected before the final demo. PR 7A is the
+next implementation packet.
 
 ## Executive Decision
 

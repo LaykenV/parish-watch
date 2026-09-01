@@ -132,18 +132,18 @@ anonymous Ask evidence gates are proved. PR #45 deployed 24-hour anonymous
 sessions, private Agent threads, component-owned message history, and
 accepted-evidence retrieval. PR #47 deployed strict `MODEL_FAST` answers,
 deterministic citation validation, and exact current-evidence replay. PR #49
-connected the resident interface and added atomic per-session and app-wide
-request and token limits. The production issue-scoped flow completed two cited
-turns, opened the exact `CO-022-2026` and `CO-023-2026` minutes spans, and
-returned evidence not found without citations for an unsupported question.
-The working-tree quality revision removes those lexical and token-budget gates.
-It uses high-reasoning Luna first to select relevant targets from the complete
-current issue, meeting, decision, and accepted-excerpt catalog. A second Luna
-call receives the selected records and their hash-checked normalized official
-documents. Invalid, broad, and empty selections expand to the full scope. A
-valid not-found selection skips the second call. Per-session and app-wide
-request-frequency limits, private usage telemetry, and deterministic citation
-validation remain. This revision is not deployed.
+connected the resident interface. PR #56 deployed the current answer path as
+`adc0a34` through production workflow `33560561545`. High-reasoning Luna first
+selects relevant targets from the complete current issue, meeting, decision,
+and accepted-excerpt catalog. A second Luna call receives the selected records
+and their hash-checked normalized official documents. Invalid, broad, and empty
+selections expand to the full scope. A valid not-found selection skips the
+second call. Per-session and app-wide request-frequency limits, private usage
+telemetry, and deterministic citation validation remain. PR #57 deployed the
+resident citation-display correction as `13f735b` through workflow
+`33562735003`, so answer prose no longer exposes raw internal evidence IDs.
+Production tests proved cited issue and corpus answers, exact Source controls,
+evidence not found, and thread restoration.
 Auth, follow, AgentMail, coverage-request, and private-report adapters remain in
 the post-Slice-5 plan.
 

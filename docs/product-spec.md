@@ -53,20 +53,20 @@ handoff. PR #43 deployed that final interface as `85d6947`; production workflow
 `33454522729` and the independent production smoke passed.
 
 This closes resident UI design, but not every production adapter. Implementation
-Slice 6 is deployed through PRs #45, #47, and #49. Production Ask now uses
-private 24-hour Agent threads, validated current evidence, deterministic
-citation checks, and per-session plus app-wide request and token limits. The
-working-tree quality revision uses high-reasoning Luna to select relevant
-targets from the complete published catalog, then asks a second high-reasoning
-Luna call with the expanded records and verified official documents. Broad or
-invalid selections use the full scope. Token use remains private telemetry
-instead of an answer budget. It is not deployed yet. A
-production issue-scoped test completed two related cited turns, opened the exact
-`CO-022-2026` and `CO-023-2026` Source spans, and returned evidence not found
-without citations for an unsupported question. Accounts, follows, AgentMail,
-coverage requests, and private reports remain unavailable until their backend
-paths pass. Each integration must replace the matching typed adapter without
-changing the page hierarchy or visual system.
+Slice 6 is deployed through PRs #45, #47, #49, #56, and #57. Production Ask
+uses private 24-hour Agent threads, validated current evidence, deterministic
+citation checks, and per-session plus app-wide request-frequency limits. One
+high-reasoning Luna call selects relevant targets from the complete published
+catalog and accepted excerpts. A second high-reasoning Luna call receives the
+expanded records and verified official documents. Broad or invalid selections
+use the full scope. A valid not-found selection skips the second call. Token use
+remains private telemetry instead of an answer budget. Production tests proved
+related issue turns, a corpus question spanning two decisions, exact Source
+controls, evidence not found, thread restoration, and resident answer text
+without raw internal evidence IDs. Accounts, follows, AgentMail, coverage
+requests, and private reports remain unavailable until their backend paths
+pass. Each integration must replace the matching typed adapter without changing
+the page hierarchy or visual system.
 
 ### Start With Consequence
 
