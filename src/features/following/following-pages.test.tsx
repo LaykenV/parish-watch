@@ -55,7 +55,7 @@ describe('resident following interface', () => {
   })
 
   it('loads the real account adapter without a development fixture', async () => {
-    await expect(loadFollowingPageData()).resolves.toMatchObject({
+    await expect(loadFollowingPageData(undefined)).resolves.toMatchObject({
       areas: [],
       available: true,
       mode: 'live',
