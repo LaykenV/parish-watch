@@ -14,6 +14,7 @@ const EXPECTED_RESIDENT_ROUTES = [
   '/ask',
   '/coverage',
   '/coverage/request',
+  '/issues',
   '/issues/$issueSlug',
   '/decisions/$recordKey',
   '/meetings/$meetingId',
@@ -33,7 +34,7 @@ const routeGraphIsComplete: Exclude<
 
 describe('resident interface Slice 1 contracts', () => {
   it('accounts for every resident route outside the existing home page', () => {
-    expect(EXPECTED_RESIDENT_ROUTES).toHaveLength(13)
+    expect(EXPECTED_RESIDENT_ROUTES).toHaveLength(14)
     expect(routeGraphIsComplete).toBe(true)
   })
 

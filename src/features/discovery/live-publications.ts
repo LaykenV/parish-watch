@@ -13,11 +13,52 @@ export type PublishedDecision = FunctionReturnType<
   typeof api.resident.discovery.listPublishedDecisions
 >[number]
 
+export type PublishedIssue = FunctionReturnType<
+  typeof api.resident.evidence.listPublishedIssues
+>[number]
+
 export function usePublishedDecisions(enabled: boolean) {
   return useQuery(
     api.resident.discovery.listPublishedDecisions,
     enabled ? {} : 'skip',
   )
+}
+
+export function usePublishedIssues(enabled: boolean) {
+  return useQuery(
+    api.resident.evidence.listPublishedIssues,
+    enabled ? {} : 'skip',
+  )
+}
+
+export function toIssueCard(issue: PublishedIssue): IssueCardData | null {
+  const placeSlug = toAreaSlug(issue.placeSlug)
+  if (!placeSlug) return null
+
+  return {
+    body: issue.bodyName,
+    evidence: {
+      checked: new Date(issue.evidenceCheckedAt).toISOString(),
+      note: `Built from ${issue.decisionCount} linked official decision ${issue.decisionCount === 1 ? 'record' : 'records'}.`,
+      status:
+        issue.mode === 'full' ? 'Evidence available' : 'Limited information',
+    },
+    href: `/issues/${encodeURIComponent(issue.slug)}`,
+    latestOutcome:
+      !issue.nextKnownAction?.at && issue.latestMeetingAt
+        ? { date: issue.latestMeetingAt, label: 'Latest record' }
+        : undefined,
+    nextDate: issue.nextKnownAction?.at
+      ? { date: issue.nextKnownAction.at, label: 'Next known action' }
+      : undefined,
+    place: issue.placeName,
+    placeSlug,
+    slug: issue.slug,
+    state: toIssueLifecycleState(issue.lifecycleState),
+    title: issue.title,
+    topics: issue.topics,
+    whyMatter: issue.summary,
+  }
 }
 
 export function toDecisionCard(
@@ -89,6 +130,32 @@ export function toLifecycleState(
     case 'discovered':
     case 'unknown':
     case null:
+      return 'Status not stated'
+  }
+}
+
+export function toIssueLifecycleState(
+  state: PublishedIssue['lifecycleState'],
+): LifecycleState {
+  switch (state) {
+    case 'developing':
+      return 'Developing'
+    case 'scheduled':
+      return 'Scheduled'
+    case 'active':
+      return 'In progress'
+    case 'postponed':
+      return 'Postponed'
+    case 'decided':
+      return 'Decided'
+    case 'complete':
+      return 'Completed'
+    case 'canceled':
+      return 'Canceled'
+    case 'unknown':
+    case null:
+      return 'Status not stated'
+    default:
       return 'Status not stated'
   }
 }

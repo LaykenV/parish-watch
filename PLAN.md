@@ -18,8 +18,10 @@ validation failures, and one negative control returned `not_found`. The
 resident integration reads current full and limited atomic publications through
 one bounded public query. Home, For You, and Explore label them as published
 decision records and open the accepted official source. Withheld versions stay
-hidden. No production issue build, importance assessment, or ranked issue feed
-has run. Publication counts do not prove complete body coverage.
+hidden. Lafayette and Rapides now have accepted production issue builds. The
+`/issues` index lists only issue timelines that still pass the issue page's
+current-link and citation checks. Publication counts do not prove complete body
+coverage.
 
 Resident-interface Design Slice 1 established the complete route blueprint.
 Design Slice 2 then shipped the responsive shell plus fixture-backed Home, For

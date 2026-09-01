@@ -181,9 +181,9 @@ function IssueDetail({
     >
       <main className="ev-page" id="resident-main">
         <BackLink
-          label="Back to Explore"
+          label="Back to Issues"
           returnTo={search.returnTo}
-          to="/explore"
+          to="/issues"
         />
 
         <header className="ev-head">
@@ -440,8 +440,8 @@ function IssueNotFound({ slug }: { slug: string }) {
         </p>
       </header>
       <div className="ev-recovery-actions">
-        <Button render={<Link to="/explore" />} size="touch">
-          Search records
+        <Button render={<Link to="/issues" />} size="touch">
+          Browse issues
         </Button>
         <Button render={<Link to="/coverage" />} size="touch" variant="outline">
           Check coverage

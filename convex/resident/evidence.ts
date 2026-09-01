@@ -122,6 +122,26 @@ const issueResult = v.object({
   changes: v.array(materialChange),
 })
 
+const issueSummaryResult = v.object({
+  revision: v.string(),
+  slug: v.string(),
+  placeName: v.string(),
+  placeSlug: v.string(),
+  bodyName: v.string(),
+  mode: acceptedMode,
+  title: v.string(),
+  summary: v.string(),
+  lifecycleState: v.union(v.string(), v.null()),
+  nextKnownAction: v.union(
+    v.null(),
+    v.object({ description: v.string(), at: v.union(v.string(), v.null()) }),
+  ),
+  topics: v.array(v.string()),
+  evidenceCheckedAt: v.number(),
+  latestMeetingAt: v.union(v.string(), v.null()),
+  decisionCount: v.number(),
+})
+
 const meetingResult = v.object({
   id: v.string(),
   placeName: v.string(),
@@ -409,161 +429,221 @@ export const getPublishedIssue = query({
       .query('issues')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
       .unique()
-    if (!issue?.currentVersionId || !issue.currentMode) return null
-    const [current, body] = await Promise.all([
-      ctx.db.get(issue.currentVersionId),
-      ctx.db.get(issue.governmentBodyId),
-    ])
-    if (
-      !current?.payload ||
-      current.issueId !== issue._id ||
-      current.mode !== issue.currentMode ||
-      current.payload.kind !== current.mode ||
-      !body
-    ) {
-      return null
-    }
-    const [place, build, links, factors, versions] = await Promise.all([
-      ctx.db.get(body.jurisdictionId),
-      ctx.db.get(current.buildId),
+    return issue ? projectPublishedIssue(ctx, issue) : null
+  },
+})
+
+export const listPublishedIssues = query({
+  args: {},
+  returns: v.array(issueSummaryResult),
+  handler: async (ctx) => {
+    const [fullIssues, limitedIssues] = await Promise.all([
       ctx.db
-        .query('issueDecisionLinks')
-        .withIndex('by_issue_version', (q) =>
-          q.eq('issueVersionId', current._id),
+        .query('issues')
+        .withIndex('by_current_mode_and_updated_at', (q) =>
+          q.eq('currentMode', 'full'),
         )
-        .take(11),
+        .order('desc')
+        .take(20),
       ctx.db
-        .query('importanceAssessments')
-        .withIndex('by_issue_version_and_factor', (q) =>
-          q.eq('issueVersionId', current._id),
+        .query('issues')
+        .withIndex('by_current_mode_and_updated_at', (q) =>
+          q.eq('currentMode', 'limited'),
         )
-        .take(8),
-      ctx.db
-        .query('issueVersions')
-        .withIndex('by_issue_and_version', (q) => q.eq('issueId', issue._id))
         .order('desc')
         .take(20),
     ])
-    if (
-      !place ||
-      !build?.candidate ||
-      !build.rankedResult ||
-      links.length > 10 ||
-      factors.length > 7
-    ) {
-      return null
-    }
-    const decisions = (
-      await Promise.all(
-        links.map(async (link) => {
-          const record = await ctx.db.get(link.recordId)
-          if (!record) return null
-          const projected = await projectDecision(ctx, record, {
-            includeIssue: false,
-            includeHistory: false,
-          })
-          if (
-            !projected ||
-            record.currentPublishedVersionId !== link.publicationVersionId
-          ) {
-            return null
-          }
-          return { link, projected }
-        }),
-      )
-    ).filter(
-      (
-        item,
-      ): item is {
-        link: Doc<'issueDecisionLinks'>
-        projected: typeof decision.type
-      } => item !== null,
-    )
-    if (decisions.length !== links.length) return null
-    const citations = dedupeCitations(
-      decisions.flatMap(({ projected }) => projected.citations),
-    )
-    const citationIds = new Set(citations.map((item) => item.id))
-    const supported = new Set(build.rankedResult.supportedFactPaths)
-    const factIds = (fieldPath: string): string[] => {
-      if (!supported.has(fieldPath)) return []
-      const fact = build.candidate?.facts.find(
-        (candidateFact) => candidateFact.fieldPath === fieldPath,
-      )
-      return (fact?.citationIds ?? []).filter((id) => citationIds.has(id))
-    }
-    const titleCitationIds = factIds('/title')
-    const summaryCitationIds = factIds('/summary')
-    if (
-      titleCitationIds.length === 0 ||
-      summaryCitationIds.length === 0 ||
-      decisions.some(({ link }) =>
-        link.citationIds.every((id) => !citationIds.has(id)),
-      )
-    ) {
-      return null
-    }
-    const changes = (
-      await Promise.all(
-        decisions.map(({ link }) => loadChanges(ctx, link.recordId)),
-      )
-    )
-      .flat()
-      .sort((left, right) => right.createdAt - left.createdAt)
+    const issues = [...fullIssues, ...limitedIssues]
+      .sort((left, right) => right.updatedAt - left.updatedAt)
       .slice(0, 20)
-    const publicActions = decisions.flatMap(
-      ({ projected }) => projected.publicActions,
+    const projected = await Promise.all(
+      issues.map((issue) => projectPublishedIssue(ctx, issue)),
     )
 
-    return {
-      revision: current._id,
-      slug: issue.slug,
-      placeName: place.name,
-      placeSlug: place.slug,
-      bodyName: body.name,
-      mode: current.mode,
-      title: current.payload.title,
-      summary: current.payload.summary,
-      lifecycleState: current.payload.lifecycleState ?? null,
-      nextKnownAction: current.payload.nextKnownAction ?? null,
-      topics: current.payload.topics,
-      claimCitationIds: {
-        title: titleCitationIds,
-        summary: summaryCitationIds,
-        lifecycleState: factIds('/lifecycleState'),
-        nextDescription: factIds('/nextKnownAction/description'),
-        nextAt: factIds('/nextKnownAction/at'),
-      },
-      links: decisions.map(({ link, projected }) => ({
-        recordKey: projected.recordKey,
-        title: projected.title,
-        summary: projected.summary,
-        lifecycleState: projected.lifecycleState,
-        meetingAt: projected.meetingAt,
-        relationship: link.relationship,
-        reason: link.reason,
-        citationIds: link.citationIds.filter((id) => citationIds.has(id)),
-      })),
-      factors: factors.map((factor) => ({
-        factor: factor.factor,
-        level: factor.level,
-        rationale: factor.rationale,
-        citationIds: factor.citationIds.filter((id) => citationIds.has(id)),
-      })),
-      publicActions,
-      citations,
-      versions: versions
-        .filter((row) => row.mode !== 'withheld' && row.payload !== null)
-        .map((row) => ({
-          version: row.version,
-          mode: row.mode as 'full' | 'limited',
-          reasonCode: row.reasonCode,
-          createdAt: row.createdAt,
-        })),
-      changes,
-    }
+    return projected
+      .filter((issue): issue is typeof issueResult.type => issue !== null)
+      .map((issue) => ({
+        revision: issue.revision,
+        slug: issue.slug,
+        placeName: issue.placeName,
+        placeSlug: issue.placeSlug,
+        bodyName: issue.bodyName,
+        mode: issue.mode,
+        title: issue.title,
+        summary: issue.summary,
+        lifecycleState: issue.lifecycleState,
+        nextKnownAction: issue.nextKnownAction,
+        topics: issue.topics,
+        evidenceCheckedAt: Math.max(
+          ...issue.citations.map((item) => item.retrievedAt),
+        ),
+        latestMeetingAt:
+          issue.links
+            .map((link) => link.meetingAt)
+            .filter((value): value is string => value !== null)
+            .sort()
+            .at(-1) ?? null,
+        decisionCount: issue.links.length,
+      }))
   },
 })
+
+async function projectPublishedIssue(
+  ctx: QueryCtx,
+  issue: Doc<'issues'>,
+): Promise<typeof issueResult.type | null> {
+  if (!issue.currentVersionId || !issue.currentMode) return null
+  const [current, body] = await Promise.all([
+    ctx.db.get(issue.currentVersionId),
+    ctx.db.get(issue.governmentBodyId),
+  ])
+  if (
+    !current?.payload ||
+    current.issueId !== issue._id ||
+    current.mode !== issue.currentMode ||
+    current.payload.kind !== current.mode ||
+    !body
+  ) {
+    return null
+  }
+  const [place, build, links, factors, versions] = await Promise.all([
+    ctx.db.get(body.jurisdictionId),
+    ctx.db.get(current.buildId),
+    ctx.db
+      .query('issueDecisionLinks')
+      .withIndex('by_issue_version', (q) => q.eq('issueVersionId', current._id))
+      .take(11),
+    ctx.db
+      .query('importanceAssessments')
+      .withIndex('by_issue_version_and_factor', (q) =>
+        q.eq('issueVersionId', current._id),
+      )
+      .take(8),
+    ctx.db
+      .query('issueVersions')
+      .withIndex('by_issue_and_version', (q) => q.eq('issueId', issue._id))
+      .order('desc')
+      .take(20),
+  ])
+  if (
+    !place ||
+    !build?.candidate ||
+    !build.rankedResult ||
+    links.length > 10 ||
+    factors.length > 7
+  ) {
+    return null
+  }
+  const decisions = (
+    await Promise.all(
+      links.map(async (link) => {
+        const record = await ctx.db.get(link.recordId)
+        if (!record) return null
+        const projected = await projectDecision(ctx, record, {
+          includeIssue: false,
+          includeHistory: false,
+        })
+        if (
+          !projected ||
+          record.currentPublishedVersionId !== link.publicationVersionId
+        ) {
+          return null
+        }
+        return { link, projected }
+      }),
+    )
+  ).filter(
+    (
+      item,
+    ): item is {
+      link: Doc<'issueDecisionLinks'>
+      projected: typeof decision.type
+    } => item !== null,
+  )
+  if (decisions.length !== links.length) return null
+  const citations = dedupeCitations(
+    decisions.flatMap(({ projected }) => projected.citations),
+  )
+  const citationIds = new Set(citations.map((item) => item.id))
+  const supported = new Set(build.rankedResult.supportedFactPaths)
+  const factIds = (fieldPath: string): string[] => {
+    if (!supported.has(fieldPath)) return []
+    const fact = build.candidate?.facts.find(
+      (candidateFact) => candidateFact.fieldPath === fieldPath,
+    )
+    return (fact?.citationIds ?? []).filter((id) => citationIds.has(id))
+  }
+  const titleCitationIds = factIds('/title')
+  const summaryCitationIds = factIds('/summary')
+  if (
+    titleCitationIds.length === 0 ||
+    summaryCitationIds.length === 0 ||
+    decisions.some(({ link }) =>
+      link.citationIds.every((id) => !citationIds.has(id)),
+    )
+  ) {
+    return null
+  }
+  const changes = (
+    await Promise.all(
+      decisions.map(({ link }) => loadChanges(ctx, link.recordId)),
+    )
+  )
+    .flat()
+    .sort((left, right) => right.createdAt - left.createdAt)
+    .slice(0, 20)
+  const publicActions = decisions.flatMap(
+    ({ projected }) => projected.publicActions,
+  )
+
+  return {
+    revision: current._id,
+    slug: issue.slug,
+    placeName: place.name,
+    placeSlug: place.slug,
+    bodyName: body.name,
+    mode: current.mode,
+    title: current.payload.title,
+    summary: current.payload.summary,
+    lifecycleState: current.payload.lifecycleState ?? null,
+    nextKnownAction: current.payload.nextKnownAction ?? null,
+    topics: current.payload.topics,
+    claimCitationIds: {
+      title: titleCitationIds,
+      summary: summaryCitationIds,
+      lifecycleState: factIds('/lifecycleState'),
+      nextDescription: factIds('/nextKnownAction/description'),
+      nextAt: factIds('/nextKnownAction/at'),
+    },
+    links: decisions.map(({ link, projected }) => ({
+      recordKey: projected.recordKey,
+      title: projected.title,
+      summary: projected.summary,
+      lifecycleState: projected.lifecycleState,
+      meetingAt: projected.meetingAt,
+      relationship: link.relationship,
+      reason: link.reason,
+      citationIds: link.citationIds.filter((id) => citationIds.has(id)),
+    })),
+    factors: factors.map((factor) => ({
+      factor: factor.factor,
+      level: factor.level,
+      rationale: factor.rationale,
+      citationIds: factor.citationIds.filter((id) => citationIds.has(id)),
+    })),
+    publicActions,
+    citations,
+    versions: versions
+      .filter((row) => row.mode !== 'withheld' && row.payload !== null)
+      .map((row) => ({
+        version: row.version,
+        mode: row.mode as 'full' | 'limited',
+        reasonCode: row.reasonCode,
+        createdAt: row.createdAt,
+      })),
+    changes,
+  }
+}
 
 function dedupeCitations(
   values: Array<typeof citation.type>,

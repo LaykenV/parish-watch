@@ -16,6 +16,7 @@ import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FollowingRouteImport } from './routes/following'
 import { Route as ForYouRouteImport } from './routes/for-you'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as IssuesRouteImport } from './routes/issues_'
 import { Route as CoverageRequestRouteImport } from './routes/coverage_.request'
 import { Route as DecisionsRecordKeyRouteImport } from './routes/decisions.$recordKey'
 import { Route as FollowingAreasAndTopicsRouteImport } from './routes/following_.areas-and-topics'
@@ -57,6 +58,11 @@ const ForYouRoute = ForYouRouteImport.update({
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IssuesRoute = IssuesRouteImport.update({
+  id: '/issues_',
+  path: '/issues',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoverageRequestRoute = CoverageRequestRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/following': typeof FollowingRoute
   '/for-you': typeof ForYouRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/issues': typeof IssuesRoute
   '/coverage/request': typeof CoverageRequestRoute
   '/decisions/$recordKey': typeof DecisionsRecordKeyRoute
   '/following/areas-and-topics': typeof FollowingAreasAndTopicsRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/following': typeof FollowingRoute
   '/for-you': typeof ForYouRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/issues': typeof IssuesRoute
   '/coverage/request': typeof CoverageRequestRoute
   '/decisions/$recordKey': typeof DecisionsRecordKeyRoute
   '/following/areas-and-topics': typeof FollowingAreasAndTopicsRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/following': typeof FollowingRoute
   '/for-you': typeof ForYouRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/issues_': typeof IssuesRoute
   '/coverage_/request': typeof CoverageRequestRoute
   '/decisions/$recordKey': typeof DecisionsRecordKeyRoute
   '/following_/areas-and-topics': typeof FollowingAreasAndTopicsRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/following'
     | '/for-you'
     | '/how-it-works'
+    | '/issues'
     | '/coverage/request'
     | '/decisions/$recordKey'
     | '/following/areas-and-topics'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/following'
     | '/for-you'
     | '/how-it-works'
+    | '/issues'
     | '/coverage/request'
     | '/decisions/$recordKey'
     | '/following/areas-and-topics'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/following'
     | '/for-you'
     | '/how-it-works'
+    | '/issues_'
     | '/coverage_/request'
     | '/decisions/$recordKey'
     | '/following_/areas-and-topics'
@@ -203,6 +215,7 @@ export interface RootRouteChildren {
   FollowingRoute: typeof FollowingRoute
   ForYouRoute: typeof ForYouRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  IssuesRoute: typeof IssuesRoute
   CoverageRequestRoute: typeof CoverageRequestRoute
   DecisionsRecordKeyRoute: typeof DecisionsRecordKeyRoute
   FollowingAreasAndTopicsRoute: typeof FollowingAreasAndTopicsRoute
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/how-it-works'
       fullPath: '/how-it-works'
       preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/issues_': {
+      id: '/issues_'
+      path: '/issues'
+      fullPath: '/issues'
+      preLoaderRoute: typeof IssuesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coverage_/request': {
@@ -323,6 +343,7 @@ const rootRouteChildren: RootRouteChildren = {
   FollowingRoute: FollowingRoute,
   ForYouRoute: ForYouRoute,
   HowItWorksRoute: HowItWorksRoute,
+  IssuesRoute: IssuesRoute,
   CoverageRequestRoute: CoverageRequestRoute,
   DecisionsRecordKeyRoute: DecisionsRecordKeyRoute,
   FollowingAreasAndTopicsRoute: FollowingAreasAndTopicsRoute,

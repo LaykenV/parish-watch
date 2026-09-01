@@ -746,7 +746,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_issue_key', ['issueKey'])
-    .index('by_slug', ['slug']),
+    .index('by_slug', ['slug'])
+    .index('by_current_mode_and_updated_at', ['currentMode', 'updatedAt']),
 
   issueVersions: defineTable({
     issueId: v.id('issues'),

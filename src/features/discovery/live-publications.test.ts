@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import type { PublishedDecision } from './live-publications'
+import type { PublishedDecision, PublishedIssue } from './live-publications'
 import {
   toDecisionCard,
   toDecisionRow,
+  toIssueCard,
+  toIssueLifecycleState,
   toLifecycleState,
 } from './live-publications'
 
@@ -23,6 +25,23 @@ const fullDecision: PublishedDecision = {
   sourceRecordId: 'CO-062-2026',
   summary: 'The council postponed the ordinance.',
   title: 'An ordinance concerning Hellen Street',
+}
+
+const fullIssue: PublishedIssue = {
+  bodyName: 'Rapides Parish Police Jury',
+  decisionCount: 2,
+  evidenceCheckedAt: 1_788_000_000_000,
+  latestMeetingAt: '2026-06-09T00:00:00.000Z',
+  lifecycleState: 'decided',
+  mode: 'full',
+  nextKnownAction: null,
+  placeName: 'Rapides Parish',
+  placeSlug: 'rapides-parish',
+  revision: 'issue-version-id',
+  slug: '2026-millage-levy',
+  summary: 'The police jury set the 2026 property-tax millage levy.',
+  title: '2026 millage levy on the Rapides Parish tax roll',
+  topics: ['Public money'],
 }
 
 describe('live publication discovery adapter', () => {
@@ -71,5 +90,29 @@ describe('live publication discovery adapter', () => {
     expect(toLifecycleState('implementing')).toBe('In progress')
     expect(toLifecycleState('decided')).toBe('Decided')
     expect(toLifecycleState(null)).toBe('Status not stated')
+  })
+
+  it('maps a published issue without dropping its linked-record context', () => {
+    expect(toIssueCard(fullIssue)).toMatchObject({
+      body: 'Rapides Parish Police Jury',
+      evidence: {
+        note: 'Built from 2 linked official decision records.',
+        status: 'Evidence available',
+      },
+      href: '/issues/2026-millage-levy',
+      latestOutcome: {
+        date: '2026-06-09T00:00:00.000Z',
+        label: 'Latest record',
+      },
+      place: 'Rapides Parish',
+      state: 'Decided',
+      whyMatter: 'The police jury set the 2026 property-tax millage levy.',
+    })
+  })
+
+  it('maps issue-specific lifecycle labels into resident language', () => {
+    expect(toIssueLifecycleState('active')).toBe('In progress')
+    expect(toIssueLifecycleState('complete')).toBe('Completed')
+    expect(toIssueLifecycleState('unknown')).toBe('Status not stated')
   })
 })
