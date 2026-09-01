@@ -29,6 +29,7 @@
     "deploy": "npx @convex-dev/static-hosting deploy --dist dist/client"
   },
   "dependencies": {
+    "@ai-sdk/provider": "4.0.3",
     "@base-ui/react": "1.6.0",
     "@convex-dev/agent": "0.7.1",
     "@convex-dev/ai-sdk-provider": "0.1.0",

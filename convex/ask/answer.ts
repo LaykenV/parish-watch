@@ -2,6 +2,7 @@
 
 import { Agent, listMessages } from '@convex-dev/agent'
 import { convexGateway } from '@convex-dev/ai-sdk-provider'
+import type { JSONSchema7 } from '@ai-sdk/provider'
 import { ConvexError, v } from 'convex/values'
 import { Output, jsonSchema } from 'ai'
 
@@ -36,7 +37,7 @@ Every factual claim in an answer must be supported by one or more supplied evide
 Return not_found when the supplied evidence cannot support a useful answer.
 Keep suggested follow-up questions inside the same evidence scope.`
 
-export const ASK_ANSWER_JSON_SCHEMA = {
+export const ASK_ANSWER_JSON_SCHEMA: JSONSchema7 & Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
   properties: {
@@ -55,7 +56,7 @@ export const ASK_ANSWER_JSON_SCHEMA = {
     },
   },
   required: ['kind', 'answer', 'evidenceIds', 'followUps'],
-} as const
+}
 
 type GatewayGeneration = {
   output: unknown
