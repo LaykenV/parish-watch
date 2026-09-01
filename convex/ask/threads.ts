@@ -307,7 +307,7 @@ async function requirePublishedScope(ctx: MutationCtx, scope: AskScope) {
     const meeting = await ctx.runQuery(
       api.resident.evidence.getPublishedMeeting,
       {
-        meetingId: scope.meetingId,
+        meetingKey: scope.meetingId,
       },
     )
     if (!meeting)

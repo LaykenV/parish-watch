@@ -185,7 +185,7 @@ async function scopedDecisions(
   if (scope.kind === 'meeting') {
     const meeting: MeetingProjection | null = await ctx.runQuery(
       api.resident.evidence.getPublishedMeeting,
-      { meetingId: scope.meetingId },
+      { meetingKey: scope.meetingId },
     )
     if (!meeting) return []
     const meetingMatches = score(
