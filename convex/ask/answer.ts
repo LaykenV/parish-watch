@@ -137,7 +137,7 @@ export const answerQuestion = action({
       {
         token: args.token,
         threadId: args.threadId,
-        question: context.question,
+        question: retrievalQuestion(context),
       },
     )
 
@@ -442,6 +442,20 @@ function buildPrompt(
     `Published evidence: ${JSON.stringify(safeEvidence)}`,
     'Return the strict answer object. Cite only evidenceId values listed above.',
   ].join('\n\n')
+}
+
+function retrievalQuestion(context: {
+  question: string
+  prior: Array<{ role: string; text: string }>
+}): string {
+  const previousQuestion = context.prior
+    .slice()
+    .reverse()
+    .find((message) => message.role === 'user')?.text
+  if (!previousQuestion) return context.question
+  const remaining = 500 - context.question.length - 1
+  if (remaining <= 0) return context.question
+  return `${previousQuestion.slice(0, remaining)}\n${context.question}`
 }
 
 async function runDirectFallback(

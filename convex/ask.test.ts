@@ -174,7 +174,7 @@ test('retrieval stays inside the accepted thread scope and fails closed', async 
   ).rejects.toThrow('Issue evidence is unavailable')
 })
 
-test('answers with retrieved citations once and replays the Agent message', async () => {
+test('answers follow-ups with retrieved citations and replays the Agent message', async () => {
   const t = initTest()
   const seeded = await seedEvidence(t)
   const token = 'answer-session-token-000000000000000000000000000000'
@@ -232,21 +232,47 @@ test('answers with retrieved citations once and replays the Agent message', asyn
   })
   expect(calls).toBe(1)
 
+  const followUp = await t.mutation(api.ask.threads.appendQuestion, {
+    token,
+    threadId: thread.threadId,
+    question: 'Who received it?',
+    idempotencyKey: 'answer-follow-up-receipt-001',
+  })
+  await expect(
+    t.action(api.ask.answer.answerQuestion, {
+      token,
+      threadId: thread.threadId,
+      questionMessageId: followUp.messageId,
+    }),
+  ).resolves.toMatchObject({ kind: 'answer', replayed: false })
+  expect(receivedPrompt).toContain('What changed about drainage')
+  expect(receivedPrompt).toContain('Who received it?')
+  expect(calls).toBe(2)
+
   const stored = await t.run(async (ctx) => ({
     attempts: await ctx.db.query('askModelAttempts').collect(),
     receipts: await ctx.db.query('askAnswerReceipts').collect(),
   }))
-  expect(stored.attempts).toMatchObject([
-    {
-      route: 'ai_gateway',
-      modelRole: 'MODEL_FAST',
-      status: 'success',
-      totalTokens: 15,
-    },
-  ])
-  expect(stored.receipts).toMatchObject([
-    { state: 'succeeded', answerMessageId: first.messageId },
-  ])
+  expect(stored.attempts).toHaveLength(2)
+  expect(stored.attempts).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        route: 'ai_gateway',
+        modelRole: 'MODEL_FAST',
+        status: 'success',
+        totalTokens: 15,
+      }),
+    ]),
+  )
+  expect(stored.receipts).toHaveLength(2)
+  expect(stored.receipts).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        state: 'succeeded',
+        answerMessageId: first.messageId,
+      }),
+    ]),
+  )
 })
 
 test('rejects invented citations before an assistant message is saved', async () => {
