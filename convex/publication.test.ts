@@ -23,6 +23,10 @@ import {
 } from './review/contractV1'
 import { buildIndependentReviewPromptV1 } from './review/promptV1'
 import { extractionRunKey, publicationRunKey } from './pipeline/keys'
+import {
+  EXTRACTION_PROCESSOR_VERSION,
+  EXTRACTION_PROMPT_VERSION,
+} from './pipeline/state'
 import { applyPublicationPolicyV1 } from './publication/policyV1'
 import schema from './schema'
 import { sha256HexOfBytes, sha256HexOfText } from './sources/hashing'
@@ -122,7 +126,7 @@ async function seedValidatedCandidate(
       registryId,
       trigger: 'manual_extraction',
       state: 'succeeded',
-      processorVersion: 'v1.17',
+      processorVersion: EXTRACTION_PROCESSOR_VERSION,
       snapshotId,
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
@@ -137,9 +141,9 @@ async function seedValidatedCandidate(
       sourceKind: 'agenda',
       targetRecordId: 'CO-029-2026',
       sourceRecordIdProvenance: 'source_printed',
-      promptVersion: 'v1.6',
+      promptVersion: EXTRACTION_PROMPT_VERSION,
       schemaVersion: 'v1',
-      processorVersion: 'v1.17',
+      processorVersion: EXTRACTION_PROCESSOR_VERSION,
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
       route: 'ai_gateway',
@@ -166,7 +170,7 @@ async function seedValidatedCandidate(
       amounts: [],
       publicActions: [],
       state: 'deterministically_validated',
-      promptVersion: 'v1.6',
+      promptVersion: EXTRACTION_PROMPT_VERSION,
       schemaVersion: 'v1',
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
@@ -308,7 +312,7 @@ async function seedReextractedCandidate(
       registryId: original.registryId,
       trigger: 'manual_extraction',
       state: 'succeeded',
-      processorVersion: 'v1.17',
+      processorVersion: EXTRACTION_PROCESSOR_VERSION,
       snapshotId: original.snapshotId,
       sourceKind: original.sourceKind,
       targetRecordId: original.targetRecordId,
@@ -327,7 +331,7 @@ async function seedReextractedCandidate(
         original.sourceRecordIdProvenance ?? 'source_printed',
       promptVersion: original.promptVersion,
       schemaVersion: original.schemaVersion,
-      processorVersion: 'v1.17',
+      processorVersion: EXTRACTION_PROCESSOR_VERSION,
       modelRole: 'MODEL_STRONG',
       modelId: TERRA_MODEL,
       route: 'ai_gateway',
@@ -945,9 +949,9 @@ test('replaying a succeeded extraction repairs a missing publication run', async
     sourceKind: 'agenda',
     targetRecordId: 'CO-029-2026',
     sourceRecordIdProvenance: 'source_printed',
-    promptVersion: 'v1.6',
+    promptVersion: EXTRACTION_PROMPT_VERSION,
     schemaVersion: 'v1',
-    processorVersion: 'v1.17',
+    processorVersion: EXTRACTION_PROCESSOR_VERSION,
   })
   await t.run(async (ctx) => {
     await ctx.db.patch(seeded.runId, { idempotencyKey })
@@ -959,7 +963,7 @@ test('replaying a succeeded extraction repairs a missing publication run', async
       attempt: 1,
       inputSnapshotId: seeded.snapshotId,
       outputExtractionId: seeded.extractionId,
-      promptVersion: 'v1.6',
+      promptVersion: EXTRACTION_PROMPT_VERSION,
       schemaVersion: 'v1',
     })
     await ctx.db.insert('pipelineStages', {
