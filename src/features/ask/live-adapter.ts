@@ -186,7 +186,7 @@ export class LiveAskAdapter implements AskAdapter {
       this.replaceTurnId(temporaryId, questionMessageId)
       const answer = await this.threads.answer(threadId, questionMessageId)
       this.completeTurn(questionMessageId, projectAnswer(answer))
-      await this.pushRecent()
+      void this.pushRecent().catch(() => undefined)
     } catch (error) {
       this.handleRequestFailure(questionMessageId, error)
       if (!accepted) {

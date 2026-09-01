@@ -116,6 +116,49 @@ test('rejects an online failure before acceptance and removes the optimistic tur
   expect(latestConversation(updates)).toBeNull()
 })
 
+test('keeps a completed answer when recent-label refresh fails', async () => {
+  const mutation = vi
+    .fn()
+    .mockResolvedValueOnce({ expiresAt: 2_000_000_000_000 })
+    .mockResolvedValueOnce({
+      threadId: 'agent-thread-recent-failure',
+      expiresAt: 2_000_000_000_000,
+      scope: { kind: 'issue', issueSlug: 'truck-donation' },
+    })
+    .mockResolvedValueOnce({
+      messageId: 'question-recent-failure',
+      replayed: false,
+    })
+  const query = vi.fn().mockRejectedValue(new Error('Label query failed'))
+  const adapter = new LiveAskAdapter(
+    {
+      mutation,
+      action: vi.fn().mockResolvedValue(answerResult()),
+      query,
+    } as unknown as ConvexReactClient,
+    memoryStorage(),
+  )
+  const updates: AskUpdate[] = []
+  adapter.subscribe((update) => updates.push(update))
+
+  await adapter.submit({
+    scope: {
+      kind: 'issue',
+      issueSlug: 'truck-donation',
+      label: 'Answering from this issue',
+      recordTitle: 'Surplus truck donation',
+      returnTo: '/issues/truck-donation',
+    },
+    question: 'Who received the trucks?',
+    idempotencyKey: 'question-key-recent-failure-0001',
+  })
+  await vi.waitFor(() => expect(query).toHaveBeenCalled())
+  expect(latestConversation(updates)?.turns[0]).toMatchObject({
+    id: 'question-recent-failure',
+    state: 'complete',
+  })
+})
+
 test('rebuilds a refreshed conversation from Agent history and exact citations', async () => {
   const storage = memoryStorage()
   const mutation = vi
