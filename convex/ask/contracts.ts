@@ -30,6 +30,8 @@ export const askEvidenceResult = v.object({
   evidence: v.array(askEvidence),
 })
 
+export type AskEvidenceResult = typeof askEvidenceResult.type
+
 export function scopeKey(scope: AskScope): string {
   if (scope.kind === 'issue') return scope.issueSlug
   if (scope.kind === 'meeting') return scope.meetingId

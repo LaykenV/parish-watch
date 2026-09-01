@@ -125,7 +125,9 @@ test('retrieval stays inside the accepted thread scope and fails closed', async 
   expect(evidence.kind).toBe('evidence')
   expect(evidence.evidence.length).toBeGreaterThan(0)
   expect(
-    evidence.evidence.every((item) => item.recordKey === seeded.recordKey),
+    evidence.evidence.every(
+      (item: { recordKey: string }) => item.recordKey === seeded.recordKey,
+    ),
   ).toBe(true)
   expect(JSON.stringify(evidence)).not.toContain('superseded drainage wording')
   expect(JSON.stringify(evidence)).not.toContain('withheld pipeline record')
@@ -153,7 +155,7 @@ test('retrieval stays inside the accepted thread scope and fails closed', async 
   })
   expect(
     meetingEvidence.evidence.every(
-      (item) => item.recordKey === seeded.recordKey,
+      (item: { recordKey: string }) => item.recordKey === seeded.recordKey,
     ),
   ).toBe(true)
 

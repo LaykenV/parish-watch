@@ -3,6 +3,7 @@ import { ConvexError, v } from 'convex/values'
 import { api } from '../_generated/api'
 import type { QueryCtx } from '../_generated/server'
 import { query } from '../_generated/server'
+import type { AskEvidenceResult } from './contracts'
 import { askEvidenceResult, storedScope } from './contracts'
 import { authorizeThreadRead } from './threads'
 
@@ -54,7 +55,7 @@ export const retrieveEvidence = query({
     question: v.string(),
   },
   returns: askEvidenceResult,
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<AskEvidenceResult> => {
     const question = args.question.trim()
     if (question.length === 0 || question.length > 500) {
       throw new ConvexError({
@@ -89,8 +90,10 @@ export const retrieveEvidence = query({
       )
       .slice(0, MAX_EVIDENCE_ITEMS)
 
+    const kind: AskEvidenceResult['kind'] =
+      evidence.length > 0 ? 'evidence' : 'no_evidence'
     return {
-      kind: evidence.length > 0 ? 'evidence' : 'no_evidence',
+      kind,
       scope,
       evidence,
     }
@@ -99,11 +102,66 @@ export const retrieveEvidence = query({
 
 type Scope = ReturnType<typeof storedScope>
 
-async function scopedDecisions(ctx: QueryCtx, scope: Scope, terms: string[]) {
+type EvidenceCitation = {
+  id: string
+  fieldPath: string
+  documentTitle: string
+  bodyName: string
+  officialUrl: string
+  excerpt: string
+  page: number | null
+  section: string | null
+}
+
+type ScopedDecision = {
+  recordKey: string
+  citations: EvidenceCitation[]
+}
+
+type IssueProjection = {
+  title: string
+  summary: string
+  topics: string[]
+  links: Array<{
+    recordKey: string
+    title: string
+    summary: string | null
+    reason: string
+  }>
+}
+
+type MeetingProjection = {
+  bodyName: string
+  placeName: string
+  meetingAt: string
+  decisions: Array<
+    ScopedDecision & {
+      title: string
+      summary: string | null
+      sourceRecordId: string
+    }
+  >
+}
+
+type DiscoveryProjection = {
+  recordKey: string
+  sourceRecordId: string
+  placeSlug: string
+  bodyName: string
+  title: string
+  summary: string | null
+}
+
+async function scopedDecisions(
+  ctx: QueryCtx,
+  scope: Scope,
+  terms: string[],
+): Promise<ScopedDecision[]> {
   if (scope.kind === 'issue') {
-    const issue = await ctx.runQuery(api.resident.evidence.getPublishedIssue, {
-      slug: scope.issueSlug,
-    })
+    const issue: IssueProjection | null = await ctx.runQuery(
+      api.resident.evidence.getPublishedIssue,
+      { slug: scope.issueSlug },
+    )
     if (!issue) return []
     const issueMatches = score(
       `${issue.title} ${issue.summary} ${issue.topics.join(' ')}`,
@@ -125,7 +183,7 @@ async function scopedDecisions(ctx: QueryCtx, scope: Scope, terms: string[]) {
   }
 
   if (scope.kind === 'meeting') {
-    const meeting = await ctx.runQuery(
+    const meeting: MeetingProjection | null = await ctx.runQuery(
       api.resident.evidence.getPublishedMeeting,
       { meetingId: scope.meetingId },
     )
@@ -148,7 +206,7 @@ async function scopedDecisions(ctx: QueryCtx, scope: Scope, terms: string[]) {
       .map((item) => item.decision)
   }
 
-  const published = await ctx.runQuery(
+  const published: DiscoveryProjection[] = await ctx.runQuery(
     api.resident.discovery.listPublishedDecisions,
     {},
   )
@@ -170,14 +228,17 @@ async function scopedDecisions(ctx: QueryCtx, scope: Scope, terms: string[]) {
   return await loadDecisions(ctx, keys)
 }
 
-async function loadDecisions(ctx: QueryCtx, recordKeys: string[]) {
-  const decisions = await Promise.all(
+async function loadDecisions(
+  ctx: QueryCtx,
+  recordKeys: string[],
+): Promise<ScopedDecision[]> {
+  const decisions: Array<ScopedDecision | null> = await Promise.all(
     recordKeys.map((recordKey) =>
       ctx.runQuery(api.resident.evidence.getPublishedDecision, { recordKey }),
     ),
   )
   return decisions.filter(
-    (decision): decision is NonNullable<typeof decision> => decision !== null,
+    (decision): decision is ScopedDecision => decision !== null,
   )
 }
 
