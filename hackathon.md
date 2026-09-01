@@ -12,9 +12,19 @@
 - **Auth:** none
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T00:52:28Z
+- **Last updated:** 2026-09-01T01:29:11Z
 
 ## Log
+
+### 2026-09-01 - 070958e
+
+Removed the stale Lafayette board-vacancy projection from the production
+resident feed without deleting its decision record or linked publication
+evidence. The legacy record now has no current publication pointers. The
+production resident query returns 26 publications and exactly one
+board-vacancy card, under `CITY-BOARD-APPLICATIONS-2026-09-15`. This was a
+one-time data correction. It did not add a withdrawal workflow or resident
+correction product.
 
 ### 2026-09-01 - 85d6947
 
@@ -77,9 +87,10 @@ The run published 26 launch records: 15 Lafayette, 9 Rapides, and 2 East Baton
 Rouge. Fifteen are full and 11 are limited. The Rapides negative control
 returned `not_found`, and replay reused all 27 successful extraction run IDs
 without new model calls. Three targets stayed out after repeat exact-citation
-validation failures. The resident query also exposes one older duplicate
-Lafayette board-vacancy card, so its current public count is 27 until a
-ledger-preserving withdrawal operation exists
+validation failures. At promotion time, the resident query also exposed one
+older duplicate Lafayette board-vacancy card, which raised the public count to
+27. The September 1 production-data correction above removed that stale
+projection while preserving its record and evidence
 (`docs/production-batches/launch-data-2026-08-31.v1.json`,
 `convex/operations/seed.ts`).
 

@@ -20,12 +20,12 @@ AgentMail, a coverage compiler, or the real detail and action adapters.
 
 The next planned capability is PR 6A, private evidence-scoped Ask threads. It
 starts the production resident loop without reopening the finished interface.
-Before filing it, remove the known duplicate board-vacancy projection through a
-ledger-preserving withdrawal operation. Then close the missing Slice 5 data
-prerequisite: run and review at least one production issue build, connect the
-accepted issue, decision, meeting, and citation projections to their finished
-routes, and prove one published change updates that open issue without refresh.
-This is correction, adapter, and data work, not another UI slice.
+The known duplicate board-vacancy projection is corrected. Before filing PR
+6A, close the remaining Slice 5 data prerequisite: run and review at least one
+production issue build, connect the accepted issue, decision, meeting, and
+citation projections to their finished routes, and prove one published change
+updates that open issue without refresh. This is adapter and data work, not
+another UI slice.
 
 ## Original starting assumption
 

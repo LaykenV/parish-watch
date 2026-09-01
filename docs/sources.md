@@ -22,9 +22,11 @@ three targets stayed out after repeat exact-citation failures, and replay reused
 all 27 successful extraction run IDs without new model calls. The batch evidence
 lives in `docs/production-batches/launch-data-2026-08-31.v1.json`.
 
-The resident query currently exposes those publications plus one older
-duplicate Lafayette board-vacancy card. Its public count is 27 until a
-ledger-preserving withdrawal operation exists. This is a known projection
+The resident query now exposes those 26 publications. A September 1 one-time
+production data correction cleared the current publication pointers from one
+older duplicate Lafayette board-vacancy record without deleting its evidence.
+Exactly one board-vacancy card remains, under
+`CITY-BOARD-APPLICATIONS-2026-09-15`. The duplicate was a legacy projection
 defect, not another launch record.
 
 This proof covers selected official PDF source families. It does not mark any

@@ -78,9 +78,11 @@ The later controlled production onboarding ran Terra extraction and Luna review
 for launch atomic records. The August 31 batch published 26 records from 17
 hash-matched official PDFs: 15 Lafayette, 9 Rapides, and 2 East Baton Rouge.
 Fifteen are full and 11 are limited. Production still has no issue build,
-issue-decision link, importance assessment, or ranked issue projection. The
-resident query exposes one older duplicate Lafayette board-vacancy card pending
-a ledger-preserving withdrawal operation.
+issue-decision link, importance assessment, or ranked issue projection. A
+September 1 one-time production data correction cleared the current publication
+pointers from one older duplicate Lafayette board-vacancy record without
+deleting its evidence. The resident query now returns 26 publications and one
+canonical board-vacancy card.
 
 PR #24 merged resident-interface Design Slice 2 as `4e2ac67`. The application
 now has a responsive shell plus Home, For You, and Explore routes. Explicit

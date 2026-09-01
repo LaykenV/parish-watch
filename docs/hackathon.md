@@ -153,10 +153,12 @@ official PDFs whose production hashes matched the reviewed development inputs.
 The batch produced 15 Lafayette, 9 Rapides, and 2 East Baton Rouge records: 15
 full and 11 limited. One negative control returned `not_found`, three targets
 stayed out after exact-citation failures, and replay reused all 27 successful
-extraction run IDs. The resident query also exposes one older duplicate
-Lafayette board-vacancy card, so the current public count is 27 until a
-ledger-preserving withdrawal operation exists. These records do not prove
-complete government-body coverage.
+extraction run IDs. A one-time production-data correction then cleared the
+current publication pointers from one older duplicate Lafayette board-vacancy
+record without deleting its evidence. The resident query now returns 26
+publications and exactly one board-vacancy card, under
+`CITY-BOARD-APPLICATIONS-2026-09-15`. These records do not prove complete
+government-body coverage.
 
 PR #14 deployed the labeled low-fidelity route blueprint as `6e46fd7`. PR #24
 then deployed the responsive application shell plus fixture-backed Home, For

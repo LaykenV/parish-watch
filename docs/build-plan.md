@@ -209,9 +209,11 @@ through #23. On August 31, the repeatable launch batch promoted 26 atomic
 records from 17 hash-matched official PDFs: 15 Lafayette, 9 Rapides, and 2 East
 Baton Rouge. Fifteen are full and 11 are limited. One negative control returned
 `not_found`, three targets stayed out after exact-citation failures, and replay
-reused all 27 successful extraction run IDs. The resident query also contains
-one older duplicate Lafayette board-vacancy card pending a ledger-preserving
-withdrawal operation.
+reused all 27 successful extraction run IDs. A September 1 one-time production
+data correction cleared the current publication pointers from one older
+duplicate Lafayette board-vacancy record without deleting its evidence. The
+resident query now returns 26 publications and exactly one board-vacancy card,
+under `CITY-BOARD-APPLICATIONS-2026-09-15`.
 
 Production still has no issue build, issue-decision link, or importance
 assessment. Accepted atomic records may appear in the unranked "Published
