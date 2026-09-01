@@ -1,6 +1,6 @@
 # Resident interface Slice 3
 
-Status: deployed through PR #27 as `3a59e45` on August 30, 2026
+Status: deployed through PR #27 as `3a59e45` on August 30, 2026; production data adapters were connected later
 
 Date: August 30, 2026
 
@@ -66,11 +66,12 @@ parameter does not add a resident-facing banner. Links between fixture-backed
 issues, decisions, and meetings preserve the parameter so the review path does
 not fall into a production recovery state.
 
-Production builds ignore both fixture values and show the route recovery page.
-Development-only dynamic imports keep the evidence fixtures and fabricated
-source excerpts out of the production JavaScript bundle. The fixtures do not
-enter Convex, prerendered HTML, or public civic records. Real issue,
-decision-detail, and meeting-detail queries remain integration work.
+Production builds ignore both fixture values. At this design checkpoint they
+showed the route recovery page. Development-only dynamic imports keep the
+evidence fixtures and fabricated source excerpts out of the production
+JavaScript bundle. The fixtures do not enter Convex, prerendered HTML, or public
+civic records. Later resident-evidence releases connected real issue, decision,
+and meeting queries without changing this fixture boundary.
 
 ## Shared interface rules
 

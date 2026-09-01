@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4 and resident-interface Design Slices 1 through 8 are deployed
+Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slice 6 are deployed
 
 ## Product Sentence
 
@@ -52,16 +52,16 @@ resident journeys with bounded return paths and a code-level fixture-to-API
 handoff. PR #43 deployed that final interface as `85d6947`; production workflow
 `33454522729` and the independent production smoke passed.
 
-This closes resident UI design and implementation, not the production adapters.
-Production keeps Ask, accounts, follows, AgentMail, coverage requests, and
-private reports unavailable until their backend paths pass. PR 6A establishes
-private evidence-scoped Ask threads and retrieval. PR 6B adds validated answers
-and exact current-evidence replay. PR 6C connects Ask to the approved interface
-with request and token limits. The stacked development head passed a real
-two-turn gateway conversation, not-found, refresh restoration, offline, exact
-Source, and phone-width browser checks. Production Ask remains unavailable
-while the three Slice 6 PRs are open. Each integration must replace the matching
-typed adapter without changing the page hierarchy or visual system.
+This closes resident UI design, but not every production adapter. Implementation
+Slice 6 is deployed through PRs #45, #47, and #49. Production Ask now uses
+private 24-hour Agent threads, validated current evidence, deterministic
+citation checks, and per-session plus app-wide request and token limits. A
+production issue-scoped test completed two related cited turns, opened the exact
+`CO-022-2026` and `CO-023-2026` Source spans, and returned evidence not found
+without citations for an unsupported question. Accounts, follows, AgentMail,
+coverage requests, and private reports remain unavailable until their backend
+paths pass. Each integration must replace the matching typed adapter without
+changing the page hierarchy or visual system.
 
 ### Start With Consequence
 

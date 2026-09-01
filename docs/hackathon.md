@@ -114,8 +114,8 @@ Phase 0 was completed on August 27:
 - the public root, production-bound asset, direct not-found route, and desktop
   and mobile layouts were tested signed out.
 
-The evidence backend through Slice 4 and resident-interface Design Slices 1
-through 3 are live in production.
+The evidence backend through Slice 4, resident-interface Design Slices 1 through
+8, and implementation Slice 6 are live in production.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -202,12 +202,16 @@ Anonymous visit and area-selection telemetry is live and private. A controlled
 test proved the production writes and origin-specific browser accounting. It is
 test traffic, not resident adoption.
 
-The UI track is complete. Resident-safe decision and meeting projections now
-map accepted publications and exact citations into the finished routes, and the
-issue query fails closed on stale decision links. A fresh production issue
-build and live-update proof, the Ask backend, mounted Convex Auth, follows,
-AgentMail, coverage integration, the owner compiler, resident proof, the demo,
-and the vibeapps.dev submission remain pending.
+The UI track, Slice 5 data gate, and implementation Slice 6 are complete.
+Resident-safe decision, meeting, and issue projections map accepted
+publications and exact citations into the finished routes, and the issue query
+fails closed on stale decision links. PRs #45, #47, and #49 deployed private
+24-hour Agent threads, validated `MODEL_FAST` answers, and bounded anonymous
+Ask. A production issue-scoped test completed two related cited turns, opened
+the exact `CO-022-2026` and `CO-023-2026` minutes spans, and returned evidence
+not found without citations for an unsupported question. Mounted Convex Auth,
+follows, AgentMail, coverage integration, the owner compiler, resident proof,
+the demo, and the vibeapps.dev submission remain pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

@@ -24,24 +24,22 @@ Terra extraction, Luna review, and idempotent replay proofs ran in the personal
 development deployment. Slice 4 deployed through PR #13 as `c162543` and passed
 the exact production workflow plus an independent smoke.
 
-Resident-interface Design Slices 1 through 5 are also deployed. PR #24 merged as
-`4e2ac67` and shipped the responsive application shell plus fixture-backed Home,
-For You, and Explore routes. PR #27 merged as `3a59e45` and added the issue,
-atomic decision, meeting, and citation-level evidence surfaces. Explicit
-development fixture URLs drive QA states. Area selection, URL-restored Explore filters,
-offline state, share fallback, and responsive navigation work in the browser.
-The discovery records are not a live resident feed, and no production issue
-build or importance assessment has run.
+Resident-interface Design Slices 1 through 8 are deployed. Production exposes
+26 accepted atomic publications and two accepted issue timelines through
+bounded resident projections. Home leads with those issue timelines and the
+decision records underneath. Explore searches issues before individual records.
+Legacy `/for-you` and `/issues` index routes redirect to Home, while stable issue
+detail routes retain their citations and Source controls.
 
-Design Slice 4, Ask Public Parish, merged in PR #28 as `ff36c1b`. Its production
-workflow succeeded. Ask resolves corpus, issue, and meeting scope through a
-typed adapter and renders cited answers in
-the existing evidence gutter, but no chat backend exists behind it. Production
-keeps Ask in navigation showing an honest unavailable state. Design Slice 5
-deployed through PR #31 as `adfe81e`. Production workflow `33401768387` and the
-independent production smoke passed. It implements the fixture-backed follow,
-ownership, preference, and notification interface. Authentication, AgentMail,
-and coverage APIs remain unfinished.
+Implementation Slice 6 is deployed through PRs #45, #47, and #49. Signed-out
+residents can hold a private 24-hour issue, meeting, or corpus conversation.
+`MODEL_FAST` receives only bounded accepted evidence, and deterministic code
+rejects unsupported citation IDs before display. Per-session and app-wide
+request and token ceilings bound provider spend. A production issue-scoped test
+completed two cited turns, opened the exact `CO-022-2026` and `CO-023-2026`
+minutes spans, and returned evidence not found without citations for an
+unsupported question. Authentication, follows, AgentMail, coverage requests,
+and private source reports remain unfinished.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)

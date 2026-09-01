@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 8 are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slice 6 are deployed
 
 ## Architecture Goal
 
@@ -127,16 +127,17 @@ typed contract, current gate, fixture owner, and future API owner for every
 resident destination. Production workflow `33454522729` and the independent
 production smoke passed.
 
-The frontend contract is complete. Decision, meeting, issue, and realtime
-evidence gates are proved. PR 6A adds 24-hour anonymous sessions, private Agent
-threads, component-owned message history, and accepted-evidence retrieval.
-PR 6B adds strict `MODEL_FAST` answers, deterministic citation validation, and
-exact current-evidence replay. PR 6C connects the resident interface and adds
-atomic request and token limits. Its development deployment passed a real
-two-turn conversation, not-found, refresh, offline, Source panel, and
-phone-width checks. Production Ask remains unavailable while the three PRs are
-open. Auth, follow, AgentMail, coverage, request, and private-report adapters
-remain in the post-Slice-5 plan.
+The frontend contract is complete. Decision, meeting, issue, realtime, and
+anonymous Ask evidence gates are proved. PR #45 deployed 24-hour anonymous
+sessions, private Agent threads, component-owned message history, and
+accepted-evidence retrieval. PR #47 deployed strict `MODEL_FAST` answers,
+deterministic citation validation, and exact current-evidence replay. PR #49
+connected the resident interface and added atomic per-session and app-wide
+request and token limits. The production issue-scoped flow completed two cited
+turns, opened the exact `CO-022-2026` and `CO-023-2026` minutes spans, and
+returned evidence not found without citations for an unsupported question.
+Auth, follow, AgentMail, coverage-request, and private-report adapters remain in
+the post-Slice-5 plan.
 
 ## System Boundaries
 

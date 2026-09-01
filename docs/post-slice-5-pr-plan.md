@@ -1,8 +1,7 @@
 # Post-Slice-5 PR plan
 
-Status: approved scope split for build Slices 6 through 9; the resident
-activation precursor to PR 9C is deployed, while core Slice 6 through 9
-capabilities remain
+Status: implementation Slice 6 is deployed and production-proved; Slice 7 PR 7A
+is next
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
@@ -14,21 +13,21 @@ hierarchy and interaction contracts remain in
 Resident-interface Design Slices 1 through 8 are deployed through PR #43 as
 `85d6947`. The complete route hierarchy, responsive behavior, development
 fixtures, integration gates, and fixture-to-API handoff now exist. Production
-discovery reads accepted atomic publications, and anonymous product telemetry
-is live. Production does not yet have mounted Convex Auth, AgentMail, a coverage
-compiler, or the real action adapters. PR 6A pins and registers
-`@convex-dev/agent` for private Ask history. The
-resident-evidence integration connects current accepted decisions, grouped
-meeting evidence, and exact citations to the finished routes. Its issue query
-subscribes to the accepted pointer and withholds any issue whose links no longer
-match every current decision publication.
+discovery reads accepted atomic publications and accepted issue timelines, and
+anonymous product telemetry is live. The known duplicate board-vacancy
+projection is corrected. The Slice 5 data prerequisite is closed. Two bounded
+production issue builds passed linking, independent review, validation, and
+publication. The Rapides millage issue reached an existing subscriber 10.8
+seconds after an initial empty result.
 
-PR 6A is the active capability. It starts the production resident loop without
-reopening the finished interface. The known duplicate board-vacancy projection
-is corrected. The Slice 5 data prerequisite is closed. Two bounded production
-issue builds passed linking, independent review, validation, and publication.
-The Rapides millage issue reached an existing subscriber 10.8 seconds after an
-initial empty result. PR 6A keeps model calls and resident-visible answers out.
+Implementation Slice 6 is closed. PRs #45, #47, and #49 deployed private
+24-hour Agent threads, bounded accepted-evidence retrieval, validated
+`MODEL_FAST` answers, and the real Ask interface with per-session and app-wide
+request and token limits. A production issue-scoped conversation completed two
+related cited turns, opened the exact accepted minutes spans, and returned
+evidence not found without citations for an unsupported question. Production
+does not yet have mounted Convex Auth, AgentMail, or a coverage compiler. PR 7A
+is the active capability.
 
 ## Original starting assumption
 
@@ -124,8 +123,8 @@ after 24 hours, and normal use cannot create unbounded provider cost.
 
 ### PR 6A: establish private evidence-scoped Ask threads
 
-Status on September 1: PR #45 is open with green verification and PR-Agent
-checks.
+Status on September 1: PR #45 merged as `c9ea441`. Production workflow
+`33515579521` passed.
 
 Suggested title: `feat: establish private evidence-scoped ask threads`
 
@@ -172,11 +171,12 @@ question retrieves only its accepted citations.
 
 ### PR 6B: answer Ask with validated published evidence
 
-Status on September 1: PR #47 is open. Its exact stacked implementation reached
-the personal development deployment. A real `MODEL_FAST` call returned a
+Status on September 1: PR #47 merged as `9ae0467`. Production workflow
+`33517184457` passed. Its exact stacked implementation first reached the
+personal development deployment, where a real `MODEL_FAST` call returned a
 strict answer with current Lafayette citations. A second turn used the prior
 question to retrieve the same current records, and an unsupported question
-returned not found without citations. Final replacement checks remain pending.
+returned not found without citations.
 
 Suggested title: `feat: answer ask with validated published evidence`
 
@@ -223,13 +223,16 @@ returns not found, and an invented citation fails closed.
 
 ### PR 6C: ship the bounded anonymous Ask experience
 
-Status on September 1: PR #49 is open and stacked on PR #47. The exact head
-reached the personal development deployment. A real two-turn conversation and
-an unsupported question passed. Browser QA at 375 pixels proved refresh
-restoration, private local storage, exact Source controls, focus return,
-not-found, offline behavior, live answer announcements, and no horizontal
-overflow. The desktop evidence rail also passed. Final replacement checks
-remain pending.
+Status on September 1: PR #49 merged as `30dc267`. Production workflow
+`33518827257` passed. Exact head `e1cd4b1` adds app-wide minute and daily token
+ceilings that survive anonymous session rotation. The production issue-scoped
+flow completed two related turns using the accepted `CO-022-2026` and
+`CO-023-2026` citations. Both Source controls opened their exact minutes spans.
+An unsupported question first entered the safe retry state; its fenced retry
+returned evidence not found with no citations. After refresh, reopening the
+preserved recent conversation restored all three turns. Earlier browser QA at
+375 and 1280 pixels covered private local storage, Source controls, focus
+return, offline behavior, live announcements, and overflow.
 
 Suggested title: `feat: ship bounded anonymous ask`
 
@@ -278,6 +281,9 @@ Proof and release gate:
 - verify not-found, expiry, cooldown, and provider failure;
 - pass the complete Ask browser flow at 375 pixels;
 - do not call Slice 6 complete from fixture answers.
+
+Status: passed in development and on the production issue-scoped flow.
+Implementation Slice 6 is closed.
 
 ## Slice 7: accounts, follows, and AgentMail
 

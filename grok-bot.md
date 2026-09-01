@@ -137,13 +137,15 @@ As of this file's update:
 - production has accepted Lafayette City Council records for `CO-062-2026`,
   `CO-069-2026`, and `CO-072-2026`;
 - production also has one deliberately limited board-vacancy record;
-- production has not run an issue build, importance assessment, or ranked issue
-  projection;
-- resident Home, For You, and Explore can show accepted atomic publications;
-- issue, decision, meeting, and citation views still have unfinished real-data
-  integration;
-- Ask, follows, AgentMail, authentication, and the coverage compiler remain
-  later work unless current repository evidence proves otherwise;
+- production has two accepted issue builds over four current atomic records;
+- resident Home leads with accepted issues, then their atomic records, and
+  Explore searches issues before decision records;
+- issue, decision, meeting, citation, and anonymous Ask views use bounded real
+  production projections;
+- PRs #45, #47, and #49 deployed private 24-hour Agent threads, validated
+  answers, and bounded anonymous Ask;
+- follows, AgentMail, authentication, and the coverage compiler remain later
+  work unless current repository evidence proves otherwise;
 - Lafayette planning and zoning, Youngsville, Rapides bodies, and East Baton
   Rouge bodies remain candidates until each passes the coverage gate.
 
@@ -455,4 +457,3 @@ Use this after the profile and access are configured:
 > stop conditions, and your proposed first bounded source batch. Cite the exact
 > repository files and current official URLs you used. Wait for approval before
 > starting the batch.
-

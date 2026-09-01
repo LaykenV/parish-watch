@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, and resident-interface Design Slices 1 through 8 are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slice 6 are deployed
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -36,21 +36,19 @@ Coverage icon. Production workflow `33324166404` and the independent smoke
 passed. The current integration replaces the production discovery empty states
 with accepted atomic records.
 
-PR #27 deployed Design Slice 3 as `3a59e45`. It implements the issue, atomic
+PR #27 deployed Design Slice 3 as `3a59e45`. It implemented the issue, atomic
 decision, meeting, and citation-level evidence surfaces. Its explicit typed
 fixtures load only through development-only imports, add no resident-facing
-banner, and stay out of production JavaScript. Production routes show an honest
-recovery page until real issue, decision-detail, and meeting-detail queries
-exist.
+banner, and stay out of production JavaScript. At that design checkpoint,
+production routes showed an honest recovery page until the real detail queries
+arrived.
 
 PR #28 merged resident-interface Design Slice 4 as `ff36c1b`. Its production
-workflow `33389489990` succeeded. Ask resolves corpus, issue, and meeting scope
-through a typed adapter, renders cited answers
-in the existing evidence gutter, and moves the resident's question out of the
-URL into an in-memory handoff. No chat backend exists behind it. Production
-keeps Ask in navigation and shows the honest unavailable state, and the record
-pages show that same message in place of a composer, so no resident is asked
-for a question the product cannot take. Eleven presentation scenarios load only
+workflow `33389489990` succeeded. That design release resolved corpus, issue,
+and meeting scope through a typed adapter, rendered cited answers in the
+existing evidence gutter, and moved the resident's question out of the URL into
+an in-memory handoff. It deliberately kept production Ask unavailable until the
+implementation Slice 6 backend passed. Eleven presentation scenarios load only
 through a development-only dynamic import.
 
 PR #31 deployed Design Slice 5 as `adfe81e`. Production workflow `33401768387`
@@ -70,26 +68,30 @@ The final UI carries development evidence scenarios and bounded return routes
 across discovery, records, Ask, Following, and Coverage without exposing
 fixtures in production.
 
-The resident UI design and implementation track is complete. The production
-resident loop is not. The resident-evidence integration connects current
-accepted decisions, grouped meeting evidence, exact citations, and fail-closed
-issue subscriptions to the finished routes. Production issue runs
+The resident UI design track is complete. The full production resident loop is
+not. The resident-evidence integration connects current accepted decisions,
+grouped meeting evidence, exact citations, and fail-closed issue subscriptions
+to the finished routes. Production issue runs
 `jd7eeb84pv1rzdmp6jf3dg161d8djvz0` and
 `jd76dkmjgyz6rf4temt03cefgx8dj27m` passed linking, independent review,
 deterministic validation, and publication. A subscriber received the second
 issue on its existing connection 10.8 seconds after an initial empty result.
-The Slice 5 data gate is closed. PR #45 establishes private anonymous Ask
-threads and is open with green verification and review checks. PR #47 adds
-strict `MODEL_FAST` answers, exact current evidence replay, Agent message
-persistence, and private provider accounting. The stacked PR 6C working tree
-connects the approved resident interface and adds atomic request and token
-limits. The exact stacked head reached the personal development deployment. A
-real two-turn gateway conversation returned current Lafayette citations, an
-unsupported question returned not found, and phone-width browser QA passed.
-Final pull-request checks remain pending.
-Production Ask stays unavailable until that PR merges. Account, follow,
-AgentMail, coverage, request, and private-report adapters remain in the
-post-Slice-5 implementation plan.
+The Slice 5 data gate is closed.
+
+Implementation Slice 6 is also closed. PR #45 deployed private 24-hour Agent
+threads as `c9ea441`, PR #47 deployed validated `MODEL_FAST` answers as
+`9ae0467`, and PR #49 deployed the bounded anonymous Ask interface as
+`30dc267`. Their exact production workflows passed. The final PR #49 head
+`e1cd4b1` adds app-wide minute and daily token ceilings that survive anonymous
+session rotation. On September 1, the production issue-scoped flow completed
+two related turns against the Lafayette surplus-pickup issue. Both answers used
+the two accepted citations, and the Source controls opened the exact
+`CO-022-2026` and `CO-023-2026` minutes spans. An unsupported question first
+reached the safe retry state; its fenced retry returned evidence not found with
+no citations. After refresh, reopening the preserved recent conversation
+restored all three turns. Account, follow, AgentMail, coverage-request, and
+private-report adapters remain in implementation Slices 7 through 9. PR 7A is
+the next packet.
 
 ## Executive Decision
 

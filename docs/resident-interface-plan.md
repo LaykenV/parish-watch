@@ -15,8 +15,12 @@ succeeded. PR #31 deployed Design Slice 5 as `adfe81e`; production workflow
 Design Slice 6 as `0aa7474`. PR #37 deployed Design Slice 7 as `f854c2e`. PR
 #43 deployed Design Slice 8 as `85d6947`; production workflow `33454522729`
 and the independent production smoke passed. The complete design and frontend
-contract is closed. Resident detail, Ask, account, follow, email, coverage,
-request, and private-report API connections are not complete.
+contract is closed. Later releases connected accepted issue, decision, meeting,
+citation, and bounded anonymous Ask adapters without reopening the design.
+Account, follow, email, coverage-request, and private-report API connections are
+not complete. The current primary navigation is Home, Explore, Ask, and
+Coverage; legacy `/for-you` and `/issues` index routes redirect to the issue-led
+Home.
 
 ## Purpose
 

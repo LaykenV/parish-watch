@@ -10,23 +10,24 @@
 - **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`, `@convex-dev/agent`
 - **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, scheduled functions, durable workflows
 - **Auth:** none
-- **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review through Convex AI Gateway
+- **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T16:16:08Z
+- **Last updated:** 2026-09-01T16:57:20Z
 
 ## Log
 
-### 2026-09-01 - working tree
+### 2026-09-01 - 5679fa3
 
-Folded the resident-facing issue index and For You destination into one
-issue-led Home in the working tree. Home reads the bounded accepted-issue and
+Deployed the resident-facing issue index and For You replacement through PR
+#54 as `5679fa3`. Home reads the bounded accepted-issue and
 decision queries, shows Lafayette and Rapides timelines before compact atomic
 records, and keeps equal-weight issue cards because no resident-facing
 importance score is published. Explore now searches accepted issues before
 individual records. Primary navigation is Home, Explore, Ask, and Coverage.
 `/for-you` redirects to Home, `/issues` redirects to Home's issue section, and
 the cited issue detail routes remain stable. Development fixtures passed browser
-inspection at 375 and 1280 CSS pixels with no horizontal overflow
+inspection at 375 and 1280 CSS pixels with no horizontal overflow.
+Production workflow `33533462706` and the independent production smoke passed
 (`src/features/discovery/home.tsx`, `src/features/discovery/explore.tsx`,
 `src/features/discovery/explore-model.ts`, `src/routes/for-you.tsx`,
 `src/routes/issues_.tsx`).
@@ -57,8 +58,9 @@ development deployment. A real `openai/gpt-5.6-luna` call returned a strict
 answer with current Lafayette citations. A follow-up first exposed retrieval
 that ignored its prior question. The corrected path combined that bounded prior
 question with the current turn and returned the same current pickup records.
-An unsupported volcano question returned not found without citations.
-Production Ask is still unavailable.
+An unsupported volcano question returned not found without citations. PR #47
+later deployed this answer path as `9ae0467` through production workflow
+`33517184457`.
 
 Built the stacked PR 6C resident connection in the working tree. The real
 adapter keeps only opaque session and thread handles in browser storage, opens
@@ -83,8 +85,18 @@ returned focus to the Source control. Browser storage contained only the opaque
 session token and thread handles, not question or answer text. The not-found and
 offline states passed, live status announced the completed answer with its
 source count, and the page had no horizontal overflow. At 1280 pixels the same
-source opened in the 320-pixel docked evidence rail. Final replacement checks
-remain pending. Production Ask is still unavailable.
+source opened in the 320-pixel docked evidence rail.
+
+PR #45 deployed the private thread foundation as `c9ea441` through workflow
+`33515579521`. PR #49 deployed the final bounded Ask interface as `30dc267`
+through workflow `33518827257`. Exact head `e1cd4b1` adds app-wide minute and
+daily token ceilings that survive anonymous session rotation. A production
+issue-scoped test then completed two related cited turns. Both answers used the
+accepted `CO-022-2026` and `CO-023-2026` citations, and their Source controls
+opened the exact supporting minutes spans. An unsupported question first
+entered the safe retry state; its fenced retry returned evidence not found with
+no citations. After refresh, the issue thread remained in Recent on this device,
+and reopening it restored all three turns. Implementation Slice 6 is closed.
 
 ### 2026-09-01 - bdc0195
 

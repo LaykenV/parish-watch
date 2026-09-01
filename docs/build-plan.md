@@ -215,16 +215,17 @@ duplicate Lafayette board-vacancy record without deleting its evidence. The
 resident query now returns 26 publications and exactly one board-vacancy card,
 under `CITY-BOARD-APPLICATIONS-2026-09-15`.
 
-Production still has no issue build, issue-decision link, or importance
-assessment. Accepted atomic records may appear in the unranked "Published
-decision records" verification view. They cannot enter "Major local decisions"
-or another promoted issue feed until issue ranking passes. Any later bulk run
-needs a cost estimate and separate approval.
+Production has two accepted issue builds. One links the two Lafayette
+surplus-pickup ordinances, and one links the two Rapides 2026 millage records.
+Both passed linking, independent review, deterministic validation, and
+publication. Home displays these equal-weight issue timelines before their
+atomic decision records. No resident-facing importance rank is published. Any
+later bulk run still needs a cost estimate and separate approval.
 
 ### Slice 5: Complete Resident Interface
 
-Status: interface design and implementation complete; production integration
-exit gate remains open. Design Slice 1 deployed through PR #14 as `6e46fd7`.
+Status: interface design and implementation complete; production data exit gate
+closed. Design Slice 1 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
 Slice 3 deployed through PR #27 as `3a59e45` on August 30, 2026. PR #28 merged
@@ -233,9 +234,10 @@ Design Slice 4 as `ff36c1b`; production workflow `33389489990` succeeded. PR
 the independent production smoke passed. PR #34 deployed Design Slice 6 as
 `0aa7474`, PR #37 deployed Design Slice 7 as `f854c2e`, and PR #43 deployed
 Design Slice 8 as `85d6947`. Production workflow `33454522729` and the
-independent production smoke passed. The complete interface remains
-fixture-backed where account, email, detail, Ask, follow, coverage, request, and
-private-report adapters have not passed their integration gates.
+independent production smoke passed. Accepted decision, meeting, issue, and Ask
+adapters are live. The complete interface remains fixture-backed where account,
+email, follow, coverage-request, and private-report adapters have not passed
+their integration gates.
 
 The deployed Slice 2 release introduced the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -259,15 +261,15 @@ independent review, deterministic validation, and publication. A live Convex
 subscriber received the Rapides millage issue 10.8 seconds after its initial
 empty result without reconnecting. The full Slice 5 exit is closed.
 
-Design Slice 4 implements Ask Public Parish against the same development
-fixtures and the shipped evidence viewer. It includes
-focused Ask tests for route privacy, scope restoration, draft consumption,
-citation accounting, production fixture gating, duplicate-submit protection,
-the compact thread composer, and named official contacts. Production keeps Ask
-in navigation behind the honest unavailable state while PR 6A is under review.
-The PR 6A backend uses hashed 24-hour sessions, application-owned thread access,
-Agent component history, and bounded retrieval over accepted evidence. It does
-not call a model or expose the unfinished adapter in production.
+Design Slice 4 established Ask Public Parish against development fixtures and
+the shipped evidence viewer. Implementation Slice 6 replaced that adapter in
+production. PR #45 uses hashed 24-hour sessions, application-owned thread
+access, Agent component history, and bounded accepted-evidence retrieval. PR
+#47 adds strict `MODEL_FAST` answers and deterministic citation validation. PR
+#49 connects the interface and enforces per-session plus app-wide request and
+token limits. The production issue-scoped flow completed two related cited
+turns, opened the exact `CO-022-2026` and `CO-023-2026` Source spans, and
+returned evidence not found without citations for an unsupported question.
 
 Design Slice 5 replaces the Following and email-management blueprints with the
 finished page hierarchy and interactions. It uses development-only typed
@@ -310,10 +312,11 @@ Then pause implementation and complete this design handoff:
 - never promote fixture-backed success as working production behavior.
 
 Exit gate: the approved resident interface is implemented as one responsive
-system. The design portion is complete. The full Slice 5 exit gate remains open
-until one real issue and its citations are live and a published change updates
-that open production page without refresh. Later implementation slices connect
-remaining actions without reopening page layout or visual direction.
+system. The design portion is complete. The full Slice 5 exit gate closed after
+two real issues and their citations went live and an existing subscriber
+received the Rapides issue 10.8 seconds after its initial empty result. Later
+implementation slices connect remaining actions without reopening page layout
+or visual direction.
 
 After Slice 5, use
 [`post-slice-5-pr-plan.md`](./post-slice-5-pr-plan.md) as the agent execution
@@ -350,16 +353,16 @@ Dates: September 3 through September 9
 - invisible token and abuse limits;
 - CAPTCHA or cooldown fallback.
 
-PR 6A now provides the private 24-hour Agent threads and bounded published
-evidence retrieval. PR 6B adds strict structured answers through Convex AI
-Gateway, validates every evidence ID before saving an assistant message, and
-records private usage and safe failure metadata. The stacked PR 6C working tree
-connects the approved resident interface and reserves request and token
-capacity before any model call. Its exact stacked head reached the personal
-development deployment. A real two-turn gateway conversation, an unsupported
-question, history restoration, phone-width Source handling, and offline
-behavior passed. Production Ask stays unavailable until the three Slice 6 PRs
-merge.
+PR #45 provides private 24-hour Agent threads and bounded published-evidence
+retrieval. PR #47 adds strict structured answers through Convex AI Gateway,
+validates every evidence ID before saving an assistant message, and records
+private usage and safe failure metadata. PR #49 connects the approved resident
+interface and reserves per-session and app-wide request and token capacity
+before any model call. All three are deployed. On September 1, the production
+issue-scoped flow completed two related cited turns, opened the exact accepted
+minutes spans, and returned evidence not found without citations for an
+unsupported question. Reopening the preserved recent conversation after a
+refresh restored all three turns. Implementation Slice 6 is closed.
 
 ### Account Loop
 
