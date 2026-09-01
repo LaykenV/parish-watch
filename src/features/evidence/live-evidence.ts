@@ -18,7 +18,7 @@ import type {
   SourceDocument,
 } from './contracts'
 
-type PublishedIssue = NonNullable<
+export type PublishedIssue = NonNullable<
   FunctionReturnType<typeof api.resident.evidence.getPublishedIssue>
 >
 type PublishedDecision = NonNullable<
@@ -52,12 +52,14 @@ export function toIssueFixture(
   const checked = newestRetrieval(published.citations)
   const nextAt = published.nextKnownAction?.at ?? undefined
   const timeline = [...published.links]
-    .sort((left, right) =>
-      (left.meetingAt ?? '').localeCompare(right.meetingAt ?? ''),
-    )
+    .sort((left, right) => {
+      if (!left.meetingAt) return right.meetingAt ? 1 : 0
+      if (!right.meetingAt) return -1
+      return left.meetingAt.localeCompare(right.meetingAt)
+    })
     .map((link) => ({
       citationId: firstCitation(link.citationIds),
-      date: link.meetingAt ?? new Date(checked).toISOString(),
+      date: link.meetingAt ?? undefined,
       recordKey: link.recordKey,
       state: toLifecycleState(link.lifecycleState),
       summary: link.summary ?? link.reason,

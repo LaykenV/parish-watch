@@ -62,7 +62,7 @@ export type PublicActionData = {
 
 export type TimelineEntry = {
   citationId?: string
-  date: string
+  date?: string
   meaningfulChange?: string
   recordKey?: string
   state: LifecycleState

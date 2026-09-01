@@ -28,7 +28,7 @@ export function applyLiveUpdate(
       changes: [liveUpdate.change, ...fixture.issue.changes],
       next: liveUpdate.next,
       timeline: fixture.issue.timeline.map((entry) =>
-        entry.date === previousNext
+        entry.date !== undefined && entry.date === previousNext
           ? {
               ...entry,
               date: liveUpdate.next.date,
