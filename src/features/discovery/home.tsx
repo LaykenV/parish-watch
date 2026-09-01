@@ -206,7 +206,6 @@ function HomeFeed({
       <LatestUpdatesSection
         entries={relevantUpdates}
         evidenceScenario={refreshed ? 'update' : 'preview'}
-        fixturesEnabled={fixturesEnabled}
       />
       {degraded ? (
         <Notice
@@ -436,18 +435,15 @@ function HappeningSoonSection({ watching }: { watching: AreaSlug[] }) {
 function LatestUpdatesSection({
   entries,
   evidenceScenario,
-  fixturesEnabled,
 }: {
   entries: typeof UPDATE_FIXTURES
   evidenceScenario: 'preview' | 'update'
-  fixturesEnabled: boolean
 }) {
   const currentHref = useRouterState({
     select: (state) => state.location.href,
   })
   const detailSearch = evidenceJourneySearch({
     currentHref,
-    fixture: fixturesEnabled,
     scenario: evidenceScenario,
   })
 

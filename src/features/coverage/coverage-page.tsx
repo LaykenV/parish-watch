@@ -214,7 +214,7 @@ function CoverageBodyRow({
               size="touch"
               variant="ghost"
             >
-              Request another area
+              Request coverage
             </Button>
           ) : null}
         </div>

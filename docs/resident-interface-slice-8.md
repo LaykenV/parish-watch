@@ -16,7 +16,7 @@ unfinished provider action behind its existing availability gate.
 
 The visible change is deliberately small. Following gives a resident a written
 `Open changed issue` action beside the latest material update. A degraded
-coverage row offers `Request another area`. Both controls use the existing
+coverage row offers `Request coverage`. Both controls use the existing
 ledger and action treatments. The evidence gutter remains the only prominent
 visual signature.
 
@@ -30,7 +30,7 @@ visual signature.
 | Follow through Google | The existing flow keeps the target and cadence through its Google return state. |
 | Follow through email-only verification | The existing sheet keeps email entry, code, confirmation, target, cadence, and destination in one overlay. |
 | Open an alert, inspect What changed, inspect a Source | Following links the drainage update to `fixture=update`; the issue announces the accepted update and returns to Following. |
-| Inspect degraded coverage and request another area | Each degraded body links to the development coverage-request form without starting compiler work. |
+| Inspect degraded coverage and request coverage | Each degraded body links to the development coverage-request form without starting compiler work. |
 | Report a source problem privately | Issue, decision, and meeting pages keep the record URL attached and return focus to the record. |
 | Return with a stored area | The existing local area store replaces the hero with `Watching [area]` and puts the feed first. |
 | Complete filters, Source, and Follow with a keyboard | Slice 7 focus, target, sheet, and reduced-motion contracts remain unchanged. The new written links use 44-pixel targets. |

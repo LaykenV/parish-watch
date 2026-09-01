@@ -45,17 +45,28 @@ export function parseResidentReturnTo(value: unknown): string | undefined {
   return `${url.pathname}${url.search}${url.hash}`
 }
 
+/*
+  Discovery routes carry their own presentation scenarios. Only the accepted
+  update scenario has a matching evidence fixture, so every other development
+  scenario opens the preview record.
+*/
+export function evidenceScenarioFromRouteSearch(
+  search: unknown,
+): EvidenceScenario | undefined {
+  const fixture = (search as Record<string, unknown> | undefined)?.fixture
+  if (typeof fixture !== 'string' || fixture.length === 0) return undefined
+  return fixture === 'update' ? 'update' : 'preview'
+}
+
 export function evidenceJourneySearch({
   currentHref,
-  fixture,
-  scenario = 'preview',
+  scenario,
 }: {
   currentHref: string
-  fixture: boolean
   scenario?: EvidenceScenario
 }): EvidenceJourneySearch {
   return {
-    fixture: fixture && import.meta.env.DEV ? scenario : undefined,
+    fixture: scenario && import.meta.env.DEV ? scenario : undefined,
     returnTo: parseResidentReturnTo(currentHref),
   }
 }

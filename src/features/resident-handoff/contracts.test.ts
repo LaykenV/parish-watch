@@ -8,6 +8,7 @@ import {
 import {
   evidenceJourneySearch,
   evidenceRouteHref,
+  evidenceScenarioFromRouteSearch,
   parseResidentReturnTo,
   residentReturnLabel,
 } from './navigation'
@@ -69,12 +70,20 @@ describe('resident implementation handoff', () => {
     expect(
       evidenceJourneySearch({
         currentHref: '/explore?fixture=update&q=drainage',
-        fixture: true,
+        scenario: evidenceScenarioFromRouteSearch({ fixture: 'update' }),
       }),
     ).toEqual({
-      fixture: 'preview',
+      fixture: 'update',
       returnTo: '/explore?fixture=update&q=drainage',
     })
+  })
+
+  it('opens the preview record for discovery-only scenarios', () => {
+    expect(evidenceScenarioFromRouteSearch({ fixture: 'degraded' })).toBe(
+      'preview',
+    )
+    expect(evidenceScenarioFromRouteSearch({})).toBeUndefined()
+    expect(evidenceScenarioFromRouteSearch(undefined)).toBeUndefined()
   })
 
   it('keeps the original origin when a resident crosses two records', () => {

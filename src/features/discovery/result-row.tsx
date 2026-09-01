@@ -3,20 +3,21 @@ import { Link, useRouterState } from '@tanstack/react-router'
 
 import { formatDate } from './format'
 import type { ResultRowData } from './contracts'
-import { evidenceJourneySearch } from '../resident-handoff/navigation'
+import {
+  evidenceJourneySearch,
+  evidenceScenarioFromRouteSearch,
+} from '../resident-handoff/navigation'
 
 export function ResultRow({ row }: { row: ResultRowData }) {
   const journey = useRouterState({
     select: (state) => ({
       currentHref: state.location.href,
-      hasDevelopmentFixture: Boolean(
-        (state.location.search as Record<string, unknown> | undefined)?.fixture,
-      ),
+      scenario: evidenceScenarioFromRouteSearch(state.location.search),
     }),
   })
   const detailSearch = evidenceJourneySearch({
     currentHref: journey.currentHref,
-    fixture: journey.hasDevelopmentFixture,
+    scenario: journey.scenario,
   })
   const metaParts = [
     row.place,

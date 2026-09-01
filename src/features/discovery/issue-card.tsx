@@ -4,7 +4,10 @@ import { Link, useRouterState } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
 import { FollowAction } from '../following/follow-action'
-import { evidenceJourneySearch } from '../resident-handoff/navigation'
+import {
+  evidenceJourneySearch,
+  evidenceScenarioFromRouteSearch,
+} from '../resident-handoff/navigation'
 import { formatDate, formatDay, formatTime } from './format'
 import type {
   EvidenceStatus,
@@ -57,9 +60,7 @@ export function IssueCard({
   const journey = useRouterState({
     select: (state) => ({
       currentHref: state.location.href,
-      hasDevelopmentFixture: Boolean(
-        (state.location.search as Record<string, unknown> | undefined)?.fixture,
-      ),
+      scenario: evidenceScenarioFromRouteSearch(state.location.search),
     }),
   })
   const href = issue.href ?? '/issues/' + issue.slug
@@ -67,7 +68,7 @@ export function IssueCard({
   const showSecondaryActions = issue.showSecondaryActions ?? true
   const detailSearch = evidenceJourneySearch({
     currentHref: journey.currentHref,
-    fixture: journey.hasDevelopmentFixture,
+    scenario: journey.scenario,
   })
 
   const dateLine = issue.nextDate
@@ -141,9 +142,7 @@ export function IssueCard({
             <>
               <FollowAction
                 available={
-                  import.meta.env.DEV &&
-                  journey.hasDevelopmentFixture &&
-                  !external
+                  import.meta.env.DEV && Boolean(journey.scenario) && !external
                 }
                 className="pp-inline-action"
                 target={{
@@ -165,14 +164,12 @@ export function UpcomingCard({ item }: { item: UpcomingItemData }) {
   const journey = useRouterState({
     select: (state) => ({
       currentHref: state.location.href,
-      hasDevelopmentFixture: Boolean(
-        (state.location.search as Record<string, unknown> | undefined)?.fixture,
-      ),
+      scenario: evidenceScenarioFromRouteSearch(state.location.search),
     }),
   })
   const detailSearch = evidenceJourneySearch({
     currentHref: journey.currentHref,
-    fixture: journey.hasDevelopmentFixture,
+    scenario: journey.scenario,
   })
 
   return (
