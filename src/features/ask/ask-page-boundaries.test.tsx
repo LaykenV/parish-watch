@@ -45,6 +45,23 @@ describe('Ask page ship boundaries', () => {
     expect(page).toContain('checking || submitting')
   })
 
+  it('announces checking before an answer can replace that status', () => {
+    const submit = page.slice(
+      page.indexOf('const handleSubmit'),
+      page.indexOf('const handleRetry'),
+    )
+    const retry = page.slice(
+      page.indexOf('const handleRetry'),
+      page.indexOf('const handleDismiss'),
+    )
+    expect(
+      submit.indexOf("setStatus('Checking the official record')"),
+    ).toBeLessThan(submit.indexOf('await adapter.submit'))
+    expect(
+      retry.indexOf("setStatus('Checking the official record')"),
+    ).toBeLessThan(retry.indexOf('await adapter.retry'))
+  })
+
   it('uses one compact active-thread control instead of covering the answer', () => {
     expect(page).toContain('className="ask-compose-open"')
     expect(page).toContain('sticky && !composerExpanded && draft.length === 0')

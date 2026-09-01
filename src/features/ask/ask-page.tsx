@@ -380,6 +380,7 @@ export function AskPage({
     if (!adapter || !canSubmit || submitLock.current) return
     submitLock.current = true
     setSubmitting(true)
+    setStatus('Checking the official record')
     const question = draft.trim()
     try {
       await adapter.submit({
@@ -403,7 +404,6 @@ export function AskPage({
     setDraft('')
     setExpired(false)
     setComposerExpanded(false)
-    setStatus('Checking the official record')
   }, [
     adapter,
     canSubmit,
@@ -416,6 +416,7 @@ export function AskPage({
   const handleRetry = useCallback(
     async (turnId: string) => {
       if (!adapter || !conversation) return
+      setStatus('Checking the official record')
       try {
         await adapter.retry({ conversationId: conversation.id, turnId })
       } catch (error) {
@@ -423,7 +424,6 @@ export function AskPage({
         handleAvailability(error.failure)
         return
       }
-      setStatus('Checking the official record')
     },
     [adapter, conversation, handleAvailability],
   )
