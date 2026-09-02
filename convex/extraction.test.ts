@@ -2245,6 +2245,9 @@ test('deterministic date and amount helpers reject malformed values', () => {
     textSupportsAmount('not to exceed 1.25 million dollars', 1_250_000),
   ).toBe(true)
   expect(textSupportsAmount('up to $1.2 billion', 1_200_000_000)).toBe(true)
+  expect(textSupportsAmount('serving 1.2 million residents', 1_200_000)).toBe(
+    false,
+  )
   expect(textSupportsAmount('not to exceed $1.2 million', 1_200)).toBe(false)
   expect(textSupportsAmount('not to exceed $1.2 billion', 1_200_000)).toBe(
     false,
