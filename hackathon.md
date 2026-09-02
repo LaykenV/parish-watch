@@ -16,7 +16,7 @@
 
 ## Log
 
-### 2026-09-02 - fdfebd8
+### 2026-09-02 - 8fc4642
 
 Built the two-PR Slice 7B follow stack. The backend adds verified email
 subscribers, hashed challenges and access tokens, encrypted delivery addresses,
@@ -45,7 +45,7 @@ resumed delivery.
 PR #66 deployed the backend as `fdfebd8` through production workflow
 `33672529400`. The workflow and independent production smoke passed the direct
 Convex host, canonical `www` host, apex redirect, and backend readiness query.
-The updates inbox and two new encryption keys are configured in production.
+The updates inbox and two new cryptographic keys are configured in production.
 The AgentMail webhook is registered for outbound lifecycle events, and its
 provider-issued signing secret is configured without exposing it in repository
 history or logs.
