@@ -1,4 +1,5 @@
 import firecrawl from '@firecrawl/firecrawl-convex/convex.config'
+import agentmail from '@agentmail/convex/convex.config'
 import agent from '@convex-dev/agent/convex.config'
 import auth from '@convex-dev/auth/core/convex.config.js'
 import oauth from '@convex-dev/auth/providers/oauth/convex.config.js'
@@ -21,6 +22,11 @@ const app = defineApp({
     AUTH_GOOGLE_CLIENT_ID: v.string(),
     AUTH_GOOGLE_CLIENT_SECRET: v.string(),
     ADMIN_EMAIL: v.optional(v.string()),
+    AGENTMAIL_API_KEY: v.string(),
+    AGENTMAIL_WEBHOOK_SECRET: v.optional(v.string()),
+    AGENTMAIL_UPDATES_INBOX_ID: v.optional(v.string()),
+    EMAIL_ADDRESS_HMAC_KEY: v.optional(v.string()),
+    EMAIL_ENCRYPTION_KEY: v.optional(v.string()),
   },
 })
 
@@ -49,6 +55,12 @@ app.use(agent)
 app.use(workflow)
 
 app.use(rateLimiter)
+
+app.use(agentmail, {
+  env: {
+    AGENTMAIL_API_KEY: app.env.AGENTMAIL_API_KEY,
+  },
+})
 
 app.use(firecrawl, {
   httpPrefix: '/firecrawl/',

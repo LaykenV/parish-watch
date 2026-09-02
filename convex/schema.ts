@@ -9,6 +9,14 @@ import {
 } from './extraction/contractV1'
 import { areaSlug, topicSlug } from './follows/contracts'
 import {
+  activeDeliveryCadence,
+  deliveryCadence,
+  emailSubscriberState,
+  emailTokenKind,
+  followTargetKind,
+  verificationPurpose,
+} from './follows/enrollmentContracts'
+import {
   importanceFactorNames,
   importanceLevels,
   issueCandidateV1,
@@ -113,6 +121,113 @@ export default defineSchema({
   })
     .index('by_user_id', ['userId'])
     .index('by_user_id_and_topic', ['userId', 'topic']),
+
+  emailSubscribers: defineTable({
+    addressHash: v.string(),
+    encryptedAddress: v.string(),
+    encryptionVersion: v.literal(1),
+    state: emailSubscriberState,
+    verifiedAt: v.optional(v.number()),
+    unsubscribedAt: v.optional(v.number()),
+    agentmailThreadId: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_address_hash', ['addressHash'])
+    .index('by_state_and_created_at', ['state', 'createdAt']),
+
+  emailVerificationChallenges: defineTable({
+    subscriberId: v.id('emailSubscribers'),
+    challengeId: v.string(),
+    codeHash: v.string(),
+    purpose: verificationPurpose,
+    targetKind: followTargetKind,
+    targetKey: v.string(),
+    cadence: activeDeliveryCadence,
+    expiresAt: v.number(),
+    attempts: v.number(),
+    consumedAt: v.optional(v.number()),
+    outboundId: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_challenge_id', ['challengeId'])
+    .index('by_subscriber_id_and_purpose_and_created_at', [
+      'subscriberId',
+      'purpose',
+      'createdAt',
+    ])
+    .index('by_expires_at', ['expiresAt']),
+
+  follows: defineTable(
+    v.union(
+      v.object({
+        ownerKind: v.literal('google'),
+        ownerKey: v.string(),
+        userId: v.id('users'),
+        targetKind: followTargetKind,
+        targetKey: v.string(),
+        targetTitle: v.string(),
+        targetDetail: v.string(),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+      }),
+      v.object({
+        ownerKind: v.literal('email'),
+        ownerKey: v.string(),
+        emailSubscriberId: v.id('emailSubscribers'),
+        targetKind: followTargetKind,
+        targetKey: v.string(),
+        targetTitle: v.string(),
+        targetDetail: v.string(),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+      }),
+    ),
+  )
+    .index('by_owner_key_and_target_kind_and_target_key', [
+      'ownerKey',
+      'targetKind',
+      'targetKey',
+    ])
+    .index('by_user_id_and_created_at', ['userId', 'createdAt'])
+    .index('by_email_subscriber_id_and_created_at', [
+      'emailSubscriberId',
+      'createdAt',
+    ])
+    .index('by_target_kind_and_target_key_and_owner_kind', [
+      'targetKind',
+      'targetKey',
+      'ownerKind',
+    ]),
+
+  notificationPreferences: defineTable({
+    followId: v.id('follows'),
+    cadence: deliveryCadence,
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index('by_follow_id', ['followId']),
+
+  emailAccessTokens: defineTable({
+    subscriberId: v.id('emailSubscribers'),
+    followId: v.optional(v.id('follows')),
+    kind: emailTokenKind,
+    tokenHash: v.string(),
+    expiresAt: v.optional(v.number()),
+    consumedAt: v.optional(v.number()),
+    revokedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index('by_token_hash', ['tokenHash'])
+    .index('by_subscriber_id_and_kind_and_created_at', [
+      'subscriberId',
+      'kind',
+      'createdAt',
+    ])
+    .index('by_follow_id_and_kind_and_created_at', [
+      'followId',
+      'kind',
+      'createdAt',
+    ]),
 
   analyticsSubjects: defineTable({
     visitorKeyHash: v.string(),

@@ -401,6 +401,8 @@ enrollment remains PR 7B.
 ### AgentMail
 
 - register the component and inbound route;
+- bind the API key into the AgentMail component and sweep finalized outbound
+  verification payloads after one hour;
 - verify an email-only subscription with a short-lived code or confirmation;
 - create a follow without treating that verification as account authentication;
 - send a material-change email with sources;

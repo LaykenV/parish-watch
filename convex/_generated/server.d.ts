@@ -31,11 +31,16 @@ type Env = {
   readonly CONVEX_CLOUD_URL: string;
   readonly CONVEX_SITE_URL: string;
   readonly ADMIN_EMAIL: string | undefined;
+  readonly AGENTMAIL_API_KEY: string;
+  readonly AGENTMAIL_UPDATES_INBOX_ID: string | undefined;
+  readonly AGENTMAIL_WEBHOOK_SECRET: string | undefined;
   readonly AUTH_GOOGLE_CLIENT_ID: string;
   readonly AUTH_GOOGLE_CLIENT_SECRET: string;
   readonly AUTH_JWKS: string;
   readonly AUTH_PRIVATE_KEY: string;
   readonly DIRECT_OPENAI_FALLBACK_ENABLED: string | undefined;
+  readonly EMAIL_ADDRESS_HMAC_KEY: string | undefined;
+  readonly EMAIL_ENCRYPTION_KEY: string | undefined;
   readonly FIRECRAWL_API_KEY: string;
   readonly FIRECRAWL_WEBHOOK_SECRET: string | undefined;
   readonly MODEL_FAST_ID: string | undefined;

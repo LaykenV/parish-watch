@@ -11,4 +11,18 @@ crons.interval(
   {},
 )
 
+crons.interval(
+  'remove expired email verification challenges',
+  { hours: 24 },
+  internal.follows.retention.removeExpiredChallenges,
+  {},
+)
+
+crons.interval(
+  'remove finalized AgentMail verification payloads',
+  { hours: 1 },
+  internal.follows.retention.removeFinalizedAgentMailPayloads,
+  {},
+)
+
 export default crons
