@@ -60,7 +60,7 @@ index 2db242a..d174809 100644
  //# sourceMappingURL=lib.d.ts.map
 \ No newline at end of file
 diff --git a/node_modules/@agentmail/convex/dist/component/lib.js b/node_modules/@agentmail/convex/dist/component/lib.js
-index c245802..fab99e2 100644
+index c245802..ebd0833 100644
 --- a/node_modules/@agentmail/convex/dist/component/lib.js
 +++ b/node_modules/@agentmail/convex/dist/component/lib.js
 @@ -5,7 +5,7 @@ import { Workpool } from "@convex-dev/workpool";
@@ -139,8 +139,9 @@ index c245802..fab99e2 100644
      },
  });
  //# sourceMappingURL=lib.js.map
+\ No newline at end of file
 diff --git a/node_modules/@agentmail/convex/dist/component/utils.js b/node_modules/@agentmail/convex/dist/component/utils.js
-index 47ab5db..05da147 100644
+index 47ab5db..b8f0248 100644
 --- a/node_modules/@agentmail/convex/dist/component/utils.js
 +++ b/node_modules/@agentmail/convex/dist/component/utils.js
 @@ -44,6 +44,7 @@ export async function agentmailFetch(path, opts) {
@@ -151,6 +152,17 @@ index 47ab5db..05da147 100644
      };
      let body;
      if (opts.body !== undefined) {
+diff --git a/node_modules/@agentmail/convex/dist/test.js b/node_modules/@agentmail/convex/dist/test.js
+index 4e6d6e6..dcb9b51 100644
+--- a/node_modules/@agentmail/convex/dist/test.js
++++ b/node_modules/@agentmail/convex/dist/test.js
+@@ -1,5 +1,5 @@
+ import schema from "./component/schema.js";
+-const modules = import.meta.glob("./component/**/!(*.*.*)*.ts");
++const modules = import.meta.glob("./component/**/!(*.*.*)*.{ts,js}");
+ export default {
+     register(t, name = "agentmail") {
+         t.registerComponent(name, schema, modules);
 diff --git a/node_modules/@agentmail/convex/src/component/_generated/component.d.ts b/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
 index 6c2860c..cba4cb3 100644
 --- a/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
@@ -279,3 +291,16 @@ index e20117d..442f284 100644
    };
    let body: string | undefined;
    if (opts.body !== undefined) {
+diff --git a/node_modules/@agentmail/convex/src/test.ts b/node_modules/@agentmail/convex/src/test.ts
+index 166f09e..08f1394 100644
+--- a/node_modules/@agentmail/convex/src/test.ts
++++ b/node_modules/@agentmail/convex/src/test.ts
+@@ -2,7 +2,7 @@
+ import type { TestConvex } from "convex-test";
+ import schema from "./component/schema.js";
+ 
+-const modules = import.meta.glob("./component/**/!(*.*.*)*.ts");
++const modules = import.meta.glob("./component/**/!(*.*.*)*.{ts,js}");
+ 
+ export default {
+   register(t: TestConvex<typeof schema>, name = "agentmail") {
