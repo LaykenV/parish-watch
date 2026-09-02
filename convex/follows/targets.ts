@@ -1,8 +1,16 @@
-import { ConvexError } from 'convex/values'
+import { paginationOptsValidator } from 'convex/server'
+import { ConvexError, v } from 'convex/values'
 
+import { internal } from '../_generated/api'
+import type { Doc, Id } from '../_generated/dataModel'
 import type { MutationCtx, QueryCtx } from '../_generated/server'
+import { internalMutation } from '../_generated/server'
 import { TOPIC_SLUGS } from './contracts'
-import type { FollowTargetKind } from './enrollmentContracts'
+import type { TopicSlug } from './contracts'
+import type {
+  ActiveDeliveryCadence,
+  FollowTargetKind,
+} from './enrollmentContracts'
 
 type TargetCtx = Pick<QueryCtx | MutationCtx, 'db'>
 
@@ -20,6 +28,28 @@ const TOPIC_LABELS: Record<(typeof TOPIC_SLUGS)[number], string> = {
   housing: 'Housing',
   drainage: 'Drainage',
   'land-use': 'Land use',
+}
+
+const TOPIC_ALIASES = new Map<string, TopicSlug>([
+  ['public-money', 'public-money'],
+  ['public money', 'public-money'],
+  ['public-assets', 'public-assets'],
+  ['public assets', 'public-assets'],
+  ['public-safety', 'public-safety'],
+  ['public safety', 'public-safety'],
+  ['housing', 'housing'],
+  ['drainage', 'drainage'],
+  ['land-use', 'land-use'],
+  ['land use', 'land-use'],
+])
+
+export function canonicalTopicSlug(value: string): TopicSlug | null {
+  const normalized = value
+    .normalize('NFKC')
+    .trim()
+    .toLocaleLowerCase('en-US')
+    .replace(/[_\s]+/g, ' ')
+  return TOPIC_ALIASES.get(normalized) ?? null
 }
 
 export async function resolveFollowTarget(
@@ -103,4 +133,266 @@ function isFollowableCoverage(value: string): boolean {
 
 function invalidTarget(): ConvexError<string> {
   return new ConvexError('This follow target is unavailable')
+}
+
+type MatchTarget = {
+  targetKind: FollowTargetKind
+  targetKey: string
+}
+
+export const startDecisionMatchFanout = internalMutation({
+  args: { materialChangeId: v.id('materialChanges') },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await startMatchFanout(ctx, {
+      materialChangeId: args.materialChangeId,
+      phase: 'decision',
+    })
+    return null
+  },
+})
+
+export const startIssueMatchFanout = internalMutation({
+  args: {
+    materialChangeId: v.id('materialChanges'),
+    issueVersionId: v.id('issueVersions'),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await startMatchFanout(ctx, {
+      materialChangeId: args.materialChangeId,
+      phase: 'issue',
+      issueVersionId: args.issueVersionId,
+    })
+    return null
+  },
+})
+
+async function startMatchFanout(
+  ctx: MutationCtx,
+  args: {
+    materialChangeId: Id<'materialChanges'>
+    phase: 'decision' | 'issue'
+    issueVersionId?: Id<'issueVersions'>
+  },
+): Promise<void> {
+  const change = await ctx.db.get(args.materialChangeId)
+  if (!change?.material) return
+  const existing = await ctx.db
+    .query('notificationFanouts')
+    .withIndex(
+      'by_material_change_id_and_phase_and_issue_version_id',
+      (index) =>
+        index
+          .eq('materialChangeId', args.materialChangeId)
+          .eq('phase', args.phase)
+          .eq('issueVersionId', args.issueVersionId),
+    )
+    .unique()
+  if (existing) return
+  const now = Date.now()
+  const fanoutId = await ctx.db.insert('notificationFanouts', {
+    materialChangeId: args.materialChangeId,
+    phase: args.phase,
+    issueVersionId: args.issueVersionId,
+    targetIndex: 0,
+    state: 'pending',
+    matchesCreated: 0,
+    createdAt: now,
+    updatedAt: now,
+  })
+  await ctx.scheduler.runAfter(0, internal.follows.targets.runMatchFanout, {
+    fanoutId,
+    paginationOpts: { numItems: 50, cursor: null },
+  })
+}
+
+export const runMatchFanout = internalMutation({
+  args: {
+    fanoutId: v.id('notificationFanouts'),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const fanout = await ctx.db.get(args.fanoutId)
+    if (!fanout || fanout.state === 'complete') return null
+    const change = await ctx.db.get(fanout.materialChangeId)
+    if (!change?.material) {
+      await ctx.db.patch(fanout._id, {
+        state: 'complete',
+        updatedAt: Date.now(),
+      })
+      return null
+    }
+    const targets = await matchTargets(ctx, fanout, change)
+    const target = targets[fanout.targetIndex]
+    if (!target) {
+      await ctx.db.patch(fanout._id, {
+        state: 'complete',
+        cursor: undefined,
+        updatedAt: Date.now(),
+      })
+      return null
+    }
+    const page = await ctx.db
+      .query('follows')
+      .withIndex(
+        'by_target_kind_and_target_key_and_owner_kind',
+        (index) =>
+          index
+            .eq('targetKind', target.targetKind)
+            .eq('targetKey', target.targetKey),
+      )
+      .paginate(args.paginationOpts)
+    let matchesCreated = 0
+    for (const follow of page.page) {
+      if (follow.createdAt > change.createdAt) continue
+      const preference = await ctx.db
+        .query('notificationPreferences')
+        .withIndex('by_follow_id', (index) =>
+          index.eq('followId', follow._id),
+        )
+        .unique()
+      if (!preference || preference.cadence === 'muted') continue
+      if (follow.ownerKind === 'email') {
+        const subscriber = await ctx.db.get(follow.emailSubscriberId)
+        if (!subscriber || subscriber.state !== 'verified') continue
+      } else if (!(await ctx.db.get(follow.userId))) {
+        continue
+      }
+      const existing = await ctx.db
+        .query('notificationMatches')
+        .withIndex('by_follow_id_and_material_change_id', (index) =>
+          index
+            .eq('followId', follow._id)
+            .eq('materialChangeId', change._id),
+        )
+        .unique()
+      if (existing) continue
+      await ctx.db.insert('notificationMatches', {
+        followId: follow._id,
+        materialChangeId: change._id,
+        ownerKind: follow.ownerKind,
+        ownerKey: follow.ownerKey,
+        targetKind: follow.targetKind,
+        targetKey: follow.targetKey,
+        cadenceAtMatch: preference.cadence as ActiveDeliveryCadence,
+        matchedAt: Date.now(),
+      })
+      matchesCreated += 1
+    }
+    const nextTargetIndex = page.isDone
+      ? fanout.targetIndex + 1
+      : fanout.targetIndex
+    const complete = page.isDone && nextTargetIndex >= targets.length
+    const now = Date.now()
+    await ctx.db.patch(fanout._id, {
+      targetIndex: nextTargetIndex,
+      cursor: complete || page.isDone ? undefined : page.continueCursor,
+      state: complete ? 'complete' : 'pending',
+      matchesCreated: fanout.matchesCreated + matchesCreated,
+      updatedAt: now,
+    })
+    if (!complete) {
+      await ctx.scheduler.runAfter(0, internal.follows.targets.runMatchFanout, {
+        fanoutId: fanout._id,
+        paginationOpts: {
+          numItems: 50,
+          cursor: page.isDone ? null : page.continueCursor,
+        },
+      })
+    }
+    return null
+  },
+})
+
+async function matchTargets(
+  ctx: TargetCtx,
+  fanout: Doc<'notificationFanouts'>,
+  change: Doc<'materialChanges'>,
+): Promise<MatchTarget[]> {
+  if (fanout.phase === 'decision') {
+    const record = await ctx.db.get(change.recordId)
+    const body = record ? await ctx.db.get(record.governmentBodyId) : null
+    const jurisdiction = body
+      ? await ctx.db.get(body.jurisdictionId)
+      : null
+    if (!body || !jurisdiction) return []
+    const targets: MatchTarget[] = [
+      { targetKind: 'government_body', targetKey: body.slug },
+      { targetKind: 'place', targetKey: jurisdiction.slug },
+    ]
+    if (jurisdiction.parentJurisdictionId) {
+      const parent = await ctx.db.get(jurisdiction.parentJurisdictionId)
+      if (parent && isFollowableCoverage(parent.publicStatus)) {
+        targets.push({ targetKind: 'place', targetKey: parent.slug })
+      }
+    }
+    return targets
+  }
+
+  if (!fanout.issueVersionId) return []
+  const version = await ctx.db.get(fanout.issueVersionId)
+  const issue = version ? await ctx.db.get(version.issueId) : null
+  if (
+    !version?.payload ||
+    !issue ||
+    issue.currentVersionId !== version._id ||
+    issue.currentMode !== version.mode
+  ) {
+    return []
+  }
+  const targets: MatchTarget[] = [
+    { targetKind: 'issue', targetKey: issue.slug },
+  ]
+  const seen = new Set<string>()
+  for (const topic of version.payload.topics) {
+    const targetKey = canonicalTopicSlug(topic)
+    if (!targetKey || seen.has(targetKey)) continue
+    seen.add(targetKey)
+    targets.push({ targetKind: 'topic', targetKey })
+  }
+  return targets
+}
+
+export async function scheduleNewIssueLinkFanouts(
+  ctx: MutationCtx,
+  args: {
+    issueVersionId: Id<'issueVersions'>
+    previousIssueVersionId?: Id<'issueVersions'>
+  },
+): Promise<void> {
+  const previousPublicationIds = new Set<string>()
+  if (args.previousIssueVersionId) {
+    const previousLinks = await ctx.db
+      .query('issueDecisionLinks')
+      .withIndex('by_issue_version', (index) =>
+        index.eq('issueVersionId', args.previousIssueVersionId as Id<'issueVersions'>),
+      )
+      .take(10)
+    for (const link of previousLinks) {
+      previousPublicationIds.add(link.publicationVersionId)
+    }
+  }
+  const links = await ctx.db
+    .query('issueDecisionLinks')
+    .withIndex('by_issue_version', (index) =>
+      index.eq('issueVersionId', args.issueVersionId),
+    )
+    .take(10)
+  for (const link of links) {
+    if (previousPublicationIds.has(link.publicationVersionId)) continue
+    const change = await ctx.db
+      .query('materialChanges')
+      .withIndex('by_current_publication', (index) =>
+        index.eq('currentPublicationVersionId', link.publicationVersionId),
+      )
+      .unique()
+    if (!change?.material) continue
+    await ctx.scheduler.runAfter(
+      0,
+      internal.follows.targets.startIssueMatchFanout,
+      { materialChangeId: change._id, issueVersionId: args.issueVersionId },
+    )
+  }
 }

@@ -4,6 +4,7 @@ import type { Doc, Id } from '../_generated/dataModel'
 import type { MutationCtx, QueryCtx } from '../_generated/server'
 import { internalMutation, internalQuery } from '../_generated/server'
 import { aiRoutes, estimateCostUsd, modelRoles } from '../ai/types'
+import { scheduleNewIssueLinkFanouts } from '../follows/targets'
 import {
   IMPORTANCE_RUBRIC_VERSION,
   ISSUE_BUILD_PROCESSOR_VERSION,
@@ -1011,6 +1012,7 @@ export const publishIssueBuild = internalMutation({
       issue = await ctx.db.get(issueId)
     }
     if (!issue) throw new Error('Issue creation failed')
+    const previousAcceptedIssueVersionId = issue.currentVersionId
     const latestVersion = await ctx.db
       .query('issueVersions')
       .withIndex('by_issue_and_version', (q) => q.eq('issueId', issue._id))
@@ -1096,6 +1098,10 @@ export const publishIssueBuild = internalMutation({
         currentVersionId: issueVersionId,
         currentMode: ranked.mode,
         updatedAt: now,
+      })
+      await scheduleNewIssueLinkFanouts(ctx, {
+        issueVersionId,
+        previousIssueVersionId: previousAcceptedIssueVersionId,
       })
     } else {
       await ctx.db.patch(issue._id, { updatedAt: now })

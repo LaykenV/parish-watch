@@ -44,6 +44,41 @@ function initTest(fastModel: string = LUNA_MODEL): TestConvex {
   return t
 }
 
+async function seedGoogleFollow(
+  t: TestConvex,
+  targetKind: 'issue' | 'topic',
+  targetKey: string,
+): Promise<Id<'follows'>> {
+  return await t.run(async (ctx) => {
+    const userId = await ctx.db.insert('users', {
+      googleAccountId: `issue-alert-${targetKind}-${targetKey}`,
+      email: `${targetKind}-${targetKey}@example.com`,
+      emailVerified: true,
+      createdAt: 1,
+      updatedAt: 1,
+      lastSignedInAt: 1,
+    })
+    const followId = await ctx.db.insert('follows', {
+      ownerKind: 'google',
+      ownerKey: `google:${userId}`,
+      userId,
+      targetKind,
+      targetKey,
+      targetTitle: targetKey,
+      targetDetail: 'Issue alert test',
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    await ctx.db.insert('notificationPreferences', {
+      followId,
+      cadence: 'immediate',
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    return followId
+  })
+}
+
 async function seedIssueInput(t: TestConvex): Promise<SeededIssueInput> {
   return await t.run(async (ctx) => {
     const jurisdictionId = await ctx.db.insert('jurisdictions', {
@@ -358,6 +393,7 @@ async function seedIssueInput(t: TestConvex): Promise<SeededIssueInput> {
 async function advanceCurrentVersions(
   t: TestConvex,
   seeded: SeededIssueInput,
+  material = false,
 ): Promise<SeededIssueInput> {
   return await t.run(async (ctx) => {
     const citationsByRecord: SeededIssueInput['citationsByRecord'] = []
@@ -422,9 +458,18 @@ async function advanceCurrentVersions(
         recordId: record._id,
         previousPublicationVersionId: previous._id,
         currentPublicationVersionId,
-        classification: 'no_public_change',
-        material: false,
-        fieldChanges: [],
+        classification: material ? 'amended' : 'no_public_change',
+        material,
+        fieldChanges: material
+          ? [
+              {
+                fieldPath: '/plainLanguageSummary',
+                kind: 'changed',
+                previousValue: JSON.stringify(previous.payload),
+                currentValue: JSON.stringify(previous.payload),
+              },
+            ]
+          : [],
         createdAt: previous.createdAt + 1_000,
       })
       await ctx.db.patch(record._id, {
@@ -681,6 +726,7 @@ afterEach(() => {
 test('two atomic decisions publish one cited issue, score, timeline, and material change', async () => {
   const t = initTest()
   const seeded = await seedIssueInput(t)
+  const topicFollowId = await seedGoogleFollow(t, 'topic', 'public-assets')
   const candidate = issueCandidate(seeded)
   const requests: Array<Record<string, unknown>> = []
   const fetchMock = stubIssueFetch(
@@ -719,6 +765,16 @@ test('two atomic decisions publish one cited issue, score, timeline, and materia
     modelId: LUNA_MODEL,
   })
   expect(evidence.links).toHaveLength(2)
+  await t.run(async (ctx) => {
+    const matches = await ctx.db
+      .query('notificationMatches')
+      .withIndex('by_follow_id_and_material_change_id', (index) =>
+        index.eq('followId', topicFollowId),
+      )
+      .take(10)
+    expect(matches).toHaveLength(2)
+    expect(matches.every((match) => match.targetKind === 'topic')).toBe(true)
+  })
   expect(evidence.assessments).toEqual([
     expect.objectContaining({
       factor: 'public_assets',
@@ -1094,9 +1150,14 @@ test('a published decision refresh creates one new issue version and replays wit
       mode: 'full',
     }),
   ])
+  const issueFollowId = await seedGoogleFollow(
+    t,
+    'issue',
+    firstEvidence.issue?.slug as string,
+  )
   vi.unstubAllGlobals()
 
-  const refreshedInput = await advanceCurrentVersions(t, seeded)
+  const refreshedInput = await advanceCurrentVersions(t, seeded, true)
   expect(
     await t.query(api.resident.evidence.listPublishedIssues, {}),
   ).toEqual([])
@@ -1121,6 +1182,15 @@ test('a published decision refresh creates one new issue version and replays wit
   ])
   expect(issueEvidence.currentVersion?.version).toBe(2)
   expect(refreshFetch).toHaveBeenCalledTimes(2)
+  await t.run(async (ctx) => {
+    const matches = await ctx.db
+      .query('notificationMatches')
+      .withIndex('by_follow_id_and_material_change_id', (index) =>
+        index.eq('followId', issueFollowId),
+      )
+      .take(10)
+    expect(matches).toHaveLength(2)
+  })
   const refreshedResidentIssue = await t.query(
     api.resident.evidence.getPublishedIssue,
     { slug: firstEvidence.issue?.slug as string },

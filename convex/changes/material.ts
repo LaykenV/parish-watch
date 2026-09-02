@@ -163,7 +163,7 @@ export async function recordMaterialChange(
   ctx: MutationCtx,
   input: {
     recordId: Id<'decisionRecords'>
-    previousVersion: Doc<'publicationVersions'>
+    previousVersion?: Doc<'publicationVersions'>
     currentPublicationVersionId: Id<'publicationVersions'>
     currentPayload: AcceptedPayload
     createdAt: number
@@ -176,18 +176,21 @@ export async function recordMaterialChange(
     )
     .unique()
   if (existing) return existing._id
-  if (input.previousVersion.payload === null) {
+  if (input.previousVersion?.payload === null) {
     throw new Error(
       'Accepted publication history cannot point at a withheld payload',
     )
   }
-  const change = classifyMaterialChange(
-    input.previousVersion.payload,
-    input.currentPayload,
-  )
+  const change = input.previousVersion
+    ? classifyMaterialChange(input.previousVersion.payload, input.currentPayload)
+    : {
+        classification: 'new_decision' as const,
+        material: true,
+        fieldChanges: [] as FieldChange[],
+      }
   return await ctx.db.insert('materialChanges', {
     recordId: input.recordId,
-    previousPublicationVersionId: input.previousVersion._id,
+    previousPublicationVersionId: input.previousVersion?._id,
     currentPublicationVersionId: input.currentPublicationVersionId,
     ...change,
     createdAt: input.createdAt,

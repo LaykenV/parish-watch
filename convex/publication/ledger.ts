@@ -267,19 +267,21 @@ export const finalizePublication = internalMutation({
         retrievedAt: args.context.retrievedAt,
       })
     }
-    if (
-      policy.mode !== 'withheld' &&
-      payload !== null &&
-      record.currentPublishedVersionId
-    ) {
-      const previousVersion = await ctx.db.get(record.currentPublishedVersionId)
-      if (!previousVersion || previousVersion.recordId !== record._id) {
+    let materialChangeId: Id<'materialChanges'> | undefined
+    if (policy.mode !== 'withheld' && payload !== null) {
+      const previousVersion = record.currentPublishedVersionId
+        ? await ctx.db.get(record.currentPublishedVersionId)
+        : undefined
+      if (
+        record.currentPublishedVersionId &&
+        (!previousVersion || previousVersion.recordId !== record._id)
+      ) {
         throw new ConvexError({
           code: 'publication_history_mismatch',
           message: 'Current publication pointer does not belong to this record',
         })
       }
-      await recordMaterialChange(ctx, {
+      materialChangeId = await recordMaterialChange(ctx, {
         recordId: record._id,
         previousVersion,
         currentPublicationVersionId: publicationVersionId,
@@ -310,6 +312,13 @@ export const finalizePublication = internalMutation({
           },
     )
     if (policy.mode !== 'withheld') {
+      if (materialChangeId) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.follows.targets.startDecisionMatchFanout,
+          { materialChangeId },
+        )
+      }
       await ctx.scheduler.runAfter(
         0,
         internal.operations.issues.refreshLinkedIssues,

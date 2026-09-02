@@ -8,9 +8,16 @@ import { expect, test } from 'vitest'
 import { api, internal } from './_generated/api'
 import type { DataModel, Id } from './_generated/dataModel'
 import schema from './schema'
+import { canonicalTopicSlug } from './follows/targets'
 
 const modules = import.meta.glob('./**/*.ts')
 type TestConvex = TestConvexForDataModelAndIdentity<DataModel>
+
+test('issue topics map only through the explicit follow aliases', () => {
+  expect(canonicalTopicSlug('Public assets')).toBe('public-assets')
+  expect(canonicalTopicSlug('land_use')).toBe('land-use')
+  expect(canonicalTopicSlug('Taxes')).toBeNull()
+})
 
 test('email verification rejects wrong, expired, exhausted, replayed, and concurrent codes', async () => {
   const t = convexTest(schema, modules)

@@ -451,6 +451,10 @@ Include:
 - fanout for issue, topic, body, and place follows;
 - map accepted issue topics to the six explicit follow-topic slugs and ignore an
   unknown topic instead of guessing a match;
+- treat a newly accepted issue build and an accepted refresh as alert commit
+  points for the material publication versions newly linked into that issue;
+- do not infer an issue from a first decision publication, and match places
+  through the publishing body's jurisdiction rather than `affectedPlaces`;
 - wait to notify an issue follower until the refreshed accepted issue version
   contains the changed publication and its public route is readable;
 - no notification for withheld, non-material, muted, or unsubscribed records;
