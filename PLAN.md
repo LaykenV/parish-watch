@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slice 7A are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slices 7A and 7B are deployed
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -104,11 +104,14 @@ PRs #58 and #59. Google account ownership, private saved areas and topics,
 centralized authorization, and the public privacy notice are live. Production
 browser tests completed Google sign-in and sign-out from the canonical domain
 and from the qualifying `convex.site` origin through the canonical callback.
-Follows, AgentMail, coverage requests, and private source reports remain in
-implementation Slices 7 through 9. One controlled corpus answer rendered Luna's
-Markdown emphasis markers as literal text. That presentation defect does not
-affect grounding or block Slice 7B, but it should be corrected before the final
-demo. PR 7B is the next implementation packet.
+Implementation Slice 7B is deployed through PRs #66 and #67. Google residents
+and AgentMail-verified email-only residents can now follow an issue, topic,
+government body, or place, and each can manage only their own follow. Coverage
+requests and private source reports remain in implementation Slices 8 and 9,
+and sourced alert delivery is Slice 7C. One controlled corpus answer rendered
+Luna's Markdown emphasis markers as literal text. That presentation defect does
+not affect grounding, but it should be corrected before the final demo. PR 7C
+is the next implementation packet.
 
 ## Executive Decision
 

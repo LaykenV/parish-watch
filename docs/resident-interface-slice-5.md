@@ -8,8 +8,10 @@ Pull-request verification passed 221 tests across 27 files, typecheck, client
 and server production builds, prerender, and lint. Production workflow
 `33401768387` and the independent production smoke passed. A later Slice 7A
 release connected Google account ownership and private saved areas and topics.
-Production still creates no follow until AgentMail enrollment and unified
-follow ownership pass the remaining integration gates below.
+Slice 7B then replaced the follow, verification, preference, and
+email-management adapters. Production now creates real follows for Google and
+verified email owners. Alert delivery and reply grounding stay gated until
+Slice 7C.
 
 ## Decision
 
@@ -21,8 +23,9 @@ positions to the shared flow.
 
 This was an interface-only release. At that checkpoint, Convex Auth and
 AgentMail were not connected. Slice 7A later replaced the Google account and
-saved-interest adapters. Follow enrollment, verification challenges, email,
-and notification preferences remain gated until Slice 7B.
+saved-interest adapters, and Slice 7B replaced follow enrollment, verification
+challenges, email management, and notification preferences with live
+functions.
 
 ## Design direction
 

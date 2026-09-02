@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slice 7A are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slices 7A and 7B are deployed
 
 ## Architecture Goal
 
@@ -147,8 +147,11 @@ evidence not found, and thread restoration. PRs #58 and #59 deployed the pinned
 Convex Auth v2 alpha, Google account ownership, private saved areas and topics,
 and the public privacy notice. Production sign-in and sign-out passed on the
 canonical custom domain and from the qualifying `convex.site` origin through
-the canonical callback. Follow, AgentMail, coverage-request, and private-report
-adapters remain in the post-Slice-5 plan.
+the canonical callback. PRs #66 and #67 replaced the follow and AgentMail
+adapters with verified email subscribers, unified Google and email follow
+ownership, hashed rotatable management tokens, and a Svix-verified webhook
+route. Coverage-request and private-report adapters remain in the post-Slice-5
+plan.
 
 ## System Boundaries
 

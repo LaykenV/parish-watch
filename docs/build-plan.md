@@ -288,10 +288,13 @@ Design Slice 5 replaces the Following and email-management blueprints with the
 finished page hierarchy and interactions. It uses development-only typed
 fixtures for email verification, follows, notification preferences, and alerts.
 Implementation Slice 7A replaced the Google account and saved-interest adapters
-with Convex Auth v2 and private saved setup. Production still creates no follow
-until the AgentMail enrollment path and unified follow ownership pass Slice 7B.
-Pull-request verification passed 221 tests across 27 files, typecheck,
-production builds, prerender, and lint.
+with Convex Auth v2 and private saved setup. Implementation Slice 7B then
+replaced the verification, follow, preference, and email-management fixture
+adapters with the live AgentMail enrollment path and unified follow ownership.
+Production creates real follows for both owner kinds. Slice 7A pull-request
+verification passed 221 tests across 27 files, typecheck, production builds,
+prerender, and lint. Slice 7B verification passed on both of its stacked pull
+requests.
 
 Design Slice 6 completes Coverage, coverage request, public method, area-state,
 and private-report interfaces. Design Slice 7 makes loading, heading focus,
@@ -390,7 +393,8 @@ Slice 6 is closed.
 
 Status: Google OAuth, centralized user authorization, and private saved areas
 and topics deployed through PRs #58 and #59. Google and email-only follow
-enrollment remains PR 7B.
+enrollment deployed through PRs #66 and #67. Sourced alert delivery remains
+PR 7C.
 
 - pin and install Convex Auth v2 alpha;
 - add Google OAuth account sign-in;

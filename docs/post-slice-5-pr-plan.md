@@ -1,6 +1,6 @@
 # Post-Slice-5 PR plan
 
-Status: implementation Slice 6 and Slice 7 PR 7A are deployed and production-proved; Slice 7 PR 7B is next
+Status: implementation Slice 6 and Slice 7 PRs 7A and 7B are deployed and production-proved; Slice 7 PR 7C is next
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
@@ -34,11 +34,12 @@ a corpus answer spanning two decisions, exact Source controls, evidence not
 found, thread restoration, and answer prose without raw internal evidence IDs.
 The original PR sections below remain as the historical delivery record.
 Production now has mounted Convex Auth v2, Google account ownership, private
-saved areas and topics, and the public privacy notice. It does not yet have
-AgentMail or a coverage compiler. Controlled corpus QA also found that one
-answer displayed Markdown emphasis markers as literal text. That presentation
-defect does not affect the grounded answer path or block Slice 7B, but it
-remains a pre-demo correction. PR 7B is the active capability.
+saved areas and topics, the public privacy notice, and the AgentMail follow
+enrollment path. It does not yet have alert delivery or a coverage compiler.
+Controlled corpus QA also found that one answer displayed Markdown emphasis
+markers as literal text. That presentation defect does not affect the grounded
+answer path, but it remains a pre-demo correction. PR 7C is the active
+capability.
 
 ## Original starting assumption
 
@@ -403,6 +404,27 @@ each can manage only their own follow.
 Implementation uses two stacked PRs. The first adds enrollment, management,
 webhook, retention, and tests. The second connects the shipped resident UI to
 those functions and carries the complete browser proof.
+
+Status on September 2: PR #66 merged as `fdfebd8` through production workflow
+`33672529400`, and PR #67 merged as `8fc4642` through workflow `33675616509`.
+PRs #68 and #69 recorded the release in `hackathon.md` and finished on exact
+head `d1744a7` through workflow `33677352750`. Every deploy ran the independent
+production smoke against the direct Convex host, the canonical `www` host, the
+apex redirect, and backend readiness. The AgentMail component ships with a
+pinned patch that declares its environment through the host app and shortens
+finalized outbound retention to one hour, so recipient addresses and plain
+verification codes do not persist in component storage. Cron sweeps remove
+expired challenges and finalized provider payloads. Unsubscribe applies to the
+whole address. It mutes every follow, revokes every unconsumed management
+token, and marks the subscriber unsubscribed. Development proved real email
+verification, token rotation, expired-token rejection, signed webhook
+validation and idempotency, Google OAuth follow creation, reactive cadence
+changes, mute, resume, and removal. Production browser QA loaded a published
+issue, opened the live follow sheet, and confirmed development fixture
+parameters cannot replace production data. No production subscriber was created
+during that read-only pass. One boundary stays open. No natural
+provider-signed delivery callback has been observed in production yet. Sourced
+alert delivery belongs to PR 7C and will exercise that path.
 
 ### PR 7C: deliver immediate and weekly sourced alerts
 
