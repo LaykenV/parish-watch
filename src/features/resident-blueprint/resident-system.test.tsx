@@ -65,12 +65,19 @@ describe('resident interface Slice 7 system', () => {
     expect(residentRouteLabel('/')).toBe('Home')
     expect(residentRouteLabel('/for-you')).toBe('Home')
     expect(residentRouteLabel('/coverage/request')).toBe('Request coverage')
+    expect(residentRouteLabel('/privacy')).toBe('Privacy')
     expect(residentRouteLabel('/issues/drainage-fee-credit-cap')).toBe('Issue')
     expect(residentRouteLabel('/decisions/CO-022-2026')).toBe('Decision record')
     expect(residentRouteLabel('/meetings/lafayette-2026-09-15')).toBe('Meeting')
     expect(residentRouteLabel('/email/manage/example')).toBe(
       'Manage this follow',
     )
+  })
+
+  it('keeps privacy and project information reachable from every page', () => {
+    expect(shellSource).toContain('aria-label="About Public Parish"')
+    expect(shellSource).toContain('<Link to="/privacy">Privacy</Link>')
+    expect(shellSource).toContain('Official evidence is public.')
   })
 
   it('updates the document title when async route content replaces its heading', () => {

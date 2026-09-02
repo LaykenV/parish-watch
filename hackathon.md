@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, development callback and saved setup verified; production release pending
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-02T02:42:12Z
+- **Last updated:** 2026-09-02T02:54:14Z
 
 ## Log
 
@@ -27,7 +27,10 @@ and notification fixtures. A real development Google callback completed, saved
 Lafayette Parish, survived a reload, and removed the saved area after the proof.
 The production release and production callback proof remain pending
 (`convex/auth.ts`, `convex/auth/`, `convex/follows/savedSetup.ts`,
-`src/features/auth/`, `src/features/following/`).
+`src/features/auth/`, `src/features/following/`). A public privacy notice now
+states the live account, Ask, analytics, provider, retention, and deletion
+boundaries required before publishing the dedicated Google consent screen
+(`src/routes/privacy.tsx`, `src/features/privacy/`).
 
 ### 2026-09-01 - 13f735b
 

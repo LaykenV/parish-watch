@@ -46,6 +46,7 @@ const STATIC_ROUTE_LABELS: Record<string, string> = {
   '/for-you': 'Home',
   '/how-it-works': 'How Public Parish works',
   '/issues': 'Home',
+  '/privacy': 'Privacy',
 }
 
 export function residentRouteLabel(pathname: string): string {
@@ -264,6 +265,21 @@ export function ResidentShell({ children }: { children: ReactNode }) {
       )}
 
       {children}
+
+      <footer className="resident-footer">
+        <nav aria-label="About Public Parish">
+          <Link to="/how-it-works">How it works</Link>
+          <Link to="/privacy">Privacy</Link>
+          <a
+            href="https://github.com/LaykenV/public-parish"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Source code
+          </a>
+        </nav>
+        <p>Official evidence is public. Resident activity stays private.</p>
+      </footer>
 
       <nav className="resident-mobile-nav" aria-label="Primary navigation">
         {PRIMARY_NAVIGATION.map((item) => (

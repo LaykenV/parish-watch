@@ -21,6 +21,7 @@ const EXPECTED_RESIDENT_ROUTES = [
   '/decisions/$recordKey',
   '/meetings/$meetingId',
   '/how-it-works',
+  '/privacy',
   '/following',
   '/following/areas-and-topics',
   '/following/notifications',
@@ -45,7 +46,7 @@ const issuesRoute = readFileSync(
 
 describe('resident interface Slice 1 contracts', () => {
   it('accounts for every resident route outside the existing home page', () => {
-    expect(EXPECTED_RESIDENT_ROUTES).toHaveLength(14)
+    expect(EXPECTED_RESIDENT_ROUTES).toHaveLength(15)
     expect(routeGraphIsComplete).toBe(true)
   })
 

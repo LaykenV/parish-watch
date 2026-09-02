@@ -249,8 +249,12 @@ callback. Production only allows `https://www.publicparish.com` as a Convex Auth
 redirect origin. A Google sign-in started on the submission `convex.site` URL
 first moves the resident to the same path and query on `www.publicparish.com`.
 The OAuth flow state and callback therefore stay on one browser origin. Register
-`https://www.publicparish.com/oauth/google/callback` with Google, then test a
-complete sign-in started from each served origin.
+`https://woozy-wren-227.convex.site/oauth/google/callback` and
+`https://www.publicparish.com/oauth/google/callback` with Google. Use a dedicated
+Public Parish Google Cloud project so publishing its consent screen cannot
+change another product's OAuth clients. The consent screen links to the public
+home and `/privacy` pages. Test a complete sign-in started from each served
+origin.
 
 The redirect project exists because Vercel DNS rejects a literal apex CNAME and
 Convex did not verify Vercel's flattened ALIAS record. DNS cannot send an HTTP
