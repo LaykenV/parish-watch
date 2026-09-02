@@ -332,15 +332,25 @@ async function matchTargets(
   }
 
   if (!fanout.issueVersionId) return []
-  const version = await ctx.db.get(fanout.issueVersionId)
-  const issue = version ? await ctx.db.get(version.issueId) : null
+  const fanoutVersion = await ctx.db.get(fanout.issueVersionId)
+  const issue = fanoutVersion ? await ctx.db.get(fanoutVersion.issueId) : null
+  const version = issue?.currentVersionId
+    ? await ctx.db.get(issue.currentVersionId)
+    : null
   if (
     !version?.payload ||
     !issue ||
-    issue.currentVersionId !== version._id ||
     issue.currentMode !== version.mode
   ) {
     return []
+  }
+  if (version._id !== fanoutVersion?._id) {
+    const links = await loadIssueLinksWithinBuildBound(ctx, version._id)
+    const stillLinked = links.some(
+      (link) =>
+        link.publicationVersionId === change.currentPublicationVersionId,
+    )
+    if (!stillLinked) return []
   }
   const targets: MatchTarget[] = [
     { targetKind: 'issue', targetKey: issue.slug },
@@ -355,6 +365,22 @@ async function matchTargets(
   return targets
 }
 
+async function loadIssueLinksWithinBuildBound(
+  ctx: Pick<MutationCtx, 'db'> | Pick<TargetCtx, 'db'>,
+  issueVersionId: Id<'issueVersions'>,
+): Promise<Doc<'issueDecisionLinks'>[]> {
+  const links = await ctx.db
+    .query('issueDecisionLinks')
+    .withIndex('by_issue_version', (index) =>
+      index.eq('issueVersionId', issueVersionId),
+    )
+    .take(11)
+  if (links.length > 10) {
+    throw new Error('Issue version exceeds the ten-decision build limit')
+  }
+  return links
+}
+
 export async function scheduleNewIssueLinkFanouts(
   ctx: MutationCtx,
   args: {
@@ -364,22 +390,15 @@ export async function scheduleNewIssueLinkFanouts(
 ): Promise<void> {
   const previousPublicationIds = new Set<string>()
   if (args.previousIssueVersionId) {
-    const previousLinks = await ctx.db
-      .query('issueDecisionLinks')
-      .withIndex('by_issue_version', (index) =>
-        index.eq('issueVersionId', args.previousIssueVersionId as Id<'issueVersions'>),
-      )
-      .take(10)
+    const previousLinks = await loadIssueLinksWithinBuildBound(
+      ctx,
+      args.previousIssueVersionId,
+    )
     for (const link of previousLinks) {
       previousPublicationIds.add(link.publicationVersionId)
     }
   }
-  const links = await ctx.db
-    .query('issueDecisionLinks')
-    .withIndex('by_issue_version', (index) =>
-      index.eq('issueVersionId', args.issueVersionId),
-    )
-    .take(10)
+  const links = await loadIssueLinksWithinBuildBound(ctx, args.issueVersionId)
   for (const link of links) {
     if (previousPublicationIds.has(link.publicationVersionId)) continue
     const change = await ctx.db

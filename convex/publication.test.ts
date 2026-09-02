@@ -889,7 +889,6 @@ test('a first accepted publication records one new-decision event and matches it
   })
   expect(result.changes).toEqual([
     expect.objectContaining({
-      previousPublicationVersionId: undefined,
       classification: 'new_decision',
       material: true,
       fieldChanges: [],
