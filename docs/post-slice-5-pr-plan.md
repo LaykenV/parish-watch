@@ -482,7 +482,8 @@ Include:
 - suppression of empty roundups;
 - connect `/following/notifications` to a Google-owned default cadence for new
   follows and the real immediate and weekly delivery states. Changing the
-  default must not rewrite existing follows.
+  default must not rewrite existing follows, and a reactive settings refresh
+  must not replace a cadence the resident already chose in an open follow form.
 
 Required tests:
 
