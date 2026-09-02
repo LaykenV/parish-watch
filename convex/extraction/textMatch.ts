@@ -313,11 +313,13 @@ export function textSupportsAmount(text: string, value: number): boolean {
     const token = match[0]
     const fraction = match[2] as string | undefined
     const scale = match[3] as string | undefined
-    const hasMoneyMarker =
-      /\$|\bUSD\b|\bdollars?\b|\b(?:thousand|million|billion)\b/i.test(token)
+    const hasMoneyMarker = /\$|\bUSD\b|\bdollars?\b/i.test(token)
     const hasMoneyFormatting = match[1].includes(',') || fraction !== undefined
+    const hasMoneyEvidence = scale
+      ? hasMoneyMarker
+      : hasMoneyMarker || hasMoneyFormatting
     if (
-      (hasMoneyMarker || hasMoneyFormatting) &&
+      hasMoneyEvidence &&
       centsFromMoneyToken(match[1], fraction, scale) === expectedCents
     ) {
       return true
