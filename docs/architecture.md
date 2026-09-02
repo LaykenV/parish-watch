@@ -1193,9 +1193,10 @@ For an email-only subscription:
 
 `@agentmail/convex@0.1.0` stores the recipient and message body in its isolated
 outbound table while a send is pending. Public Parish runs an hourly sweep and
-deletes finalized component rows and their linked delivery events after one
-hour. The component has no built-in cron, so the application owns this cleanup.
-The application tables contain only the encrypted address and hashed code.
+makes finalized component rows eligible for deletion after one hour. Bounded
+continuation jobs drain every eligible row and all linked delivery events. The
+component has no built-in cron, so the application owns this cleanup. The
+application tables contain only the encrypted address and hashed code.
 
 On a material publication change:
 

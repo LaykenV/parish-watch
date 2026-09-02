@@ -401,8 +401,9 @@ enrollment remains PR 7B.
 ### AgentMail
 
 - register the component and inbound route;
-- bind the API key into the AgentMail component and sweep finalized outbound
-  verification payloads after one hour;
+- bind the API key into the AgentMail component, make finalized verification
+  payloads eligible for deletion after one hour, and drain every eligible row
+  through the hourly bounded sweep;
 - verify an email-only subscription with a short-lived code or confirmation;
 - create a follow without treating that verification as account authentication;
 - send a material-change email with sources;

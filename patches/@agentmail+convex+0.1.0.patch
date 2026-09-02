@@ -1,16 +1,18 @@
 diff --git a/node_modules/@agentmail/convex/dist/component/_generated/component.d.ts b/node_modules/@agentmail/convex/dist/component/_generated/component.d.ts
-index 6c2860c..c24e751 100644
+index 6c2860c..cba4cb3 100644
 --- a/node_modules/@agentmail/convex/dist/component/_generated/component.d.ts
 +++ b/node_modules/@agentmail/convex/dist/component/_generated/component.d.ts
-@@ -158,7 +158,7 @@ export type ComponentApi<
+@@ -158,8 +158,8 @@ export type ComponentApi<
      cleanupFinalizedOutbound: FunctionReference<
        "mutation",
        "public",
 -      { olderThan?: number },
+-      null,
 +      {},
-       null,
++      { deleted: number; continued: boolean },
        Name
      >;
+   };
 diff --git a/node_modules/@agentmail/convex/dist/component/convex.config.d.ts b/node_modules/@agentmail/convex/dist/component/convex.config.d.ts
 index 08c43c3..087bdb4 100644
 --- a/node_modules/@agentmail/convex/dist/component/convex.config.d.ts
@@ -39,21 +41,24 @@ index 3d15ed6..5a3a556 100644
  component.use(workpool, { name: "callbackPool" });
  export default component;
 diff --git a/node_modules/@agentmail/convex/dist/component/lib.d.ts b/node_modules/@agentmail/convex/dist/component/lib.d.ts
-index 2db242a..73f61b8 100644
+index 2db242a..fec5fd6 100644
 --- a/node_modules/@agentmail/convex/dist/component/lib.d.ts
 +++ b/node_modules/@agentmail/convex/dist/component/lib.d.ts
-@@ -178,8 +178,6 @@ export declare const handleEvent: import("convex/server").RegisteredMutation<"pu
+@@ -178,8 +178,9 @@ export declare const handleEvent: import("convex/server").RegisteredMutation<"pu
          initialBackoffMs: number;
      };
  }, Promise<void>>;
 -export declare const cleanupFinalizedOutbound: import("convex/server").RegisteredMutation<"public", {
 -    olderThan?: number | undefined;
 -}, Promise<void>>;
-+export declare const cleanupFinalizedOutbound: import("convex/server").RegisteredMutation<"public", {}, Promise<void>>;
++export declare const cleanupFinalizedOutbound: import("convex/server").RegisteredMutation<"public", {}, Promise<{
++    deleted: number;
++    continued: boolean;
++}>>;
  export {};
  //# sourceMappingURL=lib.d.ts.map
 diff --git a/node_modules/@agentmail/convex/dist/component/lib.js b/node_modules/@agentmail/convex/dist/component/lib.js
-index c245802..6b72390 100644
+index c245802..843fa9d 100644
 --- a/node_modules/@agentmail/convex/dist/component/lib.js
 +++ b/node_modules/@agentmail/convex/dist/component/lib.js
 @@ -5,7 +5,7 @@ import { Workpool } from "@convex-dev/workpool";
@@ -65,7 +70,7 @@ index c245802..6b72390 100644
  const SEND_POOL_PARALLELISM = 8;
  const CALLBACK_POOL_PARALLELISM = 8;
  const sendPool = new Workpool(components.sendPool, {
-@@ -458,11 +458,10 @@ async function applyEventToOutbound(ctx, messageId, event) {
+@@ -458,22 +458,45 @@ async function applyEventToOutbound(ctx, messageId, event) {
  // never delivers a follow-up delivery/bounce webhook.
  const SWEEPABLE_STATUSES = ["sent", ...TERMINAL_STATUSES];
  export const cleanupFinalizedOutbound = mutation({
@@ -75,40 +80,62 @@ index c245802..6b72390 100644
 -        const cutoff = Date.now() - olderThan;
 -        const PER_STATUS_LIMIT = 200;
 +    args: {},
++    returns: v.object({ deleted: v.number(), continued: v.boolean() }),
 +    handler: async (ctx) => {
 +        const cutoff = Date.now() - FINALIZED_OUTBOUND_RETENTION_MS;
 +        const PER_STATUS_LIMIT = 25;
++        const EVENT_LIMIT = 25;
++        let deleted = 0;
++        let continued = false;
          for (const status of SWEEPABLE_STATUSES) {
              const rows = await ctx.db
                  .query("outboundMessages")
-@@ -470,6 +469,14 @@ export const cleanupFinalizedOutbound = mutation({
+                 .withIndex("by_status", (q) => q.eq("status", status))
                  .take(PER_STATUS_LIMIT);
++            const lastRow = rows.at(-1);
++            if (rows.length === PER_STATUS_LIMIT &&
++                lastRow?.finalizedAt &&
++                lastRow.finalizedAt < cutoff) {
++                continued = true;
++            }
              for (const row of rows) {
                  if (row.finalizedAt && row.finalizedAt < cutoff) {
 +                    if (row.agentmailMessageId) {
 +                        const events = await ctx.db
 +                            .query("events")
 +                            .withIndex("by_message", (q) => q.eq("messageId", row.agentmailMessageId))
-+                            .take(10);
++                            .take(EVENT_LIMIT);
 +                        for (const event of events)
 +                            await ctx.db.delete(event._id);
++                        if (events.length === EVENT_LIMIT) {
++                            continued = true;
++                            continue;
++                        }
 +                    }
                      await ctx.db.delete(row._id);
++                    deleted += 1;
                  }
              }
+         }
++        return { deleted, continued };
+     },
+ });
+ //# sourceMappingURL=lib.js.map
 diff --git a/node_modules/@agentmail/convex/src/component/_generated/component.d.ts b/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
-index 6c2860c..c24e751 100644
+index 6c2860c..cba4cb3 100644
 --- a/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
 +++ b/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
-@@ -158,7 +158,7 @@ export type ComponentApi<
+@@ -158,8 +158,8 @@ export type ComponentApi<
      cleanupFinalizedOutbound: FunctionReference<
        "mutation",
        "public",
 -      { olderThan?: number },
+-      null,
 +      {},
-       null,
++      { deleted: number; continued: boolean },
        Name
      >;
+   };
 diff --git a/node_modules/@agentmail/convex/src/component/convex.config.ts b/node_modules/@agentmail/convex/src/component/convex.config.ts
 index b1cc7f1..8117bd7 100644
 --- a/node_modules/@agentmail/convex/src/component/convex.config.ts
@@ -129,7 +156,7 @@ index b1cc7f1..8117bd7 100644
  component.use(workpool, { name: "callbackPool" });
  
 diff --git a/node_modules/@agentmail/convex/src/component/lib.ts b/node_modules/@agentmail/convex/src/component/lib.ts
-index 121dd58..d5449df 100644
+index 121dd58..227ac3b 100644
 --- a/node_modules/@agentmail/convex/src/component/lib.ts
 +++ b/node_modules/@agentmail/convex/src/component/lib.ts
 @@ -24,7 +24,7 @@ import {
@@ -141,7 +168,7 @@ index 121dd58..d5449df 100644
  const SEND_POOL_PARALLELISM = 8;
  const CALLBACK_POOL_PARALLELISM = 8;
  
-@@ -562,11 +562,10 @@ async function applyEventToOutbound(
+@@ -562,21 +562,47 @@ async function applyEventToOutbound(
  const SWEEPABLE_STATUSES = ["sent", ...TERMINAL_STATUSES] as const;
  
  export const cleanupFinalizedOutbound = mutation({
@@ -151,14 +178,26 @@ index 121dd58..d5449df 100644
 -    const cutoff = Date.now() - olderThan;
 -    const PER_STATUS_LIMIT = 200;
 +  args: {},
++  returns: v.object({ deleted: v.number(), continued: v.boolean() }),
 +  handler: async (ctx) => {
 +    const cutoff = Date.now() - FINALIZED_OUTBOUND_RETENTION_MS;
 +    const PER_STATUS_LIMIT = 25;
++    const EVENT_LIMIT = 25;
++    let deleted = 0;
++    let continued = false;
      for (const status of SWEEPABLE_STATUSES) {
        const rows = await ctx.db
          .query("outboundMessages")
-@@ -574,6 +573,15 @@ export const cleanupFinalizedOutbound = mutation({
+         .withIndex("by_status", (q) => q.eq("status", status))
          .take(PER_STATUS_LIMIT);
++      const lastRow = rows.at(-1);
++      if (
++        rows.length === PER_STATUS_LIMIT &&
++        lastRow?.finalizedAt &&
++        lastRow.finalizedAt < cutoff
++      ) {
++        continued = true;
++      }
        for (const row of rows) {
          if (row.finalizedAt && row.finalizedAt < cutoff) {
 +          if (row.agentmailMessageId) {
@@ -167,9 +206,18 @@ index 121dd58..d5449df 100644
 +              .withIndex("by_message", (q) =>
 +                q.eq("messageId", row.agentmailMessageId),
 +              )
-+              .take(10);
++              .take(EVENT_LIMIT);
 +            for (const event of events) await ctx.db.delete(event._id);
++            if (events.length === EVENT_LIMIT) {
++              continued = true;
++              continue;
++            }
 +          }
            await ctx.db.delete(row._id);
++          deleted += 1;
          }
        }
+     }
++    return { deleted, continued };
+   },
+ });

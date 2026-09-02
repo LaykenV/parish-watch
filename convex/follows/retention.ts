@@ -30,9 +30,19 @@ export const removeExpiredChallenges = internalMutation({
 
 export const removeFinalizedAgentMailPayloads = internalMutation({
   args: {},
-  returns: v.null(),
+  returns: v.object({ deleted: v.number(), continued: v.boolean() }),
   handler: async (ctx) => {
-    await ctx.runMutation(components.agentmail.lib.cleanupFinalizedOutbound, {})
-    return null
+    const result = await ctx.runMutation(
+      components.agentmail.lib.cleanupFinalizedOutbound,
+      {},
+    )
+    if (result.continued) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.follows.retention.removeFinalizedAgentMailPayloads,
+        {},
+      )
+    }
+    return result
   },
 })
