@@ -302,7 +302,9 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
     completedAt: v.optional(v.number()),
-  }).index('by_window_key', ['windowKey']),
+  })
+    .index('by_window_key', ['windowKey'])
+    .index('by_state_and_updated_at', ['state', 'updatedAt']),
 
   roundupEntries: defineTable({
     roundupWindowId: v.id('roundupWindows'),

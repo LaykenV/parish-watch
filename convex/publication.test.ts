@@ -990,6 +990,39 @@ test('a first accepted publication records one new-decision event and matches it
       expect.objectContaining({ state: 'reserved', roundupWindowId }),
     ])
   })
+  await t.run(async (ctx) => {
+    const preference = await ctx.db
+      .query('notificationPreferences')
+      .withIndex('by_follow_id', (index) =>
+        index.eq('followId', followIds[1]),
+      )
+      .unique()
+    if (!preference) throw new Error('Missing weekly preference')
+    await ctx.db.patch(preference._id, {
+      cadence: 'immediate',
+      updatedAt: Date.now(),
+    })
+  })
+  await t.mutation(
+    internal.follows.agentmailClient.deliverWeeklyRoundupPage,
+    {
+      roundupWindowId,
+      paginationOpts: { numItems: 25, cursor: null },
+    },
+  )
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(roundupWindowId)).toMatchObject({
+      state: 'complete',
+    })
+    expect(
+      (await ctx.db.query('notificationDeliveries').take(10)).find(
+        (delivery) => delivery.kind === 'weekly',
+      ),
+    ).toMatchObject({
+      state: 'suppressed',
+      errorDetail: 'The follow is no longer active',
+    })
+  })
 
   const emptyWindowId = await t.run(async (ctx) => {
     return await ctx.db.insert('roundupWindows', {
@@ -1016,6 +1049,27 @@ test('a first accepted publication records one new-decision event and matches it
       entryCount: 0,
       deliveryCount: 0,
     })
+  })
+
+  const staleWindowId = await t.run(async (ctx) => {
+    return await ctx.db.insert('roundupWindows', {
+      windowKey: '2026-08-31',
+      startsAt: 0,
+      endsAt: 1,
+      state: 'collecting',
+      entryCount: 0,
+      deliveryCount: 0,
+      createdAt: 1,
+      updatedAt: 1,
+    })
+  })
+  await t.mutation(internal.follows.agentmailClient.claimWeeklyRoundup, {})
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(staleWindowId)).toMatchObject({
+      state: 'collecting',
+      updatedAt: expect.any(Number),
+    })
+    expect((await ctx.db.get(staleWindowId))?.updatedAt).toBeGreaterThan(1)
   })
 })
 

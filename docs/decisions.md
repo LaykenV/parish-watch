@@ -252,7 +252,9 @@ expand the promise.
   canonical issue topic label.
 - Run the weekly roundup Monday at 7:00 AM in `America/Chicago`. A periodic
   scheduler checks local civil time and claims one deduplicated weekly window,
-  so daylight-saving changes do not shift the resident-facing time.
+  so daylight-saving changes do not shift the resident-facing time. The next
+  24 hours remain eligible to claim a missed window. Later scheduler runs resume
+  stale collection and delivery pages from their stored cursors.
 - AgentMail owns threaded email delivery and replies.
 - An unsupported email answer states that the evidence was not found and points
   to an official contact.

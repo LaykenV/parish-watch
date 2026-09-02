@@ -18,9 +18,29 @@ export function weeklyRoundupWindowAt(
   now: number,
 ): WeeklyRoundupWindow | null {
   const local = civilParts(now)
-  if (local.weekday !== 'Mon' || local.hour !== 7) return null
-  const endsAt = civilToUtc(local.year, local.month, local.day, 7)
-  const prior = new Date(Date.UTC(local.year, local.month - 1, local.day - 7))
+  const daysSinceMonday =
+    local.weekday === 'Mon' && local.hour >= 7
+      ? 0
+      : local.weekday === 'Tue' && local.hour < 7
+        ? 1
+        : null
+  if (daysSinceMonday === null) return null
+  const monday = new Date(
+    Date.UTC(local.year, local.month - 1, local.day - daysSinceMonday),
+  )
+  const endsAt = civilToUtc(
+    monday.getUTCFullYear(),
+    monday.getUTCMonth() + 1,
+    monday.getUTCDate(),
+    7,
+  )
+  const prior = new Date(
+    Date.UTC(
+      monday.getUTCFullYear(),
+      monday.getUTCMonth(),
+      monday.getUTCDate() - 7,
+    ),
+  )
   const startsAt = civilToUtc(
     prior.getUTCFullYear(),
     prior.getUTCMonth() + 1,
@@ -28,7 +48,7 @@ export function weeklyRoundupWindowAt(
     7,
   )
   return {
-    key: `${local.year}-${String(local.month).padStart(2, '0')}-${String(local.day).padStart(2, '0')}`,
+    key: `${monday.getUTCFullYear()}-${String(monday.getUTCMonth() + 1).padStart(2, '0')}-${String(monday.getUTCDate()).padStart(2, '0')}`,
     startsAt,
     endsAt,
   }

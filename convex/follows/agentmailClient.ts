@@ -32,6 +32,7 @@ const MAX_ENQUEUE_ATTEMPTS = 3
 // Keep polling beyond that window so the app records the component's terminal state.
 const MAX_RECONCILE_ATTEMPTS = 70
 const ENQUEUE_RETRY_DELAY_MS = 60_000
+const ROUNDUP_STALE_AFTER_MS = 15 * 60_000
 
 export const reserveImmediateDelivery = internalMutation({
   args: {
@@ -230,14 +231,15 @@ export const claimWeeklyRoundup = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const window = weeklyRoundupWindowAt(Date.now())
+    const now = Date.now()
+    await resumeStaleRoundupWindows(ctx, now)
+    const window = weeklyRoundupWindowAt(now)
     if (!window) return null
     const existing = await ctx.db
       .query('roundupWindows')
       .withIndex('by_window_key', (index) => index.eq('windowKey', window.key))
       .unique()
     if (existing) return null
-    const now = Date.now()
     const roundupWindowId = await ctx.db.insert('roundupWindows', {
       windowKey: window.key,
       startsAt: window.startsAt,
@@ -259,6 +261,53 @@ export const claimWeeklyRoundup = internalMutation({
     return null
   },
 })
+
+async function resumeStaleRoundupWindows(
+  ctx: MutationCtx,
+  now: number,
+): Promise<void> {
+  const staleBefore = now - ROUNDUP_STALE_AFTER_MS
+  const collecting = await ctx.db
+    .query('roundupWindows')
+    .withIndex('by_state_and_updated_at', (index) =>
+      index.eq('state', 'collecting').lt('updatedAt', staleBefore),
+    )
+    .first()
+  if (collecting) {
+    await ctx.db.patch(collecting._id, { updatedAt: now })
+    await ctx.scheduler.runAfter(
+      0,
+      internal.follows.agentmailClient.collectWeeklyRoundupPage,
+      {
+        roundupWindowId: collecting._id,
+        paginationOpts: {
+          numItems: 50,
+          cursor: collecting.matchCursor ?? null,
+        },
+      },
+    )
+  }
+  const delivering = await ctx.db
+    .query('roundupWindows')
+    .withIndex('by_state_and_updated_at', (index) =>
+      index.eq('state', 'delivering').lt('updatedAt', staleBefore),
+    )
+    .first()
+  if (delivering) {
+    await ctx.db.patch(delivering._id, { updatedAt: now })
+    await ctx.scheduler.runAfter(
+      0,
+      internal.follows.agentmailClient.deliverWeeklyRoundupPage,
+      {
+        roundupWindowId: delivering._id,
+        paginationOpts: {
+          numItems: 25,
+          cursor: delivering.deliveryCursor ?? null,
+        },
+      },
+    )
+  }
+}
 
 export const collectWeeklyRoundupPage = internalMutation({
   args: {
@@ -296,7 +345,7 @@ export const collectWeeklyRoundupPage = internalMutation({
       if (
         !follow ||
         !preference ||
-        preference.cadence === 'muted' ||
+        (preference.cadence !== 'weekly' && preference.cadence !== 'both') ||
         follow.ownerKey !== match.ownerKey
       ) {
         continue
@@ -323,6 +372,7 @@ export const collectWeeklyRoundupPage = internalMutation({
           roundupWindowId: window._id,
           representativeFollowId: follow._id,
           state: 'reserved',
+          enqueueAttempts: 0,
           reconcileAttempts: 0,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -431,6 +481,25 @@ export const deliverWeeklyRoundupPage = internalMutation({
   },
 })
 
+export const retryWeeklyDelivery = internalMutation({
+  args: { deliveryId: v.id('notificationDeliveries') },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const delivery = await ctx.db.get(args.deliveryId)
+    if (
+      !delivery ||
+      delivery.kind !== 'weekly' ||
+      delivery.state !== 'failed' ||
+      delivery.outboundId !== undefined ||
+      delivery.enqueueAttempts >= MAX_ENQUEUE_ATTEMPTS
+    ) {
+      return null
+    }
+    await enqueueWeeklyDelivery(ctx, delivery)
+    return null
+  },
+})
+
 async function enqueueWeeklyDelivery(
   ctx: MutationCtx,
   delivery: Doc<'notificationDeliveries'>,
@@ -446,7 +515,11 @@ async function enqueueWeeklyDelivery(
         )
         .unique()
     : null
-  if (!follow || !preference || preference.cadence === 'muted') {
+  if (
+    !follow ||
+    !preference ||
+    (preference.cadence !== 'weekly' && preference.cadence !== 'both')
+  ) {
     await suppressDelivery(ctx, delivery, 'The follow is no longer active')
     return
   }
@@ -480,6 +553,13 @@ async function enqueueWeeklyDelivery(
   }
   const projected = await projectWeeklyEmail(ctx, delivery, managementUrl)
   if (!projected) return
+  const enqueueAttempts = delivery.enqueueAttempts + 1
+  await ctx.db.patch(delivery._id, {
+    state: 'reserved',
+    errorDetail: undefined,
+    enqueueAttempts,
+    updatedAt: Date.now(),
+  })
   try {
     const outboundId = await agentmail.sendMessage(ctx, updatesInboxId(), {
       to: recipient,
@@ -504,6 +584,13 @@ async function enqueueWeeklyDelivery(
       errorDetail: errorText(error),
       updatedAt: Date.now(),
     })
+    if (enqueueAttempts < MAX_ENQUEUE_ATTEMPTS) {
+      await ctx.scheduler.runAfter(
+        ENQUEUE_RETRY_DELAY_MS * 2 ** (enqueueAttempts - 1),
+        internal.follows.agentmailClient.retryWeeklyDelivery,
+        { deliveryId: delivery._id },
+      )
+    }
   }
 }
 
