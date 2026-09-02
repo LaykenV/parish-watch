@@ -1,7 +1,6 @@
 /// <reference types="vite/client" />
 
 import workflowTest from '@convex-dev/workflow/test'
-import agentmailTest from '@agentmail/convex/test'
 import { convexTest } from 'convex-test'
 import type { TestConvexForDataModelAndIdentity } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -55,19 +54,12 @@ function initTest(fastModel: string = LUNA_MODEL): TestConvex {
   vi.stubEnv('FIRECRAWL_API_KEY', 'fc-test-key')
   vi.stubEnv('MODEL_STRONG_ID', TERRA_MODEL)
   vi.stubEnv('MODEL_FAST_ID', fastModel)
-  vi.stubEnv('AGENTMAIL_API_KEY', 'agentmail-test-key')
   vi.stubEnv('AGENTMAIL_UPDATES_INBOX_ID', 'updates-test')
   vi.stubEnv('CONVEX_SITE_URL', 'https://public-parish-test.convex.site')
   overrideGatewayTokenMinterForTests(async () => 'test-scoped-token')
   const t = convexTest(schema, modules)
   workflowTest.register(t)
   return t
-}
-
-function registerAgentMail(t: TestConvex): void {
-  agentmailTest.register(
-    t as unknown as Parameters<typeof agentmailTest.register>[0],
-  )
 }
 
 async function seedValidatedCandidate(
@@ -943,7 +935,6 @@ test('a first accepted publication records one new-decision event and matches it
     await ctx.db.patch(match._id, { cadenceAtMatch: 'immediate' })
     await ctx.db.patch(preference._id, { cadence: 'immediate' })
   })
-  registerAgentMail(t)
   await t.mutation(internal.follows.agentmailClient.reserveImmediateDelivery, {
     materialChangeId: result.changes[0]._id,
     ownerKey: result.matches[0].ownerKey,
@@ -956,14 +947,12 @@ test('a first accepted publication records one new-decision event and matches it
     const deliveries = await ctx.db.query('notificationDeliveries').take(10)
     expect(deliveries).toEqual([
       expect.objectContaining({
-        state: 'pending',
-        outboundId: expect.any(String),
-        providerIdempotencyKey: expect.any(String),
+        state: 'failed',
+        errorDetail: expect.stringContaining('AGENTMAIL_API_KEY'),
       }),
     ])
-    expect(deliveries[0].providerIdempotencyKey).toBe(
-      deliveries[0].outboundId,
-    )
+    expect(deliveries[0].outboundId).toBeUndefined()
+    expect(deliveries[0].providerIdempotencyKey).toBeUndefined()
   })
 })
 

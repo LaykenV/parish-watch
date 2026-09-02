@@ -152,26 +152,6 @@ index 47ab5db..b8f0248 100644
      };
      let body;
      if (opts.body !== undefined) {
-diff --git a/node_modules/@agentmail/convex/dist/test.js b/node_modules/@agentmail/convex/dist/test.js
-index 4e6d6e6..1a6ad7b 100644
---- a/node_modules/@agentmail/convex/dist/test.js
-+++ b/node_modules/@agentmail/convex/dist/test.js
-@@ -1,8 +1,14 @@
- import schema from "./component/schema.js";
--const modules = import.meta.glob("./component/**/!(*.*.*)*.ts");
-+import workpool from "@convex-dev/workpool/test";
-+const modules = {
-+    ...import.meta.glob("./component/*.ts"),
-+    ...import.meta.glob("./component/_generated/*.js"),
-+};
- export default {
-     register(t, name = "agentmail") {
-         t.registerComponent(name, schema, modules);
-+        workpool.register(t, `${name}/sendPool`);
-+        workpool.register(t, `${name}/callbackPool`);
-     },
-     schema,
-     modules,
 diff --git a/node_modules/@agentmail/convex/src/component/_generated/component.d.ts b/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
 index 6c2860c..cba4cb3 100644
 --- a/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
@@ -300,27 +280,3 @@ index e20117d..442f284 100644
    };
    let body: string | undefined;
    if (opts.body !== undefined) {
-diff --git a/node_modules/@agentmail/convex/src/test.ts b/node_modules/@agentmail/convex/src/test.ts
-index 166f09e..b0c5ab7 100644
---- a/node_modules/@agentmail/convex/src/test.ts
-+++ b/node_modules/@agentmail/convex/src/test.ts
-@@ -1,12 +1,18 @@
- /// <reference types="vite/client" />
- import type { TestConvex } from "convex-test";
- import schema from "./component/schema.js";
-+import workpool from "@convex-dev/workpool/test";
- 
--const modules = import.meta.glob("./component/**/!(*.*.*)*.ts");
-+const modules = {
-+  ...import.meta.glob("./component/*.ts"),
-+  ...import.meta.glob("./component/_generated/*.js"),
-+};
- 
- export default {
-   register(t: TestConvex<typeof schema>, name = "agentmail") {
-     t.registerComponent(name, schema, modules);
-+    workpool.register(t, `${name}/sendPool`);
-+    workpool.register(t, `${name}/callbackPool`);
-   },
-   schema,
-   modules,
