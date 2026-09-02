@@ -270,7 +270,7 @@ export const finalizePublication = internalMutation({
     let materialChangeId: Id<'materialChanges'> | undefined
     if (policy.mode !== 'withheld' && payload !== null) {
       const previousVersion = record.currentPublishedVersionId
-        ? await ctx.db.get(record.currentPublishedVersionId)
+        ? ((await ctx.db.get(record.currentPublishedVersionId)) ?? undefined)
         : undefined
       if (
         record.currentPublishedVersionId &&
