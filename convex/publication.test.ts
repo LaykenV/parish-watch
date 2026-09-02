@@ -55,6 +55,7 @@ function initTest(fastModel: string = LUNA_MODEL): TestConvex {
   vi.stubEnv('FIRECRAWL_API_KEY', 'fc-test-key')
   vi.stubEnv('MODEL_STRONG_ID', TERRA_MODEL)
   vi.stubEnv('MODEL_FAST_ID', fastModel)
+  vi.stubEnv('AGENTMAIL_API_KEY', 'agentmail-test-key')
   vi.stubEnv('AGENTMAIL_UPDATES_INBOX_ID', 'updates-test')
   vi.stubEnv('CONVEX_SITE_URL', 'https://public-parish-test.convex.site')
   overrideGatewayTokenMinterForTests(async () => 'test-scoped-token')
