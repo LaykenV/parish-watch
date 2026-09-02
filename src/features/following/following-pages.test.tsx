@@ -235,6 +235,10 @@ describe('resident following interface', () => {
     expect(current).toBeLessThan(consequence)
     expect(consequence).toBeLessThan(sources)
     expect(html).toContain('No changes means no email.')
+    expect(html).toContain(
+      'This development preview does not save notification settings.',
+    )
+    expect(followingPageSource).toContain('disabled={busy || !actions}')
     expect(html).not.toContain('Reply with a question')
     expect(liveFollowsSource).toContain('currentNotificationSettings')
     expect(liveFollowsSource).toContain('updateNotificationDefault')

@@ -1253,13 +1253,14 @@ function Notifications({
         </fieldset>
         <div className="following-save-row">
           <Button
-            disabled={busy}
+            disabled={busy || !actions}
             onClick={() => {
               void (async () => {
+                if (!actions) return
                 setBusy(true)
                 setError(false)
                 try {
-                  if (actions) await actions.save(frequency)
+                  await actions.save(frequency)
                   setSaved(true)
                 } catch {
                   setError(true)
@@ -1273,7 +1274,9 @@ function Notifications({
             {busy ? 'Saving...' : 'Save notification settings'}
           </Button>
           <p aria-live="polite" role={error ? 'alert' : undefined}>
-            {error
+            {!actions
+              ? 'This development preview does not save notification settings.'
+              : error
               ? 'Notification settings could not be saved. Try again.'
               : saved
               ? 'Notification settings saved.'
