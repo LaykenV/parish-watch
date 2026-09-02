@@ -101,6 +101,7 @@ function FixtureIssuePage({
   return (
     <IssueDetail
       fixture={current}
+      liveFollow={false}
       onSelectSource={onSelectSource}
       search={search}
       updated={updated}
@@ -139,6 +140,7 @@ function PublishedIssuePage({
   return (
     <IssueDetail
       fixture={publishedFixture}
+      liveFollow
       onSelectSource={onSelectSource}
       search={{ ...search, fixture: undefined }}
       updated={updated}
@@ -159,11 +161,13 @@ function EvidenceLoading() {
 
 function IssueDetail({
   fixture,
+  liveFollow,
   onSelectSource,
   search,
   updated,
 }: {
   fixture: IssueDetailFixture
+  liveFollow: boolean
   onSelectSource: (id: string | null) => void
   search: EvidenceSearch
   updated: boolean
@@ -274,9 +278,11 @@ function IssueDetail({
               />
               <div className="ev-status-actions">
                 <FollowAction
-                  available={import.meta.env.DEV && Boolean(search.fixture)}
+                  available
                   label="Follow this issue"
+                  live={liveFollow}
                   target={{
+                    key: issue.slug,
                     kind: 'Issue',
                     title: issue.title,
                     detail: `${issue.place} · ${issue.body}`,

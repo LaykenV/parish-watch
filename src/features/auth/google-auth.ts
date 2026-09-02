@@ -81,14 +81,14 @@ export function useGoogleAuth(returnTo?: string) {
           ? flowError.message
           : OAUTH_ERROR_MESSAGES[flowError.code],
     isSigningIn,
-    signInGoogle: async () => {
+    signInGoogle: async (redirectTo = window.location.href) => {
       rememberReturnTo()
-      const handoffUrl = googleSignInHandoffUrl(window.location.href)
+      const handoffUrl = googleSignInHandoffUrl(redirectTo)
       if (handoffUrl) {
         window.location.replace(handoffUrl)
         return
       }
-      await startGoogleSignIn(window.location.href)
+      await startGoogleSignIn(redirectTo)
     },
     signOut,
   }

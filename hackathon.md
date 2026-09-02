@@ -7,14 +7,47 @@
 - **Repo:** https://github.com/LaykenV/public-parish
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
-- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`, `@convex-dev/agent`, `@convex-dev/auth`
+- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`, `@convex-dev/agent`, `@convex-dev/auth`, `@agentmail/convex`
 - **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, scheduled functions, durable workflows, authentication
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-02T15:11:38Z
+- **Last updated:** 2026-09-02T19:22:03Z
 
 ## Log
+
+### 2026-09-02 - fdfebd8
+
+Built the two-PR Slice 7B follow stack. The backend adds verified email
+subscribers, hashed challenges and access tokens, encrypted delivery addresses,
+Google-owned and email-owned follows, notification preferences, signed AgentMail
+webhooks, bounded rate limits, and cleanup for expired verification data and
+finalized component messages. The AgentMail component receives its declared
+environment through the host app and keeps remote maintenance functions private
+(`convex/follows/`, `convex/http.ts`, `convex/crons.ts`,
+`patches/@agentmail+convex+0.1.0.patch`).
+
+The resident follow sheet now sends and verifies real email codes, resumes a
+Google follow through a URL-safe one-time intent, and reports expiry, retry, and
+provider failures. The email management route loads one token-scoped follow,
+updates its cadence, rotates the token, and removes the follow. Signed-in Google
+users receive a reactive Following page with update and removal controls
+(`src/features/following/`, `src/features/auth/google-auth.ts`). A development
+browser completed enrollment, token rotation, old-token rejection, signed
+webhook idempotency, and a Google-owned follow through the full OAuth return.
+The signed-in Following page showed the new target, changed its cadence
+reactively, and restored the requested weekly setting before the test session
+signed out. A second development proof muted that weekly follow, kept weekly as
+its resume cadence, and restored weekly delivery. The email-only management
+fixture also changed from muted to following when its schedule-save action
+resumed delivery.
+
+PR #66 deployed the backend as `fdfebd8` through production workflow
+`33672529400`. The workflow and independent production smoke passed the direct
+Convex host, canonical `www` host, apex redirect, and backend readiness query.
+The updates inbox and two new encryption keys are configured in production.
+AgentMail webhook registration, its provider-issued signing secret, and the
+resident frontend in PR #67 remain pending.
 
 ### 2026-09-02 - 8ea38af
 

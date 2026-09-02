@@ -49,6 +49,7 @@ export const SAVED_TOPIC_LABELS: Record<SavedTopicSlug, string> = {
 }
 
 export type FollowTarget = {
+  key: string
   kind: FollowKind
   title: string
   detail: string

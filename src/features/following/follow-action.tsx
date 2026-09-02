@@ -4,27 +4,44 @@ import {
   CircleAlertIcon,
   MailIcon,
 } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useAction, useMutation, useQuery } from 'convex/react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
+import { api } from '../../../convex/_generated/api'
 import { Button } from '../../components/ui/button'
+import { useGoogleAuth } from '../auth/google-auth'
 import { Sheet } from '../discovery/sheet'
 import type { DeliveryFrequency, FollowTarget } from './contracts'
 import { frequencyLabel } from './contracts'
+import {
+  clearGoogleFollowIntent,
+  followTargetKind,
+  googleFollowIntentUrl,
+  readGoogleFollowIntent,
+} from './google-follow-intent'
 
 import './following.css'
 
 type FollowStep =
-  'choose' | 'email' | 'code' | 'expired' | 'google-failed' | 'success'
+  | 'choose'
+  | 'email'
+  | 'code'
+  | 'expired'
+  | 'exhausted'
+  | 'google-failed'
+  | 'success'
 
 export function FollowAction({
   available,
   className,
   label = 'Follow',
+  live = false,
   target,
 }: {
   available: boolean
   className?: string
   label?: string
+  live?: boolean
   target: FollowTarget
 }) {
   const titleId = useId()
@@ -35,6 +52,25 @@ export function FollowAction({
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [destination, setDestination] = useState('')
+  const [challengeId, setChallengeId] = useState<string | null>(null)
+  const [expiresAt, setExpiresAt] = useState<number | null>(null)
+  const [managementToken, setManagementToken] = useState<string | null>(null)
+  const [requestingCode, setRequestingCode] = useState(false)
+  const [verifyingCode, setVerifyingCode] = useState(false)
+  const [savingGoogleFollow, setSavingGoogleFollow] = useState(false)
+  const googleIntentHandled = useRef(false)
+  const auth = useGoogleAuth()
+  const requestEmailFollow = useAction(
+    api.follows.enrollment.requestEmailFollow,
+  )
+  const verifyEmailFollow = useAction(api.follows.enrollment.verifyEmailFollow)
+  const createGoogleFollow = useMutation(
+    api.follows.enrollment.createGoogleFollow,
+  )
+  const delivery = useQuery(
+    api.follows.enrollment.verificationDelivery,
+    live && challengeId ? { challengeId } : 'skip',
+  )
 
   const reset = () => {
     setStep('choose')
@@ -43,12 +79,168 @@ export function FollowAction({
     setCode('')
     setError('')
     setDestination('')
+    setChallengeId(null)
+    setExpiresAt(null)
+    setManagementToken(null)
+    setRequestingCode(false)
+    setVerifyingCode(false)
+    setSavingGoogleFollow(false)
   }
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
     if (!next) reset()
   }
+
+  const saveGoogleFollow = useCallback(
+    async (cadence: DeliveryFrequency) => {
+      setSavingGoogleFollow(true)
+      setError('')
+      try {
+        await createGoogleFollow({
+          cadence,
+          targetKey: target.key,
+          targetKind: followTargetKind(target.kind),
+        })
+        setDestination('Google account')
+        setStep('success')
+      } catch {
+        setStep('google-failed')
+      } finally {
+        setSavingGoogleFollow(false)
+      }
+    },
+    [createGoogleFollow, target.key, target.kind],
+  )
+
+  const startGoogleFollow = async () => {
+    if (!live) {
+      setDestination('Google account')
+      setStep('success')
+      return
+    }
+    if (auth.isAuthenticated) {
+      await saveGoogleFollow(frequency)
+      return
+    }
+    const redirectTo = googleFollowIntentUrl(
+      window.location.href,
+      target,
+      frequency,
+    )
+    await auth.signInGoogle(redirectTo)
+  }
+
+  const sendCode = async () => {
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setError('Enter a complete email address.')
+      return
+    }
+    if (!live) {
+      setDestination(email)
+      setStep('code')
+      return
+    }
+    setRequestingCode(true)
+    setError('')
+    try {
+      const result = await requestEmailFollow({
+        email,
+        targetKind: followTargetKind(target.kind),
+        targetKey: target.key,
+        cadence: frequency,
+      })
+      setChallengeId(result.challengeId)
+      setExpiresAt(result.expiresAt)
+      setCode('')
+      setDestination(email)
+      setStep('code')
+    } catch {
+      setError('The verification email could not be started. Try again.')
+      setStep('email')
+    } finally {
+      setRequestingCode(false)
+    }
+  }
+
+  const verifyCode = async () => {
+    if (code.length !== 6) {
+      setError('Enter the six-digit code.')
+      return
+    }
+    if (!live || !challengeId) {
+      setStep('success')
+      return
+    }
+    setVerifyingCode(true)
+    setError('')
+    try {
+      const result = await verifyEmailFollow({ challengeId, code })
+      if (result.status === 'verified') {
+        setManagementToken(result.managementToken)
+        setStep('success')
+      } else if (result.status === 'wrong') {
+        setError(
+          `That code does not match. ${result.attemptsRemaining} ${result.attemptsRemaining === 1 ? 'try' : 'tries'} left.`,
+        )
+      } else if (result.status === 'exhausted') {
+        setStep('exhausted')
+      } else if (result.status === 'expired') {
+        setStep('expired')
+      } else {
+        setError('That verification request is no longer available.')
+      }
+    } catch {
+      setError('Public Parish could not verify that code. Try again.')
+    } finally {
+      setVerifyingCode(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!live || auth.isLoading || googleIntentHandled.current) return
+    const intent = readGoogleFollowIntent(window.location.href)
+    if (
+      !intent ||
+      intent.targetKind !== followTargetKind(target.kind) ||
+      intent.targetKey !== target.key
+    ) {
+      return
+    }
+    setOpen(true)
+    setFrequency(intent.cadence)
+    if (!auth.isAuthenticated && !auth.error) return
+    googleIntentHandled.current = true
+    window.history.replaceState(
+      window.history.state,
+      '',
+      clearGoogleFollowIntent(window.location.href),
+    )
+    if (auth.error) {
+      setStep('google-failed')
+      return
+    }
+    void saveGoogleFollow(intent.cadence)
+  }, [
+    auth.error,
+    auth.isAuthenticated,
+    auth.isLoading,
+    live,
+    saveGoogleFollow,
+    target.key,
+    target.kind,
+  ])
+
+  useEffect(() => {
+    if (step !== 'code' || !expiresAt) return
+    const remaining = expiresAt - Date.now()
+    if (remaining <= 0) {
+      setStep('expired')
+      return
+    }
+    const timer = window.setTimeout(() => setStep('expired'), remaining)
+    return () => window.clearTimeout(timer)
+  }, [expiresAt, step])
 
   return (
     <Sheet
@@ -82,10 +274,8 @@ export function FollowAction({
               frequency={frequency}
               onEmail={() => setStep('email')}
               onFrequency={setFrequency}
-              onGoogle={() => {
-                setDestination('Google account')
-                setStep('success')
-              }}
+              googleBusy={auth.isSigningIn || savingGoogleFollow}
+              onGoogle={() => void startGoogleFollow()}
               onGoogleFailure={() => setStep('google-failed')}
               target={target}
             />
@@ -102,14 +292,8 @@ export function FollowAction({
                 setEmail(value)
                 setError('')
               }}
-              onSubmit={() => {
-                if (!/^\S+@\S+\.\S+$/.test(email)) {
-                  setError('Enter a complete email address.')
-                  return
-                }
-                setDestination(email)
-                setStep('code')
-              }}
+              onSubmit={() => void sendCode()}
+              submitting={requestingCode}
               target={target}
             />
           ) : null}
@@ -127,36 +311,39 @@ export function FollowAction({
                 setCode(value.replace(/\D/g, '').slice(0, 6))
                 setError('')
               }}
-              onExpired={() => setStep('expired')}
-              onSubmit={() => {
-                if (code.length !== 6) {
-                  setError('Enter the six-digit code.')
-                  return
-                }
-                setStep('success')
-              }}
+              deliveryStatus={delivery?.status}
+              onResend={() => void sendCode()}
+              onSubmit={() => void verifyCode()}
+              resending={requestingCode}
+              verifying={verifyingCode}
             />
           ) : null}
           {step === 'expired' ? (
             <ExpiredCode
               onBack={() => setStep('email')}
-              onRetry={() => {
-                setCode('')
-                setError('')
-                setStep('code')
-              }}
+              onRetry={() => void sendCode()}
+              sending={requestingCode}
+            />
+          ) : null}
+          {step === 'exhausted' ? (
+            <ExpiredCode
+              exhausted
+              onBack={() => setStep('email')}
+              onRetry={() => void sendCode()}
+              sending={requestingCode}
             />
           ) : null}
           {step === 'google-failed' ? (
             <ProviderFailure
               onEmail={() => setStep('email')}
-              onRetry={() => setStep('choose')}
+              onRetry={() => void startGoogleFollow()}
             />
           ) : null}
           {step === 'success' ? (
             <FollowSuccess
               destination={destination}
               frequency={frequency}
+              managementToken={managementToken}
               onDone={() => handleOpenChange(false)}
               target={target}
             />
@@ -182,6 +369,7 @@ export function FollowAction({
 
 function FollowChoice({
   frequency,
+  googleBusy,
   onEmail,
   onFrequency,
   onGoogle,
@@ -189,6 +377,7 @@ function FollowChoice({
   target,
 }: {
   frequency: DeliveryFrequency
+  googleBusy: boolean
   onEmail: () => void
   onFrequency: (value: DeliveryFrequency) => void
   onGoogle: () => void
@@ -207,8 +396,8 @@ function FollowChoice({
         <FrequencyOptions onChange={onFrequency} value={frequency} />
       </fieldset>
       <div className="follow-provider-grid">
-        <Button onClick={onGoogle} size="touch">
-          Continue with Google
+        <Button disabled={googleBusy} onClick={onGoogle} size="touch">
+          {googleBusy ? 'Saving follow...' : 'Continue with Google'}
         </Button>
         <Button onClick={onEmail} size="touch" variant="outline">
           <MailIcon aria-hidden="true" />
@@ -238,6 +427,7 @@ function EmailEntry({
   onBack,
   onChange,
   onSubmit,
+  submitting,
   target,
 }: {
   email: string
@@ -245,6 +435,7 @@ function EmailEntry({
   onBack: () => void
   onChange: (value: string) => void
   onSubmit: () => void
+  submitting: boolean
   target: FollowTarget
 }) {
   return (
@@ -284,8 +475,8 @@ function EmailEntry({
           {error}
         </p>
       ) : null}
-      <Button size="touch" type="submit">
-        Send verification code
+      <Button disabled={submitting} size="touch" type="submit">
+        {submitting ? 'Sending code...' : 'Send verification code'}
       </Button>
       <p className="follow-provider-note">
         This creates an alert subscription, not an account.
@@ -300,16 +491,22 @@ function CodeEntry({
   error,
   onBack,
   onChange,
-  onExpired,
+  deliveryStatus,
+  onResend,
   onSubmit,
+  resending,
+  verifying,
 }: {
   code: string
   email: string
   error: string
   onBack: () => void
   onChange: (value: string) => void
-  onExpired: () => void
+  deliveryStatus?: 'failed' | 'pending' | 'sent' | 'unavailable'
+  onResend: () => void
   onSubmit: () => void
+  resending: boolean
+  verifying: boolean
 }) {
   return (
     <form
@@ -327,6 +524,16 @@ function CodeEntry({
           The code expires in 10 minutes. You can try three times.
         </p>
       </div>
+      {deliveryStatus === 'pending' ? (
+        <p aria-live="polite" className="follow-provider-note" role="status">
+          AgentMail is sending the code now.
+        </p>
+      ) : null}
+      {deliveryStatus === 'failed' || deliveryStatus === 'unavailable' ? (
+        <p className="follow-field-error" role="alert">
+          That message could not be delivered. Send a new code to try again.
+        </p>
+      ) : null}
       <label className="follow-input-label" htmlFor="follow-code">
         Six-digit code
       </label>
@@ -347,32 +554,43 @@ function CodeEntry({
           {error}
         </p>
       ) : null}
-      <Button size="touch" type="submit">
-        Verify and follow
+      <Button disabled={verifying} size="touch" type="submit">
+        {verifying ? 'Verifying...' : 'Verify and follow'}
       </Button>
-      <button className="follow-text-action" onClick={onExpired} type="button">
-        The code expired
+      <button
+        className="follow-text-action"
+        disabled={resending}
+        onClick={onResend}
+        type="button"
+      >
+        {resending ? 'Sending a new code...' : 'Send a new code'}
       </button>
     </form>
   )
 }
 
 function ExpiredCode({
+  exhausted = false,
   onBack,
   onRetry,
+  sending,
 }: {
+  exhausted?: boolean
   onBack: () => void
   onRetry: () => void
+  sending: boolean
 }) {
   return (
     <div className="follow-state-panel" role="alert">
       <CircleAlertIcon aria-hidden="true" />
       <p className="follow-step-label">Verification needed</p>
-      <h3>That code expired.</h3>
+      <h3>
+        {exhausted ? 'That code cannot be tried again.' : 'That code expired.'}
+      </h3>
       <p>No follow was created. Send a new code or use another email.</p>
       <div className="follow-state-actions">
-        <Button onClick={onRetry} size="touch">
-          Send a new code
+        <Button disabled={sending} onClick={onRetry} size="touch">
+          {sending ? 'Sending...' : 'Send a new code'}
         </Button>
         <Button onClick={onBack} size="touch" variant="outline">
           Use another email
@@ -410,11 +628,13 @@ function ProviderFailure({
 function FollowSuccess({
   destination,
   frequency,
+  managementToken,
   onDone,
   target,
 }: {
   destination: string
   frequency: DeliveryFrequency
+  managementToken?: string | null
   onDone: () => void
   target: FollowTarget
 }) {
@@ -437,6 +657,17 @@ function FollowSuccess({
       <Button onClick={onDone} size="touch">
         Return to {target.kind.toLowerCase()}
       </Button>
+      {managementToken ? (
+        <Button
+          render={
+            <a href={`/email/manage/${encodeURIComponent(managementToken)}`} />
+          }
+          size="touch"
+          variant="outline"
+        >
+          Manage this email follow
+        </Button>
+      ) : null}
     </div>
   )
 }

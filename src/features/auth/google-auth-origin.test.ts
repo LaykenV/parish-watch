@@ -8,13 +8,15 @@ import {
 describe('Google sign-in origin handoff', () => {
   it('moves the submission URL to the matching canonical page', () => {
     const result = googleSignInHandoffUrl(
-      'https://befitting-flamingo-587.convex.site/following/areas-and-topics?returnTo=%2Fissues%2Fdrainage#saved',
+      'https://befitting-flamingo-587.convex.site/following/areas-and-topics?returnTo=%2Fissues%2Fdrainage&followKind=issue&followKey=drainage&followCadence=both#saved',
     )
     const handoff = new URL(result ?? '')
 
     expect(handoff.origin).toBe('https://www.publicparish.com')
     expect(handoff.pathname).toBe('/following/areas-and-topics')
     expect(handoff.searchParams.get('returnTo')).toBe('/issues/drainage')
+    expect(handoff.searchParams.get('followKey')).toBe('drainage')
+    expect(handoff.searchParams.get('followCadence')).toBe('both')
     expect(handoff.searchParams.get('googleSignIn')).toBe('1')
     expect(handoff.hash).toBe('#saved')
   })
@@ -23,9 +25,7 @@ describe('Google sign-in origin handoff', () => {
     expect(
       googleSignInHandoffUrl('https://www.publicparish.com/following'),
     ).toBeNull()
-    expect(
-      googleSignInHandoffUrl('http://localhost:3000/following'),
-    ).toBeNull()
+    expect(googleSignInHandoffUrl('http://localhost:3000/following')).toBeNull()
     expect(googleSignInHandoffUrl('not a URL')).toBeNull()
   })
 
@@ -34,9 +34,7 @@ describe('Google sign-in origin handoff', () => {
       consumeGoogleSignInHandoff(
         'https://www.publicparish.com/following?returnTo=%2Fexplore&googleSignIn=1#saved',
       ),
-    ).toBe(
-      'https://www.publicparish.com/following?returnTo=%2Fexplore#saved',
-    )
+    ).toBe('https://www.publicparish.com/following?returnTo=%2Fexplore#saved')
     expect(
       consumeGoogleSignInHandoff(
         'https://befitting-flamingo-587.convex.site/following?googleSignIn=1',

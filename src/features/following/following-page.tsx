@@ -34,6 +34,7 @@ import {
 } from './contracts'
 import { FrequencyOptions } from './follow-action'
 import type { FollowingPageData, SavedArea } from './following-page.data'
+import { useGoogleFollows, useGoogleFollowMutations } from './live-follows'
 import { useSavedSetup, useSavedSetupMutations } from './live-saved-setup'
 
 import './following.css'
@@ -81,6 +82,8 @@ function LiveFollowingPage({
 }) {
   const auth = useGoogleAuth(returnTo)
   const setup = useSavedSetup(auth.isAuthenticated)
+  const follows = useGoogleFollows(auth.isAuthenticated)
+  const followMutations = useGoogleFollowMutations()
   const mutations = useSavedSetupMutations()
 
   useEffect(() => {
@@ -92,7 +95,10 @@ function LiveFollowingPage({
     if (safeReturn) window.location.replace(safeReturn)
   }, [auth.isAuthenticated])
 
-  if (auth.isLoading || (auth.isAuthenticated && setup === undefined)) {
+  if (
+    auth.isLoading ||
+    (auth.isAuthenticated && (setup === undefined || follows === undefined))
+  ) {
     return <FollowingLoading />
   }
 
@@ -116,7 +122,7 @@ function LiveFollowingPage({
     mode: 'live',
     notificationsAvailable: false,
     signedIn: true,
-    targets: [],
+    targets: follows ?? [],
     topics: setup?.topics ?? [],
   }
 
@@ -124,6 +130,7 @@ function LiveFollowingPage({
     <FollowingDashboard
       areaActions={{ remove: mutations.removeArea, save: mutations.saveArea }}
       data={liveData}
+      followActions={followMutations}
       onSignOut={auth.signOut}
       topicActions={{
         remove: mutations.removeTopic,
@@ -159,12 +166,14 @@ type TopicActions = {
 function FollowingDashboard({
   areaActions,
   data,
+  followActions,
   onSignOut,
   topicActions,
   view,
 }: {
   areaActions?: AreaActions
   data: FollowingPageData
+  followActions?: FollowActions
   onSignOut?: () => Promise<void>
   topicActions?: TopicActions
   view: FollowingView
@@ -177,7 +186,7 @@ function FollowingDashboard({
         <p>
           {view === 'following'
             ? data.mode === 'live'
-              ? 'Saved setup works now. Issue follows arrive with verified email delivery.'
+              ? 'Manage the civic updates saved to this Google account.'
               : 'Every target, delivery schedule, and destination you manage.'
             : view === 'areas'
               ? 'Saved areas shape Home. Explore filters stay temporary.'
@@ -195,11 +204,7 @@ function FollowingDashboard({
       <FollowingNavigation scenario={data.scenario} view={view} />
 
       {view === 'following' ? (
-        data.mode === 'live' ? (
-          <FollowsUnavailable />
-        ) : (
-          <FollowingList data={data} />
-        )
+        <FollowingList actions={followActions} data={data} />
       ) : null}
       {view === 'areas' ? (
         <AreasAndTopics
@@ -324,7 +329,7 @@ function FollowingSignedOut({
           <p>
             {fixture
               ? 'Save several issues, places, and topics. Manage them together from this page.'
-              : 'Save launch areas and topics now. Issue follows arrive with verified email delivery.'}
+              : 'Save launch areas, topics, and followed civic updates to this account.'}
           </p>
           <Button disabled={busy} onClick={() => void onGoogle()} size="touch">
             {busy ? 'Opening Google...' : 'Continue with Google'}
@@ -340,28 +345,20 @@ function FollowingSignedOut({
           ) : null}
         </section>
         <section className="following-entry-card">
-          <p className="following-entry-label">
-            {fixture ? 'One subscription' : 'Coming next'}
-          </p>
+          <p className="following-entry-label">One subscription</p>
           <h2>Use email only</h2>
           <p>
             {fixture
               ? 'Start from a Follow button. Verify a code, then manage that follow through its private email link.'
-              : 'Email-only subscriptions are not connected yet.'}
+              : 'Start from a Follow button. A short-lived code verifies the address without creating an account.'}
           </p>
-          {fixture ? (
-            <Button
-              render={<Link to="/explore" />}
-              size="touch"
-              variant="outline"
-            >
-              Find something to follow
-            </Button>
-          ) : (
-            <Button disabled size="touch" variant="outline">
-              Email subscriptions coming next
-            </Button>
-          )}
+          <Button
+            render={<Link to="/explore" />}
+            size="touch"
+            variant="outline"
+          >
+            Find something to follow
+          </Button>
         </section>
       </div>
       <p className="following-private-note">
@@ -369,28 +366,6 @@ function FollowingSignedOut({
       </p>
       <span className="visually-hidden">Fixture state: {scenario}</span>
     </main>
-  )
-}
-
-function FollowsUnavailable() {
-  return (
-    <section
-      aria-labelledby="follows-next-title"
-      className="following-unavailable"
-    >
-      <BellRingIcon aria-hidden="true" />
-      <div>
-        <h2 id="follows-next-title">Issue follows are not connected yet</h2>
-        <p>
-          This account can save areas and topics. Public Parish will not create
-          a follow or promise an alert until ownership and verified email
-          delivery are connected.
-        </p>
-        <Button render={<Link to="/following/areas-and-topics" />} size="touch">
-          Manage saved setup
-        </Button>
-      </div>
-    </section>
   )
 }
 
@@ -442,12 +417,29 @@ function FollowingNavigation({
   )
 }
 
-function FollowingList({ data }: { data: FollowingPageData }) {
+type FollowActions = {
+  remove: (followId: string) => Promise<unknown>
+  update: (
+    followId: string,
+    cadence: DeliveryFrequency | 'muted',
+  ) => Promise<unknown>
+}
+
+function FollowingList({
+  actions,
+  data,
+}: {
+  actions?: FollowActions
+  data: FollowingPageData
+}) {
   const [targets, setTargets] = useState(data.targets)
   const [filter, setFilter] = useState<'All' | FollowKind>('All')
   const [selected, setSelected] = useState<FollowedTarget | null>(null)
   const [undo, setUndo] = useState<FollowedTarget | null>(null)
   const [confirmAll, setConfirmAll] = useState(false)
+  const [operationError, setOperationError] = useState('')
+
+  useEffect(() => setTargets(data.targets), [data.targets])
 
   const shown = useMemo(
     () =>
@@ -457,17 +449,57 @@ function FollowingList({ data }: { data: FollowingPageData }) {
     [filter, targets],
   )
 
-  const updateTarget = (next: FollowedTarget) => {
+  const updateTarget = async (next: FollowedTarget) => {
+    if (actions) {
+      setOperationError('')
+      try {
+        await actions.update(
+          next.id,
+          next.status === 'Muted' ? 'muted' : next.frequency,
+        )
+        setSelected(null)
+      } catch {
+        setOperationError('That follow could not be updated. Try again.')
+      }
+      return
+    }
     setTargets((current) =>
       current.map((target) => (target.id === next.id ? next : target)),
     )
     setSelected(next)
   }
 
-  const unfollow = (target: FollowedTarget) => {
+  const unfollow = async (target: FollowedTarget) => {
+    if (actions) {
+      setOperationError('')
+      try {
+        await actions.remove(target.id)
+        setSelected(null)
+      } catch {
+        setOperationError('That follow could not be removed. Try again.')
+      }
+      return
+    }
     setTargets((current) => current.filter((item) => item.id !== target.id))
     setUndo(target)
     setSelected(null)
+  }
+
+  const unfollowAll = async () => {
+    if (!actions) {
+      setTargets([])
+      setConfirmAll(false)
+      return
+    }
+    setOperationError('')
+    try {
+      for (const target of targets) await actions.remove(target.id)
+      setConfirmAll(false)
+    } catch {
+      setOperationError(
+        'Some follows could not be removed. Reload before trying again.',
+      )
+    }
   }
 
   return (
@@ -501,7 +533,13 @@ function FollowingList({ data }: { data: FollowingPageData }) {
         )}
       </div>
 
-      {undo ? (
+      {operationError ? (
+        <p className="following-area-status" role="alert">
+          {operationError}
+        </p>
+      ) : null}
+
+      {undo && !actions ? (
         <div aria-live="polite" className="following-undo">
           <span>Unfollowed {undo.title}.</span>
           <button
@@ -522,7 +560,11 @@ function FollowingList({ data }: { data: FollowingPageData }) {
             <FollowRow
               key={target.id}
               onManage={() => setSelected(target)}
-              returnTo={`/following?fixture=${data.scenario ?? 'active'}`}
+              returnTo={
+                data.scenario
+                  ? `/following?fixture=${data.scenario}`
+                  : '/following'
+              }
               target={target}
             />
           ))}
@@ -561,10 +603,7 @@ function FollowingList({ data }: { data: FollowingPageData }) {
             >
               <p>Remove all {targets.length} follows?</p>
               <Button
-                onClick={() => {
-                  setTargets([])
-                  setConfirmAll(false)
-                }}
+                onClick={() => void unfollowAll()}
                 size="touch"
                 variant="destructive-outline"
               >
@@ -695,17 +734,36 @@ function ManageFollowSheet({
   onUnfollow,
   target,
 }: {
-  onChange: (target: FollowedTarget) => void
+  onChange: (target: FollowedTarget) => Promise<void> | void
   onOpenChange: (open: boolean) => void
-  onUnfollow: (target: FollowedTarget) => void
+  onUnfollow: (target: FollowedTarget) => Promise<void> | void
   target: FollowedTarget | null
 }) {
   const [frequency, setFrequency] = useState<DeliveryFrequency>(
     target?.frequency ?? 'immediate',
   )
+  const [busy, setBusy] = useState(false)
 
   const handleOpen = (open: boolean) => {
     onOpenChange(open)
+  }
+
+  const change = async (next: FollowedTarget) => {
+    setBusy(true)
+    try {
+      await onChange(next)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const remove = async (current: FollowedTarget) => {
+    setBusy(true)
+    try {
+      await onUnfollow(current)
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -729,16 +787,23 @@ function ManageFollowSheet({
             <FrequencyOptions onChange={setFrequency} value={frequency} />
           </fieldset>
           <Button
-            onClick={() => onChange({ ...target, frequency })}
+            disabled={busy}
+            onClick={() =>
+              void change({ ...target, frequency, status: 'Following' })
+            }
             size="touch"
           >
-            Save delivery schedule
+            {target.status === 'Muted'
+              ? 'Save schedule and resume'
+              : 'Save delivery schedule'}
           </Button>
           <div className="manage-follow-secondary">
             <Button
+              disabled={busy}
               onClick={() =>
-                onChange({
+                void change({
                   ...target,
+                  frequency,
                   status: target.status === 'Muted' ? 'Following' : 'Muted',
                 })
               }
@@ -753,7 +818,8 @@ function ManageFollowSheet({
               {target.status === 'Muted' ? 'Resume delivery' : 'Mute delivery'}
             </Button>
             <Button
-              onClick={() => onUnfollow(target)}
+              disabled={busy}
+              onClick={() => void remove(target)}
               size="touch"
               variant="destructive-outline"
             >

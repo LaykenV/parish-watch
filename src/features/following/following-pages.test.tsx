@@ -5,10 +5,14 @@ import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { DeliveryReceipt, FrequencyOptions } from './follow-action'
-import { EmailManagementPage } from './email-management-page'
+import {
+  EmailManagementPage,
+  toEmailManagedTarget,
+} from './email-management-page'
 import { FollowingPage } from './following-page'
 import { loadFollowingPageData } from './following-page.data'
 import type { FollowingPageData } from './following-page.data'
+import { toFollowedTarget } from './live-follows'
 import {
   EMAIL_SUBSCRIPTION_FIXTURE,
   FOLLOWED_TARGET_FIXTURES,
@@ -36,6 +40,10 @@ const followSource = readFileSync(
 )
 const followingPageSource = readFileSync(
   new URL('./following-page.tsx', import.meta.url),
+  'utf8',
+)
+const emailManagementSource = readFileSync(
+  new URL('./email-management-page.tsx', import.meta.url),
   'utf8',
 )
 
@@ -80,6 +88,7 @@ describe('resident following interface', () => {
         destination="resident@example.com"
         frequency="both"
         target={{
+          key: 'drainage-fee-credit-cap',
           kind: 'Issue',
           title: 'Drainage fee credit cap',
           detail: 'Lafayette Parish',
@@ -166,6 +175,41 @@ describe('resident following interface', () => {
     )
     expect(bothOption).toContain('data-selected=""')
     expect(bothOption).toContain('checked=""')
+  })
+
+  it('keeps the previous schedule available while a follow is muted', () => {
+    const follow = {
+      cadence: 'muted' as const,
+      createdAt: Date.UTC(2026, 8, 2),
+      detail: 'Lafayette Parish',
+      id: 'follow-cadence',
+      resumeCadence: 'both' as const,
+      targetKey: 'public-money',
+      targetKind: 'topic' as const,
+      title: 'Public money',
+    }
+
+    expect(toFollowedTarget(follow)).toMatchObject({
+      frequency: 'both',
+      status: 'Muted',
+    })
+    expect(toEmailManagedTarget(follow)).toMatchObject({
+      frequency: 'both',
+      status: 'Muted',
+    })
+    expect(emailManagementSource).toContain('if (updated) setMuted(false)')
+    expect(emailManagementSource).toContain('Save schedule and resume')
+  })
+
+  it('gives an expired live management link an available recovery path', () => {
+    const html = renderToStaticMarkup(
+      <EmailManagementPage
+        data={{ available: true, managementState: 'expired' }}
+      />,
+    )
+    expect(html).toContain('Use Explore to find the target again')
+    expect(html).toContain('Explore published records')
+    expect(html).not.toContain('Email address for this follow')
   })
 
   it('orders immediate alert content around the resident consequence', () => {

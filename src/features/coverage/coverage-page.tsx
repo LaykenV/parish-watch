@@ -201,6 +201,7 @@ function CoverageBodyRow({
               label="Follow body"
               target={{
                 detail: 'Coverage and material decision updates',
+                key: body.id,
                 kind: 'Government body',
                 title: body.name,
               }}

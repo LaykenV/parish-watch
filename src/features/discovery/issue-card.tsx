@@ -141,11 +141,11 @@ export function IssueCard({
           {variant !== 'rail' && showSecondaryActions ? (
             <>
               <FollowAction
-                available={
-                  import.meta.env.DEV && Boolean(journey.scenario) && !external
-                }
+                available={!external}
                 className="pp-inline-action"
+                live={!journey.scenario}
                 target={{
+                  key: issue.slug,
                   kind: 'Issue',
                   title: issue.title,
                   detail: `${issue.place} · ${issue.body}`,
