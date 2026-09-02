@@ -948,6 +948,7 @@ test('a first accepted publication records one new-decision event and matches it
     expect(deliveries).toEqual([
       expect.objectContaining({
         state: 'failed',
+        enqueueAttempts: 2,
         errorDetail: expect.stringContaining('AGENTMAIL_API_KEY'),
       }),
     ])

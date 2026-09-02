@@ -25,6 +25,9 @@ export function updatesInboxId(): string {
   return inboxId
 }
 
+const MAX_ENQUEUE_ATTEMPTS = 3
+const ENQUEUE_RETRY_DELAY_MS = 60_000
+
 export const reserveImmediateDelivery = internalMutation({
   args: {
     materialChangeId: v.id('materialChanges'),
@@ -41,7 +44,14 @@ export const reserveImmediateDelivery = internalMutation({
           .eq('materialChangeId', args.materialChangeId),
       )
       .unique()
-    if (existing) return null
+    if (
+      existing &&
+      (existing.state !== 'failed' ||
+        existing.outboundId !== undefined ||
+        existing.enqueueAttempts >= MAX_ENQUEUE_ATTEMPTS)
+    ) {
+      return null
+    }
     const matches = await ctx.db
       .query('notificationMatches')
       .withIndex('by_material_change_id_and_owner_key', (index) =>
@@ -113,14 +123,24 @@ export const reserveImmediateDelivery = internalMutation({
     )
     if (!projected) return null
     const now = Date.now()
-    const deliveryId = await ctx.db.insert('notificationDeliveries', {
-      ownerKind: first.follow.ownerKind,
-      ownerKey: args.ownerKey,
-      kind: 'immediate',
-      materialChangeId: args.materialChangeId,
+    const deliveryId = existing
+      ? existing._id
+      : await ctx.db.insert('notificationDeliveries', {
+          ownerKind: first.follow.ownerKind,
+          ownerKey: args.ownerKey,
+          kind: 'immediate',
+          materialChangeId: args.materialChangeId,
+          state: 'reserved',
+          enqueueAttempts: 0,
+          reconcileAttempts: 0,
+          createdAt: now,
+          updatedAt: now,
+        })
+    const enqueueAttempts = (existing?.enqueueAttempts ?? 0) + 1
+    await ctx.db.patch(deliveryId, {
       state: 'reserved',
-      reconcileAttempts: 0,
-      createdAt: now,
+      errorDetail: undefined,
+      enqueueAttempts,
       updatedAt: now,
     })
     try {
@@ -147,6 +167,13 @@ export const reserveImmediateDelivery = internalMutation({
         errorDetail: errorText(error),
         updatedAt: Date.now(),
       })
+      if (enqueueAttempts < MAX_ENQUEUE_ATTEMPTS) {
+        await ctx.scheduler.runAfter(
+          ENQUEUE_RETRY_DELAY_MS * 2 ** (enqueueAttempts - 1),
+          internal.follows.agentmailClient.reserveImmediateDelivery,
+          args,
+        )
+      }
     }
     return null
   },

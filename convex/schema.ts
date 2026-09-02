@@ -267,6 +267,7 @@ export default defineSchema({
     agentmailMessageId: v.optional(v.string()),
     agentmailThreadId: v.optional(v.string()),
     errorDetail: v.optional(v.string()),
+    enqueueAttempts: v.number(),
     reconcileAttempts: v.number(),
     createdAt: v.number(),
     updatedAt: v.number(),
