@@ -23,10 +23,9 @@ PR #61 requires each issue claim to cite every excerpt needed for its complete
 wording. PR #63 accepts scaled currency such as `$1.2 million` without treating
 an unmarked quantity such as `1.2 million residents` as money. PR #64 moves the
 linker to prompt v1.5 and names every allowed dynamic fact path, including the
-required lifecycle fact, while excluding link relationship fields. The
-deterministic validators and full, limited, or withheld publication policy stay
-unchanged (`convex/issues/`, `convex/extraction/textMatch.ts`,
-`convex/pipeline/state.ts`).
+required lifecycle fact, while excluding link relationship fields. The full,
+limited, or withheld publication policy stays unchanged (`convex/issues/`,
+`convex/extraction/textMatch.ts`, `convex/pipeline/state.ts`).
 
 ### 2026-09-02 - f725094
 
