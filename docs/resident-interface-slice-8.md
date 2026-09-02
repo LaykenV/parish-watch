@@ -2,7 +2,8 @@
 
 Status: deployed through PR #43 as `85d6947` on August 31, 2026. Production
 workflow `33454522729` and the independent production smoke passed. Later
-releases connected accepted issue, evidence, and anonymous Ask adapters.
+releases connected accepted issue, evidence, anonymous Ask, Google account, and
+private saved-setup adapters.
 
 ## What this slice closes
 
@@ -52,16 +53,17 @@ At the Slice 8 checkpoint, the gates were:
   private reporting, and email management remain unavailable in production.
 - How Public Parish works is static published method copy.
 
-Later releases made accepted issue, decision, meeting, citation, and bounded
-anonymous Ask paths live. Account, follow, email, coverage-request, and private
-report actions remain gated. No fixture interaction counts as production proof.
+Later releases made accepted issue, decision, meeting, citation, bounded
+anonymous Ask, Google account, and private saved-setup paths live. Follow,
+email, coverage-request, and private-report actions remain gated. No fixture
+interaction counts as production proof.
 
 ## Implementation inventory
 
 The final route inventory is `/`, `/for-you`, `/explore`, `/ask`, `/coverage`,
 `/coverage/request`, `/issues/$issueSlug`, `/decisions/$recordKey`,
-`/meetings/$meetingId`, `/how-it-works`, the three Following views, and
-`/email/manage/$token`.
+`/meetings/$meetingId`, `/how-it-works`, `/privacy`, the three Following views,
+and `/email/manage/$token`.
 
 The shared component registry remains the one recorded in Slice 7. Slice 8
 changes navigation data passed to Issue card, result row, upcoming item,

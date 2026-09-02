@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slice 6 are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slice 7A are deployed
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -99,12 +99,16 @@ minutes spans. The corpus flow selected both surplus-pickup decisions and named
 Terrebonne Parish Consolidated Government from the accepted evidence. PR #57
 deployed the citation-display correction as `13f735b` through workflow
 `33562735003`; a fresh production answer showed resident-facing Source controls
-without raw internal evidence IDs. Account, follow, AgentMail,
-coverage-request, and private-report adapters remain in implementation Slices
-7 through 9. One controlled corpus answer rendered Luna's Markdown emphasis
-markers as literal text. That presentation defect does not affect grounding or
-block Slice 7, but it should be corrected before the final demo. PR 7A is the
-next implementation packet.
+without raw internal evidence IDs. Implementation Slice 7A is deployed through
+PRs #58 and #59. Google account ownership, private saved areas and topics,
+centralized authorization, and the public privacy notice are live. Production
+browser tests completed Google sign-in and sign-out from the canonical domain
+and from the qualifying `convex.site` origin through the canonical callback.
+Follows, AgentMail, coverage requests, and private source reports remain in
+implementation Slices 7 through 9. One controlled corpus answer rendered Luna's
+Markdown emphasis markers as literal text. That presentation defect does not
+affect grounding or block Slice 7B, but it should be corrected before the final
+demo. PR 7B is the next implementation packet.
 
 ## Executive Decision
 

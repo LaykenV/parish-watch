@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slice 6 are deployed
+Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slice 7A are deployed
 
 ## Product Sentence
 
@@ -63,10 +63,11 @@ use the full scope. A valid not-found selection skips the second call. Token use
 remains private telemetry instead of an answer budget. Production tests proved
 related issue turns, a corpus question spanning two decisions, exact Source
 controls, evidence not found, thread restoration, and resident answer text
-without raw internal evidence IDs. Accounts, follows, AgentMail, coverage
-requests, and private reports remain unavailable until their backend paths
-pass. Each integration must replace the matching typed adapter without changing
-the page hierarchy or visual system.
+without raw internal evidence IDs. Google accounts and private saved areas and
+topics are live through Convex Auth v2. Follows, AgentMail, coverage requests,
+and private reports remain unavailable until their backend paths pass. Each
+integration must replace the matching typed adapter without changing the page
+hierarchy or visual system.
 
 ### Start With Consequence
 
@@ -134,7 +135,8 @@ Contextual paths:
 - atomic decision;
 - meeting;
 - source citation;
-- request coverage.
+- request coverage;
+- privacy notice.
 
 The product defaults to issues for comprehension while keeping underlying
 decisions and sources inspectable.

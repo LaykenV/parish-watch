@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slice 6 are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slice 7A are deployed
 
 ## Architecture Goal
 
@@ -143,10 +143,12 @@ telemetry, and deterministic citation validation remain. PR #57 deployed the
 resident citation-display correction as `13f735b` through workflow
 `33562735003`, so answer prose no longer exposes raw internal evidence IDs.
 Production tests proved cited issue and corpus answers, exact Source controls,
-evidence not found, and thread restoration.
-Google account sessions and saved setup use the pinned Convex Auth v2 alpha.
-Follow, AgentMail, coverage-request, and private-report adapters remain in the
-post-Slice-5 plan.
+evidence not found, and thread restoration. PRs #58 and #59 deployed the pinned
+Convex Auth v2 alpha, Google account ownership, private saved areas and topics,
+and the public privacy notice. Production sign-in and sign-out passed on the
+canonical custom domain and from the qualifying `convex.site` origin through
+the canonical callback. Follow, AgentMail, coverage-request, and private-report
+adapters remain in the post-Slice-5 plan.
 
 ## System Boundaries
 
@@ -305,6 +307,7 @@ development proof for unfinished APIs. Production never treats them as data.
 | `/following`            | Follows, saved interests, and preferences          |
 | `/email/manage/$token`  | Scoped email-only subscription management          |
 | `/how-it-works`         | Method, neutrality, revision, and reporting policy |
+| `/privacy`              | Resident data, provider, retention, and controls   |
 
 Stable routes such as home, How it works, and coverage should be prerendered when
 possible. Direct refreshes to dynamic routes must be tested on the final

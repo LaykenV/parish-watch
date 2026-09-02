@@ -115,7 +115,7 @@ Phase 0 was completed on August 27:
   and mobile layouts were tested signed out.
 
 The evidence backend through Slice 4, resident-interface Design Slices 1 through
-8, and implementation Slice 6 are live in production.
+8, implementation Slice 6, and implementation Slice 7A are live in production.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -211,9 +211,12 @@ request-frequency limits, deterministic citation validation, and corrected
 resident citation display. Controlled production tests proved related issue
 turns, a corpus answer spanning two decisions, exact Source controls, evidence
 not found, thread restoration, and answer prose without raw internal evidence
-IDs. Convex Auth and saved setup are code complete and await credentialed
-callback proof. Follows, AgentMail, coverage integration, the owner compiler,
-resident proof, the demo, and the vibeapps.dev submission remain pending.
+IDs. PRs #58 and #59 deployed Convex Auth v2 Google sessions, centralized
+ownership, private saved areas and topics, and the public privacy notice. Real
+production sign-in and sign-out passed on the canonical domain and from the
+qualifying `convex.site` origin through the canonical callback. Follows,
+AgentMail, coverage integration, the owner compiler, resident proof, the demo,
+and the vibeapps.dev submission remain pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

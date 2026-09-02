@@ -229,7 +229,8 @@ later bulk run still needs a cost estimate and separate approval.
 ### Slice 5: Complete Resident Interface
 
 Status: interface design and implementation complete; production data exit gate
-closed. Design Slice 1 deployed through PR #14 as `6e46fd7`.
+closed; the Slice 7A account and saved-setup gate is closed. Design Slice 1
+deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
 Slice 3 deployed through PR #27 as `3a59e45` on August 30, 2026. PR #28 merged
@@ -285,11 +286,12 @@ thread restoration, and answer prose without raw internal evidence IDs.
 
 Design Slice 5 replaces the Following and email-management blueprints with the
 finished page hierarchy and interactions. It uses development-only typed
-fixtures for Google return, email verification, ownership, preferences, and
-alerts. Production shows an honest unavailable state and creates no follow
-until the Auth and AgentMail adapters pass their gates. Pull-request verification
-passed 221 tests across 27 files, typecheck, production builds, prerender, and
-lint.
+fixtures for email verification, follows, notification preferences, and alerts.
+Implementation Slice 7A replaced the Google account and saved-interest adapters
+with Convex Auth v2 and private saved setup. Production still creates no follow
+until the AgentMail enrollment path and unified follow ownership pass Slice 7B.
+Pull-request verification passed 221 tests across 27 files, typecheck,
+production builds, prerender, and lint.
 
 Design Slice 6 completes Coverage, coverage request, public method, area-state,
 and private-report interfaces. Design Slice 7 makes loading, heading focus,
@@ -385,6 +387,10 @@ not found, thread restoration, and corrected citation display. Implementation
 Slice 6 is closed.
 
 ### Account Loop
+
+Status: Google OAuth, centralized user authorization, and private saved areas
+and topics deployed through PRs #58 and #59. Google and email-only follow
+enrollment remains PR 7B.
 
 - pin and install Convex Auth v2 alpha;
 - add Google OAuth account sign-in;

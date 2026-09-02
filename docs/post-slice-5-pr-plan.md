@@ -1,7 +1,6 @@
 # Post-Slice-5 PR plan
 
-Status: implementation Slice 6 is deployed and production-proved; Slice 7 PR 7A
-is next
+Status: implementation Slice 6 and Slice 7 PR 7A are deployed and production-proved; Slice 7 PR 7B is next
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
@@ -34,11 +33,12 @@ truncating evidence or documents. Production tests proved related issue turns,
 a corpus answer spanning two decisions, exact Source controls, evidence not
 found, thread restoration, and answer prose without raw internal evidence IDs.
 The original PR sections below remain as the historical delivery record.
-Production does not yet have mounted Convex Auth, AgentMail, or a coverage
-compiler. Controlled corpus QA also found that one answer displayed Markdown
-emphasis markers as literal text. That presentation defect does not affect the
-grounded answer path or block Slice 7, but it remains a pre-demo correction. PR
-7A is the active capability.
+Production now has mounted Convex Auth v2, Google account ownership, private
+saved areas and topics, and the public privacy notice. It does not yet have
+AgentMail or a coverage compiler. Controlled corpus QA also found that one
+answer displayed Markdown emphasis markers as literal text. That presentation
+defect does not affect the grounded answer path or block Slice 7B, but it
+remains a pre-demo correction. PR 7B is the active capability.
 
 ## Original starting assumption
 
@@ -340,8 +340,14 @@ Exclude:
 Proof: a resident signs in from an issue, returns to it, saves an area and topic,
 and another user cannot access either record.
 
-Status: implemented on the Slice 7A branch. Pull-request checks, Google
-credentials, and hosted callback proof remain before merge.
+Status on September 2: PR #58 merged as `04d4350`. PR #59 corrected the Convex
+deployment environment access and merged as `f725094`. Exact production
+workflow `33587446687` and the independent production smoke passed. Development
+proved a saved area survives reload and can be removed. Production proved
+Google sign-in and sign-out on the canonical domain and from the qualifying
+`convex.site` origin through the canonical callback. Authorization tests cover
+anonymous denial, cross-user isolation, idempotency, target validation,
+verified Google profiles, and owner access that fails closed.
 
 ### PR 7B: complete Google and email-only follow enrollment
 

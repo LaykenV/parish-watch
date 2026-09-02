@@ -41,9 +41,14 @@ limits bound call frequency. Provider token use and estimated cost remain
 private telemetry rather than an answer limit. Production tests proved cited
 issue and corpus answers, exact Source controls, evidence not found, thread
 restoration, and the removal of raw internal evidence IDs from resident-facing
-answer text. Slice 7A adds Google account ownership and saved areas and topics.
-Follows, AgentMail, coverage requests, and private source reports remain
-unfinished.
+answer text.
+
+Implementation Slice 7A is deployed through PRs #58 and #59. Convex Auth v2
+Google sessions now own private saved areas and topics through centralized
+authorization. The canonical custom domain and qualifying `convex.site` flow
+both completed real production sign-in and sign-out, and the public privacy
+notice is live on both hosts. Follows, AgentMail, coverage requests, and private
+source reports remain unfinished. PR 7B is next.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)
