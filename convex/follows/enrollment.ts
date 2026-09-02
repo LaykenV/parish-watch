@@ -19,7 +19,11 @@ import {
   VERIFICATION_MAX_ATTEMPTS,
   VERIFICATION_TTL_MS,
 } from './enrollmentContracts'
-import type { DeliveryCadence, FollowTargetKind } from './enrollmentContracts'
+import type {
+  ActiveDeliveryCadence,
+  DeliveryCadence,
+  FollowTargetKind,
+} from './enrollmentContracts'
 import {
   createOpaqueToken,
   createVerificationCode,
@@ -80,6 +84,7 @@ type FollowView = {
   title: string
   detail: string
   cadence: DeliveryCadence
+  resumeCadence: ActiveDeliveryCadence
   createdAt: number
 }
 
@@ -595,14 +600,17 @@ async function upsertPreference(
     .withIndex('by_follow_id', (index) => index.eq('followId', followId))
     .unique()
   if (existing) {
+    const resumeCadence = cadenceAfterMute(cadence, existing)
     await ctx.db.patch('notificationPreferences', existing._id, {
       cadence,
+      resumeCadence,
       updatedAt: now,
     })
   } else {
     await ctx.db.insert('notificationPreferences', {
       followId,
       cadence,
+      resumeCadence: cadence === 'muted' ? 'immediate' : cadence,
       createdAt: now,
       updatedAt: now,
     })
@@ -664,6 +672,7 @@ async function readFollowView(
   title: string
   detail: string
   cadence: DeliveryCadence
+  resumeCadence: ActiveDeliveryCadence
   createdAt: number
 } | null> {
   const row = await ctx.db.get('follows', followId)
@@ -686,8 +695,21 @@ async function followViewForRow(
     title: row.targetTitle,
     detail: row.targetDetail,
     cadence: preference.cadence,
+    resumeCadence:
+      preference.cadence === 'muted'
+        ? (preference.resumeCadence ?? 'immediate')
+        : preference.cadence,
     createdAt: row.createdAt,
   }
+}
+
+function cadenceAfterMute(
+  cadence: DeliveryCadence,
+  existing: Doc<'notificationPreferences'>,
+): ActiveDeliveryCadence {
+  if (cadence !== 'muted') return cadence
+  if (existing.cadence !== 'muted') return existing.cadence
+  return existing.resumeCadence ?? 'immediate'
 }
 
 function forbiddenFollow(): ConvexError<string> {

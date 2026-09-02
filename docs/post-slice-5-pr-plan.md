@@ -370,7 +370,8 @@ Include:
 - verify AgentMail webhook signatures before state changes;
 - add a unified follow schema for Google and verified-email owners;
 - validate all four target types and prevent duplicates;
-- add notification preferences for immediate, weekly, both, and muted;
+- add notification preferences for immediate, weekly, both, and muted, while
+  preserving the last active cadence for resume;
 - add hashed, rotatable email management and unsubscribe tokens;
 - make management tokens expire after 30 days and scope them to one follow;
 - make unsubscribe stop all mail to the address until a new verification;

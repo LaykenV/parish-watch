@@ -827,9 +827,10 @@ Indexes: token hash; subscriber plus purpose; follow plus purpose.
 
 #### `notificationPreferences`
 
-Fields: owner kind and reference, immediate material changes, weekly roundup,
-quiet preferences, verified delivery destination reference.
-Indexes: user; email subscriber.
+Fields: follow reference, cadence, the last active cadence to restore after a
+mute, and created and updated time. Cadence is immediate, weekly, both, or
+muted. Older muted rows without a stored restore value resume as immediate.
+Index: follow.
 
 #### `notifications`
 

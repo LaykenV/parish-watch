@@ -150,6 +150,42 @@ test('follow mutations enforce owner scope and reject unsupported targets', asyn
   ).rejects.toThrow('target is unavailable')
 })
 
+test('muting a follow preserves the cadence used when it resumes', async () => {
+  const t = convexTest(schema, modules)
+  const userId = await createGoogleUser(
+    t,
+    'google-cadence',
+    'cadence@example.com',
+  )
+  const google = t.withIdentity({ subject: userId })
+  const created = await google.mutation(
+    api.follows.enrollment.createGoogleFollow,
+    {
+      targetKind: 'topic',
+      targetKey: 'public-money',
+      cadence: 'both',
+    },
+  )
+
+  await google.mutation(api.follows.enrollment.updateGoogleFollow, {
+    followId: created.follow.id as Id<'follows'>,
+    cadence: 'muted',
+  })
+  const [muted] = await google.query(
+    api.follows.enrollment.currentGoogleFollows,
+    {},
+  )
+  expect(muted).toMatchObject({ cadence: 'muted', resumeCadence: 'both' })
+
+  await google.mutation(api.follows.enrollment.updateGoogleFollow, {
+    followId: created.follow.id as Id<'follows'>,
+    cadence: muted.resumeCadence,
+  })
+  await expect(
+    google.query(api.follows.enrollment.currentGoogleFollows, {}),
+  ).resolves.toMatchObject([{ cadence: 'both', resumeCadence: 'both' }])
+})
+
 test('management tokens isolate one follow, rotate, expire, and remove', async () => {
   const t = convexTest(schema, modules)
   const subscriberId = await createSubscriber(t, 'address-c')

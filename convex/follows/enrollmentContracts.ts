@@ -41,6 +41,7 @@ export const followView = v.object({
   title: v.string(),
   detail: v.string(),
   cadence: deliveryCadence,
+  resumeCadence: activeDeliveryCadence,
   createdAt: v.number(),
 })
 

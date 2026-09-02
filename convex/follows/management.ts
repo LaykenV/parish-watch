@@ -11,7 +11,10 @@ import {
   MANAGEMENT_TOKEN_TTL_MS,
   MAX_FOLLOWS_PER_OWNER,
 } from './enrollmentContracts'
-import type { DeliveryCadence } from './enrollmentContracts'
+import type {
+  ActiveDeliveryCadence,
+  DeliveryCadence,
+} from './enrollmentContracts'
 
 const managementResult = v.union(
   v.object({ status: v.literal('unavailable') }),
@@ -30,6 +33,7 @@ type ManagementResult =
         title: string
         detail: string
         cadence: DeliveryCadence
+        resumeCadence: ActiveDeliveryCadence
         createdAt: number
       }
     }
@@ -290,6 +294,7 @@ async function followViewForRow(
   title: string
   detail: string
   cadence: DeliveryCadence
+  resumeCadence: ActiveDeliveryCadence
   createdAt: number
 } | null> {
   const preference = await ctx.db
@@ -304,6 +309,10 @@ async function followViewForRow(
     title: row.targetTitle,
     detail: row.targetDetail,
     cadence: preference.cadence,
+    resumeCadence:
+      preference.cadence === 'muted'
+        ? (preference.resumeCadence ?? 'immediate')
+        : preference.cadence,
     createdAt: row.createdAt,
   }
 }
@@ -319,8 +328,10 @@ async function upsertPreference(
     .withIndex('by_follow_id', (index) => index.eq('followId', followId))
     .unique()
   if (existing) {
+    const resumeCadence = cadenceAfterMute(cadence, existing)
     await ctx.db.patch('notificationPreferences', existing._id, {
       cadence,
+      resumeCadence,
       updatedAt: now,
     })
     return
@@ -328,7 +339,17 @@ async function upsertPreference(
   await ctx.db.insert('notificationPreferences', {
     followId,
     cadence,
+    resumeCadence: cadence === 'muted' ? 'immediate' : cadence,
     createdAt: now,
     updatedAt: now,
   })
+}
+
+function cadenceAfterMute(
+  cadence: DeliveryCadence,
+  existing: Doc<'notificationPreferences'>,
+): ActiveDeliveryCadence {
+  if (cadence !== 'muted') return cadence
+  if (existing.cadence !== 'muted') return existing.cadence
+  return existing.resumeCadence ?? 'immediate'
 }

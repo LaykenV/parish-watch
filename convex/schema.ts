@@ -203,6 +203,7 @@ export default defineSchema({
   notificationPreferences: defineTable({
     followId: v.id('follows'),
     cadence: deliveryCadence,
+    resumeCadence: v.optional(activeDeliveryCadence),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index('by_follow_id', ['followId']),
