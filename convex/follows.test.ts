@@ -507,7 +507,7 @@ test('subscriber management tokens list and manage every follow for one address'
   await consume(t, 'wide-one', 'code-hash')
   await createChallenge(t, subscriberId, 'wide-two', 'code-hash', undefined, 'drainage')
   await consume(t, 'wide-two', 'code-hash')
-  const [housingFollow, drainageFollow] = await t.run(async (ctx) => {
+  const follows = await t.run(async (ctx) => {
     await ctx.db.insert('emailAccessTokens', {
       subscriberId,
       kind: 'management',
@@ -522,6 +522,12 @@ test('subscriber management tokens list and manage every follow for one address'
       )
       .take(10)
   })
+  const housingFollow = follows.find((follow) => follow.targetKey === 'housing')
+  const drainageFollow = follows.find(
+    (follow) => follow.targetKey === 'drainage',
+  )
+  expect(housingFollow).toBeDefined()
+  expect(drainageFollow).toBeDefined()
   await expect(
     t.query(internal.follows.management.readManagement, {
       tokenHash: 'subscriber-wide-token',
@@ -536,12 +542,12 @@ test('subscriber management tokens list and manage every follow for one address'
   })
   await t.mutation(internal.follows.management.updateEmailFollowWithToken, {
     tokenHash: 'subscriber-wide-token',
-    followId: housingFollow._id,
+    followId: housingFollow!._id,
     cadence: 'weekly',
   })
   await t.mutation(internal.follows.management.removeEmailFollowWithToken, {
     tokenHash: 'subscriber-wide-token',
-    followId: drainageFollow._id,
+    followId: drainageFollow!._id,
   })
   await expect(
     t.query(internal.follows.management.readManagement, {
@@ -552,6 +558,16 @@ test('subscriber management tokens list and manage every follow for one address'
     status: 'valid',
     follows: [{ targetKey: 'housing', cadence: 'weekly' }],
   })
+  await t.mutation(internal.follows.management.removeEmailFollowWithToken, {
+    tokenHash: 'subscriber-wide-token',
+    followId: housingFollow!._id,
+  })
+  await expect(
+    t.query(internal.follows.management.readManagement, {
+      tokenHash: 'subscriber-wide-token',
+      now: Date.now(),
+    }),
+  ).resolves.toEqual({ status: 'valid', follows: [] })
 })
 
 test('unsubscribe stops all email follows and a new verification re-enables only its target', async () => {

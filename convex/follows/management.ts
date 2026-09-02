@@ -93,7 +93,7 @@ export const readManagement = internalQuery({
       const view = await followViewForRow(ctx, row)
       if (view) follows.push(view)
     }
-    return follows.length > 0
+    return follows.length > 0 || !token.followId
       ? { status: 'valid' as const, follows }
       : { status: 'unavailable' as const }
   },

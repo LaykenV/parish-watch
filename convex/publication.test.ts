@@ -60,7 +60,9 @@ function initTest(fastModel: string = LUNA_MODEL): TestConvex {
   overrideGatewayTokenMinterForTests(async () => 'test-scoped-token')
   const t = convexTest(schema, modules)
   workflowTest.register(t)
-  agentmailTest.register(t)
+  agentmailTest.register(
+    t as unknown as Parameters<typeof agentmailTest.register>[0],
+  )
   return t
 }
 
