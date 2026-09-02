@@ -115,6 +115,179 @@ test('Google and email owners can follow the same target without duplicates', as
   })
 })
 
+test('Google follows accept every supported target kind and both place types', async () => {
+  const t = convexTest(schema, modules)
+  const userId = await createGoogleUser(
+    t,
+    'google-targets',
+    'targets@example.com',
+  )
+  const google = t.withIdentity({ subject: userId })
+  const targets = await t.run(async (ctx) => {
+    const parishId = await ctx.db.insert('jurisdictions', {
+      name: 'Lafayette Parish',
+      slug: 'lafayette-parish',
+      type: 'parish',
+      state: 'LA',
+      publicStatus: 'supported',
+    })
+    await ctx.db.insert('jurisdictions', {
+      name: 'Youngsville',
+      slug: 'youngsville',
+      type: 'municipality',
+      state: 'LA',
+      parentJurisdictionId: parishId,
+      publicStatus: 'degraded',
+    })
+    await ctx.db.insert('jurisdictions', {
+      name: 'Candidate Parish',
+      slug: 'candidate-parish',
+      type: 'parish',
+      state: 'LA',
+      publicStatus: 'candidate',
+    })
+    const governmentBodyId = await ctx.db.insert('governmentBodies', {
+      jurisdictionId: parishId,
+      name: 'Lafayette City Council',
+      slug: 'lafayette-city-council',
+      bodyType: 'city_council',
+      publicStatus: 'supported',
+    })
+    const registryId = await ctx.db.insert('sourceRegistries', {
+      governmentBodyId,
+      officialDomains: ['lafayettela.gov'],
+      seedUrls: ['https://lafayettela.gov/council'],
+      sourceKinds: ['agenda'],
+      expectedCadence: { kind: 'meeting_cycle' },
+      discoveryMode: 'dynamic',
+      status: 'supported',
+    })
+    const runId = await ctx.db.insert('pipelineRuns', {
+      registryId,
+      trigger: 'manual_issue_build',
+      state: 'succeeded',
+      processorVersion: 'test',
+      startedAt: 1,
+      completedAt: 2,
+    })
+    const buildId = await ctx.db.insert('issueBuilds', {
+      runId,
+      registryId,
+      governmentBodyId,
+      issueKey: 'drainage-plan',
+      idempotencyKey: 'issue-build-drainage-plan',
+      inputHash: 'issue-input-drainage-plan',
+      recordIds: [],
+      publicationVersionIds: [],
+      state: 'published',
+      promptVersion: 'test',
+      schemaVersion: 'test',
+      processorVersion: 'test',
+      modelRole: 'MODEL_STRONG',
+      createdAt: 3,
+      updatedAt: 4,
+    })
+    const issueId = await ctx.db.insert('issues', {
+      issueKey: 'drainage-plan',
+      slug: 'drainage-plan',
+      governmentBodyId,
+      createdAt: 3,
+      updatedAt: 4,
+    })
+    const issueVersionId = await ctx.db.insert('issueVersions', {
+      issueId,
+      buildId,
+      version: 1,
+      mode: 'full',
+      reasonCode: 'accepted',
+      policyVersion: 'test',
+      payloadVersion: 'test',
+      payloadHash: 'issue-payload-drainage-plan',
+      payload: {
+        kind: 'full',
+        title: 'Drainage plan',
+        summary: 'A published drainage plan.',
+        topics: ['Drainage'],
+        importance: {
+          score: 0,
+          maxScore: 100,
+          completenessPercent: 100,
+          supportedFactorCount: 0,
+          totalFactorCount: 4,
+          hasNearTermPublicDeadline: false,
+        },
+      },
+      createdAt: 4,
+    })
+    await ctx.db.patch('issues', issueId, {
+      currentVersionId: issueVersionId,
+      currentMode: 'full',
+    })
+    await ctx.db.patch('issueBuilds', buildId, { issueVersionId })
+    return {
+      parish: 'lafayette-parish',
+      municipality: 'youngsville',
+      unavailableParish: 'candidate-parish',
+      governmentBody: 'lafayette-city-council',
+      issue: 'drainage-plan',
+    }
+  })
+
+  const cases = [
+    {
+      targetKind: 'topic',
+      targetKey: 'land-use',
+      title: 'Land use',
+      detail: 'Published local decisions in this topic',
+    },
+    {
+      targetKind: 'issue',
+      targetKey: targets.issue,
+      title: 'Drainage plan',
+      detail: 'Lafayette City Council',
+    },
+    {
+      targetKind: 'government_body',
+      targetKey: targets.governmentBody,
+      title: 'Lafayette City Council',
+      detail: 'Lafayette Parish',
+    },
+    {
+      targetKind: 'place',
+      targetKey: targets.parish,
+      title: 'Lafayette Parish',
+      detail: 'Parish',
+    },
+    {
+      targetKind: 'place',
+      targetKey: targets.municipality,
+      title: 'Youngsville',
+      detail: 'Municipality',
+    },
+  ] as const
+
+  for (const target of cases) {
+    await expect(
+      google.mutation(api.follows.enrollment.createGoogleFollow, {
+        targetKind: target.targetKind,
+        targetKey: target.targetKey,
+        cadence: 'immediate',
+      }),
+    ).resolves.toMatchObject({
+      created: true,
+      follow: target,
+    })
+  }
+
+  await expect(
+    google.mutation(api.follows.enrollment.createGoogleFollow, {
+      targetKind: 'place',
+      targetKey: targets.unavailableParish,
+      cadence: 'immediate',
+    }),
+  ).rejects.toThrow('target is unavailable')
+})
+
 test('follow mutations enforce owner scope and reject unsupported targets', async () => {
   const t = convexTest(schema, modules)
   const aliceId = await createGoogleUser(t, 'google-alice', 'alice@example.com')
