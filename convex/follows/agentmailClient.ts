@@ -1,5 +1,6 @@
 import { AgentMail } from '@agentmail/convex'
 import type { OutboundId, OutboundStatus } from '@agentmail/convex'
+import { paginationOptsValidator } from 'convex/server'
 import { v } from 'convex/values'
 
 import { components, internal } from '../_generated/api'
@@ -12,6 +13,7 @@ import {
   hashAccessToken,
 } from './secrets'
 import { MANAGEMENT_TOKEN_TTL_MS } from './enrollmentContracts'
+import { weeklyRoundupWindowAt } from './roundupTime'
 
 export const agentmail = new AgentMail(components.agentmail, {
   webhookSecret: env.AGENTMAIL_WEBHOOK_SECRET ?? '',
@@ -223,6 +225,382 @@ export const reconcileImmediateDelivery = internalMutation({
     return null
   },
 })
+
+export const claimWeeklyRoundup = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const window = weeklyRoundupWindowAt(Date.now())
+    if (!window) return null
+    const existing = await ctx.db
+      .query('roundupWindows')
+      .withIndex('by_window_key', (index) => index.eq('windowKey', window.key))
+      .unique()
+    if (existing) return null
+    const now = Date.now()
+    const roundupWindowId = await ctx.db.insert('roundupWindows', {
+      windowKey: window.key,
+      startsAt: window.startsAt,
+      endsAt: window.endsAt,
+      state: 'collecting',
+      entryCount: 0,
+      deliveryCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    })
+    await ctx.scheduler.runAfter(
+      0,
+      internal.follows.agentmailClient.collectWeeklyRoundupPage,
+      {
+        roundupWindowId,
+        paginationOpts: { numItems: 50, cursor: null },
+      },
+    )
+    return null
+  },
+})
+
+export const collectWeeklyRoundupPage = internalMutation({
+  args: {
+    roundupWindowId: v.id('roundupWindows'),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const window = await ctx.db.get(args.roundupWindowId)
+    if (!window || window.state !== 'collecting') return null
+    const page = await ctx.db
+      .query('notificationMatches')
+      .withIndex('by_matched_at', (index) =>
+        index.gte('matchedAt', window.startsAt).lt('matchedAt', window.endsAt),
+      )
+      .paginate(args.paginationOpts)
+    let entryCount = 0
+    let deliveryCount = 0
+    for (const match of page.page) {
+      if (
+        match.cadenceAtMatch !== 'weekly' &&
+        match.cadenceAtMatch !== 'both'
+      ) {
+        continue
+      }
+      const follow = await ctx.db.get(match.followId)
+      const preference = follow
+        ? await ctx.db
+            .query('notificationPreferences')
+            .withIndex('by_follow_id', (index) =>
+              index.eq('followId', follow._id),
+            )
+            .unique()
+        : null
+      if (
+        !follow ||
+        !preference ||
+        preference.cadence === 'muted' ||
+        follow.ownerKey !== match.ownerKey
+      ) {
+        continue
+      }
+      if (follow.ownerKind === 'email') {
+        const subscriber = await ctx.db.get(follow.emailSubscriberId)
+        if (!subscriber || subscriber.state !== 'verified') continue
+      } else if (!(await ctx.db.get(follow.userId))) {
+        continue
+      }
+      let delivery = await ctx.db
+        .query('notificationDeliveries')
+        .withIndex('by_roundup_window_id_and_owner_key', (index) =>
+          index
+            .eq('roundupWindowId', window._id)
+            .eq('ownerKey', match.ownerKey),
+        )
+        .unique()
+      if (!delivery) {
+        const deliveryId = await ctx.db.insert('notificationDeliveries', {
+          ownerKind: match.ownerKind,
+          ownerKey: match.ownerKey,
+          kind: 'weekly',
+          roundupWindowId: window._id,
+          representativeFollowId: follow._id,
+          state: 'reserved',
+          reconcileAttempts: 0,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        })
+        delivery = await ctx.db.get(deliveryId)
+        deliveryCount += 1
+      }
+      if (!delivery || delivery.kind !== 'weekly') continue
+      const existingEntry = await ctx.db
+        .query('roundupEntries')
+        .withIndex('by_delivery_id_and_material_change_id', (index) =>
+          index
+            .eq('deliveryId', delivery!._id)
+            .eq('materialChangeId', match.materialChangeId),
+        )
+        .unique()
+      if (existingEntry) continue
+      await ctx.db.insert('roundupEntries', {
+        roundupWindowId: window._id,
+        deliveryId: delivery._id,
+        materialChangeId: match.materialChangeId,
+        createdAt: Date.now(),
+      })
+      entryCount += 1
+    }
+    const now = Date.now()
+    if (!page.isDone) {
+      await ctx.db.patch(window._id, {
+        matchCursor: page.continueCursor,
+        entryCount: window.entryCount + entryCount,
+        deliveryCount: window.deliveryCount + deliveryCount,
+        updatedAt: now,
+      })
+      await ctx.scheduler.runAfter(
+        0,
+        internal.follows.agentmailClient.collectWeeklyRoundupPage,
+        {
+          roundupWindowId: window._id,
+          paginationOpts: { numItems: 50, cursor: page.continueCursor },
+        },
+      )
+      return null
+    }
+    await ctx.db.patch(window._id, {
+      state: 'delivering',
+      matchCursor: undefined,
+      entryCount: window.entryCount + entryCount,
+      deliveryCount: window.deliveryCount + deliveryCount,
+      updatedAt: now,
+    })
+    await ctx.scheduler.runAfter(
+      0,
+      internal.follows.agentmailClient.deliverWeeklyRoundupPage,
+      {
+        roundupWindowId: window._id,
+        paginationOpts: { numItems: 25, cursor: null },
+      },
+    )
+    return null
+  },
+})
+
+export const deliverWeeklyRoundupPage = internalMutation({
+  args: {
+    roundupWindowId: v.id('roundupWindows'),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const window = await ctx.db.get(args.roundupWindowId)
+    if (!window || window.state !== 'delivering') return null
+    const page = await ctx.db
+      .query('notificationDeliveries')
+      .withIndex('by_roundup_window_id_and_owner_key', (index) =>
+        index.eq('roundupWindowId', window._id),
+      )
+      .paginate(args.paginationOpts)
+    for (const delivery of page.page) {
+      if (delivery.kind === 'weekly' && delivery.state === 'reserved') {
+        await enqueueWeeklyDelivery(ctx, delivery)
+      }
+    }
+    const now = Date.now()
+    if (!page.isDone) {
+      await ctx.db.patch(window._id, {
+        deliveryCursor: page.continueCursor,
+        updatedAt: now,
+      })
+      await ctx.scheduler.runAfter(
+        0,
+        internal.follows.agentmailClient.deliverWeeklyRoundupPage,
+        {
+          roundupWindowId: window._id,
+          paginationOpts: { numItems: 25, cursor: page.continueCursor },
+        },
+      )
+      return null
+    }
+    await ctx.db.patch(window._id, {
+      state: 'complete',
+      deliveryCursor: undefined,
+      completedAt: now,
+      updatedAt: now,
+    })
+    return null
+  },
+})
+
+async function enqueueWeeklyDelivery(
+  ctx: MutationCtx,
+  delivery: Doc<'notificationDeliveries'>,
+): Promise<void> {
+  const follow = delivery.representativeFollowId
+    ? await ctx.db.get(delivery.representativeFollowId)
+    : null
+  const preference = follow
+    ? await ctx.db
+        .query('notificationPreferences')
+        .withIndex('by_follow_id', (index) =>
+          index.eq('followId', follow._id),
+        )
+        .unique()
+    : null
+  if (!follow || !preference || preference.cadence === 'muted') {
+    await suppressDelivery(ctx, delivery, 'The follow is no longer active')
+    return
+  }
+  let recipient: string
+  let managementUrl: string
+  if (follow.ownerKind === 'google') {
+    const user = await ctx.db.get(follow.userId)
+    if (!user) {
+      await suppressDelivery(ctx, delivery, 'The alert owner is unavailable')
+      return
+    }
+    recipient = user.email
+    managementUrl = appUrl('/following/notifications')
+  } else {
+    const subscriber = await ctx.db.get(follow.emailSubscriberId)
+    if (!subscriber || subscriber.state !== 'verified') {
+      await suppressDelivery(ctx, delivery, 'The subscriber is not verified')
+      return
+    }
+    recipient = await decryptAddress(subscriber.encryptedAddress)
+    const token = createOpaqueToken()
+    const now = Date.now()
+    await ctx.db.insert('emailAccessTokens', {
+      subscriberId: subscriber._id,
+      kind: 'management',
+      tokenHash: await hashAccessToken(token),
+      expiresAt: now + MANAGEMENT_TOKEN_TTL_MS,
+      createdAt: now,
+    })
+    managementUrl = appUrl(`/email/manage/${encodeURIComponent(token)}`)
+  }
+  const projected = await projectWeeklyEmail(ctx, delivery, managementUrl)
+  if (!projected) return
+  try {
+    const outboundId = await agentmail.sendMessage(ctx, updatesInboxId(), {
+      to: recipient,
+      subject: projected.subject,
+      text: projected.text,
+      labels: ['public-parish', 'sourced-alert', 'weekly'],
+    })
+    await ctx.db.patch(delivery._id, {
+      state: 'pending',
+      outboundId,
+      providerIdempotencyKey: outboundId,
+      updatedAt: Date.now(),
+    })
+    await ctx.scheduler.runAfter(
+      5_000,
+      internal.follows.agentmailClient.reconcileImmediateDelivery,
+      { deliveryId: delivery._id },
+    )
+  } catch (error) {
+    await ctx.db.patch(delivery._id, {
+      state: 'failed',
+      errorDetail: errorText(error),
+      updatedAt: Date.now(),
+    })
+  }
+}
+
+async function projectWeeklyEmail(
+  ctx: MutationCtx,
+  delivery: Doc<'notificationDeliveries'>,
+  managementUrl: string,
+): Promise<{ subject: string; text: string } | null> {
+  const entries = await ctx.db
+    .query('roundupEntries')
+    .withIndex('by_delivery_id_and_created_at', (index) =>
+      index.eq('deliveryId', delivery._id),
+    )
+    .take(101)
+  if (entries.length === 0) {
+    await suppressDelivery(ctx, delivery, 'The roundup is empty')
+    return null
+  }
+  if (entries.length > 100) {
+    await ctx.db.patch(delivery._id, {
+      state: 'failed',
+      errorDetail: 'The roundup exceeded 100 material updates',
+      updatedAt: Date.now(),
+    })
+    return null
+  }
+  const items: Array<{
+    place: string
+    title: string
+    change: string
+    source: string
+    href: string
+  }> = []
+  for (const entry of entries) {
+    const change = await ctx.db.get(entry.materialChangeId)
+    const version = change
+      ? await ctx.db.get(change.currentPublicationVersionId)
+      : null
+    const record = change ? await ctx.db.get(change.recordId) : null
+    const body = record ? await ctx.db.get(record.governmentBodyId) : null
+    const jurisdiction = body
+      ? await ctx.db.get(body.jurisdictionId)
+      : null
+    if (!change?.material || !version?.payload || !record || !jurisdiction) {
+      continue
+    }
+    const issue = await currentIssueLink(ctx, record._id, version._id)
+    items.push({
+      place: jurisdiction.name,
+      title: version.payload.title,
+      change:
+        change.classification === 'new_decision'
+          ? 'New decision'
+          : changeLabel(change.classification),
+      source: version.payload.source.officialUrl,
+      href: issue
+        ? appUrl(`/issues/${encodeURIComponent(issue.slug)}`)
+        : appUrl(`/decisions/${encodeURIComponent(record.recordKey)}`),
+    })
+  }
+  if (items.length === 0) {
+    await suppressDelivery(ctx, delivery, 'The roundup has no readable updates')
+    return null
+  }
+  items.sort(
+    (left, right) =>
+      left.place.localeCompare(right.place) ||
+      left.title.localeCompare(right.title),
+  )
+  const lines = ['Your weekly Public Parish roundup']
+  let place = ''
+  for (const item of items) {
+    if (item.place !== place) {
+      place = item.place
+      lines.push('', place)
+    }
+    lines.push(`- ${item.title}`, `  ${item.change}`, `  ${item.href}`)
+    lines.push(`  Official source: ${item.source}`)
+  }
+  lines.push('', `Manage alerts: ${managementUrl}`)
+  return {
+    subject: `${items.length} ${items.length === 1 ? 'update' : 'updates'} in your Public Parish roundup`,
+    text: lines.join('\n'),
+  }
+}
+
+async function suppressDelivery(
+  ctx: MutationCtx,
+  delivery: Doc<'notificationDeliveries'>,
+  reason: string,
+): Promise<void> {
+  await ctx.db.patch(delivery._id, {
+    state: 'suppressed',
+    errorDetail: reason,
+    updatedAt: Date.now(),
+  })
+}
 
 type DeliveryCtx = MutationCtx
 
