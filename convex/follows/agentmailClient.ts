@@ -84,7 +84,7 @@ export const reserveImmediateDelivery = internalMutation({
         !follow ||
         follow.ownerKey !== args.ownerKey ||
         !preference ||
-        preference.cadence === 'muted'
+        (preference.cadence !== 'immediate' && preference.cadence !== 'both')
       ) {
         continue
       }
