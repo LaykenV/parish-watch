@@ -512,7 +512,25 @@ async function enqueueWeeklyDelivery(
   ctx: MutationCtx,
   delivery: Doc<'notificationDeliveries'>,
 ): Promise<void> {
-  const follow = await currentWeeklyFollow(ctx, delivery)
+  const entries = await ctx.db
+    .query('roundupEntries')
+    .withIndex('by_delivery_id_and_created_at', (index) =>
+      index.eq('deliveryId', delivery._id),
+    )
+    .take(101)
+  if (entries.length === 0) {
+    await suppressDelivery(ctx, delivery, 'The roundup is empty')
+    return
+  }
+  if (entries.length > 100) {
+    await ctx.db.patch(delivery._id, {
+      state: 'failed',
+      errorDetail: 'The roundup exceeded 100 material updates',
+      updatedAt: Date.now(),
+    })
+    return
+  }
+  const follow = await currentWeeklyFollow(ctx, delivery, entries)
   if (!follow) {
     await suppressDelivery(ctx, delivery, 'No contributing follow is weekly')
     return
@@ -545,7 +563,7 @@ async function enqueueWeeklyDelivery(
     })
     managementUrl = appUrl(`/email/manage/${encodeURIComponent(token)}`)
   }
-  const projected = await projectWeeklyEmail(ctx, delivery, managementUrl)
+  const projected = await projectWeeklyEmail(ctx, entries, managementUrl)
   if (!projected) return
   const enqueueAttempts = delivery.enqueueAttempts + 1
   await ctx.db.patch(delivery._id, {
@@ -591,13 +609,8 @@ async function enqueueWeeklyDelivery(
 async function currentWeeklyFollow(
   ctx: MutationCtx,
   delivery: Doc<'notificationDeliveries'>,
+  entries: Array<Doc<'roundupEntries'>>,
 ): Promise<Doc<'follows'> | null> {
-  const entries = await ctx.db
-    .query('roundupEntries')
-    .withIndex('by_delivery_id_and_created_at', (index) =>
-      index.eq('deliveryId', delivery._id),
-    )
-    .take(101)
   for (const entry of entries) {
     for (const followId of entry.followIds) {
       const follow = await ctx.db.get(followId)
@@ -627,27 +640,9 @@ async function currentWeeklyFollow(
 
 async function projectWeeklyEmail(
   ctx: MutationCtx,
-  delivery: Doc<'notificationDeliveries'>,
+  entries: Array<Doc<'roundupEntries'>>,
   managementUrl: string,
 ): Promise<{ subject: string; text: string } | null> {
-  const entries = await ctx.db
-    .query('roundupEntries')
-    .withIndex('by_delivery_id_and_created_at', (index) =>
-      index.eq('deliveryId', delivery._id),
-    )
-    .take(101)
-  if (entries.length === 0) {
-    await suppressDelivery(ctx, delivery, 'The roundup is empty')
-    return null
-  }
-  if (entries.length > 100) {
-    await ctx.db.patch(delivery._id, {
-      state: 'failed',
-      errorDetail: 'The roundup exceeded 100 material updates',
-      updatedAt: Date.now(),
-    })
-    return null
-  }
   const items: Array<{
     place: string
     title: string
