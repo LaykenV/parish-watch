@@ -530,11 +530,12 @@ async function enqueueWeeklyDelivery(
     })
     return
   }
-  const follow = await currentWeeklyFollow(ctx, delivery, entries)
-  if (!follow) {
+  const selection = await currentWeeklySelection(ctx, delivery, entries)
+  if (!selection) {
     await suppressDelivery(ctx, delivery, 'No contributing follow is weekly')
     return
   }
+  const { follow } = selection
   let recipient: string
   let managementUrl: string
   if (follow.ownerKind === 'google') {
@@ -563,7 +564,11 @@ async function enqueueWeeklyDelivery(
     })
     managementUrl = appUrl(`/email/manage/${encodeURIComponent(token)}`)
   }
-  const projected = await projectWeeklyEmail(ctx, entries, managementUrl)
+  const projected = await projectWeeklyEmail(
+    ctx,
+    selection.entries,
+    managementUrl,
+  )
   if (!projected) return
   const enqueueAttempts = delivery.enqueueAttempts + 1
   await ctx.db.patch(delivery._id, {
@@ -606,12 +611,18 @@ async function enqueueWeeklyDelivery(
   }
 }
 
-async function currentWeeklyFollow(
+async function currentWeeklySelection(
   ctx: MutationCtx,
   delivery: Doc<'notificationDeliveries'>,
   entries: Array<Doc<'roundupEntries'>>,
-): Promise<Doc<'follows'> | null> {
+): Promise<{
+  entries: Array<Doc<'roundupEntries'>>
+  follow: Doc<'follows'>
+} | null> {
+  const eligibleEntries: Array<Doc<'roundupEntries'>> = []
+  let recipientFollow: Doc<'follows'> | null = null
   for (const entry of entries) {
+    let entryIsEligible = false
     for (const followId of entry.followIds) {
       const follow = await ctx.db.get(followId)
       if (
@@ -631,11 +642,16 @@ async function currentWeeklyFollow(
         preference?.cadence === 'weekly' ||
         preference?.cadence === 'both'
       ) {
-        return follow
+        recipientFollow ??= follow
+        entryIsEligible = true
+        break
       }
     }
+    if (entryIsEligible) eligibleEntries.push(entry)
   }
-  return null
+  return recipientFollow
+    ? { entries: eligibleEntries, follow: recipientFollow }
+    : null
 }
 
 async function projectWeeklyEmail(
