@@ -12,6 +12,22 @@ vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: ReactNode }) => <a href="#">{children}</a>,
 }))
 
+vi.mock('convex/react', () => ({
+  useAction: () => vi.fn(),
+  useMutation: () => vi.fn(),
+  useQuery: () => null,
+}))
+
+vi.mock('../auth/google-auth', () => ({
+  useGoogleAuth: () => ({
+    error: null,
+    isAuthenticated: false,
+    isLoading: false,
+    isSigningIn: false,
+    signInGoogle: vi.fn(),
+  }),
+}))
+
 const loaderSource = readFileSync(
   new URL('./coverage-page.data.ts', import.meta.url),
   'utf8',
