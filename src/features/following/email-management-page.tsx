@@ -75,7 +75,7 @@ export function LiveEmailManagementPage({ token }: { token: string }) {
     )
   }
 
-  const subscription = liveSubscription(result.follow)
+  const subscription = toEmailManagedTarget(result.follow)
   const rotate = async () => {
     const next = await rotateToken({ token: activeToken })
     setActiveToken(next.token)
@@ -407,11 +407,12 @@ function ExpiredEmailManagement({
   )
 }
 
-function liveSubscription(follow: {
+export function toEmailManagedTarget(follow: {
   cadence: DeliveryFrequency | 'muted'
   createdAt: number
   detail: string
   id: string
+  resumeCadence: DeliveryFrequency
   targetKey: string
   targetKind: 'issue' | 'topic' | 'government_body' | 'place'
   title: string
@@ -425,7 +426,7 @@ function liveSubscription(follow: {
   return {
     destination: 'Verified email',
     detail: follow.detail,
-    frequency: follow.cadence === 'muted' ? 'immediate' : follow.cadence,
+    frequency: follow.resumeCadence,
     id: follow.id,
     key: follow.targetKey,
     kind: kind[follow.targetKind],

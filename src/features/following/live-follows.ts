@@ -5,11 +5,12 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import type { DeliveryFrequency, FollowKind, FollowedTarget } from './contracts'
 
-type LiveFollow = {
+export type LiveFollow = {
   cadence: DeliveryFrequency | 'muted'
   createdAt: number
   detail: string
   id: string
+  resumeCadence: DeliveryFrequency
   targetKey: string
   targetKind: 'issue' | 'topic' | 'government_body' | 'place'
   title: string
@@ -53,7 +54,7 @@ export function toFollowedTarget(follow: LiveFollow): FollowedTarget {
     title: follow.title,
     detail: follow.detail,
     destination: 'Google account',
-    frequency: activeCadence(follow.cadence),
+    frequency: follow.resumeCadence,
     latestChange: `Follow created ${new Intl.DateTimeFormat('en-US', {
       day: 'numeric',
       month: 'short',
@@ -61,17 +62,5 @@ export function toFollowedTarget(follow: LiveFollow): FollowedTarget {
       timeZone: 'America/Chicago',
     }).format(follow.createdAt)}`,
     status: muted ? 'Muted' : 'Following',
-  }
-}
-
-function activeCadence(
-  cadence: DeliveryFrequency | 'muted',
-): DeliveryFrequency {
-  switch (cadence) {
-    case 'both':
-    case 'weekly':
-      return cadence
-    default:
-      return 'immediate'
   }
 }

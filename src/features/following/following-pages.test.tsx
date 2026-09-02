@@ -5,10 +5,14 @@ import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { DeliveryReceipt, FrequencyOptions } from './follow-action'
-import { EmailManagementPage } from './email-management-page'
+import {
+  EmailManagementPage,
+  toEmailManagedTarget,
+} from './email-management-page'
 import { FollowingPage } from './following-page'
 import { loadFollowingPageData } from './following-page.data'
 import type { FollowingPageData } from './following-page.data'
+import { toFollowedTarget } from './live-follows'
 import {
   EMAIL_SUBSCRIPTION_FIXTURE,
   FOLLOWED_TARGET_FIXTURES,
@@ -167,6 +171,28 @@ describe('resident following interface', () => {
     )
     expect(bothOption).toContain('data-selected=""')
     expect(bothOption).toContain('checked=""')
+  })
+
+  it('keeps the previous schedule available while a follow is muted', () => {
+    const follow = {
+      cadence: 'muted' as const,
+      createdAt: Date.UTC(2026, 8, 2),
+      detail: 'Lafayette Parish',
+      id: 'follow-cadence',
+      resumeCadence: 'both' as const,
+      targetKey: 'public-money',
+      targetKind: 'topic' as const,
+      title: 'Public money',
+    }
+
+    expect(toFollowedTarget(follow)).toMatchObject({
+      frequency: 'both',
+      status: 'Muted',
+    })
+    expect(toEmailManagedTarget(follow)).toMatchObject({
+      frequency: 'both',
+      status: 'Muted',
+    })
   })
 
   it('gives an expired live management link an available recovery path', () => {
