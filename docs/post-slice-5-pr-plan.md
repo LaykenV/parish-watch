@@ -340,6 +340,9 @@ Exclude:
 Proof: a resident signs in from an issue, returns to it, saves an area and topic,
 and another user cannot access either record.
 
+Status: implemented on the Slice 7A branch. Pull-request checks, Google
+credentials, and hosted callback proof remain before merge.
+
 ### PR 7B: complete Google and email-only follow enrollment
 
 Suggested title: `feat: follow civic updates with Google or email`

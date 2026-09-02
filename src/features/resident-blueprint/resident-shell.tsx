@@ -13,6 +13,7 @@ import { AreaSelector } from '../discovery/area-selector'
 import { useArea } from '../discovery/area-store'
 import { areaName } from '../discovery/contracts'
 import { useKeyboardOpen, useOnline, useOverlayOpen } from '../discovery/hooks'
+import { parseResidentReturnTo } from '../resident-handoff/navigation'
 
 import { Spinner } from '../../components/ui/spinner'
 import { LOUISIANA_OUTLINE_PATH } from '../landing/louisiana-path'
@@ -45,6 +46,7 @@ const STATIC_ROUTE_LABELS: Record<string, string> = {
   '/for-you': 'Home',
   '/how-it-works': 'How Public Parish works',
   '/issues': 'Home',
+  '/privacy': 'Privacy',
 }
 
 export function residentRouteLabel(pathname: string): string {
@@ -55,6 +57,16 @@ export function residentRouteLabel(pathname: string): string {
   if (pathname.startsWith('/issues/')) return 'Issue'
   if (pathname.startsWith('/meetings/')) return 'Meeting'
   return 'Page'
+}
+
+export function residentDocumentTitle(
+  pathname: string,
+  headingText: string | null | undefined,
+): string {
+  const heading = headingText?.trim()
+  return heading
+    ? `${heading} | Public Parish`
+    : `${residentRouteLabel(pathname)} | Public Parish`
 }
 
 export function ResidentRouteAccessibility() {
@@ -70,15 +82,30 @@ export function ResidentRouteAccessibility() {
   useEffect(() => {
     if (isLoading) return
 
+    const updateDocumentTitle = () => {
+      const heading = document.querySelector<HTMLElement>('#resident-main h1')
+      document.title = residentDocumentTitle(pathname, heading?.textContent)
+    }
+
+    updateDocumentTitle()
+    const observer = new MutationObserver(updateDocumentTitle)
+    observer.observe(document.body, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+
+    return () => observer.disconnect()
+  }, [isLoading, pathname])
+
+  useEffect(() => {
+    if (isLoading) return
+
     const fallbackLabel = residentRouteLabel(pathname)
     let innerFrame = 0
     const frame = window.requestAnimationFrame(() => {
       innerFrame = window.requestAnimationFrame(() => {
         const heading = document.querySelector<HTMLElement>('#resident-main h1')
-        const headingText = heading?.textContent.trim()
-        document.title = headingText
-          ? `${headingText} | Public Parish`
-          : `${fallbackLabel} | Public Parish`
 
         if (
           previousPath.current !== null &&
@@ -156,8 +183,11 @@ export function RouteLoadingRegion() {
 }
 
 export function ResidentShell({ children }: { children: ReactNode }) {
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
+  const { currentHref, pathname } = useRouterState({
+    select: (state) => ({
+      currentHref: state.location.href,
+      pathname: state.location.pathname,
+    }),
   })
   const area = useArea()
   const keyboardOpen = useKeyboardOpen()
@@ -214,6 +244,11 @@ export function ResidentShell({ children }: { children: ReactNode }) {
             />
             <Link
               className="resident-account-control"
+              search={{
+                returnTo: pathname.startsWith('/following')
+                  ? undefined
+                  : parseResidentReturnTo(currentHref),
+              }}
               to="/following"
               aria-label="Open account and following"
             >
@@ -230,6 +265,21 @@ export function ResidentShell({ children }: { children: ReactNode }) {
       )}
 
       {children}
+
+      <footer className="resident-footer">
+        <nav aria-label="About Public Parish">
+          <Link to="/how-it-works">How it works</Link>
+          <Link to="/privacy">Privacy</Link>
+          <a
+            href="https://github.com/LaykenV/public-parish"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Source code
+          </a>
+        </nav>
+        <p>Official evidence is public. Resident activity stays private.</p>
+      </footer>
 
       <nav className="resident-mobile-nav" aria-label="Primary navigation">
         {PRIMARY_NAVIGATION.map((item) => (

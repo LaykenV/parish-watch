@@ -211,9 +211,9 @@ request-frequency limits, deterministic citation validation, and corrected
 resident citation display. Controlled production tests proved related issue
 turns, a corpus answer spanning two decisions, exact Source controls, evidence
 not found, thread restoration, and answer prose without raw internal evidence
-IDs. Mounted Convex Auth, follows, AgentMail, coverage integration, the owner
-compiler, resident proof, the demo, and the vibeapps.dev submission remain
-pending.
+IDs. Convex Auth and saved setup are code complete and await credentialed
+callback proof. Follows, AgentMail, coverage integration, the owner compiler,
+resident proof, the demo, and the vibeapps.dev submission remain pending.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests

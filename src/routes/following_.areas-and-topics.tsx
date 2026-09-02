@@ -13,9 +13,15 @@ export const Route = createFileRoute('/following_/areas-and-topics')({
 })
 
 function AreasAndTopicsRoute() {
+  const { returnTo } = Route.useSearch()
+
   return (
     <ResidentShell>
-      <FollowingPage data={Route.useLoaderData()} view="areas" />
+      <FollowingPage
+        data={Route.useLoaderData()}
+        returnTo={returnTo}
+        view="areas"
+      />
     </ResidentShell>
   )
 }

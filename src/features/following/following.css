@@ -473,6 +473,11 @@
   line-height: 1.5;
 }
 
+.following-area-status[data-error],
+.following-save-row [data-error] {
+  color: var(--destructive-foreground);
+}
+
 .following-return,
 .email-expired,
 .email-manage-result {

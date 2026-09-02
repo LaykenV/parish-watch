@@ -7,6 +7,7 @@ import {
   publicActionTypes,
   recordTypes,
 } from './extraction/contractV1'
+import { areaSlug, topicSlug } from './follows/contracts'
 import {
   importanceFactorNames,
   importanceLevels,
@@ -86,6 +87,33 @@ const analyticsAreaCounts = v.object({
 })
 
 export default defineSchema({
+  users: defineTable({
+    googleAccountId: v.string(),
+    email: v.string(),
+    emailVerified: v.literal(true),
+    name: v.optional(v.string()),
+    picture: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastSignedInAt: v.number(),
+  }).index('by_google_account_id', ['googleAccountId']),
+
+  savedAreas: defineTable({
+    userId: v.id('users'),
+    area: areaSlug,
+    createdAt: v.number(),
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_user_id_and_area', ['userId', 'area']),
+
+  savedTopics: defineTable({
+    userId: v.id('users'),
+    topic: topicSlug,
+    createdAt: v.number(),
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_user_id_and_topic', ['userId', 'topic']),
+
   analyticsSubjects: defineTable({
     visitorKeyHash: v.string(),
     firstSeenAt: v.number(),

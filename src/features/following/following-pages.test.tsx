@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { DeliveryReceipt, FrequencyOptions } from './follow-action'
 import { EmailManagementPage } from './email-management-page'
 import { FollowingPage } from './following-page'
+import { loadFollowingPageData } from './following-page.data'
 import type { FollowingPageData } from './following-page.data'
 import {
   EMAIL_SUBSCRIPTION_FIXTURE,
@@ -33,10 +34,16 @@ const followSource = readFileSync(
   new URL('./follow-action.tsx', import.meta.url),
   'utf8',
 )
+const followingPageSource = readFileSync(
+  new URL('./following-page.tsx', import.meta.url),
+  'utf8',
+)
 
 const active: FollowingPageData = {
   areas: SAVED_AREAS,
   available: true,
+  mode: 'fixture',
+  notificationsAvailable: true,
   scenario: 'active',
   signedIn: true,
   targets: FOLLOWED_TARGET_FIXTURES,
@@ -49,6 +56,22 @@ describe('resident following interface', () => {
     expect(loaderSource.indexOf('if (!active)')).toBeLessThan(
       loaderSource.indexOf('await import('),
     )
+  })
+
+  it('loads the real account adapter without a development fixture', async () => {
+    await expect(loadFollowingPageData(undefined)).resolves.toMatchObject({
+      areas: [],
+      available: true,
+      mode: 'live',
+      notificationsAvailable: false,
+      targets: [],
+      topics: [],
+    })
+  })
+
+  it('resyncs saved setup when another browser tab changes it', () => {
+    expect(followingPageSource).toContain('setAreas(data.areas)')
+    expect(followingPageSource).toContain('setTopics(new Set(data.topics))')
   })
 
   it('shows the target, cadence, and destination together', () => {
@@ -108,6 +131,8 @@ describe('resident following interface', () => {
         data={{
           areas: [],
           available: false,
+          mode: 'unavailable',
+          notificationsAvailable: false,
           signedIn: false,
           targets: [],
           topics: [],

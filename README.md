@@ -41,8 +41,9 @@ limits bound call frequency. Provider token use and estimated cost remain
 private telemetry rather than an answer limit. Production tests proved cited
 issue and corpus answers, exact Source controls, evidence not found, thread
 restoration, and the removal of raw internal evidence IDs from resident-facing
-answer text. Authentication, follows, AgentMail, coverage requests, and private
-source reports remain unfinished.
+answer text. Slice 7A adds Google account ownership and saved areas and topics.
+Follows, AgentMail, coverage requests, and private source reports remain
+unfinished.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)
@@ -146,10 +147,9 @@ auth, webhook, routing, or schema work genuinely needs isolation.
   material-change alerts
 
 Direct dependencies and the lockfile use exact versions. Convex Auth v2 is
-pinned to `2.0.0-alpha.1`; auth is not implemented yet. Terra extraction and
-Luna review have passed real development and production decision cases. The
-publications remain separate from the fixture-backed discovery interface until
-the resident projection and ranking query are connected.
+pinned to `2.0.0-alpha.1` and owns Google sessions for saved resident setup.
+Terra extraction and Luna review have passed real development and production
+decision cases.
 
 ## License
 

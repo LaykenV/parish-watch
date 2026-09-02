@@ -7,14 +7,30 @@
 - **Repo:** https://github.com/LaykenV/public-parish
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
-- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`, `@convex-dev/agent`
-- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, scheduled functions, durable workflows
-- **Auth:** none
+- **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`, `@convex-dev/agent`, `@convex-dev/auth`
+- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, scheduled functions, durable workflows, authentication
+- **Auth:** Convex Auth with Google OAuth, development callback and saved setup verified; production release pending
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-01T22:17:03Z
+- **Last updated:** 2026-09-02T02:54:14Z
 
 ## Log
+
+### 2026-09-01 - working tree
+
+Mounted the pinned Convex Auth v2 alpha core and Google OAuth for Slice 7A.
+Verified Google profiles create private users, and every saved-area or topic
+query derives ownership from the signed JWT subject. Indexed, idempotent
+mutations reject anonymous callers and unsupported launch targets. The resident
+account route now separates the live Google setup from the development follow
+and notification fixtures. A real development Google callback completed, saved
+Lafayette Parish, survived a reload, and removed the saved area after the proof.
+The production release and production callback proof remain pending
+(`convex/auth.ts`, `convex/auth/`, `convex/follows/savedSetup.ts`,
+`src/features/auth/`, `src/features/following/`). A public privacy notice now
+states the live account, Ask, analytics, provider, retention, and deletion
+boundaries required before publishing the dedicated Google consent screen
+(`src/routes/privacy.tsx`, `src/features/privacy/`).
 
 ### 2026-09-01 - 13f735b
 
