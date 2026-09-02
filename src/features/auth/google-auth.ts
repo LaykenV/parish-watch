@@ -3,9 +3,15 @@ import {
   useOauth,
   useSignInWithGoogle,
 } from '@convex-dev/auth/providers/oauth/react'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { api } from '../../../convex/_generated/api'
+import {
+  consumeGoogleSignInHandoff,
+  googleSignInHandoffUrl,
+} from './google-auth-origin'
+
+export const AUTH_RETURN_KEY = 'public-parish:google-return-to'
 
 const OAUTH_ERROR_MESSAGES = {
   access_denied: 'Google sign-in was canceled.',
@@ -15,13 +21,56 @@ const OAUTH_ERROR_MESSAGES = {
   rejected: 'Public Parish could not use that Google account.',
 } as const
 
-export function useGoogleAuth() {
+export function useGoogleAuth(returnTo?: string) {
   const auth = useConvexAuth()
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [startError, setStartError] = useState<string | null>(null)
   const { signOut } = useAuthActions()
   const { flowError } = useOauth()
   const { signInGoogle } = useSignInWithGoogle(api.auth)
+
+  const rememberReturnTo = useCallback(() => {
+    if (returnTo) window.sessionStorage.setItem(AUTH_RETURN_KEY, returnTo)
+    else window.sessionStorage.removeItem(AUTH_RETURN_KEY)
+  }, [returnTo])
+
+  const startGoogleSignIn = useCallback(
+    async (redirectTo: string) => {
+      setIsSigningIn(true)
+      setStartError(null)
+      try {
+        await signInGoogle({ redirectTo })
+      } catch {
+        setStartError(
+          'Google sign-in could not start. Check your connection and try again.',
+        )
+        setIsSigningIn(false)
+      }
+    },
+    [signInGoogle],
+  )
+
+  useEffect(() => {
+    if (auth.isLoading) return
+
+    const redirectTo = consumeGoogleSignInHandoff(window.location.href)
+    if (!redirectTo) return
+
+    rememberReturnTo()
+    const cleanUrl = new URL(redirectTo)
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`,
+    )
+    if (auth.isAuthenticated) return
+    void startGoogleSignIn(redirectTo)
+  }, [
+    auth.isAuthenticated,
+    auth.isLoading,
+    rememberReturnTo,
+    startGoogleSignIn,
+  ])
 
   return {
     ...auth,
@@ -33,16 +82,13 @@ export function useGoogleAuth() {
           : OAUTH_ERROR_MESSAGES[flowError.code],
     isSigningIn,
     signInGoogle: async () => {
-      setIsSigningIn(true)
-      setStartError(null)
-      try {
-        await signInGoogle({ redirectTo: window.location.href })
-      } catch {
-        setStartError(
-          'Google sign-in could not start. Check your connection and try again.',
-        )
-        setIsSigningIn(false)
+      rememberReturnTo()
+      const handoffUrl = googleSignInHandoffUrl(window.location.href)
+      if (handoffUrl) {
+        window.location.replace(handoffUrl)
+        return
       }
+      await startGoogleSignIn(window.location.href)
     },
     signOut,
   }

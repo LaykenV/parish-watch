@@ -34,6 +34,10 @@ const followSource = readFileSync(
   new URL('./follow-action.tsx', import.meta.url),
   'utf8',
 )
+const followingPageSource = readFileSync(
+  new URL('./following-page.tsx', import.meta.url),
+  'utf8',
+)
 
 const active: FollowingPageData = {
   areas: SAVED_AREAS,
@@ -63,6 +67,11 @@ describe('resident following interface', () => {
       targets: [],
       topics: [],
     })
+  })
+
+  it('resyncs saved setup when another browser tab changes it', () => {
+    expect(followingPageSource).toContain('setAreas(data.areas)')
+    expect(followingPageSource).toContain('setTopics(new Set(data.topics))')
   })
 
   it('shows the target, cadence, and destination together', () => {

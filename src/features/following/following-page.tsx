@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
-import { useGoogleAuth } from '../auth/google-auth'
+import { AUTH_RETURN_KEY, useGoogleAuth } from '../auth/google-auth'
 import { areaName } from '../discovery/contracts'
 import { Sheet } from '../discovery/sheet'
 import { parseResidentReturnTo } from '../resident-handoff/navigation'
@@ -72,8 +72,6 @@ export function FollowingPage({
   return <FollowingDashboard data={data} view={view} />
 }
 
-const AUTH_RETURN_KEY = 'public-parish:google-return-to'
-
 function LiveFollowingPage({
   returnTo,
   view,
@@ -81,7 +79,7 @@ function LiveFollowingPage({
   returnTo?: string
   view: FollowingView
 }) {
-  const auth = useGoogleAuth()
+  const auth = useGoogleAuth(returnTo)
   const setup = useSavedSetup(auth.isAuthenticated)
   const mutations = useSavedSetupMutations()
 
@@ -103,11 +101,7 @@ function LiveFollowingPage({
       <FollowingSignedOut
         busy={auth.isSigningIn}
         error={auth.error}
-        onGoogle={async () => {
-          if (returnTo) window.sessionStorage.setItem(AUTH_RETURN_KEY, returnTo)
-          else window.sessionStorage.removeItem(AUTH_RETURN_KEY)
-          await auth.signInGoogle()
-        }}
+        onGoogle={auth.signInGoogle}
       />
     )
   }
@@ -792,11 +786,31 @@ function AreasAndTopics({
   const [topics, setTopics] = useState(
     () => new Set<SavedTopicSlug>(data.topics),
   )
+  const areaSignature = data.areas
+    .map((area) => area.slug)
+    .sort()
+    .join('|')
+  const topicSignature = [...data.topics].sort().join('|')
+  const previousAreaSignature = useRef(areaSignature)
+  const previousTopicSignature = useRef(topicSignature)
   const [topicStatus, setTopicStatus] = useState('')
   const [areaStatus, setAreaStatus] = useState('')
   const [areaError, setAreaError] = useState(false)
   const [topicError, setTopicError] = useState(false)
   const [working, setWorking] = useState(false)
+
+  useEffect(() => {
+    if (previousAreaSignature.current === areaSignature) return
+    previousAreaSignature.current = areaSignature
+    setAreas(data.areas)
+  }, [areaSignature, data.areas])
+
+  useEffect(() => {
+    if (previousTopicSignature.current === topicSignature) return
+    previousTopicSignature.current = topicSignature
+    setTopics(new Set(data.topics))
+  }, [data.topics, topicSignature])
+
   const savedAreaSlugs = new Set(areas.map((area) => area.slug))
   const availableAreas = SAVED_AREA_SLUGS.filter(
     (slug) => !savedAreaSlugs.has(slug),

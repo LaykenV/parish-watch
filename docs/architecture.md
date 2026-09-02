@@ -245,10 +245,12 @@ a permanent redirect to `www`; its complete configuration lives in
 `convex.cloud` endpoint for queries, mutations, actions, and realtime. The
 production `CONVEX_SITE_URL` override is `https://www.publicparish.com`, so
 Convex Auth will use the canonical public origin for its issuer and provider
-callback. Configure Convex Auth v2's `allowedRedirectOrigins` with both
-`https://www.publicparish.com` and the production `convex.site` origin. Register
-the exact callback URLs required by the installed Google provider when auth is
-implemented, then test a complete sign-in started from each served origin.
+callback. Production only allows `https://www.publicparish.com` as a Convex Auth
+redirect origin. A Google sign-in started on the submission `convex.site` URL
+first moves the resident to the same path and query on `www.publicparish.com`.
+The OAuth flow state and callback therefore stay on one browser origin. Register
+`https://www.publicparish.com/oauth/google/callback` with Google, then test a
+complete sign-in started from each served origin.
 
 The redirect project exists because Vercel DNS rejects a literal apex CNAME and
 Convex did not verify Vercel's flattened ALIAS record. DNS cannot send an HTTP
