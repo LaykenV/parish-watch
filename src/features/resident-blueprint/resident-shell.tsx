@@ -58,6 +58,16 @@ export function residentRouteLabel(pathname: string): string {
   return 'Page'
 }
 
+export function residentDocumentTitle(
+  pathname: string,
+  headingText: string | null | undefined,
+): string {
+  const heading = headingText?.trim()
+  return heading
+    ? `${heading} | Public Parish`
+    : `${residentRouteLabel(pathname)} | Public Parish`
+}
+
 export function ResidentRouteAccessibility() {
   const { isLoading, pathname } = useRouterState({
     select: (state) => ({
@@ -71,15 +81,30 @@ export function ResidentRouteAccessibility() {
   useEffect(() => {
     if (isLoading) return
 
+    const updateDocumentTitle = () => {
+      const heading = document.querySelector<HTMLElement>('#resident-main h1')
+      document.title = residentDocumentTitle(pathname, heading?.textContent)
+    }
+
+    updateDocumentTitle()
+    const observer = new MutationObserver(updateDocumentTitle)
+    observer.observe(document.body, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+
+    return () => observer.disconnect()
+  }, [isLoading, pathname])
+
+  useEffect(() => {
+    if (isLoading) return
+
     const fallbackLabel = residentRouteLabel(pathname)
     let innerFrame = 0
     const frame = window.requestAnimationFrame(() => {
       innerFrame = window.requestAnimationFrame(() => {
         const heading = document.querySelector<HTMLElement>('#resident-main h1')
-        const headingText = heading?.textContent.trim()
-        document.title = headingText
-          ? `${headingText} | Public Parish`
-          : `${fallbackLabel} | Public Parish`
 
         if (
           previousPath.current !== null &&

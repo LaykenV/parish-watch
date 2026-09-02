@@ -4,7 +4,10 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
 import { Button, buttonVariants } from '../../components/ui/button'
-import { residentRouteLabel } from './resident-shell'
+import {
+  residentDocumentTitle,
+  residentRouteLabel,
+} from './resident-shell'
 
 const shellSource = readFileSync(
   new URL('./resident-shell.tsx', import.meta.url),
@@ -68,6 +71,20 @@ describe('resident interface Slice 7 system', () => {
     expect(residentRouteLabel('/email/manage/example')).toBe(
       'Manage this follow',
     )
+  })
+
+  it('updates the document title when async route content replaces its heading', () => {
+    expect(residentDocumentTitle('/following', 'Loading your saved setup')).toBe(
+      'Loading your saved setup | Public Parish',
+    )
+    expect(residentDocumentTitle('/following', 'Following')).toBe(
+      'Following | Public Parish',
+    )
+    expect(residentDocumentTitle('/following', null)).toBe(
+      'Following | Public Parish',
+    )
+    expect(shellSource).toContain('new MutationObserver(updateDocumentTitle)')
+    expect(shellSource).toContain('observer.observe(document.body')
   })
 
   it('focuses the route heading without naming the page twice', () => {
