@@ -79,7 +79,6 @@ export async function resolveFollowTarget(
     .unique()
   if (
     !place ||
-    place.type !== 'municipality' ||
     !isFollowableCoverage(place.publicStatus)
   ) {
     throw invalidTarget()
@@ -88,7 +87,7 @@ export async function resolveFollowTarget(
     targetKind,
     targetKey,
     title: place.name,
-    detail: 'Municipality',
+    detail: place.type === 'parish' ? 'Parish' : 'Municipality',
   }
 }
 

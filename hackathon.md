@@ -12,9 +12,17 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-02T19:55:02Z
+- **Last updated:** 2026-09-02T20:52:56Z
 
 ## Log
+
+### 2026-09-02 - working tree
+
+Corrected Place follow validation so supported parishes and municipalities use
+the same enrollment path. Added deterministic Convex tests for issue, topic,
+government-body, parish, and municipality targets, plus rejection of a parish
+that has not passed the coverage gate (`convex/follows/targets.ts`,
+`convex/follows.test.ts`). Automated validation remains with pull-request CI.
 
 ### 2026-09-02 - 8fc4642
 
