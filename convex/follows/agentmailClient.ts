@@ -335,7 +335,7 @@ export const collectWeeklyRoundupPage = internalMutation({
         .query('roundupEntries')
         .withIndex('by_delivery_id_and_material_change_id', (index) =>
           index
-            .eq('deliveryId', delivery!._id)
+            .eq('deliveryId', delivery._id)
             .eq('materialChangeId', match.materialChangeId),
         )
         .unique()
