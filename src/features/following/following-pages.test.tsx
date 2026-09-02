@@ -126,6 +126,12 @@ describe('resident following interface', () => {
     expect(html.match(/type="radio"/g)).toHaveLength(3)
   })
 
+  it('keeps a resident cadence choice when live settings refresh', () => {
+    expect(followSource).toContain('const frequencyChanged = useRef(false)')
+    expect(followSource).toContain('if (open && frequencyChanged.current) return')
+    expect(followSource).toContain('onFrequency={handleFrequencyChange}')
+  })
+
   it('keeps destination and coverage health on each managed row', () => {
     const html = renderToStaticMarkup(
       <FollowingPage data={active} view="following" />,
