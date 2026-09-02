@@ -797,9 +797,9 @@ answer becomes visible.
 
 #### `emailSubscribers`
 
-Fields: normalized delivery-address hash, encrypted or provider-owned delivery
-reference, verification state, verified time, AgentMail thread reference, and
-unsubscribe token hash.
+Fields: normalized delivery-address hash, AES-GCM encrypted delivery address,
+encryption version, verification state, verified time, unsubscribe time, and
+AgentMail thread reference. Application tables never store the plain address.
 Indexes: delivery-address hash; verification state plus created time.
 
 #### `emailVerificationChallenges`
@@ -815,11 +815,22 @@ Fields: owner kind, Google-authenticated user or verified email subscriber,
 target type and ID, created time. Exactly one owner reference is present.
 Indexes: user plus target; email subscriber plus target; target plus owner kind.
 
+#### `emailAccessTokens`
+
+Fields: email subscriber, optional single follow, token purpose, HMAC token hash,
+optional expiry, consumed time, revoked time, and created time. Management tokens
+expire after 30 days and grant access to one follow. Unsubscribe tokens apply to
+the subscriber's whole address and remain valid until used or revoked. A new
+verification can reactivate the subscriber, but it restores only the requested
+follow and cadence. Other follows stay muted.
+Indexes: token hash; subscriber plus purpose; follow plus purpose.
+
 #### `notificationPreferences`
 
-Fields: owner kind and reference, immediate material changes, weekly roundup,
-quiet preferences, verified delivery destination reference.
-Indexes: user; email subscriber.
+Fields: follow reference, cadence, the last active cadence to restore after a
+mute, and created and updated time. Cadence is immediate, weekly, both, or
+muted. Older muted rows without a stored restore value resume as immediate.
+Index: follow.
 
 #### `notifications`
 
@@ -1174,11 +1185,19 @@ Authorization rules:
 For an email-only subscription:
 
 1. create a pending subscriber and short-lived hashed verification challenge;
-2. send the code or confirmation request through AgentMail;
+2. enqueue the code from an application mutation; the AgentMail component's
+   workpool action performs the provider request with bounded retries;
 3. enforce expiry, attempt limits, and single use;
 4. mark the delivery reference verified without creating an authenticated user;
 5. create the requested follow;
 6. include a secure unsubscribe or management path in every message.
+
+`@agentmail/convex@0.1.0` stores the recipient and message body in its isolated
+outbound table while a send is pending. Public Parish runs an hourly sweep and
+makes finalized component rows eligible for deletion after one hour. Bounded
+continuation jobs drain every eligible row and all linked delivery events. The
+component has no built-in cron, so the application owns this cleanup. The
+application tables contain only the encrypted address and hashed code.
 
 On a material publication change:
 

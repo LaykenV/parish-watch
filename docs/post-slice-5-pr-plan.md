@@ -365,12 +365,18 @@ Include:
 - add email subscribers and short-lived verification challenges;
 - store a normalized address hash, protected delivery reference, hashed code,
   expiry, attempts, purpose, and consumed time;
-- send verification codes from an action with bounded retries;
+- enqueue verification mail from a mutation so the AgentMail component's
+  workpool action performs the provider call with bounded retries;
 - verify AgentMail webhook signatures before state changes;
 - add a unified follow schema for Google and verified-email owners;
 - validate all four target types and prevent duplicates;
-- add notification preferences for immediate, weekly, both, and muted;
+- add notification preferences for immediate, weekly, both, and muted, while
+  preserving the last active cadence for resume;
 - add hashed, rotatable email management and unsubscribe tokens;
+- make management tokens expire after 30 days and scope them to one follow;
+- make unsubscribe stop all mail to the address until a new verification;
+- sweep expired challenges daily and finalized AgentMail verification payloads
+  hourly;
 - replace verification, follow, Following, preference, mute, unfollow, and
   unsubscribe fixture adapters.
 
@@ -393,6 +399,10 @@ Exclude:
 
 Proof: Google and email-only residents independently follow the same issue, and
 each can manage only their own follow.
+
+Implementation uses two stacked PRs. The first adds enrollment, management,
+webhook, retention, and tests. The second connects the shipped resident UI to
+those functions and carries the complete browser proof.
 
 ### PR 7C: deliver immediate and weekly sourced alerts
 
