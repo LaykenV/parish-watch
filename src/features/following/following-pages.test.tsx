@@ -42,6 +42,10 @@ const followingPageSource = readFileSync(
   new URL('./following-page.tsx', import.meta.url),
   'utf8',
 )
+const emailManagementSource = readFileSync(
+  new URL('./email-management-page.tsx', import.meta.url),
+  'utf8',
+)
 
 const active: FollowingPageData = {
   areas: SAVED_AREAS,
@@ -193,6 +197,8 @@ describe('resident following interface', () => {
       frequency: 'both',
       status: 'Muted',
     })
+    expect(emailManagementSource).toContain('if (updated) setMuted(false)')
+    expect(emailManagementSource).toContain('Save schedule and resume')
   })
 
   it('gives an expired live management link an available recovery path', () => {

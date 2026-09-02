@@ -262,10 +262,18 @@ function ValidEmailManagement({
         <div className="email-manage-actions">
           <Button
             disabled={busy}
-            onClick={() => void saveCadence(frequency)}
+            onClick={() =>
+              void saveCadence(frequency).then((updated) => {
+                if (updated) setMuted(false)
+              })
+            }
             size="touch"
           >
-            {busy ? 'Saving...' : 'Save delivery schedule'}
+            {busy
+              ? 'Saving...'
+              : muted
+                ? 'Save schedule and resume'
+                : 'Save delivery schedule'}
           </Button>
           <Button
             disabled={busy}

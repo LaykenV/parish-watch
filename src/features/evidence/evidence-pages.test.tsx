@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { ReactNode } from 'react'
@@ -39,6 +41,10 @@ vi.mock('../auth/google-auth', () => ({
 const { DecisionPage } = await import('./decision-page')
 const { IssuePage } = await import('./issue-page')
 const { MeetingPage } = await import('./meeting-page')
+const issuePageSource = readFileSync(
+  new URL('./issue-page.tsx', import.meta.url),
+  'utf8',
+)
 
 const noop = () => {}
 
@@ -184,6 +190,13 @@ describe('resident interface Slice 3 pages', () => {
     const html = issue('drainage-fee-credit-cap')
     expect(html).not.toContain('Design fixture')
     expect(html).not.toContain('design-only fixture data')
+  })
+
+  it('chooses the live follow adapter from the loaded record source', () => {
+    expect(issuePageSource).toContain('liveFollow={false}')
+    expect(issuePageSource).toContain('liveFollow')
+    expect(issuePageSource).toContain('live={liveFollow}')
+    expect(issuePageSource).not.toContain('live={!search.fixture}')
   })
 
   it('shows a decided issue without inventing a next date', () => {
