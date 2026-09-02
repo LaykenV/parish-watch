@@ -389,11 +389,19 @@ export const collectWeeklyRoundupPage = internalMutation({
             .eq('materialChangeId', match.materialChangeId),
         )
         .unique()
-      if (existingEntry) continue
+      if (existingEntry) {
+        if (!existingEntry.followIds.includes(follow._id)) {
+          await ctx.db.patch(existingEntry._id, {
+            followIds: [...existingEntry.followIds, follow._id],
+          })
+        }
+        continue
+      }
       await ctx.db.insert('roundupEntries', {
         roundupWindowId: window._id,
         deliveryId: delivery._id,
         materialChangeId: match.materialChangeId,
+        followIds: [follow._id],
         createdAt: Date.now(),
       })
       entryCount += 1
@@ -504,23 +512,9 @@ async function enqueueWeeklyDelivery(
   ctx: MutationCtx,
   delivery: Doc<'notificationDeliveries'>,
 ): Promise<void> {
-  const follow = delivery.representativeFollowId
-    ? await ctx.db.get(delivery.representativeFollowId)
-    : null
-  const preference = follow
-    ? await ctx.db
-        .query('notificationPreferences')
-        .withIndex('by_follow_id', (index) =>
-          index.eq('followId', follow._id),
-        )
-        .unique()
-    : null
-  if (
-    !follow ||
-    !preference ||
-    (preference.cadence !== 'weekly' && preference.cadence !== 'both')
-  ) {
-    await suppressDelivery(ctx, delivery, 'The follow is no longer active')
+  const follow = await currentWeeklyFollow(ctx, delivery)
+  if (!follow) {
+    await suppressDelivery(ctx, delivery, 'No contributing follow is weekly')
     return
   }
   let recipient: string
@@ -592,6 +586,43 @@ async function enqueueWeeklyDelivery(
       )
     }
   }
+}
+
+async function currentWeeklyFollow(
+  ctx: MutationCtx,
+  delivery: Doc<'notificationDeliveries'>,
+): Promise<Doc<'follows'> | null> {
+  const entries = await ctx.db
+    .query('roundupEntries')
+    .withIndex('by_delivery_id_and_created_at', (index) =>
+      index.eq('deliveryId', delivery._id),
+    )
+    .take(101)
+  for (const entry of entries) {
+    for (const followId of entry.followIds) {
+      const follow = await ctx.db.get(followId)
+      if (
+        !follow ||
+        follow.ownerKind !== delivery.ownerKind ||
+        follow.ownerKey !== delivery.ownerKey
+      ) {
+        continue
+      }
+      const preference = await ctx.db
+        .query('notificationPreferences')
+        .withIndex('by_follow_id', (index) =>
+          index.eq('followId', follow._id),
+        )
+        .unique()
+      if (
+        preference?.cadence === 'weekly' ||
+        preference?.cadence === 'both'
+      ) {
+        return follow
+      }
+    }
+  }
+  return null
 }
 
 async function projectWeeklyEmail(

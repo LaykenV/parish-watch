@@ -956,6 +956,24 @@ test('a first accepted publication records one new-decision event and matches it
     expect(deliveries[0].providerIdempotencyKey).toBeUndefined()
   })
 
+  await t.run(async (ctx) => {
+    const match = await ctx.db
+      .query('notificationMatches')
+      .withIndex('by_follow_id_and_material_change_id', (index) =>
+        index.eq('followId', followIds[0]),
+      )
+      .unique()
+    const preference = await ctx.db
+      .query('notificationPreferences')
+      .withIndex('by_follow_id', (index) =>
+        index.eq('followId', followIds[0]),
+      )
+      .unique()
+    if (!match || !preference) throw new Error('Missing weekly fixture')
+    await ctx.db.patch(match._id, { cadenceAtMatch: 'weekly' })
+    await ctx.db.patch(preference._id, { cadence: 'weekly' })
+  })
+
   const roundupWindowId = await t.run(async (ctx) => {
     return await ctx.db.insert('roundupWindows', {
       windowKey: '2026-09-07',
@@ -981,7 +999,9 @@ test('a first accepted publication records one new-decision event and matches it
       entryCount: 1,
       deliveryCount: 1,
     })
-    expect(await ctx.db.query('roundupEntries').take(10)).toHaveLength(1)
+    const entries = await ctx.db.query('roundupEntries').take(10)
+    expect(entries).toHaveLength(1)
+    expect(entries[0].followIds).toHaveLength(2)
     expect(
       (await ctx.db.query('notificationDeliveries').take(10)).filter(
         (delivery) => delivery.kind === 'weekly',
@@ -991,10 +1011,16 @@ test('a first accepted publication records one new-decision event and matches it
     ])
   })
   await t.run(async (ctx) => {
+    const delivery = (
+      await ctx.db.query('notificationDeliveries').take(10)
+    ).find((candidate) => candidate.kind === 'weekly')
+    if (!delivery?.representativeFollowId) {
+      throw new Error('Missing weekly representative')
+    }
     const preference = await ctx.db
       .query('notificationPreferences')
       .withIndex('by_follow_id', (index) =>
-        index.eq('followId', followIds[1]),
+        index.eq('followId', delivery.representativeFollowId),
       )
       .unique()
     if (!preference) throw new Error('Missing weekly preference')
@@ -1019,8 +1045,9 @@ test('a first accepted publication records one new-decision event and matches it
         (delivery) => delivery.kind === 'weekly',
       ),
     ).toMatchObject({
-      state: 'suppressed',
-      errorDetail: 'The follow is no longer active',
+      state: 'failed',
+      enqueueAttempts: 1,
+      errorDetail: expect.stringContaining('AGENTMAIL_API_KEY'),
     })
   })
 

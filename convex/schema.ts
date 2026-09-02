@@ -310,6 +310,7 @@ export default defineSchema({
     roundupWindowId: v.id('roundupWindows'),
     deliveryId: v.id('notificationDeliveries'),
     materialChangeId: v.id('materialChanges'),
+    followIds: v.array(v.id('follows')),
     createdAt: v.number(),
   })
     .index('by_delivery_id_and_material_change_id', [
