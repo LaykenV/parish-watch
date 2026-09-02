@@ -53,7 +53,7 @@ export function toFollowedTarget(follow: LiveFollow): FollowedTarget {
     title: follow.title,
     detail: follow.detail,
     destination: 'Google account',
-    frequency: muted ? 'immediate' : follow.cadence,
+    frequency: activeCadence(follow.cadence),
     latestChange: `Follow created ${new Intl.DateTimeFormat('en-US', {
       day: 'numeric',
       month: 'short',
@@ -61,5 +61,17 @@ export function toFollowedTarget(follow: LiveFollow): FollowedTarget {
       timeZone: 'America/Chicago',
     }).format(follow.createdAt)}`,
     status: muted ? 'Muted' : 'Following',
+  }
+}
+
+function activeCadence(
+  cadence: DeliveryFrequency | 'muted',
+): DeliveryFrequency {
+  switch (cadence) {
+    case 'both':
+    case 'weekly':
+      return cadence
+    default:
+      return 'immediate'
   }
 }
