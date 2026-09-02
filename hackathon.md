@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-02T19:22:03Z
+- **Last updated:** 2026-09-02T19:55:02Z
 
 ## Log
 
@@ -46,8 +46,19 @@ PR #66 deployed the backend as `fdfebd8` through production workflow
 `33672529400`. The workflow and independent production smoke passed the direct
 Convex host, canonical `www` host, apex redirect, and backend readiness query.
 The updates inbox and two new encryption keys are configured in production.
-AgentMail webhook registration, its provider-issued signing secret, and the
-resident frontend in PR #67 remain pending.
+The AgentMail webhook is registered for outbound lifecycle events, and its
+provider-issued signing secret is configured without exposing it in repository
+history or logs.
+
+PR #67 deployed the resident enrollment and management interface as `8fc4642`
+through production workflow `33675616509`. Fresh PR checks ran against the
+merged backend before release. The workflow and a second independent production
+smoke passed both served hosts, the apex redirect, and backend readiness. A
+production browser loaded a published issue, opened the live follow sheet, and
+confirmed that a development fixture query could not replace production data.
+The complete email, token rotation, signed webhook, Google OAuth, and reactive
+management flows passed in development. A natural provider-signed production
+delivery callback was not forced during the read-only production browser proof.
 
 ### 2026-09-02 - 8ea38af
 
