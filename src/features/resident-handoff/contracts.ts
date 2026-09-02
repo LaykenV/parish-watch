@@ -8,6 +8,12 @@ export type ResidentRouteHandoff = {
   route: string
 }
 
+export type ResidentInteractionHandoff = {
+  gate: IntegrationGate
+  interaction: string
+  owner: string
+}
+
 export const RESIDENT_ROUTE_HANDOFFS = [
   {
     route: '/',
@@ -33,42 +39,42 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/issues/$issueSlug',
     contract: 'IssuePageData',
     fixtureOwner: 'features/evidence/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'public issue projection',
   },
   {
     route: '/decisions/$recordKey',
     contract: 'DecisionDetailFixture replacement adapter',
     fixtureOwner: 'features/evidence/record-fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'public decision detail projection',
   },
   {
     route: '/meetings/$meetingId',
     contract: 'MeetingPageData',
     fixtureOwner: 'features/evidence/record-fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'public meeting projection',
   },
   {
     route: '/ask',
     contract: 'AskAdapter',
     fixtureOwner: 'features/ask/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'anonymous grounded chat',
   },
   {
     route: '/following',
     contract: 'FollowingPageData',
     fixtureOwner: 'features/following/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'Convex Auth and follows',
   },
   {
     route: '/following/areas-and-topics',
     contract: 'FollowingPageData saved interests view',
     fixtureOwner: 'features/following/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'Convex Auth and saved interests',
   },
   {
@@ -82,7 +88,7 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/email/manage/$token',
     contract: 'EmailManagementData',
     fixtureOwner: 'features/following/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'verified email subscription management',
   },
   {
@@ -105,19 +111,61 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     gate: 'static',
     owner: 'published product method',
   },
+  {
+    route: '/privacy',
+    contract: 'published resident privacy notice',
+    gate: 'static',
+    owner: 'privacy and data-retention policy',
+  },
 ] as const satisfies readonly ResidentRouteHandoff[]
 
-export const FIXTURE_INTERACTION_HANDOFFS = [
-  ['Ask question', 'anonymous grounded chat'],
-  ['Continue with Google', 'Convex Auth and follows'],
-  ['Verify email-only follow', 'AgentMail and follows'],
-  ['Save interests', 'Convex Auth and saved interests'],
-  ['Save notification settings', 'follows and AgentMail'],
-  ['Request coverage', 'coverage requests'],
-  ['Report a source problem', 'private AgentMail intake'],
-  ['Follow government body', 'Convex Auth or verified email follows'],
-  ['Manage email-only follow', 'verified email subscription management'],
-] as const
+export const RESIDENT_INTERACTION_HANDOFFS = [
+  {
+    interaction: 'Ask question',
+    gate: 'live',
+    owner: 'anonymous grounded chat',
+  },
+  {
+    interaction: 'Continue with Google',
+    gate: 'live',
+    owner: 'Convex Auth and follows',
+  },
+  {
+    interaction: 'Verify email-only follow',
+    gate: 'live',
+    owner: 'AgentMail and follows',
+  },
+  {
+    interaction: 'Save interests',
+    gate: 'live',
+    owner: 'Convex Auth and saved interests',
+  },
+  {
+    interaction: 'Save default notification settings',
+    gate: 'unavailable',
+    owner: 'follows and AgentMail delivery',
+  },
+  {
+    interaction: 'Request coverage',
+    gate: 'unavailable',
+    owner: 'coverage requests',
+  },
+  {
+    interaction: 'Report a source problem',
+    gate: 'unavailable',
+    owner: 'private AgentMail intake',
+  },
+  {
+    interaction: 'Follow government body from Coverage',
+    gate: 'unavailable',
+    owner: 'Convex Auth or verified email follows',
+  },
+  {
+    interaction: 'Manage email-only follow',
+    gate: 'live',
+    owner: 'verified email subscription management',
+  },
+] as const satisfies readonly ResidentInteractionHandoff[]
 
 export const CONNECTED_PROTOTYPE_FLOWS = [
   'choose-area-open-issue-source',

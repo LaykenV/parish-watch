@@ -528,12 +528,13 @@ never become source snapshots.
 
 ## Core Data Model
 
-The schema through Slice 3 implements `jurisdictions`, `governmentBodies`,
-`sourceRegistries`, `sourceSnapshots`, `pipelineRuns`, `pipelineStages`, the
-private extraction evidence, independent reviews, stable decision records,
-immutable publication versions, and publication citations described below.
-Coverage expectations, incidents, meetings, issues, chat, auth-linked resident
-data, and notifications remain planned.
+The schema through Slice 7B implements `jurisdictions`, `governmentBodies`,
+`sourceRegistries`, `sourceSnapshots`, `pipelineRuns`, `pipelineStages`, private
+extraction evidence, independent reviews, stable decision records, immutable
+publication versions, citations, material changes, issues, anonymous chat
+ownership, Google users, saved setup, verified email subscribers, follows,
+notification preferences, and email access tokens. Coverage expectations,
+incidents, and the notification delivery ledger remain planned.
 
 ### Coverage
 
@@ -835,12 +836,37 @@ mute, and created and updated time. Cadence is immediate, weekly, both, or
 muted. Older muted rows without a stored restore value resume as immediate.
 Index: follow.
 
-#### `notifications`
+#### `notificationDefaults` planned for Slice 7C
 
-Fields: owner kind and reference, material change, dedupe key, AgentMail thread
-and delivery state, created time, sent time.
+Fields: Google user, active default cadence for new follows, created time, and
+updated time. Existing follows keep their own preference when this default
+changes.
+Index: user.
+
+#### `notificationMatches` planned for Slice 7C
+
+Fields: follow, material change, target kind and key, current publication
+version, dedupe key, and created time. One row records each eligible follow even
+when several rows belong to the same owner and change.
+Indexes: follow plus material change; material change plus created time.
+
+#### `notificationDeliveries` planned for Slice 7C
+
+Fields: owner kind and reference, immediate or weekly kind, optional material
+change, roundup window, dedupe key, AgentMail outbound and thread references,
+delivery state, created time, sent time, and terminal failure metadata. An
+immediate delivery is unique by owner and material change. A weekly delivery is
+unique by owner and roundup window.
 Indexes: dedupe key; delivery state plus created time; user plus created time;
 email subscriber plus created time.
+
+#### `roundupEntries` planned for Slice 7C
+
+Fields: weekly delivery, material change, and created time. Separate rows avoid
+an unbounded change array on the delivery document and let the sender include
+each material change once when several follows match. The match ledger preserves
+which follows qualified.
+Indexes: weekly delivery plus created time; delivery plus material change.
 
 Google-authenticated users should use the Convex Auth v2 alpha data model rather
 than a parallel password system. Email subscribers are scoped delivery records,
@@ -1204,22 +1230,35 @@ application tables contain only the encrypted address and hashed code.
 
 On a material publication change:
 
-1. compute a stable dedupe key from owner, followed target, and publication
-   version;
-2. create a notification record;
-3. send through AgentMail in a Convex action;
-4. persist thread and delivery state;
-5. retry safely without duplicate sends.
+1. record every matching follow with a follow plus material-change dedupe key;
+2. wait to notify an issue follower until the refreshed accepted issue version
+   contains the changed publication and its public route is readable;
+3. reserve one delivery with an owner plus material-change dedupe key, even when
+   several follows match;
+4. enqueue the application delivery record and AgentMail outbound message in
+   one mutation, then let the component action perform the provider request and
+   bounded retries;
+5. persist the outbound ID, thread, and delivery state, and reconcile terminal
+   status without creating a second send after replay.
 
-For the optional weekly roundup, a scheduled internal function groups material
-publication changes for each subscriber's followed targets since the last
-successful roundup. It sends one sourced message only when at least one change
-exists. The subscriber and roundup window form the dedupe key.
+At enqueue time, resolve a Google owner's current verified profile email or
+decrypt an email-only subscriber's protected address. Pass the recipient to the
+AgentMail component, but store only the owner and outbound references in the
+application delivery record.
+
+For the optional weekly roundup, an hourly scheduled internal function checks
+the current civil time in `America/Chicago`. It claims the week's window only
+during Monday's 7:00 AM hour, so daylight-saving changes do not shift the
+resident-facing time. It groups material publication changes for each owner's
+followed targets since the last successful roundup, includes each material
+change once even when several follows match, and sends only when at least one
+change exists. The owner and local roundup window form the delivery dedupe key.
 
 The message includes the change, why it matters, official source links, and a
-path back to Public Parish. A reply stays in the same thread and runs through the
-same grounded answer path. If evidence does not answer it, the email says so and
-provides the official contact. It never forwards automatically to an agency.
+path back to Public Parish. Once Slice 7D's grounded inbound handler is live, a
+reply stays in the same thread and runs through the same grounded answer path.
+If evidence does not answer it, the email says so and provides the official
+contact. It never forwards automatically to an agency.
 
 A separate AgentMail address accepts private source-problem reports. The report
 includes the public record URL and the resident's description. It does not

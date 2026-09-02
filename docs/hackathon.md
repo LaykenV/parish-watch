@@ -115,7 +115,8 @@ Phase 0 was completed on August 27:
   and mobile layouts were tested signed out.
 
 The evidence backend through Slice 4, resident-interface Design Slices 1 through
-8, implementation Slice 6, and implementation Slice 7A are live in production.
+8, implementation Slice 6, and implementation Slices 7A and 7B are live in
+production.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -214,9 +215,19 @@ not found, thread restoration, and answer prose without raw internal evidence
 IDs. PRs #58 and #59 deployed Convex Auth v2 Google sessions, centralized
 ownership, private saved areas and topics, and the public privacy notice. Real
 production sign-in and sign-out passed on the canonical domain and from the
-qualifying `convex.site` origin through the canonical callback. Follows,
-AgentMail, coverage integration, the owner compiler, resident proof, the demo,
-and the vibeapps.dev submission remain pending.
+qualifying `convex.site` origin through the canonical callback. PRs #66 and #67
+deployed Google and AgentMail-verified email follow enrollment, ownership,
+preferences, and scoped management. Development proved real verification mail,
+signed webhook handling, Google OAuth follow creation, cadence changes, mute,
+resume, and removal. Sourced alert delivery, coverage integration, the owner
+compiler, resident proof, the demo, and the vibeapps.dev submission remain
+pending.
+
+PR #70 then corrected Place follow validation so supported parishes and
+municipalities use the same enrollment path while unsupported places still
+fail closed. Pull-request checks, production workflow `33682483792`, and the
+independent production smoke passed on merge commit `1ece03d`. This clears the
+follow-target preflight for Slice 7C without adding alert delivery.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests
@@ -491,9 +502,9 @@ other contested project.
 - [x] `openai/gpt-5.6-terra` does meaningful structured extraction work
 - [x] `openai/gpt-5.6-luna` independently reviews publication candidates
 - [x] Terra issue linking and separate Luna issue review work in development
-- [ ] Convex Auth v2 alpha Google OAuth works
-- [ ] AgentMail verifies an email-only subscription
-- [ ] AgentMail inbox and outbound alert both work
+- [x] Convex Auth v2 alpha Google OAuth works
+- [x] AgentMail sends and verifies a real email-only subscription in development
+- [ ] AgentMail sends one sourced production alert
 - [ ] Signed-out resident path works
 - [ ] Three named launch regions pass or public claims are narrowed honestly
 - [x] One development issue reaches two approved vote outcomes

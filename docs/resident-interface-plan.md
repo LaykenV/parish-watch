@@ -16,12 +16,13 @@ Design Slice 6 as `0aa7474`. PR #37 deployed Design Slice 7 as `f854c2e`. PR
 #43 deployed Design Slice 8 as `85d6947`; production workflow `33454522729`
 and the independent production smoke passed. The complete design and frontend
 contract is closed. Later releases connected accepted issue, decision, meeting,
-citation, bounded anonymous Ask, Google account, and private saved-setup
-adapters without reopening the design. Follow, email, coverage-request, and
-private-report API connections are not complete. The current primary navigation
-is Home, Explore, Ask, and Coverage; legacy `/for-you` and `/issues` index routes
-redirect to the issue-led Home. The public `/privacy` route documents account,
-Ask, analytics, provider, retention, and deletion boundaries.
+citation, bounded anonymous Ask, Google account, private saved setup, follow
+enrollment, per-follow cadence preferences, and scoped email-management adapters
+without reopening the design. Sourced alerts, coverage requests, and private
+source reports remain gated. The current primary navigation is Home, Explore,
+Ask, and Coverage; legacy `/for-you` and `/issues` index routes redirect to the
+issue-led Home. The public `/privacy` route documents account, Ask, analytics,
+provider, retention, and deletion boundaries.
 
 ## Purpose
 
@@ -285,6 +286,7 @@ result. A toast is a last resort for a result with no natural location.
 |-- /decisions/:recordKey
 |-- /meetings/:meetingId
 |-- /how-it-works
+|-- /privacy
 |-- /following
 |   |-- following
 |   |-- areas-and-topics
@@ -592,7 +594,7 @@ Place follow actions where the target makes sense:
 - issue follow on issue pages and promoted cards;
 - topic follow in saved interests;
 - body follow in Coverage;
-- municipality follow in area selection and saved areas.
+- place follow in area selection and saved areas.
 
 ### Following
 
@@ -1195,8 +1197,9 @@ design for frontend and API integration without reopening layout.
 
 - Connect the ten required prototype flows.
 - Verify navigation, Back behavior, preserved scope, overlays, and return state.
-- Record every fixture-backed interaction and its future API owner in code and
-  tests, not in a resident-facing banner. Production ignores fixture parameters.
+- Record every resident write, its current readiness gate, and its API owner in
+  code and tests, not in a resident-facing banner. Production ignores fixture
+  parameters.
 - Map every page to a typed data contract and integration readiness gate.
 - Record every route, component, icon, token, content fixture, and responsive
   frame needed for implementation.
@@ -1273,7 +1276,8 @@ fixtures without reopening the approved page hierarchy or interaction design.
 | Ask               | Scoped conversation and validated answers              | Anonymous two-turn thread, source validation, not-found, expiry, and abuse limits pass        |
 | Google auth       | Saved interests and managed follows                    | Auth v2 Google flow returns to the original target and ownership checks pass                  |
 | Email-only follow | Verification and scoped management                     | Code expiry, attempts, single use, secure management, and unsubscribe pass                    |
-| AgentMail alerts  | Immediate, roundup, reply, and private report          | Send, retry dedupe, reply grounding, empty-roundup suppression, and private intake pass       |
+| AgentMail delivery | Immediate alert, weekly roundup, and default cadence   | Send, retry dedupe, cross-target dedupe, empty-roundup suppression, and live settings pass    |
+| AgentMail inbound  | Grounded reply and private source report               | Signed intake, thread ownership, reply grounding, and private report routing pass             |
 | Coverage          | Body states and area availability                      | Public statuses derive from the coverage gate and no request starts compiler work             |
 | Coverage request  | Demand and optional notice                             | Dedupe, rate limit, separate email verification, and neutral confirmation pass                |
 | Share HTML        | Issue Share action                                     | Metadata uses the published issue projection and destination works on the production host     |

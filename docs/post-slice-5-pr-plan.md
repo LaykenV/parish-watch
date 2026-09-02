@@ -354,7 +354,7 @@ verified Google profiles, and owner access that fails closed.
 
 Suggested title: `feat: follow civic updates with Google or email`
 
-Outcome: a resident can follow an issue, topic, body, or municipality through a
+Outcome: a resident can follow an issue, topic, body, or place through a
 Google account or a verified email-only subscription, then manage that follow
 through the correct ownership path.
 
@@ -411,11 +411,12 @@ PRs #68 and #69 recorded the release in `hackathon.md` and finished on exact
 head `d1744a7` through workflow `33677352750`. Every deploy ran the independent
 production smoke against the direct Convex host, the canonical `www` host, the
 apex redirect, and backend readiness. The AgentMail component ships with a
-pinned patch that declares its environment through the host app and shortens
-finalized outbound retention to one hour, so recipient addresses and plain
-verification codes do not persist in component storage. Cron sweeps remove
-expired challenges and finalized provider payloads. Unsubscribe applies to the
-whole address. It mutes every follow, revokes every unconsumed management
+pinned patch that declares its environment through the host app and makes
+finalized outbound rows eligible for deletion after one hour. Until the hourly
+bounded sweep removes them, the isolated component table still holds recipient
+addresses and plain verification codes. Application tables do not. Cron sweeps
+remove expired challenges and finalized provider payloads. Unsubscribe applies
+to the whole address. It mutes every follow, revokes every unconsumed management
 token, and marks the subscriber unsubscribed. Development proved real email
 verification, token rotation, expired-token rejection, signed webhook
 validation and idempotency, Google OAuth follow creation, reactive cadence
@@ -430,35 +431,57 @@ alert delivery belongs to PR 7C and will exercise that path.
 
 Suggested title: `feat: deliver sourced follow alerts`
 
-Outcome: accepted material changes create one notification per eligible
-follower, send an immediate email when selected, and appear once in a non-empty
+Outcome: accepted material changes record every eligible follow, send at most
+one immediate email per owner when selected, and appear once in a non-empty
 weekly roundup when selected.
 
 Depends on: 7B and the Slice 5 realtime publication path.
 
+Preflight status on September 2: PR #70 corrected the `place` resolver so a
+supported parish or municipality can be followed. Its Convex regression test
+covers every target kind, both place types, and an unsupported parish that must
+still fail closed. Production workflow `33682483792` and the independent smoke
+passed on merge commit `1ece03d`. Alert fanout can now depend on this contract.
+
 Include:
 
-- notification ledger with stable owner, target, and publication-version dedupe
-  key;
-- fanout for issue, topic, body, and municipality follows;
+- match ledger with a stable follow plus material-change dedupe key;
+- delivery ledger with a stable owner plus material-change dedupe key so one
+  resident does not receive duplicate email when several follows match;
+- fanout for issue, topic, body, and place follows;
+- map accepted issue topics to the six explicit follow-topic slugs and ignore an
+  unknown topic instead of guessing a match;
+- wait to notify an issue follower until the refreshed accepted issue version
+  contains the changed publication and its public route is readable;
 - no notification for withheld, non-material, muted, or unsubscribed records;
 - paginated or scheduled fanout within Convex limits;
-- action-based AgentMail delivery with bounded retries;
-- concise sourced email, app link, reply invitation, and management link;
+- enqueue the delivery reservation and AgentMail outbound message in one
+  mutation, then let the component action perform the provider request and
+  bounded retries;
+- concise sourced email, official source links, app link, and management link;
 - provider thread and delivery state;
-- cron-driven weekly grouping since the last successful window;
-- subscriber and roundup-window deduplication;
-- suppression of empty roundups.
+- an hourly scheduler that claims the weekly window during Monday's 7:00 AM
+  `America/Chicago` hour, preserving local time across daylight-saving changes;
+- owner and roundup-window deduplication;
+- suppression of empty roundups;
+- connect `/following/notifications` to a Google-owned default cadence for new
+  follows and the real immediate and weekly delivery states. Changing the
+  default must not rewrite existing follows.
 
 Required tests:
 
 - all target types and owner kinds;
+- supported parish and municipality place targets plus unknown issue topics;
+- delayed, failed, and accepted issue refresh before an issue-target alert;
 - duplicate publication scheduling and partial batch retry;
 - withheld and non-material changes;
-- ambiguous provider response and duplicate delivery webhook;
+- component enqueue replay, ambiguous provider result, and duplicate delivery
+  webhook;
 - unsubscribe race;
 - retry to terminal failure;
-- empty, duplicate, partial-failure, and preference-changed roundup windows.
+- empty, duplicate, partial-failure, and preference-changed roundup windows;
+- daylight-saving boundaries for the Monday 7:00 AM local claim;
+- Google default-cadence changes affect new follows but not existing follows.
 
 Exclude:
 
@@ -468,7 +491,8 @@ Exclude:
 - coverage-launch notices.
 
 Proof: one deterministic material change produces one immediate sourced email
-and one eligible weekly entry, while replay produces no duplicate send.
+per owner and one eligible weekly entry, while replay and overlapping follows
+produce no duplicate send.
 
 ### PR 7D: handle grounded replies and private source reports
 
@@ -483,6 +507,7 @@ Depends on: 6B, 7B, and 7C.
 Include:
 
 - verified inbound sender and thread association;
+- add the reply invitation to sourced alert copy only when this handler is live;
 - bounded issue context from the matching notification;
 - reuse of Slice 6 retrieval and deterministic citation validation;
 - one reply send per provider event;

@@ -55,8 +55,8 @@ PR #31 deployed Design Slice 5 as `adfe81e`. Production workflow `33401768387`
 and the independent production smoke passed. The fixture-backed follow and
 ownership interface covers Google return, email-only verification, Following,
 areas and topics, notification preferences, scoped email management, and alert
-layouts. The production routes remain unavailable until Convex Auth and
-AgentMail pass their integration gates.
+layouts. At that design checkpoint, the production routes remained unavailable
+until Convex Auth and AgentMail passed their integration gates.
 
 PR #34 deployed Design Slice 6 as `0aa7474`, including Coverage, coverage
 requests, the public method page, area states, and private source-problem
@@ -257,7 +257,7 @@ not improvise.
 Accounts are optional. Google accounts provide saved interests and managed
 follows. A resident who does not want an account can verify an email-only
 subscription through AgentMail. Either owner can follow an issue, topic, body,
-or municipality. AgentMail sends immediate material-change alerts and an
+or place. AgentMail sends immediate material-change alerts and an
 optional weekly roundup of material updates.
 
 Material changes include a new decision, amendment, deadline, meeting change,

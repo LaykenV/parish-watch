@@ -229,7 +229,8 @@ later bulk run still needs a cost estimate and separate approval.
 ### Slice 5: Complete Resident Interface
 
 Status: interface design and implementation complete; production data exit gate
-closed; the Slice 7A account and saved-setup gate is closed. Design Slice 1
+closed; the Slice 7A account and saved-setup gate and Slice 7B follow-enrollment
+gate are closed. Design Slice 1
 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
@@ -239,10 +240,10 @@ Design Slice 4 as `ff36c1b`; production workflow `33389489990` succeeded. PR
 the independent production smoke passed. PR #34 deployed Design Slice 6 as
 `0aa7474`, PR #37 deployed Design Slice 7 as `f854c2e`, and PR #43 deployed
 Design Slice 8 as `85d6947`. Production workflow `33454522729` and the
-independent production smoke passed. Accepted decision, meeting, issue, and Ask
-adapters are live. The complete interface remains fixture-backed where account,
-email, follow, coverage-request, and private-report adapters have not passed
-their integration gates.
+independent production smoke passed. Accepted decision, meeting, issue, Ask,
+account, follow-enrollment, preference, and email-management adapters are live.
+Sourced alert layouts, coverage requests, and private reports remain
+fixture-backed until their integration gates pass.
 
 The deployed Slice 2 release introduced the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -399,7 +400,7 @@ PR 7C.
 - pin and install Convex Auth v2 alpha;
 - add Google OAuth account sign-in;
 - save multiple areas and topics;
-- follow an issue, topic, body, or municipality through the account;
+- follow an issue, topic, body, or place through the account;
 - protect user-owned records with centralized authz.
 
 ### AgentMail
@@ -408,10 +409,15 @@ PR 7C.
 - bind the API key into the AgentMail component, make finalized verification
   payloads eligible for deletion after one hour, and drain every eligible row
   through the hourly bounded sweep;
-- verify an email-only subscription with a short-lived code or confirmation;
+- verify an email-only subscription with a short-lived six-digit code;
 - create a follow without treating that verification as account authentication;
 - send a material-change email with sources;
-- offer an optional weekly roundup of material changes;
+- collapse overlapping follows into one immediate delivery per owner and
+  material change;
+- wait for a refreshed accepted issue before sending an issue-target alert;
+- offer an optional Monday 7:00 AM `America/Chicago` weekly roundup of material
+  changes, using a local-time window claim that survives daylight-saving
+  changes;
 - persist the thread and delivery state;
 - accept a reply;
 - answer the reply through the same grounded path;

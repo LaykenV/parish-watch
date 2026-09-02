@@ -47,8 +47,11 @@ Implementation Slice 7A is deployed through PRs #58 and #59. Convex Auth v2
 Google sessions now own private saved areas and topics through centralized
 authorization. The canonical custom domain and qualifying `convex.site` flow
 both completed real production sign-in and sign-out, and the public privacy
-notice is live on both hosts. Follows, AgentMail, coverage requests, and private
-source reports remain unfinished. PR 7B is next.
+notice is live on both hosts. Implementation Slice 7B is deployed through PRs
+#66 and #67. Google and AgentMail-verified email owners can create and manage
+real follows without sharing ownership. Sourced immediate and weekly alert
+delivery remains PR 7C. Coverage requests and private source reports remain
+later work.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)
@@ -134,6 +137,10 @@ auth, webhook, routing, or schema work genuinely needs isolation.
 - [Resident interface Design Slice 3](docs/resident-interface-slice-3.md)
 - [Resident interface Design Slice 4](docs/resident-interface-slice-4.md)
 - [Resident interface Design Slice 5](docs/resident-interface-slice-5.md)
+- [Resident interface Design Slice 6](docs/resident-interface-slice-6.md)
+- [Resident interface Design Slice 7](docs/resident-interface-slice-7.md)
+- [Resident interface Design Slice 8](docs/resident-interface-slice-8.md)
+- [Post-Slice-5 implementation plan](docs/post-slice-5-pr-plan.md)
 - [Public build log](hackathon.md)
 
 ## Implemented setup and intended stack

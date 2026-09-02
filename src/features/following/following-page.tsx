@@ -1166,12 +1166,12 @@ function NotificationsUnavailable() {
       <BellRingIcon aria-hidden="true" />
       <div>
         <h2 id="notification-unavailable-title">
-          Verified email delivery is next
+          Sourced alerts are next
         </h2>
         <p>
-          Saved areas and topics work now. Public Parish will not claim an alert
-          exists until email verification, delivery, and private management are
-          connected.
+          Per-follow schedules work now. Public Parish will not claim an alert
+          exists until immediate and weekly delivery pass their source, dedupe,
+          and retry gates.
         </p>
       </div>
     </section>
