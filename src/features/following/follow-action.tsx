@@ -67,6 +67,10 @@ export function FollowAction({
   const createGoogleFollow = useMutation(
     api.follows.enrollment.createGoogleFollow,
   )
+  const notificationSettings = useQuery(
+    api.follows.enrollment.currentNotificationSettings,
+    live && auth.isAuthenticated ? {} : 'skip',
+  )
   const delivery = useQuery(
     api.follows.enrollment.verificationDelivery,
     live && challengeId ? { challengeId } : 'skip',
@@ -74,7 +78,7 @@ export function FollowAction({
 
   const reset = () => {
     setStep('choose')
-    setFrequency('immediate')
+    setFrequency(notificationSettings?.defaultCadence ?? 'immediate')
     setEmail('')
     setCode('')
     setError('')
@@ -196,6 +200,12 @@ export function FollowAction({
       setVerifyingCode(false)
     }
   }
+
+  useEffect(() => {
+    if (notificationSettings && step === 'choose') {
+      setFrequency(notificationSettings.defaultCadence)
+    }
+  }, [notificationSettings, step])
 
   useEffect(() => {
     if (!live || auth.isLoading || googleIntentHandled.current) return

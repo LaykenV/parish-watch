@@ -71,6 +71,28 @@ const googleFollowResult = v.object({
   follow: followView,
 })
 
+const notificationSettingsResult = v.object({
+  defaultCadence: activeDeliveryCadence,
+  deliveries: v.array(
+    v.object({
+      id: v.string(),
+      kind: v.union(v.literal('immediate'), v.literal('weekly')),
+      state: v.union(
+        v.literal('reserved'),
+        v.literal('pending'),
+        v.literal('sent'),
+        v.literal('delivered'),
+        v.literal('bounced'),
+        v.literal('complained'),
+        v.literal('rejected'),
+        v.literal('failed'),
+        v.literal('suppressed'),
+      ),
+      updatedAt: v.number(),
+    }),
+  ),
+})
+
 type RequestResult = {
   accepted: true
   challengeId: string
@@ -474,6 +496,58 @@ export const createGoogleFollow = mutation({
     const follow = await readFollowView(ctx, followId)
     if (!follow) throw new Error('Follow is unavailable')
     return { created: !existing, follow }
+  },
+})
+
+export const currentNotificationSettings = query({
+  args: {},
+  returns: notificationSettingsResult,
+  handler: async (ctx) => {
+    const user = await requireUser(ctx)
+    const savedDefault = await ctx.db
+      .query('notificationDefaults')
+      .withIndex('by_user_id', (index) => index.eq('userId', user._id))
+      .unique()
+    const rows = await ctx.db
+      .query('notificationDeliveries')
+      .withIndex('by_owner_key_and_updated_at', (index) =>
+        index.eq('ownerKey', `google:${user._id}`),
+      )
+      .order('desc')
+      .take(10)
+    return {
+      defaultCadence: savedDefault?.cadence ?? ('immediate' as const),
+      deliveries: rows.map((row) => ({
+        id: row._id,
+        kind: row.kind,
+        state: row.state,
+        updatedAt: row.updatedAt,
+      })),
+    }
+  },
+})
+
+export const updateNotificationDefault = mutation({
+  args: { cadence: activeDeliveryCadence },
+  returns: v.object({ cadence: activeDeliveryCadence }),
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx)
+    const existing = await ctx.db
+      .query('notificationDefaults')
+      .withIndex('by_user_id', (index) => index.eq('userId', user._id))
+      .unique()
+    const now = Date.now()
+    if (existing) {
+      await ctx.db.patch(existing._id, { cadence: args.cadence, updatedAt: now })
+    } else {
+      await ctx.db.insert('notificationDefaults', {
+        userId: user._id,
+        cadence: args.cadence,
+        createdAt: now,
+        updatedAt: now,
+      })
+    }
+    return { cadence: args.cadence }
   },
 })
 

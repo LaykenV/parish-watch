@@ -40,7 +40,7 @@ export async function loadFollowingPageData(
       areas: [],
       available: true,
       mode: 'live',
-      notificationsAvailable: false,
+      notificationsAvailable: true,
       signedIn: false,
       targets: [],
       topics: [],

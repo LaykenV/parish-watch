@@ -42,6 +42,10 @@ const followingPageSource = readFileSync(
   new URL('./following-page.tsx', import.meta.url),
   'utf8',
 )
+const liveFollowsSource = readFileSync(
+  new URL('./live-follows.ts', import.meta.url),
+  'utf8',
+)
 const emailManagementSource = readFileSync(
   new URL('./email-management-page.tsx', import.meta.url),
   'utf8',
@@ -71,7 +75,7 @@ describe('resident following interface', () => {
       areas: [],
       available: true,
       mode: 'live',
-      notificationsAvailable: false,
+      notificationsAvailable: true,
       targets: [],
       topics: [],
     })
@@ -225,5 +229,8 @@ describe('resident following interface', () => {
     expect(current).toBeLessThan(consequence)
     expect(consequence).toBeLessThan(sources)
     expect(html).toContain('No changes means no email.')
+    expect(html).not.toContain('Reply with a question')
+    expect(liveFollowsSource).toContain('currentNotificationSettings')
+    expect(liveFollowsSource).toContain('updateNotificationDefault')
   })
 })

@@ -437,6 +437,11 @@ weekly roundup when selected.
 
 Depends on: 7B and the Slice 5 realtime publication path.
 
+Implementation is split into four stacked pull requests so each review has one
+runtime concern: material events and match fanout; immediate delivery and
+provider reconciliation; weekly roundups; live notification settings. The
+combined stack must pass development proof before any packet merges.
+
 Preflight status on September 2: PR #70 corrected the `place` resolver so a
 supported parish or municipality can be followed. Its Convex regression test
 covers every target kind, both place types, and an unsupported parish that must

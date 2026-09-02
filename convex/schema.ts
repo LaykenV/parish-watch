@@ -208,6 +208,13 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index('by_follow_id', ['followId']),
 
+  notificationDefaults: defineTable({
+    userId: v.id('users'),
+    cadence: activeDeliveryCadence,
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index('by_user_id', ['userId']),
+
   notificationMatches: defineTable({
     followId: v.id('follows'),
     materialChangeId: v.id('materialChanges'),
@@ -284,7 +291,8 @@ export default defineSchema({
     .index('by_roundup_window_id_and_owner_key', [
       'roundupWindowId',
       'ownerKey',
-    ]),
+    ])
+    .index('by_owner_key_and_updated_at', ['ownerKey', 'updatedAt']),
 
   roundupWindows: defineTable({
     windowKey: v.string(),

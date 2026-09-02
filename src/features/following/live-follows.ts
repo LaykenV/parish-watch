@@ -43,6 +43,20 @@ export function useGoogleFollowMutations() {
   }
 }
 
+export function useNotificationSettings(enabled: boolean) {
+  return useQuery(
+    api.follows.enrollment.currentNotificationSettings,
+    enabled ? {} : 'skip',
+  )
+}
+
+export function useNotificationSettingsMutation() {
+  const update = useMutation(
+    api.follows.enrollment.updateNotificationDefault,
+  )
+  return (cadence: DeliveryFrequency) => update({ cadence })
+}
+
 export function toFollowedTarget(follow: LiveFollow): FollowedTarget {
   const muted = follow.cadence === 'muted'
   return {
