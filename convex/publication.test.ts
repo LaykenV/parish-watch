@@ -1014,13 +1014,14 @@ test('a first accepted publication records one new-decision event and matches it
     const delivery = (
       await ctx.db.query('notificationDeliveries').take(10)
     ).find((candidate) => candidate.kind === 'weekly')
-    if (!delivery?.representativeFollowId) {
+    const representativeFollowId = delivery?.representativeFollowId
+    if (!representativeFollowId) {
       throw new Error('Missing weekly representative')
     }
     const preference = await ctx.db
       .query('notificationPreferences')
       .withIndex('by_follow_id', (index) =>
-        index.eq('followId', delivery.representativeFollowId),
+        index.eq('followId', representativeFollowId),
       )
       .unique()
     if (!preference) throw new Error('Missing weekly preference')
