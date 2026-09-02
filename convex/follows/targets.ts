@@ -7,10 +7,7 @@ import type { MutationCtx, QueryCtx } from '../_generated/server'
 import { internalMutation } from '../_generated/server'
 import { TOPIC_SLUGS } from './contracts'
 import type { TopicSlug } from './contracts'
-import type {
-  ActiveDeliveryCadence,
-  FollowTargetKind,
-} from './enrollmentContracts'
+import type { FollowTargetKind } from './enrollmentContracts'
 
 type TargetCtx = Pick<QueryCtx | MutationCtx, 'db'>
 
@@ -225,7 +222,7 @@ export const runMatchFanout = internalMutation({
       return null
     }
     const targets = await matchTargets(ctx, fanout, change)
-    const target = targets[fanout.targetIndex]
+    const target = targets.at(fanout.targetIndex)
     if (!target) {
       await ctx.db.patch(fanout._id, {
         state: 'complete',
@@ -276,7 +273,7 @@ export const runMatchFanout = internalMutation({
         ownerKey: follow.ownerKey,
         targetKind: follow.targetKind,
         targetKey: follow.targetKey,
-        cadenceAtMatch: preference.cadence as ActiveDeliveryCadence,
+          cadenceAtMatch: preference.cadence,
         matchedAt: Date.now(),
       })
       matchesCreated += 1
