@@ -283,6 +283,24 @@ function centsFromToken(whole: string, fraction: string | undefined): number {
   )
 }
 
+const AMOUNT_SCALE = {
+  thousand: 1_000,
+  million: 1_000_000,
+  billion: 1_000_000_000,
+} as const
+
+function centsFromMoneyToken(
+  whole: string,
+  fraction: string | undefined,
+  scale: string | undefined,
+): number | null {
+  const multiplier = scale
+    ? AMOUNT_SCALE[scale.toLowerCase() as keyof typeof AMOUNT_SCALE]
+    : 1
+  const cents = centsFromToken(whole, fraction) * multiplier
+  return Number.isSafeInteger(cents) ? cents : null
+}
+
 export function textSupportsAmount(text: string, value: number): boolean {
   const expectedCents = centsOf(value)
   if (expectedCents === null) {
@@ -290,15 +308,19 @@ export function textSupportsAmount(text: string, value: number): boolean {
   }
   const normalized = normalizeForMatch(text)
   const moneyPattern =
-    /(?<![\dA-Za-z])(?:USD\s*|\$\s*)?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?(?:\s*(?:USD\b|dollars?\b))?(?![\dA-Za-z])/gi
+    /(?<![\dA-Za-z])(?:USD\s*|\$\s*)?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?(?:\s*(thousand|million|billion)\b)?(?:\s*(?:USD\b|dollars?\b))?(?![\dA-Za-z])/gi
   for (const match of normalized.matchAll(moneyPattern)) {
     const token = match[0]
     const fraction = match[2] as string | undefined
+    const scale = match[3] as string | undefined
     const hasMoneyMarker = /\$|\bUSD\b|\bdollars?\b/i.test(token)
     const hasMoneyFormatting = match[1].includes(',') || fraction !== undefined
+    const hasMoneyEvidence = scale
+      ? hasMoneyMarker
+      : hasMoneyMarker || hasMoneyFormatting
     if (
-      (hasMoneyMarker || hasMoneyFormatting) &&
-      centsFromToken(match[1], fraction) === expectedCents
+      hasMoneyEvidence &&
+      centsFromMoneyToken(match[1], fraction, scale) === expectedCents
     ) {
       return true
     }
