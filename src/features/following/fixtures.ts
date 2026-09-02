@@ -9,6 +9,7 @@ import type { FollowedTarget, SavedAreaSlug, SavedTopicSlug } from './contracts'
 export const FOLLOWED_TARGET_FIXTURES: FollowedTarget[] = [
   {
     id: 'drainage-credit-cap',
+    key: 'drainage-fee-credit-cap',
     href: '/issues/drainage-fee-credit-cap',
     evidenceScenario: 'update',
     kind: 'Issue',
@@ -22,6 +23,7 @@ export const FOLLOWED_TARGET_FIXTURES: FollowedTarget[] = [
   },
   {
     id: 'surplus-pickup-donations',
+    key: 'surplus-pickup-donations',
     href: '/issues/surplus-pickup-donations',
     evidenceScenario: 'preview',
     kind: 'Issue',
@@ -34,6 +36,7 @@ export const FOLLOWED_TARGET_FIXTURES: FollowedTarget[] = [
   },
   {
     id: 'lafayette-council',
+    key: 'lafayette-city-council',
     kind: 'Government body',
     title: 'Lafayette City Council',
     detail: 'Lafayette Parish',

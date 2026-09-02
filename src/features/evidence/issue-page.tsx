@@ -274,9 +274,11 @@ function IssueDetail({
               />
               <div className="ev-status-actions">
                 <FollowAction
-                  available={import.meta.env.DEV && Boolean(search.fixture)}
+                  available
                   label="Follow this issue"
+                  live={!search.fixture}
                   target={{
+                    key: issue.slug,
                     kind: 'Issue',
                     title: issue.title,
                     detail: `${issue.place} · ${issue.body}`,

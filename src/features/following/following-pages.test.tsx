@@ -80,6 +80,7 @@ describe('resident following interface', () => {
         destination="resident@example.com"
         frequency="both"
         target={{
+          key: 'drainage-fee-credit-cap',
           kind: 'Issue',
           title: 'Drainage fee credit cap',
           detail: 'Lafayette Parish',

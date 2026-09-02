@@ -26,6 +26,7 @@ export type SavedArea = {
 
 export type EmailManagementData = {
   available: boolean
+  managementState?: 'expired' | 'unavailable'
   scenario?: EmailManagementScenario
   subscription?: FollowedTarget
 }
@@ -89,7 +90,9 @@ export async function loadEmailManagementData(
 ): Promise<EmailManagementData> {
   const active = getActiveFollowingFixture(scenario)
   if (!active) return { available: false }
-  if (active === 'expired') return { available: true, scenario: active }
+  if (active === 'expired') {
+    return { available: true, managementState: 'expired', scenario: active }
+  }
   const { EMAIL_SUBSCRIPTION_FIXTURE } = await import('./fixtures')
   return {
     available: true,

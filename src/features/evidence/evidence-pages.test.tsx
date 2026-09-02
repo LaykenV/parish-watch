@@ -21,7 +21,19 @@ vi.mock('@tanstack/react-router', () => ({
 }))
 
 vi.mock('convex/react', () => ({
+  useAction: () => vi.fn(),
+  useMutation: () => vi.fn(),
   useQuery: () => null,
+}))
+
+vi.mock('../auth/google-auth', () => ({
+  useGoogleAuth: () => ({
+    error: null,
+    isAuthenticated: false,
+    isLoading: false,
+    isSigningIn: false,
+    signInGoogle: vi.fn(),
+  }),
 }))
 
 const { DecisionPage } = await import('./decision-page')
