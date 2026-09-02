@@ -12,9 +12,20 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-02T03:37:35Z
+- **Last updated:** 2026-09-02T15:11:38Z
 
 ## Log
+
+### 2026-09-02 - 8ea38af
+
+Hardened issue linking after real launch-data runs exposed two evidence gaps.
+PR #61 requires each issue claim to cite every excerpt needed for its complete
+wording. PR #63 accepts scaled currency such as `$1.2 million` without treating
+an unmarked quantity such as `1.2 million residents` as money. PR #64 moves the
+linker to prompt v1.5 and names every allowed dynamic fact path, including the
+required lifecycle fact, while excluding link relationship fields. The full,
+limited, or withheld publication policy stays unchanged (`convex/issues/`,
+`convex/extraction/textMatch.ts`, `convex/pipeline/state.ts`).
 
 ### 2026-09-02 - f725094
 
