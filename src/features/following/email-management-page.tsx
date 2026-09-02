@@ -368,7 +368,7 @@ function ExpiredEmailManagement({
           ? 'Email-only subscription management will open after verified delivery is connected.'
           : reason === 'unavailable'
             ? 'The link may have been replaced or the follow may have been removed.'
-            : 'Verify another short-lived code to manage this one subscription. This does not create a user session.'}
+            : 'Use Explore to find the target again, then start a new email-only follow. A new short-lived code will verify the address without creating an account.'}
       </p>
       {reason !== 'expired' || !allowFixtureRetry ? (
         <Button render={<Link to="/explore" />} size="touch">

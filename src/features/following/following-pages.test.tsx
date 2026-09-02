@@ -169,6 +169,17 @@ describe('resident following interface', () => {
     expect(bothOption).toContain('checked=""')
   })
 
+  it('gives an expired live management link an available recovery path', () => {
+    const html = renderToStaticMarkup(
+      <EmailManagementPage
+        data={{ available: true, managementState: 'expired' }}
+      />,
+    )
+    expect(html).toContain('Use Explore to find the target again')
+    expect(html).toContain('Explore published records')
+    expect(html).not.toContain('Email address for this follow')
+  })
+
   it('orders immediate alert content around the resident consequence', () => {
     const html = renderToStaticMarkup(
       <FollowingPage data={active} view="notifications" />,
