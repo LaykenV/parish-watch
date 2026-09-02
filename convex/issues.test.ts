@@ -777,6 +777,18 @@ test('two atomic decisions publish one cited issue, score, timeline, and materia
   expect(JSON.stringify(requests[0].messages)).toContain(
     'must state the documented consequence',
   )
+  expect(JSON.stringify(requests[0].messages)).toContain(
+    'support every actor, action, outcome, descriptor, date, amount, place, and relationship',
+  )
+  expect(JSON.stringify(requests[0].messages)).toContain(
+    'cite both the action being considered and the cited outcome or vote',
+  )
+  expect(JSON.stringify(requests[0].messages)).toContain(
+    'cite an excerpt that names that actor or remove the actor',
+  )
+  expect(JSON.stringify(requests[0].messages)).toContain(
+    'Cite both the shared subject and the documented action or outcome',
+  )
   expect(requests[1]).toMatchObject({
     model: LUNA_MODEL,
     response_format: {

@@ -88,7 +88,7 @@ export const PUBLICATION_WORKFLOW_NAME = 'reviewAndPublishCandidateV1'
 
 export const ISSUE_BUILD_PROCESSOR_VERSION = 'v1'
 
-export const ISSUE_LINK_PROMPT_VERSION = 'v1.3'
+export const ISSUE_LINK_PROMPT_VERSION = 'v1.4'
 
 export const ISSUE_LINK_SCHEMA_VERSION = 'v1'
 

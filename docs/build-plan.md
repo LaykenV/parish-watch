@@ -200,8 +200,10 @@ the current state instead of the transition, lost meeting-time precision could
 look like an amendment, and a failed issue build reserved its idempotency key.
 The final release tests the corrected transition rules, permits a new attempt
 after a terminal failure, and rejects the government's own name or home
-jurisdiction as the only shared signal. Issue-link prompt v1.3 tells Terra the
-same rule.
+jurisdiction as the only shared signal. Issue-link prompt v1.4 tells Terra the
+same rule. It also requires each fact to cite every excerpt needed for its
+actors, actions, outcomes, and descriptors. This keeps separately cited vote
+results and body names attached to the issue claims that use them.
 
 On August 30, a controlled production onboarding processed eight official
 Lafayette City Council PDFs and exposed the first corrections through PRs #15
