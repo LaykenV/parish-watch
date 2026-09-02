@@ -2,7 +2,6 @@ import { v } from 'convex/values'
 
 import { components, internal } from '../_generated/api'
 import { internalMutation } from '../_generated/server'
-import { AGENTMAIL_FINALIZED_RETENTION_MS } from './enrollmentContracts'
 
 const BATCH_SIZE = 100
 
@@ -33,9 +32,7 @@ export const removeFinalizedAgentMailPayloads = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    await ctx.runMutation(components.agentmail.lib.cleanupFinalizedOutbound, {
-      olderThan: AGENTMAIL_FINALIZED_RETENTION_MS,
-    })
+    await ctx.runMutation(components.agentmail.lib.cleanupFinalizedOutbound, {})
     return null
   },
 })

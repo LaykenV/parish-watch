@@ -623,12 +623,14 @@ async function rotateTokens(
       .withIndex('by_follow_id_and_kind_and_created_at', (index) =>
         index.eq('followId', followId).eq('kind', 'management'),
       )
+      .order('desc')
       .take(10),
     ctx.db
       .query('emailAccessTokens')
       .withIndex('by_subscriber_id_and_kind_and_created_at', (index) =>
         index.eq('subscriberId', subscriberId).eq('kind', 'unsubscribe'),
       )
+      .order('desc')
       .take(10),
   ])
   for (const token of [...managementTokens, ...unsubscribeTokens]) {

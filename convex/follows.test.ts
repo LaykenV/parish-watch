@@ -254,6 +254,36 @@ test('management tokens isolate one follow, rotate, expire, and remove', async (
   ).resolves.toEqual({ status: 'unavailable' })
 })
 
+test('repeated verification still revokes the newest management token', async () => {
+  const t = convexTest(schema, modules)
+  const subscriberId = await createSubscriber(t, 'address-many-tokens')
+
+  for (let index = 0; index < 12; index += 1) {
+    const challengeId = `repeat-${index}`
+    await createChallenge(t, subscriberId, challengeId, 'code-hash')
+    await consume(
+      t,
+      challengeId,
+      'code-hash',
+      `management-repeat-${index}`,
+      `unsubscribe-repeat-${index}`,
+    )
+  }
+
+  await expect(
+    t.query(internal.follows.management.readManagement, {
+      tokenHash: 'management-repeat-10',
+      now: Date.now(),
+    }),
+  ).resolves.toEqual({ status: 'unavailable' })
+  await expect(
+    t.query(internal.follows.management.readManagement, {
+      tokenHash: 'management-repeat-11',
+      now: Date.now(),
+    }),
+  ).resolves.toMatchObject({ status: 'valid' })
+})
+
 test('unsubscribe stops all email follows and a new verification re-enables only its target', async () => {
   const t = convexTest(schema, modules)
   const subscriberId = await createSubscriber(t, 'address-d')
