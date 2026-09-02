@@ -9,12 +9,32 @@
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
 - **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`, `@convex-dev/agent`, `@convex-dev/auth`
 - **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, scheduled functions, durable workflows, authentication
-- **Auth:** Convex Auth with Google OAuth, development callback and saved setup verified; production release pending
+- **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-02T02:54:14Z
+- **Last updated:** 2026-09-02T03:37:35Z
 
 ## Log
+
+### 2026-09-02 - f725094
+
+PR #58 deployed Google account sign-in and private saved areas and topics. It
+also published the resident privacy notice. The first production workflow
+stopped before deployment because the Convex auth config read the platform site
+URL through the unavailable Node `process` global. PR #59 replaced that access
+with Convex's generated typed environment value and merged as `f725094`.
+Production workflow `33587446687` then deployed the backend and frontend,
+seeded source configuration, and passed its smoke. The independent production
+smoke passed both served origins, the apex redirect, and the backend readiness
+query.
+
+A real Google sign-in completed on `https://www.publicparish.com`, returned to
+the saved areas and topics page, and signed out. A second sign-in started on the
+qualifying `https://befitting-flamingo-587.convex.site` origin, handed the flow
+to the canonical `www` origin, used the canonical callback, and returned signed
+in without a cross-origin flow error. The test account signed out after the
+proof. The privacy notice and its deletion contact rendered on both production
+origins. No saved area or topic was added during production testing.
 
 ### 2026-09-01 - working tree
 
