@@ -566,6 +566,7 @@ async function enqueueWeeklyDelivery(
   }
   const projected = await projectWeeklyEmail(
     ctx,
+    delivery,
     selection.entries,
     managementUrl,
   )
@@ -656,6 +657,7 @@ async function currentWeeklySelection(
 
 async function projectWeeklyEmail(
   ctx: MutationCtx,
+  delivery: Doc<'notificationDeliveries'>,
   entries: Array<Doc<'roundupEntries'>>,
   managementUrl: string,
 ): Promise<{ subject: string; text: string } | null> {
