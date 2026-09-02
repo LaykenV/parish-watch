@@ -19,11 +19,7 @@ import {
   VERIFICATION_MAX_ATTEMPTS,
   VERIFICATION_TTL_MS,
 } from './enrollmentContracts'
-import type {
-  ActiveDeliveryCadence,
-  DeliveryCadence,
-  FollowTargetKind,
-} from './enrollmentContracts'
+import type { DeliveryCadence, FollowTargetKind } from './enrollmentContracts'
 import {
   createOpaqueToken,
   createVerificationCode,
