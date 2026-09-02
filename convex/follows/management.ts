@@ -19,24 +19,23 @@ import type {
 const managementResult = v.union(
   v.object({ status: v.literal('unavailable') }),
   v.object({ status: v.literal('expired') }),
-  v.object({ status: v.literal('valid'), follow: followView }),
+  v.object({ status: v.literal('valid'), follows: v.array(followView) }),
 )
+
+type ManagedFollow = {
+  id: string
+  targetKind: Doc<'follows'>['targetKind']
+  targetKey: string
+  title: string
+  detail: string
+  cadence: DeliveryCadence
+  resumeCadence: ActiveDeliveryCadence
+  createdAt: number
+}
 
 type ManagementResult =
   | { status: 'unavailable' | 'expired' }
-  | {
-      status: 'valid'
-      follow: {
-        id: string
-        targetKind: Doc<'follows'>['targetKind']
-        targetKey: string
-        title: string
-        detail: string
-        cadence: DeliveryCadence
-        resumeCadence: ActiveDeliveryCadence
-        createdAt: number
-      }
-    }
+  | { status: 'valid'; follows: ManagedFollow[] }
 
 export const getEmailManagement = action({
   args: { token: v.string() },
@@ -63,8 +62,7 @@ export const readManagement = internalQuery({
       !token ||
       token.kind !== 'management' ||
       token.revokedAt ||
-      token.consumedAt ||
-      !token.followId
+      token.consumedAt
     ) {
       return { status: 'unavailable' as const }
     }
@@ -72,62 +70,93 @@ export const readManagement = internalQuery({
       return { status: 'expired' as const }
     }
     const subscriber = await ctx.db.get('emailSubscribers', token.subscriberId)
-    const follow = await ctx.db.get('follows', token.followId)
-    if (
-      !subscriber ||
-      subscriber.state !== 'verified' ||
-      !follow ||
-      follow.ownerKind !== 'email' ||
-      follow.emailSubscriberId !== subscriber._id
-    ) {
+    if (!subscriber || subscriber.state !== 'verified') {
       return { status: 'unavailable' as const }
     }
-    const view = await followViewForRow(ctx, follow)
-    return view
-      ? { status: 'valid' as const, follow: view }
+    const rows = token.followId
+      ? [await ctx.db.get('follows', token.followId)]
+      : await ctx.db
+          .query('follows')
+          .withIndex('by_email_subscriber_id_and_created_at', (index) =>
+            index.eq('emailSubscriberId', subscriber._id),
+          )
+          .take(MAX_FOLLOWS_PER_OWNER)
+    const follows: ManagedFollow[] = []
+    for (const row of rows) {
+      if (
+        !row ||
+        row.ownerKind !== 'email' ||
+        row.emailSubscriberId !== subscriber._id
+      ) {
+        continue
+      }
+      const view = await followViewForRow(ctx, row)
+      if (view) follows.push(view)
+    }
+    return follows.length > 0
+      ? { status: 'valid' as const, follows }
       : { status: 'unavailable' as const }
   },
 })
 
 export const updateEmailFollow = action({
-  args: { token: v.string(), cadence: deliveryCadence },
+  args: {
+    token: v.string(),
+    followId: v.optional(v.id('follows')),
+    cadence: deliveryCadence,
+  },
   returns: v.object({ updated: v.boolean() }),
   handler: async (ctx, args): Promise<{ updated: boolean }> => {
     const tokenHash = await hashAccessToken(args.token)
     return await ctx.runMutation(
       internal.follows.management.updateEmailFollowWithToken,
-      { tokenHash, cadence: args.cadence },
+      { tokenHash, followId: args.followId, cadence: args.cadence },
     )
   },
 })
 
 export const updateEmailFollowWithToken = internalMutation({
-  args: { tokenHash: v.string(), cadence: deliveryCadence },
+  args: {
+    tokenHash: v.string(),
+    followId: v.optional(v.id('follows')),
+    cadence: deliveryCadence,
+  },
   returns: v.object({ updated: v.boolean() }),
   handler: async (ctx, args): Promise<{ updated: boolean }> => {
-    const access = await requireManagementAccess(ctx, args.tokenHash)
+    const access = await requireManagementAccess(
+      ctx,
+      args.tokenHash,
+      args.followId,
+    )
     await upsertPreference(ctx, access.follow._id, args.cadence)
     return { updated: true }
   },
 })
 
 export const removeEmailFollow = action({
-  args: { token: v.string() },
+  args: { token: v.string(), followId: v.optional(v.id('follows')) },
   returns: v.object({ removed: v.boolean() }),
   handler: async (ctx, args): Promise<{ removed: boolean }> => {
     const tokenHash = await hashAccessToken(args.token)
     return await ctx.runMutation(
       internal.follows.management.removeEmailFollowWithToken,
-      { tokenHash },
+      { tokenHash, followId: args.followId },
     )
   },
 })
 
 export const removeEmailFollowWithToken = internalMutation({
-  args: { tokenHash: v.string() },
+  args: {
+    tokenHash: v.string(),
+    followId: v.optional(v.id('follows')),
+  },
   returns: v.object({ removed: v.boolean() }),
   handler: async (ctx, args): Promise<{ removed: boolean }> => {
-    const access = await requireManagementAccess(ctx, args.tokenHash)
+    const access = await requireManagementAccess(
+      ctx,
+      args.tokenHash,
+      args.followId,
+    )
     const preference = await ctx.db
       .query('notificationPreferences')
       .withIndex('by_follow_id', (index) =>
@@ -137,9 +166,11 @@ export const removeEmailFollowWithToken = internalMutation({
     if (preference)
       await ctx.db.delete('notificationPreferences', preference._id)
     await ctx.db.delete('follows', access.follow._id)
-    await ctx.db.patch('emailAccessTokens', access.token._id, {
-      consumedAt: Date.now(),
-    })
+    if (access.token.followId) {
+      await ctx.db.patch('emailAccessTokens', access.token._id, {
+        consumedAt: Date.now(),
+      })
+    }
     return { removed: true }
   },
 })
@@ -165,7 +196,7 @@ export const rotateManagementTokenWithHash = internalMutation({
   args: { tokenHash: v.string(), replacementHash: v.string() },
   returns: v.object({ expiresAt: v.number() }),
   handler: async (ctx, args): Promise<{ expiresAt: number }> => {
-    const access = await requireManagementAccess(ctx, args.tokenHash)
+    const access = await requireManagementToken(ctx, args.tokenHash)
     const now = Date.now()
     const expiresAt = now + MANAGEMENT_TOKEN_TTL_MS
     await ctx.db.patch('emailAccessTokens', access.token._id, {
@@ -173,7 +204,7 @@ export const rotateManagementTokenWithHash = internalMutation({
     })
     await ctx.db.insert('emailAccessTokens', {
       subscriberId: access.subscriber._id,
-      followId: access.follow._id,
+      followId: access.token.followId,
       kind: 'management',
       tokenHash: args.replacementHash,
       expiresAt,
@@ -244,7 +275,7 @@ export const unsubscribeEmailWithToken = internalMutation({
   },
 })
 
-async function requireManagementAccess(ctx: MutationCtx, tokenHash: string) {
+async function requireManagementToken(ctx: MutationCtx, tokenHash: string) {
   const token = await ctx.db
     .query('emailAccessTokens')
     .withIndex('by_token_hash', (index) => index.eq('tokenHash', tokenHash))
@@ -254,24 +285,36 @@ async function requireManagementAccess(ctx: MutationCtx, tokenHash: string) {
     token.kind !== 'management' ||
     token.revokedAt ||
     token.consumedAt ||
-    !token.followId ||
     token.expiresAt === undefined ||
     token.expiresAt <= Date.now()
   ) {
     throw new Error('This management link is unavailable')
   }
   const subscriber = await ctx.db.get('emailSubscribers', token.subscriberId)
-  const follow = await ctx.db.get('follows', token.followId)
+  if (!subscriber || subscriber.state !== 'verified') {
+    throw new Error('This management link is unavailable')
+  }
+  return { token, subscriber }
+}
+
+async function requireManagementAccess(
+  ctx: MutationCtx,
+  tokenHash: string,
+  requestedFollowId?: Id<'follows'>,
+) {
+  const access = await requireManagementToken(ctx, tokenHash)
+  const followId = requestedFollowId ?? access.token.followId
+  if (!followId) throw new Error('Choose a follow to manage')
+  const follow = await ctx.db.get('follows', followId)
   if (
-    !subscriber ||
-    subscriber.state !== 'verified' ||
     !follow ||
     follow.ownerKind !== 'email' ||
-    follow.emailSubscriberId !== subscriber._id
+    follow.emailSubscriberId !== access.subscriber._id ||
+    (access.token.followId && access.token.followId !== follow._id)
   ) {
     throw new Error('This management link is unavailable')
   }
-  return { token, subscriber, follow }
+  return { ...access, follow }
 }
 
 async function tokenByHash(
@@ -287,16 +330,7 @@ async function tokenByHash(
 async function followViewForRow(
   ctx: QueryCtx,
   row: Doc<'follows'>,
-): Promise<{
-  id: string
-  targetKind: Doc<'follows'>['targetKind']
-  targetKey: string
-  title: string
-  detail: string
-  cadence: DeliveryCadence
-  resumeCadence: ActiveDeliveryCadence
-  createdAt: number
-} | null> {
+): Promise<ManagedFollow | null> {
   const preference = await ctx.db
     .query('notificationPreferences')
     .withIndex('by_follow_id', (index) => index.eq('followId', row._id))

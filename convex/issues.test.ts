@@ -71,7 +71,7 @@ async function seedGoogleFollow(
     })
     await ctx.db.insert('notificationPreferences', {
       followId,
-      cadence: 'immediate',
+      cadence: 'weekly',
       createdAt: 1,
       updatedAt: 1,
     })

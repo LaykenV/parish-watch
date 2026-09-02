@@ -407,7 +407,7 @@ test('management tokens isolate one follow, rotate, expire, and remove', async (
     }),
   ).resolves.toMatchObject({
     status: 'valid',
-    follow: { targetKey: 'housing' },
+    follows: [{ targetKey: 'housing' }],
   })
   await expect(
     t.query(internal.follows.management.readManagement, {
@@ -416,7 +416,7 @@ test('management tokens isolate one follow, rotate, expire, and remove', async (
     }),
   ).resolves.toMatchObject({
     status: 'valid',
-    follow: { targetKey: 'drainage' },
+    follows: [{ targetKey: 'drainage' }],
   })
 
   await t.mutation(internal.follows.management.rotateManagementTokenWithHash, {
@@ -498,6 +498,60 @@ test('repeated verification still revokes the newest management token', async ()
       now: Date.now(),
     }),
   ).resolves.toMatchObject({ status: 'valid' })
+})
+
+test('subscriber management tokens list and manage every follow for one address', async () => {
+  const t = convexTest(schema, modules)
+  const subscriberId = await createSubscriber(t, 'subscriber-wide')
+  await createChallenge(t, subscriberId, 'wide-one', 'code-hash', undefined, 'housing')
+  await consume(t, 'wide-one', 'code-hash')
+  await createChallenge(t, subscriberId, 'wide-two', 'code-hash', undefined, 'drainage')
+  await consume(t, 'wide-two', 'code-hash')
+  const [housingFollow, drainageFollow] = await t.run(async (ctx) => {
+    await ctx.db.insert('emailAccessTokens', {
+      subscriberId,
+      kind: 'management',
+      tokenHash: 'subscriber-wide-token',
+      expiresAt: Date.now() + 60_000,
+      createdAt: Date.now(),
+    })
+    return await ctx.db
+      .query('follows')
+      .withIndex('by_email_subscriber_id_and_created_at', (index) =>
+        index.eq('emailSubscriberId', subscriberId),
+      )
+      .take(10)
+  })
+  await expect(
+    t.query(internal.follows.management.readManagement, {
+      tokenHash: 'subscriber-wide-token',
+      now: Date.now(),
+    }),
+  ).resolves.toMatchObject({
+    status: 'valid',
+    follows: expect.arrayContaining([
+      expect.objectContaining({ targetKey: 'housing' }),
+      expect.objectContaining({ targetKey: 'drainage' }),
+    ]),
+  })
+  await t.mutation(internal.follows.management.updateEmailFollowWithToken, {
+    tokenHash: 'subscriber-wide-token',
+    followId: housingFollow._id,
+    cadence: 'weekly',
+  })
+  await t.mutation(internal.follows.management.removeEmailFollowWithToken, {
+    tokenHash: 'subscriber-wide-token',
+    followId: drainageFollow._id,
+  })
+  await expect(
+    t.query(internal.follows.management.readManagement, {
+      tokenHash: 'subscriber-wide-token',
+      now: Date.now(),
+    }),
+  ).resolves.toMatchObject({
+    status: 'valid',
+    follows: [{ targetKey: 'housing', cadence: 'weekly' }],
+  })
 })
 
 test('unsubscribe stops all email follows and a new verification re-enables only its target', async () => {

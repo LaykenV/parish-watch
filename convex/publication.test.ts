@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import workflowTest from '@convex-dev/workflow/test'
+import agentmailTest from '@agentmail/convex/test'
 import { convexTest } from 'convex-test'
 import type { TestConvexForDataModelAndIdentity } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -54,9 +55,12 @@ function initTest(fastModel: string = LUNA_MODEL): TestConvex {
   vi.stubEnv('FIRECRAWL_API_KEY', 'fc-test-key')
   vi.stubEnv('MODEL_STRONG_ID', TERRA_MODEL)
   vi.stubEnv('MODEL_FAST_ID', fastModel)
+  vi.stubEnv('AGENTMAIL_UPDATES_INBOX_ID', 'updates-test')
+  vi.stubEnv('CONVEX_SITE_URL', 'https://public-parish-test.convex.site')
   overrideGatewayTokenMinterForTests(async () => 'test-scoped-token')
   const t = convexTest(schema, modules)
   workflowTest.register(t)
+  agentmailTest.register(t)
   return t
 }
 
@@ -867,7 +871,7 @@ test('a first accepted publication records one new-decision event and matches it
       })
       await ctx.db.insert('notificationPreferences', {
         followId,
-        cadence: 'immediate',
+        cadence: 'weekly',
         createdAt: 1,
         updatedAt: 1,
       })
@@ -914,6 +918,45 @@ test('a first accepted publication records one new-decision event and matches it
   await t.run(async (ctx) => {
     expect(await ctx.db.query('notificationMatches').take(10)).toHaveLength(2)
     expect(await ctx.db.query('notificationFanouts').take(10)).toHaveLength(1)
+  })
+
+  await t.run(async (ctx) => {
+    const match = await ctx.db
+      .query('notificationMatches')
+      .withIndex('by_follow_id_and_material_change_id', (index) =>
+        index.eq('followId', followIds[0]),
+      )
+      .unique()
+    const preference = await ctx.db
+      .query('notificationPreferences')
+      .withIndex('by_follow_id', (index) =>
+        index.eq('followId', followIds[0]),
+      )
+      .unique()
+    if (!match || !preference) throw new Error('Missing immediate fixture')
+    await ctx.db.patch(match._id, { cadenceAtMatch: 'immediate' })
+    await ctx.db.patch(preference._id, { cadence: 'immediate' })
+  })
+  await t.mutation(internal.follows.agentmailClient.reserveImmediateDelivery, {
+    materialChangeId: result.changes[0]._id,
+    ownerKey: result.matches[0].ownerKey,
+  })
+  await t.mutation(internal.follows.agentmailClient.reserveImmediateDelivery, {
+    materialChangeId: result.changes[0]._id,
+    ownerKey: result.matches[0].ownerKey,
+  })
+  await t.run(async (ctx) => {
+    const deliveries = await ctx.db.query('notificationDeliveries').take(10)
+    expect(deliveries).toEqual([
+      expect.objectContaining({
+        state: 'pending',
+        outboundId: expect.any(String),
+        providerIdempotencyKey: expect.any(String),
+      }),
+    ])
+    expect(deliveries[0].providerIdempotencyKey).toBe(
+      deliveries[0].outboundId,
+    )
   })
 })
 

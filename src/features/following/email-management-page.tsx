@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
 import { api } from '../../../convex/_generated/api'
+import type { Id } from '../../../convex/_generated/dataModel'
 import { Button } from '../../components/ui/button'
 import { ResidentStandalone } from '../resident-blueprint/resident-shell'
 import type { DeliveryFrequency, FollowedTarget } from './contracts'
@@ -19,8 +20,11 @@ import type { EmailManagementData } from './following-page.data'
 import './following.css'
 
 type EmailManagementActions = {
-  remove: () => Promise<unknown>
-  update: (cadence: DeliveryFrequency | 'muted') => Promise<unknown>
+  remove: (followId?: string) => Promise<unknown>
+  update: (
+    cadence: DeliveryFrequency | 'muted',
+    followId?: string,
+  ) => Promise<unknown>
 }
 
 export function LiveEmailManagementPage({ token }: { token: string }) {
@@ -75,7 +79,7 @@ export function LiveEmailManagementPage({ token }: { token: string }) {
     )
   }
 
-  const subscription = toEmailManagedTarget(result.follow)
+  const subscriptions = result.follows.map(toEmailManagedTarget)
   const rotate = async () => {
     const next = await rotateToken({ token: activeToken })
     setActiveToken(next.token)
@@ -86,18 +90,151 @@ export function LiveEmailManagementPage({ token }: { token: string }) {
     )
   }
   const actions: EmailManagementActions = {
-    remove: () => removeFollow({ token: activeToken }),
-    update: async (cadence) => {
-      await updateFollow({ token: activeToken, cadence })
+    remove: (followId) =>
+      removeFollow({
+        token: activeToken,
+        followId: followId as Id<'follows'> | undefined,
+      }),
+    update: async (cadence, followId) => {
+      await updateFollow({
+        token: activeToken,
+        followId: followId as Id<'follows'> | undefined,
+        cadence,
+      })
       await rotate()
     },
   }
 
   return (
-    <EmailManagementPage
+    <SubscriberEmailManagementPage
       actions={actions}
-      data={{ available: true, scenario: 'valid', subscription }}
+      subscriptions={subscriptions}
     />
+  )
+}
+
+function SubscriberEmailManagementPage({
+  actions,
+  subscriptions: initialSubscriptions,
+}: {
+  actions: EmailManagementActions
+  subscriptions: FollowedTarget[]
+}) {
+  const [subscriptions, setSubscriptions] = useState(initialSubscriptions)
+  const [busyId, setBusyId] = useState('')
+  const [error, setError] = useState('')
+
+  const update = async (
+    subscription: FollowedTarget,
+    cadence: DeliveryFrequency | 'muted',
+  ) => {
+    setBusyId(subscription.id)
+    setError('')
+    try {
+      await actions.update(cadence, subscription.id)
+      setSubscriptions((current) =>
+        current.map((item) =>
+          item.id === subscription.id
+            ? {
+                ...item,
+                frequency:
+                  cadence === 'muted' ? item.frequency : cadence,
+                status: cadence === 'muted' ? 'Muted' : 'Following',
+              }
+            : item,
+        ),
+      )
+    } catch {
+      setError('That change could not be saved. Try again.')
+    } finally {
+      setBusyId('')
+    }
+  }
+
+  const remove = async (subscription: FollowedTarget) => {
+    setBusyId(subscription.id)
+    setError('')
+    try {
+      await actions.remove(subscription.id)
+      setSubscriptions((current) =>
+        current.filter((item) => item.id !== subscription.id),
+      )
+    } catch {
+      setError('This follow could not be removed. Try again.')
+    } finally {
+      setBusyId('')
+    }
+  }
+
+  return (
+    <ResidentStandalone>
+      <main className="email-manage-page" id="resident-main">
+        <header className="following-head email-manage-head">
+          <p className="following-kicker">Email-only follows</p>
+          <h1>Manage email alerts</h1>
+          <p>This private link manages every follow for this verified address.</p>
+        </header>
+        {subscriptions.length === 0 ? (
+          <section className="email-manage-result">
+            <CheckIcon aria-hidden="true" />
+            <h2>No active follows remain.</h2>
+            <Button render={<Link to="/explore" />} size="touch">
+              Browse current issues
+            </Button>
+          </section>
+        ) : (
+          subscriptions.map((subscription) => (
+            <section className="email-manage-card" key={subscription.id}>
+              <div className="email-manage-identity">
+                <MailIcon aria-hidden="true" />
+                <div>
+                  <p className="following-count">{subscription.kind}</p>
+                  <h2>{subscription.title}</h2>
+                  <p>{subscription.detail}</p>
+                </div>
+              </div>
+              <label className="follow-input-label" htmlFor={subscription.id}>
+                Delivery schedule
+              </label>
+              <select
+                className="follow-input"
+                disabled={busyId === subscription.id}
+                id={subscription.id}
+                onChange={(event) =>
+                  void update(
+                    subscription,
+                    event.target.value as DeliveryFrequency | 'muted',
+                  )
+                }
+                value={
+                  subscription.status === 'Muted'
+                    ? 'muted'
+                    : subscription.frequency
+                }
+              >
+                <option value="immediate">Immediate updates</option>
+                <option value="weekly">Weekly roundup</option>
+                <option value="both">Immediate and weekly</option>
+                <option value="muted">Muted</option>
+              </select>
+              <div className="email-manage-actions">
+                <Button
+                  disabled={busyId === subscription.id}
+                  onClick={() => void remove(subscription)}
+                  size="touch"
+                  variant="outline"
+                >
+                  Unfollow
+                </Button>
+              </div>
+            </section>
+          ))
+        )}
+        <p aria-live="polite" className="email-manage-status">
+          {error || 'Only this verified address can use this link.'}
+        </p>
+      </main>
+    </ResidentStandalone>
   )
 }
 
@@ -159,7 +296,7 @@ function ValidEmailManagement({
     setBusy(true)
     setError('')
     try {
-      if (actions) await actions.update(cadence)
+      if (actions) await actions.update(cadence, subscription.id)
       setSaved(true)
       return true
     } catch {
@@ -174,7 +311,7 @@ function ValidEmailManagement({
     setBusy(true)
     setError('')
     try {
-      if (actions) await actions.remove()
+      if (actions) await actions.remove(subscription.id)
       setRemoved(true)
     } catch {
       setError('This follow could not be removed. Try again.')
