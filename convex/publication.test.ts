@@ -61,10 +61,13 @@ function initTest(fastModel: string = LUNA_MODEL): TestConvex {
   overrideGatewayTokenMinterForTests(async () => 'test-scoped-token')
   const t = convexTest(schema, modules)
   workflowTest.register(t)
+  return t
+}
+
+function registerAgentMail(t: TestConvex): void {
   agentmailTest.register(
     t as unknown as Parameters<typeof agentmailTest.register>[0],
   )
-  return t
 }
 
 async function seedValidatedCandidate(
@@ -940,6 +943,7 @@ test('a first accepted publication records one new-decision event and matches it
     await ctx.db.patch(match._id, { cadenceAtMatch: 'immediate' })
     await ctx.db.patch(preference._id, { cadence: 'immediate' })
   })
+  registerAgentMail(t)
   await t.mutation(internal.follows.agentmailClient.reserveImmediateDelivery, {
     materialChangeId: result.changes[0]._id,
     ownerKey: result.matches[0].ownerKey,
