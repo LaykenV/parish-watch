@@ -224,13 +224,19 @@ expand the promise.
 ## Alerts and Email
 
 - Google accounts and verified email-only subscribers may follow issues, topics,
-  bodies, and municipalities.
-- AgentMail verifies email-only subscriptions with a short-lived code or
-  confirmation reply. This is subscription verification, not account
-  authentication.
+  bodies, and places.
+- AgentMail verifies email-only subscriptions with a short-lived six-digit
+  code. This is subscription verification, not account authentication.
 - Send alerts only for material changes.
 - Offer an optional weekly roundup containing only material updates to followed
   targets.
+- Send at most one immediate email per owner and material change, even when
+  several follows match. Preserve the matching follows in a separate ledger.
+- Wait until a refreshed accepted issue contains the changed publication before
+  sending an issue-target alert.
+- Run the weekly roundup Monday at 7:00 AM in `America/Chicago`. A periodic
+  scheduler checks local civil time and claims one deduplicated weekly window,
+  so daylight-saving changes do not shift the resident-facing time.
 - AgentMail owns threaded email delivery and replies.
 - An unsupported email answer states that the evidence was not found and points
   to an official contact.

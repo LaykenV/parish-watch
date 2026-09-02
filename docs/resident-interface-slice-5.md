@@ -8,10 +8,10 @@ Pull-request verification passed 221 tests across 27 files, typecheck, client
 and server production builds, prerender, and lint. Production workflow
 `33401768387` and the independent production smoke passed. A later Slice 7A
 release connected Google account ownership and private saved areas and topics.
-Slice 7B then replaced the follow, verification, preference, and
+Slice 7B then replaced the follow, verification, per-follow preference, and
 email-management adapters. Production now creates real follows for Google and
-verified email owners. Alert delivery and reply grounding stay gated until
-Slice 7C.
+verified email owners. Alert delivery stays gated until Slice 7C. Grounded
+replies remain Slice 7D.
 
 ## Decision
 
@@ -160,7 +160,7 @@ production unavailability, one-subscription email management, and alert order.
 Per repository policy, they were not run locally. GitHub Actions owns the test,
 typecheck, build, prerender, and lint gate.
 
-## Known limits
+## Known limits at the Design Slice 5 checkpoint
 
 1. Google sign-in is a development interaction, not Convex Auth.
 2. Email verification and delivery are development interactions, not AgentMail.
@@ -170,12 +170,14 @@ typecheck, build, prerender, and lint gate.
 5. Email previews show structure with bracketed placeholders. They are not sent
    messages or production records.
 
-## Integration gates
+## Integration gates and current state
 
-The Google adapter must prove return to the original target and centralized
-ownership checks. The email adapter must prove code expiry, attempt limits,
-single use, secure scoped management, and unsubscribe. AgentMail must prove
-send, retry deduplication, reply grounding, and empty-roundup suppression.
+Slice 7A proved Google return and centralized ownership. Slice 7B proved code
+expiry, attempt limits, single use, scoped management, address-wide
+unsubscribe, real verification send, and signed webhook idempotency. Slice 7C
+owns sourced send, retry deduplication, the signed-in default schedule, the live
+Notifications view, and empty-roundup suppression. Slice 7D owns reply
+grounding.
 
-Passing those gates replaces the adapters. It does not reopen the page
+Passing those gates replaces only their adapters. It does not reopen the page
 hierarchy, delivery receipt, or ownership language.

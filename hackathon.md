@@ -12,17 +12,28 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-02T20:52:56Z
+- **Last updated:** 2026-09-02T21:01:53Z
 
 ## Log
 
-### 2026-09-02 - working tree
+### 2026-09-02 - Slice 7C planning checkpoint
 
-Corrected Place follow validation so supported parishes and municipalities use
-the same enrollment path. Added deterministic Convex tests for issue, topic,
-government-body, parish, and municipality targets, plus rejection of a parish
-that has not passed the coverage gate (`convex/follows/targets.ts`,
-`convex/follows.test.ts`). Automated validation remains with pull-request CI.
+Synchronized the current product, architecture, build, interface, and operator
+documents after the Slice 7B release. The 7C contract now sends at most one
+immediate email per owner and material change while keeping every matching
+follow in a separate ledger. Issue-target alerts wait for an accepted issue
+refresh. Weekly roundups run Monday at 7:00 AM in `America/Chicago` through a
+deduplicated local-time claim that preserves the hour across daylight-saving
+changes.
+
+PR #70 cleared the preflight defect as merge commit `1ece03d`. The deployed
+`place` resolver now accepts supported parishes and municipalities while an
+unsupported place still fails closed. Convex tests cover issue, topic, body,
+parish, and municipality targets. Pull-request checks, production workflow
+`33682483792`, and the independent production smoke passed. The notification
+match, delivery, roundup, and Google default-cadence records remain
+unimplemented. No sourced alert has been sent or claimed. Alert copy will not
+invite replies until Slice 7D's grounded inbound handler is live.
 
 ### 2026-09-02 - 8fc4642
 

@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slice 7A are deployed
+Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slices 7A and 7B are deployed
 
 ## Product Sentence
 
@@ -64,10 +64,12 @@ remains private telemetry instead of an answer budget. Production tests proved
 related issue turns, a corpus question spanning two decisions, exact Source
 controls, evidence not found, thread restoration, and resident answer text
 without raw internal evidence IDs. Google accounts and private saved areas and
-topics are live through Convex Auth v2. Follows, AgentMail, coverage requests,
-and private reports remain unavailable until their backend paths pass. Each
-integration must replace the matching typed adapter without changing the page
-hierarchy or visual system.
+topics are live through Convex Auth v2. Slice 7B replaced the follow,
+verification, preference, and email-management adapters. Google and verified
+email owners can create and manage real follows. Sourced alerts, coverage
+requests, and private reports remain unavailable until their backend paths
+pass. Each integration must replace the matching typed adapter without changing
+the page hierarchy or visual system.
 
 ### Start With Consequence
 
@@ -431,7 +433,7 @@ Followable targets:
 - issue;
 - topic;
 - government body;
-- municipality.
+- place.
 
 Following does not require an account. A signed-out follow click offers two
 paths:
@@ -477,16 +479,20 @@ Body:
 6. invitation to reply with a question;
 7. delivery preference link.
 
+Slice 7C omits the reply invitation. Add it only after Slice 7D's grounded
+inbound handler passes its release gate.
+
 The message must be useful without clicking, but concise enough to scan.
 
-Before the first alert, AgentMail sends a short-lived verification code or
-confirmation request. Public Parish stores only the hashed challenge, expiry,
-attempt count, and verified delivery reference. It does not treat that flow as
-account authentication.
+Before the first alert, AgentMail sends a short-lived six-digit verification
+code. Public Parish stores a normalized address hash, encrypted delivery
+address, hashed challenge, expiry, attempt count, and provider delivery
+reference. It stores neither the plain code nor a plain address in application
+tables, and it does not treat that flow as account authentication.
 
 Residents can choose immediate material-change alerts, a weekly roundup, or
-both. The roundup groups only published material updates for followed targets.
-Do not send an empty roundup.
+both. The roundup runs Monday at 7:00 AM in `America/Chicago` and groups only
+published material updates for followed targets. Do not send an empty roundup.
 
 ## Sharing
 

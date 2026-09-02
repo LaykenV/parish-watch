@@ -2,8 +2,9 @@
 
 Status: deployed through PR #43 as `85d6947` on August 31, 2026. Production
 workflow `33454522729` and the independent production smoke passed. Later
-releases connected accepted issue, evidence, anonymous Ask, Google account, and
-private saved-setup adapters.
+releases connected accepted issue, evidence, anonymous Ask, Google account,
+private saved setup, follow enrollment, per-follow cadence preferences, and
+scoped email-management adapters.
 
 ## What this slice closes
 
@@ -41,9 +42,9 @@ visual signature.
 ## Fixture and API ownership
 
 `src/features/resident-handoff/contracts.ts` is the implementation handoff. It
-names all 14 sitemap destinations, their typed page contract, current readiness
-gate, fixture owner, and future API owner. It also names every fixture-backed
-write and the backend that must replace it.
+names all 15 sitemap destinations, their typed page contract, current readiness
+gate, fixture owner, and backend owner. It also names every fixture-backed
+or live resident write, its readiness gate, and its backend owner.
 
 At the Slice 8 checkpoint, the gates were:
 
@@ -54,8 +55,9 @@ At the Slice 8 checkpoint, the gates were:
 - How Public Parish works is static published method copy.
 
 Later releases made accepted issue, decision, meeting, citation, bounded
-anonymous Ask, Google account, and private saved-setup paths live. Follow,
-email, coverage-request, and private-report actions remain gated. No fixture
+anonymous Ask, Google account, private saved setup, follow enrollment,
+per-follow cadence preferences, and scoped email-management paths live. Sourced
+alerts, coverage requests, and private reports remain gated. No fixture
 interaction counts as production proof.
 
 ## Implementation inventory

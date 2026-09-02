@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CONNECTED_PROTOTYPE_FLOWS,
-  FIXTURE_INTERACTION_HANDOFFS,
+  RESIDENT_INTERACTION_HANDOFFS,
   RESIDENT_ROUTE_HANDOFFS,
 } from './contracts'
 import {
@@ -15,10 +15,10 @@ import {
 
 describe('resident implementation handoff', () => {
   it('keeps one contract for every approved sitemap destination', () => {
-    expect(RESIDENT_ROUTE_HANDOFFS).toHaveLength(14)
+    expect(RESIDENT_ROUTE_HANDOFFS).toHaveLength(15)
     expect(
       new Set(RESIDENT_ROUTE_HANDOFFS.map((item) => item.route)).size,
-    ).toBe(14)
+    ).toBe(15)
     expect(
       RESIDENT_ROUTE_HANDOFFS.every(
         (item) => item.contract.length > 0 && item.owner.length > 0,
@@ -26,11 +26,12 @@ describe('resident implementation handoff', () => {
     ).toBe(true)
   })
 
-  it('names an API owner for every fixture-backed write', () => {
-    expect(FIXTURE_INTERACTION_HANDOFFS).toHaveLength(9)
+  it('names readiness and an API owner for every resident write', () => {
+    expect(RESIDENT_INTERACTION_HANDOFFS).toHaveLength(9)
     expect(
-      FIXTURE_INTERACTION_HANDOFFS.every(
-        ([interaction, owner]) => interaction.length > 0 && owner.length > 0,
+      RESIDENT_INTERACTION_HANDOFFS.every(
+        ({ interaction, owner }) =>
+          interaction.length > 0 && owner.length > 0,
       ),
     ).toBe(true)
   })

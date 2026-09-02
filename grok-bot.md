@@ -1,6 +1,6 @@
 # Public Parish Grok Bot
 
-Last updated: August 30, 2026
+Last updated: September 2, 2026
 
 This file defines the job, boundaries, working method, and handoff contract for
 the Grok Bot that helps Public Parish build a trustworthy launch dataset and
@@ -142,10 +142,14 @@ As of this file's update:
   Explore searches issues before decision records;
 - issue, decision, meeting, citation, and anonymous Ask views use bounded real
   production projections;
-- PRs #45, #47, and #49 deployed private 24-hour Agent threads, validated
-  answers, and bounded anonymous Ask;
-- follows, AgentMail, authentication, and the coverage compiler remain later
-  work unless current repository evidence proves otherwise;
+- PRs #45, #47, #49, #56, and #57 deployed private 24-hour Agent threads,
+  validated answers, bounded anonymous Ask, and corrected citation display;
+- PRs #58 and #59 deployed Convex Auth v2 Google ownership and private saved
+  setup;
+- PRs #66 and #67 deployed Google and AgentMail-verified email follow
+  enrollment and scoped management;
+- sourced alert delivery and the coverage compiler remain later work unless
+  current repository evidence proves otherwise;
 - Lafayette planning and zoning, Youngsville, Rapides bodies, and East Baton
   Rouge bodies remain candidates until each passes the coverage gate.
 
@@ -164,7 +168,8 @@ Do not replace these roles with Grok.
 - Deterministic code validates model results and decides what may become public.
 - Convex stores pipeline state, evidence, versions, workflows, and public
   projections.
-- AgentMail will deliver sourced alerts after that resident loop exists.
+- AgentMail verifies email-only follows now and will deliver sourced alerts
+  after Slice 7C closes that resident loop.
 
 Grok Bot operates and repairs the system. Grok output is not civic evidence and
 must not become a published claim.
