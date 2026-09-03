@@ -73,12 +73,7 @@ type ClassifierProvider = (
 ) => Promise<StructuredOutcome>
 
 let discoverWithProvider: DiscoveryProvider = runFirecrawlDiscovery
-let classifyWithProvider: ClassifierProvider = async (request, contractCheck) =>
-  await completeStructured({
-    request,
-    responseValidator: sourceClassificationResponse,
-    contractCheck,
-  })
+let classifyWithProvider: ClassifierProvider = runStructuredClassifier
 
 export function overrideCoverageDiscoveryForTests(
   provider: DiscoveryProvider,
@@ -94,12 +89,7 @@ export function overrideCoverageClassifierForTests(
 
 export function resetCoverageProvidersForTests(): void {
   discoverWithProvider = runFirecrawlDiscovery
-  classifyWithProvider = async (request, contractCheck) =>
-    await completeStructured({
-      request,
-      responseValidator: sourceClassificationResponse,
-      contractCheck,
-    })
+  classifyWithProvider = runStructuredClassifier
 }
 
 export const discoverForRun = internalAction({
@@ -252,7 +242,10 @@ export const classifyForRun = internalAction({
           ),
         )
       } catch (error) {
-        await recordThrownModelCall(ctx, args, requestHash, error)
+        for (const attempt of (error as Error & { attempts?: AttemptRecord[] })
+          .attempts ?? []) {
+          await recordModelAttempt(ctx, args, requestHash, undefined, attempt)
+        }
         await fail(
           ctx,
           args,
@@ -354,6 +347,26 @@ async function runFirecrawlDiscovery(
         : []
     failure.evidence = [...evidence, ...failedEvidence]
     throw failure
+  }
+}
+
+async function runStructuredClassifier(
+  request: ReturnType<typeof classifierRequest>,
+  contractCheck: (parsed: unknown) => string | null,
+): Promise<StructuredOutcome> {
+  const attempts: AttemptRecord[] = []
+  try {
+    return await completeStructured({
+      request,
+      responseValidator: sourceClassificationResponse,
+      contractCheck,
+      onAttempt: async (attempt) => {
+        attempts.push(attempt)
+      },
+    })
+  } catch (error) {
+    ;(error as Error & { attempts?: AttemptRecord[] }).attempts = attempts
+    throw error
   }
 }
 
@@ -467,30 +480,6 @@ async function recordModelAttempt(
       : { totalTokens: attempt.usage.totalTokens }),
     ...(attempt.errorClass ? { errorClass: attempt.errorClass } : {}),
     ...(attempt.errorDetail ? { errorDetail: attempt.errorDetail } : {}),
-  })
-}
-
-async function recordThrownModelCall(
-  ctx: ActionCtx,
-  ids: {
-    runId: Id<'coverageCompilerRuns'>
-    stageId: Id<'coverageCompilerStages'>
-  },
-  requestHash: string,
-  error: unknown,
-): Promise<void> {
-  await ctx.runMutation(internal.coverage.discoveryLedger.recordProviderCall, {
-    ...ids,
-    provider: 'ai_gateway',
-    operation: 'classify_sources',
-    status: 'failed',
-    requestHash,
-    promptVersion: SOURCE_CLASSIFIER_PROMPT_VERSION,
-    schemaVersion: SOURCE_CLASSIFIER_SCHEMA_VERSION,
-    latencyMs: 0,
-    creditsReported: false,
-    errorClass: error instanceof Error ? error.name : 'model_error',
-    errorDetail: error instanceof Error ? error.message : String(error),
   })
 }
 

@@ -6,6 +6,7 @@ import { internalMutation, internalQuery } from '../_generated/server'
 import type { MutationCtx } from '../_generated/server'
 import { estimateCostUsd } from '../ai/types'
 import { sha256HexOfText } from '../sources/hashing'
+import { MAX_DISCOVERY_CANDIDATES } from './candidates'
 import {
   boundedDetail,
   coverageCadences,
@@ -176,14 +177,20 @@ export const persistDiscovery = internalMutation({
       return { candidateCount: 0, classificationStageId: null }
 
     const now = Date.now()
-    for (const candidate of args.candidates) {
-      const existing = await ctx.db
-        .query('coverageSourceCandidates')
-        .withIndex('by_run_and_url', (index) =>
-          index.eq('runId', run._id).eq('canonicalUrl', candidate.canonicalUrl),
-        )
-        .unique()
-      if (existing) continue
+    const existingCandidates = await ctx.db
+      .query('coverageSourceCandidates')
+      .withIndex('by_run_and_url', (index) => index.eq('runId', run._id))
+      .take(MAX_DISCOVERY_CANDIDATES)
+    const knownUrls = new Set(
+      existingCandidates.map((candidate) => candidate.canonicalUrl),
+    )
+    const candidatesToInsert = args.candidates
+      .filter((candidate) => !knownUrls.has(candidate.canonicalUrl))
+      .slice(
+        0,
+        Math.max(0, MAX_DISCOVERY_CANDIDATES - existingCandidates.length),
+      )
+    for (const candidate of candidatesToInsert) {
       await ctx.db.insert('coverageSourceCandidates', {
         runId: run._id,
         stageId: stage._id,
@@ -205,7 +212,8 @@ export const persistDiscovery = internalMutation({
       }
     }
 
-    if (args.candidates.length === 0) {
+    const candidateCount = existingCandidates.length + candidatesToInsert.length
+    if (candidateCount === 0) {
       const summary =
         'Bounded discovery found no source candidates for this body.'
       await ctx.db.patch(stage._id, {
@@ -242,7 +250,7 @@ export const persistDiscovery = internalMutation({
       internal.coverage.discovery.classifyForRun,
       { runId: run._id, stageId: classificationStageId },
     )
-    return { candidateCount: args.candidates.length, classificationStageId }
+    return { candidateCount, classificationStageId }
   },
 })
 

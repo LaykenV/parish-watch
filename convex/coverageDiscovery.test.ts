@@ -6,6 +6,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 
 import { api, internal } from './_generated/api'
 import type { DataModel, Id } from './_generated/dataModel'
+import type { AttemptRecord } from './ai/types'
 import {
   overrideCoverageClassifierForTests,
   overrideCoverageDiscoveryForTests,
@@ -205,6 +206,109 @@ test('provider evidence before a failed discovery call stays in the ledger', asy
     ['map', 'success'],
     ['search', 'failed'],
   ])
+})
+
+test('a thrown classifier failure keeps the route of every attempted call', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  stubRoot()
+  stubSuccessfulProviders()
+  overrideCoverageClassifierForTests(async () => {
+    const failure = new Error('direct fallback failed') as Error & {
+      attempts?: AttemptRecord[]
+    }
+    failure.attempts = [
+      {
+        route: 'ai_gateway',
+        modelId: 'openai/gpt-5.6-luna',
+        status: 'failed',
+        httpStatus: 503,
+        latencyMs: 10,
+        requestId: null,
+        usage: null,
+        retryAfterMs: null,
+        errorClass: 'gateway_unavailable',
+        errorDetail: 'Gateway unavailable',
+      },
+      {
+        route: 'direct_openai',
+        modelId: 'gpt-5.6-luna',
+        status: 'failed',
+        httpStatus: 502,
+        latencyMs: 15,
+        requestId: null,
+        usage: null,
+        retryAfterMs: null,
+        errorClass: 'upstream_error',
+        errorDetail: failure.message,
+      },
+    ]
+    throw failure
+  })
+
+  const runId = await verifiedRun(t, owner)
+  await owner.mutation(api.coverage.operations.discover, { runId })
+  await drainScheduled(t)
+
+  const view = await owner.query(api.coverage.operations.run, { runId })
+  expect(view?.run.state).toBe('failed_retryable')
+  expect(view?.providerCalls.map((call) => call.provider)).toEqual([
+    'firecrawl',
+    'ai_gateway',
+    'direct_openai',
+  ])
+})
+
+test('discovery retries cannot store more than 100 candidates for one run', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  stubRoot()
+  const runId = await verifiedRun(t, owner)
+  await owner.mutation(api.coverage.operations.discover, { runId })
+
+  const stageId = await t.run(async (ctx) => {
+    const stage = await ctx.db
+      .query('coverageCompilerStages')
+      .withIndex('by_run_and_stage', (index) =>
+        index.eq('runId', runId).eq('stage', 'discover_sources'),
+      )
+      .unique()
+    if (!stage) throw new Error('Discovery stage was not created')
+    for (let index = 0; index < 99; index += 1) {
+      await ctx.db.insert('coverageSourceCandidates', {
+        runId,
+        stageId: stage._id,
+        canonicalUrl: `https://www.lafayettela.gov/existing/${index}`,
+        discoveredFrom: ['earlier-attempt'],
+        matchedTerms: ['agenda'],
+        hostDisposition: 'approved',
+        state: 'pending',
+        createdAt: Date.now(),
+      })
+    }
+    return stage._id
+  })
+
+  await expect(
+    t.mutation(internal.coverage.discoveryLedger.persistDiscovery, {
+      runId,
+      stageId,
+      candidates: Array.from({ length: 5 }, (_, index) => ({
+        canonicalUrl: `https://www.lafayettela.gov/new/${index}`,
+        discoveredFrom: ['retry'],
+        matchedTerms: ['minutes'],
+        hostDisposition: 'approved' as const,
+      })),
+    }),
+  ).resolves.toMatchObject({ candidateCount: 100 })
+  await expect(
+    t.run(async (ctx) => {
+      return await ctx.db
+        .query('coverageSourceCandidates')
+        .withIndex('by_run_and_url', (index) => index.eq('runId', runId))
+        .collect()
+    }),
+  ).resolves.toHaveLength(100)
 })
 
 test.each(['discover_sources', 'classify_sources'] as const)(
