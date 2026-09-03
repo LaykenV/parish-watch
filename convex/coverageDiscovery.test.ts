@@ -151,6 +151,88 @@ test('an empty discovery fails its stage and can retry later', async () => {
   ).toBe('succeeded')
 })
 
+test('provider evidence before a failed discovery call stays in the ledger', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  stubRoot()
+  overrideCoverageDiscoveryForTests(async () => {
+    const failure = new Error('search failed after map') as Error & {
+      evidence?: Array<{
+        provider: 'firecrawl'
+        operation: string
+        status: string
+        requestHash: string
+        responseHash?: string
+        latencyMs: number
+        creditsReported: boolean
+        errorClass?: string
+        errorDetail?: string
+      }>
+    }
+    failure.evidence = [
+      {
+        provider: 'firecrawl',
+        operation: 'map',
+        status: 'success',
+        requestHash: 'map-request',
+        responseHash: 'map-response',
+        latencyMs: 20,
+        creditsReported: false,
+      },
+      {
+        provider: 'firecrawl',
+        operation: 'search',
+        status: 'failed',
+        requestHash: 'search-request',
+        latencyMs: 30,
+        creditsReported: false,
+        errorClass: 'firecrawl_request_failed',
+        errorDetail: failure.message,
+      },
+    ]
+    throw failure
+  })
+
+  const runId = await verifiedRun(t, owner)
+  await owner.mutation(api.coverage.operations.discover, { runId })
+  await drainScheduled(t)
+
+  const view = await owner.query(api.coverage.operations.run, { runId })
+  expect(view?.run.state).toBe('failed_retryable')
+  expect(
+    view?.providerCalls.map((call) => [call.operation, call.status]),
+  ).toEqual([
+    ['map', 'success'],
+    ['search', 'failed'],
+  ])
+})
+
+test.each(['discover_sources', 'classify_sources'] as const)(
+  'a missing checked manifest fails the running %s stage',
+  async (stageName) => {
+    const t = convexTest(schema, modules)
+    await signInOwner(t)
+    const { runId, stageId } = await missingManifestStage(t, stageName)
+
+    if (stageName === 'discover_sources') {
+      await t.action(internal.coverage.discovery.discoverForRun, {
+        runId,
+        stageId,
+      })
+    } else {
+      await t.action(internal.coverage.discovery.classifyForRun, {
+        runId,
+        stageId,
+      })
+    }
+
+    await t.run(async (ctx) => {
+      expect((await ctx.db.get(runId))?.state).toBe('failed_terminal')
+      expect((await ctx.db.get(stageId))?.state).toBe('failed_terminal')
+    })
+  },
+)
+
 test('cancellation stops the remaining paid discovery calls', async () => {
   const t = convexTest(schema, modules)
   const owner = await signInOwner(t)
@@ -305,6 +387,57 @@ async function drainScheduled(t: TestConvex): Promise<void> {
   vi.useFakeTimers()
   await t.finishAllScheduledFunctions(vi.runAllTimers)
   vi.useRealTimers()
+}
+
+async function missingManifestStage(
+  t: TestConvex,
+  stageName: 'discover_sources' | 'classify_sources',
+): Promise<{
+  runId: Id<'coverageCompilerRuns'>
+  stageId: Id<'coverageCompilerStages'>
+}> {
+  return await t.run(async (ctx) => {
+    const user = await ctx.db.query('users').first()
+    if (!user) throw new Error('The owner fixture is missing')
+    const startedAt = Date.now()
+    const runId = await ctx.db.insert('coverageCompilerRuns', {
+      bodyKey: 'lafayette-planning-commission',
+      jurisdictionSlug: 'lafayette-parish',
+      rootManifestVersion: 'removed-version',
+      compilerVersion: 'v1',
+      idempotencyKey: `missing-manifest:${stageName}`,
+      attempt: 1,
+      state: 'running',
+      currentStage: stageName,
+      requestedByUserId: user._id,
+      startedAt,
+    })
+    if (stageName === 'discover_sources') {
+      await ctx.db.insert('coverageCompilerStages', {
+        runId,
+        stage: 'verify_root',
+        idempotencyKey: 'missing-manifest:verified-root',
+        inputHash: 'missing-manifest:verified-root',
+        attempt: 1,
+        state: 'succeeded',
+        gateVersion: 'v1',
+        resolvedRootUrl: 'https://www.lafayettela.gov/',
+        startedAt,
+        completedAt: startedAt,
+      })
+    }
+    const stageId = await ctx.db.insert('coverageCompilerStages', {
+      runId,
+      stage: stageName,
+      idempotencyKey: `missing-manifest:${stageName}:stage`,
+      inputHash: `missing-manifest:${stageName}:stage`,
+      attempt: 1,
+      state: 'running',
+      gateVersion: 'v1',
+      startedAt,
+    })
+    return { runId, stageId }
+  })
 }
 
 function stubRoot() {

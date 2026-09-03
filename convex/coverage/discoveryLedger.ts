@@ -19,7 +19,6 @@ import {
   SOURCE_CLASSIFIER_SCHEMA_VERSION,
   sourceClassification,
 } from './classifier'
-import { resolveRootManifest } from './roots'
 
 const STAGE_SCAN_LIMIT = 30
 
@@ -107,7 +106,6 @@ export const discoveryContext = internalQuery({
     v.null(),
     v.object({
       bodyKey: v.string(),
-      bodyName: v.string(),
       rootManifestVersion: v.string(),
       resolvedRootUrl: v.string(),
     }),
@@ -135,11 +133,9 @@ export const discoveryContext = internalQuery({
     const verified = rootStages.find(
       (entry) => entry.state === 'succeeded' && entry.resolvedRootUrl,
     )
-    const manifest = resolveRootManifest(run.bodyKey, run.rootManifestVersion)
-    if (!verified?.resolvedRootUrl || !manifest) return null
+    if (!verified?.resolvedRootUrl) return null
     return {
       bodyKey: run.bodyKey,
-      bodyName: manifest.bodyName,
       rootManifestVersion: run.rootManifestVersion,
       resolvedRootUrl: verified.resolvedRootUrl,
     }
@@ -259,7 +255,7 @@ export const classificationContext = internalQuery({
     v.null(),
     v.object({
       bodyKey: v.string(),
-      bodyName: v.string(),
+      rootManifestVersion: v.string(),
       candidates: v.array(
         v.object({
           candidateId: v.id('coverageSourceCandidates'),
@@ -285,8 +281,6 @@ export const classificationContext = internalQuery({
       stage.state !== 'running'
     )
       return null
-    const manifest = resolveRootManifest(run.bodyKey, run.rootManifestVersion)
-    if (!manifest) return null
     const candidates = await ctx.db
       .query('coverageSourceCandidates')
       .withIndex('by_run_and_state', (index) =>
@@ -295,7 +289,7 @@ export const classificationContext = internalQuery({
       .take(100)
     return {
       bodyKey: run.bodyKey,
-      bodyName: manifest.bodyName,
+      rootManifestVersion: run.rootManifestVersion,
       candidates: candidates.map((candidate) => ({
         candidateId: candidate._id,
         canonicalUrl: candidate.canonicalUrl,

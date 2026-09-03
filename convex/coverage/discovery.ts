@@ -50,6 +50,10 @@ type ProviderEvidence = {
   errorDetail?: string
 }
 
+type ProviderFailure = Error & {
+  evidence?: ProviderEvidence | ProviderEvidence[]
+}
+
 type DiscoveryProviderResult = {
   inputs: Array<{ source: string; links: MapLink[] }>
   evidence: ProviderEvidence[]
@@ -138,13 +142,16 @@ export const discoverForRun = internalAction({
           )) !== null,
       )
     } catch (error) {
-      const providerEvidence = (
-        error as Error & { evidence?: ProviderEvidence }
-      ).evidence
-      if (providerEvidence) {
+      const providerEvidence = (error as ProviderFailure).evidence
+      const evidence = Array.isArray(providerEvidence)
+        ? providerEvidence
+        : providerEvidence
+          ? [providerEvidence]
+          : []
+      for (const call of evidence) {
         await ctx.runMutation(
           internal.coverage.discoveryLedger.recordProviderCall,
-          { runId: args.runId, stageId: args.stageId, ...providerEvidence },
+          { runId: args.runId, stageId: args.stageId, ...call },
         )
       }
       await fail(
@@ -192,6 +199,20 @@ export const classifyForRun = internalAction({
       args,
     )
     if (!context) return null
+    const manifest = resolveRootManifest(
+      context.bodyKey,
+      context.rootManifestVersion,
+    )
+    if (!manifest) {
+      await fail(
+        ctx,
+        args,
+        'classification_provider_failed',
+        'The checked root manifest disappeared before classification.',
+        false,
+      )
+      return null
+    }
     const classifications: SourceClassificationResponse['classifications'] = []
     for (
       let offset = 0;
@@ -214,7 +235,7 @@ export const classifyForRun = internalAction({
       )
       const request = classifierRequest(
         context.bodyKey,
-        context.bodyName,
+        manifest.bodyName,
         candidates,
       )
       const requestHash = await sha256HexOfText(JSON.stringify(request))
@@ -290,39 +311,50 @@ async function runFirecrawlDiscovery(
 ): Promise<DiscoveryProviderResult> {
   const inputs: DiscoveryProviderResult['inputs'] = []
   const evidence: ProviderEvidence[] = []
-  const mapOptions = {
-    search: MAP_SEARCH,
-    includeSubdomains: true,
-    ignoreQueryParameters: false,
-    limit: MAP_LIMIT,
-  } as const
-  const mapRequest = { operation: 'map', rootUrl, options: mapOptions }
-  const mapped = await callFirecrawl(mapRequest, () =>
-    firecrawl.map(ctx, rootUrl, mapOptions),
-  )
-  evidence.push(mapped.evidence)
-  inputs.push({ source: `map:${rootUrl}`, links: mapped.value.links })
-
-  for (const query of discoveryQueries(manifest.bodyName)) {
-    if (!(await shouldContinue())) return { inputs, evidence, canceled: true }
-    const options = {
-      sources: ['web'] as Array<'web'>,
-      includeDomains: manifest.allowedHosts,
-      limit: SEARCH_LIMIT,
-    }
-    const searched = await callFirecrawl(
-      { operation: 'search', query, options },
-      () => firecrawl.search(ctx, query, options),
+  try {
+    const mapOptions = {
+      search: MAP_SEARCH,
+      includeSubdomains: true,
+      ignoreQueryParameters: false,
+      limit: MAP_LIMIT,
+    } as const
+    const mapRequest = { operation: 'map', rootUrl, options: mapOptions }
+    const mapped = await callFirecrawl(mapRequest, () =>
+      firecrawl.map(ctx, rootUrl, mapOptions),
     )
-    evidence.push(searched.evidence)
-    inputs.push({
-      source: `search:${query}`,
-      links: (searched.value.web ?? [])
-        .map(searchLink)
-        .filter((link): link is MapLink => link !== null),
-    })
+    evidence.push(mapped.evidence)
+    inputs.push({ source: `map:${rootUrl}`, links: mapped.value.links })
+
+    for (const query of discoveryQueries(manifest.bodyName)) {
+      if (!(await shouldContinue())) return { inputs, evidence, canceled: true }
+      const options = {
+        sources: ['web'] as Array<'web'>,
+        includeDomains: manifest.allowedHosts,
+        limit: SEARCH_LIMIT,
+      }
+      const searched = await callFirecrawl(
+        { operation: 'search', query, options },
+        () => firecrawl.search(ctx, query, options),
+      )
+      evidence.push(searched.evidence)
+      inputs.push({
+        source: `search:${query}`,
+        links: (searched.value.web ?? [])
+          .map(searchLink)
+          .filter((link): link is MapLink => link !== null),
+      })
+    }
+    return { inputs, evidence }
+  } catch (error) {
+    const failure = error as ProviderFailure
+    const failedEvidence = Array.isArray(failure.evidence)
+      ? failure.evidence
+      : failure.evidence
+        ? [failure.evidence]
+        : []
+    failure.evidence = [...evidence, ...failedEvidence]
+    throw failure
   }
-  return { inputs, evidence }
 }
 
 async function callFirecrawl<T>(
@@ -349,7 +381,7 @@ async function callFirecrawl<T>(
     const failure = new Error(
       `Firecrawl ${request.operation} failed: ${error instanceof Error ? error.message : String(error)}`,
     )
-    ;(failure as Error & { evidence?: ProviderEvidence }).evidence = {
+    ;(failure as ProviderFailure).evidence = {
       provider: 'firecrawl',
       operation: request.operation,
       status: 'failed',
