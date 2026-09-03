@@ -203,9 +203,45 @@ test('a failed root gate makes no paid provider call and can be retried', async 
     runId: started.runId,
   })
   expect(retried?.run.state).toBe('succeeded')
-  expect(retried?.run.attempt).toBe(2)
+  expect(retried?.run.attempt).toBe(1)
   expect(retried?.stages).toHaveLength(2)
   expect(retried?.stages.map((stage) => stage.attempt).sort()).toEqual([1, 2])
+})
+
+test('stage retries never reuse a later run idempotency key', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => Promise.resolve(new Response(null, { status: 404 }))),
+  )
+
+  const first = await owner.mutation(api.coverage.operations.start, {
+    bodyKey: 'lafayette-city-council',
+    rootManifestVersion: 'v1',
+  })
+  await drainScheduled(t)
+  await owner.mutation(api.coverage.operations.retry, { runId: first.runId })
+  await drainScheduled(t)
+
+  const second = await owner.mutation(api.coverage.operations.start, {
+    bodyKey: 'lafayette-city-council',
+    rootManifestVersion: 'v1',
+  })
+  await drainScheduled(t)
+  await owner.mutation(api.coverage.operations.retry, { runId: second.runId })
+  await drainScheduled(t)
+
+  const third = await owner.mutation(api.coverage.operations.start, {
+    bodyKey: 'lafayette-city-council',
+    rootManifestVersion: 'v1',
+  })
+  const runs = await t.run(
+    async (ctx) => await ctx.db.query('coverageCompilerRuns').collect(),
+  )
+  expect(runs.map((run) => run.attempt).sort()).toEqual([1, 2, 3])
+  expect(new Set(runs.map((run) => run.idempotencyKey)).size).toBe(3)
+  expect(third.runId).not.toEqual(second.runId)
 })
 
 test('a terminal failure earns a new attempt instead of reusing the failed run', async () => {
