@@ -492,8 +492,9 @@ reference. It stores neither the plain code nor a plain address in application
 tables, and it does not treat that flow as account authentication.
 
 Residents can choose immediate material-change alerts, a weekly roundup, or
-both. The roundup runs Monday at 7:00 AM in `America/Chicago` and groups only
-published material updates for followed targets. Do not send an empty roundup.
+both. The scheduler claims the roundup during the Monday 7:00 AM hour in
+`America/Chicago` and groups only published material updates for followed
+targets. Do not send an empty roundup.
 
 ## Sharing
 

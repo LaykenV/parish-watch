@@ -468,9 +468,12 @@ Include:
 - pass the durable component outbound ID as AgentMail's provider idempotency
   key for retry-safe sends;
 - provider thread and delivery state;
-- an hourly scheduler that claims the weekly window during Monday's 7:00 AM
-  `America/Chicago` hour, preserving local time across daylight-saving changes;
-- owner and roundup-window deduplication;
+- an hourly scheduler that claims the Monday 7:00 AM `America/Chicago` window,
+  preserves local time across daylight-saving changes, catches up a missed
+  claim for 24 hours, and resumes stale pages from their stored cursors;
+- owner and roundup-window deduplication, while each entry keeps the follows
+  that contributed it so one removed follow cannot suppress another active
+  weekly follow;
 - suppression of empty roundups;
 - connect `/following/notifications` to a Google-owned default cadence for new
   follows and the real immediate and weekly delivery states. Changing the

@@ -226,7 +226,8 @@ export default defineSchema({
       'materialChangeId',
       'ownerKey',
     ])
-    .index('by_owner_key_and_matched_at', ['ownerKey', 'matchedAt']),
+    .index('by_owner_key_and_matched_at', ['ownerKey', 'matchedAt'])
+    .index('by_matched_at', ['matchedAt']),
 
   notificationFanouts: defineTable({
     materialChangeId: v.id('materialChanges'),
@@ -249,8 +250,10 @@ export default defineSchema({
   notificationDeliveries: defineTable({
     ownerKind: v.union(v.literal('google'), v.literal('email')),
     ownerKey: v.string(),
-    kind: v.literal('immediate'),
-    materialChangeId: v.id('materialChanges'),
+    kind: v.union(v.literal('immediate'), v.literal('weekly')),
+    materialChangeId: v.optional(v.id('materialChanges')),
+    roundupWindowId: v.optional(v.id('roundupWindows')),
+    representativeFollowId: v.optional(v.id('follows')),
     state: v.union(
       v.literal('reserved'),
       v.literal('pending'),
@@ -277,7 +280,44 @@ export default defineSchema({
       'kind',
       'materialChangeId',
     ])
+    .index('by_state_and_updated_at', ['state', 'updatedAt'])
+    .index('by_roundup_window_id_and_owner_key', [
+      'roundupWindowId',
+      'ownerKey',
+    ]),
+
+  roundupWindows: defineTable({
+    windowKey: v.string(),
+    startsAt: v.number(),
+    endsAt: v.number(),
+    state: v.union(
+      v.literal('collecting'),
+      v.literal('delivering'),
+      v.literal('complete'),
+    ),
+    matchCursor: v.optional(v.string()),
+    deliveryCursor: v.optional(v.string()),
+    entryCount: v.number(),
+    deliveryCount: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_window_key', ['windowKey'])
     .index('by_state_and_updated_at', ['state', 'updatedAt']),
+
+  roundupEntries: defineTable({
+    roundupWindowId: v.id('roundupWindows'),
+    deliveryId: v.id('notificationDeliveries'),
+    materialChangeId: v.id('materialChanges'),
+    followIds: v.array(v.id('follows')),
+    createdAt: v.number(),
+  })
+    .index('by_delivery_id_and_material_change_id', [
+      'deliveryId',
+      'materialChangeId',
+    ])
+    .index('by_delivery_id_and_created_at', ['deliveryId', 'createdAt']),
 
   emailAccessTokens: defineTable({
     subscriberId: v.id('emailSubscribers'),

@@ -417,7 +417,8 @@ PR 7C.
 - wait for a refreshed accepted issue before sending an issue-target alert;
 - offer an optional Monday 7:00 AM `America/Chicago` weekly roundup of material
   changes, using a local-time window claim that survives daylight-saving
-  changes;
+  changes, catches up a missed claim for 24 hours, and resumes stale pages from
+  their stored cursors;
 - persist the thread and delivery state;
 - accept a reply;
 - answer the reply through the same grounded path;

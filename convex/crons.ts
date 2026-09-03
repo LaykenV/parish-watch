@@ -25,4 +25,11 @@ crons.interval(
   {},
 )
 
+crons.interval(
+  'claim the weekly sourced alert window',
+  { hours: 1 },
+  internal.follows.agentmailClient.claimWeeklyRoundup,
+  {},
+)
+
 export default crons

@@ -955,6 +955,150 @@ test('a first accepted publication records one new-decision event and matches it
     expect(deliveries[0].outboundId).toBeUndefined()
     expect(deliveries[0].providerIdempotencyKey).toBeUndefined()
   })
+
+  await t.run(async (ctx) => {
+    const match = await ctx.db
+      .query('notificationMatches')
+      .withIndex('by_follow_id_and_material_change_id', (index) =>
+        index.eq('followId', followIds[0]),
+      )
+      .unique()
+    const preference = await ctx.db
+      .query('notificationPreferences')
+      .withIndex('by_follow_id', (index) =>
+        index.eq('followId', followIds[0]),
+      )
+      .unique()
+    if (!match || !preference) throw new Error('Missing weekly fixture')
+    await ctx.db.patch(match._id, { cadenceAtMatch: 'weekly' })
+    await ctx.db.patch(preference._id, { cadence: 'weekly' })
+  })
+
+  const roundupWindowId = await t.run(async (ctx) => {
+    return await ctx.db.insert('roundupWindows', {
+      windowKey: '2026-09-07',
+      startsAt: 0,
+      endsAt: Date.now() + 60_000,
+      state: 'collecting',
+      entryCount: 0,
+      deliveryCount: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    })
+  })
+  await t.mutation(
+    internal.follows.agentmailClient.collectWeeklyRoundupPage,
+    {
+      roundupWindowId,
+      paginationOpts: { numItems: 50, cursor: null },
+    },
+  )
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(roundupWindowId)).toMatchObject({
+      state: 'delivering',
+      entryCount: 1,
+      deliveryCount: 1,
+    })
+    const entries = await ctx.db.query('roundupEntries').take(10)
+    expect(entries).toHaveLength(1)
+    expect(entries[0].followIds).toHaveLength(2)
+    expect(
+      (await ctx.db.query('notificationDeliveries').take(10)).filter(
+        (delivery) => delivery.kind === 'weekly',
+      ),
+    ).toEqual([
+      expect.objectContaining({ state: 'reserved', roundupWindowId }),
+    ])
+  })
+  await t.run(async (ctx) => {
+    const delivery = (
+      await ctx.db.query('notificationDeliveries').take(10)
+    ).find((candidate) => candidate.kind === 'weekly')
+    const representativeFollowId = delivery?.representativeFollowId
+    if (!representativeFollowId) {
+      throw new Error('Missing weekly representative')
+    }
+    const preference = await ctx.db
+      .query('notificationPreferences')
+      .withIndex('by_follow_id', (index) =>
+        index.eq('followId', representativeFollowId),
+      )
+      .unique()
+    if (!preference) throw new Error('Missing weekly preference')
+    await ctx.db.patch(preference._id, {
+      cadence: 'immediate',
+      updatedAt: Date.now(),
+    })
+  })
+  await t.mutation(
+    internal.follows.agentmailClient.deliverWeeklyRoundupPage,
+    {
+      roundupWindowId,
+      paginationOpts: { numItems: 25, cursor: null },
+    },
+  )
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(roundupWindowId)).toMatchObject({
+      state: 'complete',
+    })
+    expect(
+      (await ctx.db.query('notificationDeliveries').take(10)).find(
+        (delivery) => delivery.kind === 'weekly',
+      ),
+    ).toMatchObject({
+      state: 'failed',
+      enqueueAttempts: 1,
+      errorDetail: expect.stringContaining('AGENTMAIL_API_KEY'),
+    })
+  })
+
+  const emptyWindowId = await t.run(async (ctx) => {
+    return await ctx.db.insert('roundupWindows', {
+      windowKey: '2026-09-14',
+      startsAt: Date.now() + 120_000,
+      endsAt: Date.now() + 180_000,
+      state: 'collecting',
+      entryCount: 0,
+      deliveryCount: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    })
+  })
+  await t.mutation(
+    internal.follows.agentmailClient.collectWeeklyRoundupPage,
+    {
+      roundupWindowId: emptyWindowId,
+      paginationOpts: { numItems: 50, cursor: null },
+    },
+  )
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(emptyWindowId)).toMatchObject({
+      state: 'delivering',
+      entryCount: 0,
+      deliveryCount: 0,
+    })
+  })
+
+  const staleWindowId = await t.run(async (ctx) => {
+    return await ctx.db.insert('roundupWindows', {
+      windowKey: '2026-08-31',
+      startsAt: 0,
+      endsAt: 1,
+      state: 'collecting',
+      entryCount: 0,
+      deliveryCount: 0,
+      createdAt: 1,
+      updatedAt: 1,
+    })
+  })
+  await t.mutation(internal.follows.agentmailClient.claimWeeklyRoundup, {})
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(staleWindowId)).toMatchObject({
+      state: 'collecting',
+      updatedAt: expect.any(Number),
+    })
+    expect((await ctx.db.get(staleWindowId))?.updatedAt).toBeGreaterThan(1)
+  })
 })
 
 test('a later accepted version records a comparison even when the public payload is unchanged', async () => {

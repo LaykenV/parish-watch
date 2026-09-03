@@ -43,6 +43,7 @@ import type * as follows_enrollment from "../follows/enrollment.js";
 import type * as follows_enrollmentContracts from "../follows/enrollmentContracts.js";
 import type * as follows_management from "../follows/management.js";
 import type * as follows_retention from "../follows/retention.js";
+import type * as follows_roundupTime from "../follows/roundupTime.js";
 import type * as follows_savedSetup from "../follows/savedSetup.js";
 import type * as follows_secrets from "../follows/secrets.js";
 import type * as follows_targets from "../follows/targets.js";
@@ -131,6 +132,7 @@ declare const fullApi: ApiFromModules<{
   "follows/enrollmentContracts": typeof follows_enrollmentContracts;
   "follows/management": typeof follows_management;
   "follows/retention": typeof follows_retention;
+  "follows/roundupTime": typeof follows_roundupTime;
   "follows/savedSetup": typeof follows_savedSetup;
   "follows/secrets": typeof follows_secrets;
   "follows/targets": typeof follows_targets;
