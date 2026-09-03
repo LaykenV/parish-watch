@@ -233,7 +233,9 @@ export const runMatchFanout = internalMutation({
       return null
     }
     const targets = await matchTargets(ctx, fanout, change)
-    const target = targets[fanout.targetIndex]
+    const target = targets.find(
+      (_candidate, index) => index === fanout.targetIndex,
+    )
     if (!target) {
       await ctx.db.patch(fanout._id, {
         state: 'complete',
