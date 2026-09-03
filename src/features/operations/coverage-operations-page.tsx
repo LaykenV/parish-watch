@@ -625,7 +625,7 @@ function ProposalPanel({
   proposals: Proposal[]
   runId: RunId
 }) {
-  const proposal = proposals[0]
+  const proposal = proposals.at(0)
   if (!proposal) {
     return (
       <section className="coverage-ops-proposal">
