@@ -53,12 +53,14 @@ type ProviderEvidence = {
 type DiscoveryProviderResult = {
   inputs: Array<{ source: string; links: MapLink[] }>
   evidence: ProviderEvidence[]
+  canceled?: boolean
 }
 
 type DiscoveryProvider = (
   ctx: ActionCtx,
   manifest: CoverageRootManifest,
   rootUrl: string,
+  shouldContinue: () => Promise<boolean>,
 ) => Promise<DiscoveryProviderResult>
 
 type ClassifierProvider = (
@@ -129,6 +131,11 @@ export const discoverForRun = internalAction({
         ctx,
         manifest,
         context.resolvedRootUrl,
+        async () =>
+          (await ctx.runQuery(
+            internal.coverage.discoveryLedger.discoveryContext,
+            args,
+          )) !== null,
       )
     } catch (error) {
       const providerEvidence = (
@@ -155,6 +162,10 @@ export const discoverForRun = internalAction({
         internal.coverage.discoveryLedger.recordProviderCall,
         { runId: args.runId, stageId: args.stageId, ...evidence },
       )
+    }
+    if (result.canceled) {
+      await ctx.runMutation(internal.coverage.ledger.abandonStage, args)
+      return null
     }
     const candidates = collectCoverageCandidates(
       manifest,
@@ -187,6 +198,16 @@ export const classifyForRun = internalAction({
       offset < context.candidates.length;
       offset += CLASSIFIER_BATCH_SIZE
     ) {
+      if (
+        offset > 0 &&
+        (await ctx.runQuery(
+          internal.coverage.discoveryLedger.classificationContext,
+          args,
+        )) === null
+      ) {
+        await ctx.runMutation(internal.coverage.ledger.abandonStage, args)
+        return null
+      }
       const candidates = context.candidates.slice(
         offset,
         offset + CLASSIFIER_BATCH_SIZE,
@@ -265,6 +286,7 @@ async function runFirecrawlDiscovery(
   ctx: ActionCtx,
   manifest: CoverageRootManifest,
   rootUrl: string,
+  shouldContinue: () => Promise<boolean>,
 ): Promise<DiscoveryProviderResult> {
   const inputs: DiscoveryProviderResult['inputs'] = []
   const evidence: ProviderEvidence[] = []
@@ -282,6 +304,7 @@ async function runFirecrawlDiscovery(
   inputs.push({ source: `map:${rootUrl}`, links: mapped.value.links })
 
   for (const query of discoveryQueries(manifest.bodyName)) {
+    if (!(await shouldContinue())) return { inputs, evidence, canceled: true }
     const options = {
       sources: ['web'] as Array<'web'>,
       includeDomains: manifest.allowedHosts,
