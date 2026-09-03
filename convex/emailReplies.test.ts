@@ -239,6 +239,40 @@ test('stale preparation and final answer leases can be reclaimed', async () => {
   ).resolves.toMatchObject({ kind: 'claimed', attempt: 2 })
 })
 
+test('the sweep leaves exhausted replies for retention to remove', async () => {
+  const t = initTest()
+  const exhaustedId = await seedRunningEvent(t, 2)
+  const retryableId = await seedRunningEvent(t, 1)
+  await t.run(async (ctx) => {
+    await ctx.db.patch(exhaustedId, {
+      state: 'failed',
+      retryAt: undefined,
+      completedAt: 1,
+      updatedAt: 1,
+    })
+    await ctx.db.patch(retryableId, {
+      state: 'failed',
+      retryAt: 1,
+      updatedAt: 1,
+    })
+  })
+
+  await expect(
+    t.mutation(internal.emailReplies.recovery.recoverInterruptedReplies, {}),
+  ).resolves.toEqual({ preparation: 0, answer: 1 })
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(exhaustedId)).toMatchObject({ updatedAt: 1 })
+  })
+
+  await expect(
+    t.mutation(internal.emailReplies.recovery.removeExpiredReplyMetadata, {}),
+  ).resolves.toEqual({ events: 1, threads: 1 })
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(exhaustedId)).toBeNull()
+    expect(await ctx.db.get(retryableId)).not.toBeNull()
+  })
+})
+
 test('email responses preserve grounded citations and the not-found contact path', () => {
   const grounded = answerResult('answer')
   expect(

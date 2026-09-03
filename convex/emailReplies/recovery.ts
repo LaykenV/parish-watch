@@ -41,10 +41,12 @@ export const recoverInterruptedReplies = internalMutation({
         q.eq('state', 'running').lte('updatedAt', now - ANSWER_STALE_MS),
       )
       .take(BATCH_SIZE)
+    // A missing field sorts below every value, so the floor keeps events that
+    // exhausted their attempts and cleared retryAt out of this range.
     const retryable = await ctx.db
       .query('emailReplyEvents')
       .withIndex('by_state_and_retry_at', (q) =>
-        q.eq('state', 'failed').lte('retryAt', now),
+        q.eq('state', 'failed').gte('retryAt', 0).lte('retryAt', now),
       )
       .take(BATCH_SIZE)
     for (const event of [...running, ...retryable]) {

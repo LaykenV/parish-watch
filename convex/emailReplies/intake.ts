@@ -53,12 +53,15 @@ export const onMessageReceived = internalMutation({
       await ignoreEvent(ctx, eventId, 'wrong_inbox')
       return null
     }
+    // AgentMail can group two of our sends into one thread, so take the most
+    // recent delivery rather than throwing on a second match.
     const delivery = await ctx.db
       .query('notificationDeliveries')
       .withIndex('by_agentmail_thread_id', (q) =>
         q.eq('agentmailThreadId', inbound.threadId),
       )
-      .unique()
+      .order('desc')
+      .first()
     if (!delivery) {
       await ignoreEvent(ctx, eventId, 'unknown_thread')
       return null
