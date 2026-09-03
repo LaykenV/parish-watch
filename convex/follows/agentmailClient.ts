@@ -26,6 +26,7 @@ export function updatesInboxId(): string {
 }
 
 const MAX_ENQUEUE_ATTEMPTS = 3
+const MAX_RECONCILE_ATTEMPTS = 30
 const ENQUEUE_RETRY_DELAY_MS = 60_000
 
 export const reserveImmediateDelivery = internalMutation({
@@ -208,7 +209,7 @@ export const reconcileImmediateDelivery = internalMutation({
       updatedAt: Date.now(),
     })
     if (
-      attempts < 10 &&
+      attempts < MAX_RECONCILE_ATTEMPTS &&
       (outbound.status === 'pending' || outbound.status === 'sent')
     ) {
       await ctx.scheduler.runAfter(
