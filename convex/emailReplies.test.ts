@@ -23,6 +23,7 @@ const modules = import.meta.glob('./**/*.ts')
 type TestConvex = TestConvexForDataModelAndIdentity<DataModel>
 
 function initTest(): TestConvex {
+  vi.stubEnv('AGENTMAIL_API_KEY', 'agentmail-test-key')
   vi.stubEnv('AGENTMAIL_UPDATES_INBOX_ID', 'updates-test')
   vi.stubEnv('EMAIL_ADDRESS_HMAC_KEY', 'dGVzdC1obWFjLWtleQ==')
   vi.stubEnv(
