@@ -433,11 +433,14 @@ function OwnerCoverageOperations() {
                 selectedRun.proposals.length > 0 ? (
                   <ProposalPanel
                     onPrepare={() =>
-                      operate(
-                        `prepare:${selectedRun.run.runId}`,
-                        () => prepareProposal({ runId: selectedRun.run.runId }),
-                        'Registry proposal prepared.',
-                      )
+                      operate(`prepare:${selectedRun.run.runId}`, async () => {
+                        const result = await prepareProposal({
+                          runId: selectedRun.run.runId,
+                        })
+                        return result.created
+                          ? 'Registry proposal prepared.'
+                          : 'The existing registry proposal was reused.'
+                      })
                     }
                     onPromote={(proposalId) => {
                       if (
@@ -447,32 +450,42 @@ function OwnerCoverageOperations() {
                       ) {
                         return Promise.resolve()
                       }
-                      return operate(
-                        `promote:${proposalId}`,
-                        () => confirmPromotion({ proposalId }),
-                        'Coverage promoted.',
-                      )
+                      return operate(`promote:${proposalId}`, async () => {
+                        const result = await confirmPromotion({ proposalId })
+                        return result.replayed
+                          ? 'Coverage was already promoted.'
+                          : 'Coverage promoted.'
+                      })
                     }}
                     onReevaluate={(proposalId) =>
-                      operate(
-                        `evaluate:${proposalId}`,
-                        () => reevaluateProposal({ proposalId }),
-                        'Coverage gates queued for evaluation.',
-                      )
+                      operate(`evaluate:${proposalId}`, async () => {
+                        const result = await reevaluateProposal({ proposalId })
+                        return result.started
+                          ? 'Coverage gates queued for evaluation.'
+                          : 'Coverage evaluation was already running or is unavailable.'
+                      })
                     }
                     onSetStatus={(proposalId, status) =>
-                      operate(
-                        `status:${proposalId}:${status}`,
-                        () => setCoverageStatus({ proposalId, status }),
-                        `Coverage changed to ${status}.`,
-                      )
+                      operate(`status:${proposalId}:${status}`, async () => {
+                        const result = await setCoverageStatus({
+                          proposalId,
+                          status,
+                        })
+                        if (!result.changed) {
+                          return `Coverage was already ${status} or cannot change from this proposal.`
+                        }
+                        return result.recovered
+                          ? 'Coverage recovered after the gates passed again.'
+                          : `Coverage changed to ${status}.`
+                      })
                     }
                     onValidate={(proposalId) =>
-                      operate(
-                        `validate:${proposalId}`,
-                        () => startValidation({ proposalId }),
-                        'Representative sample validation started.',
-                      )
+                      operate(`validate:${proposalId}`, async () => {
+                        const result = await startValidation({ proposalId })
+                        return result.started
+                          ? 'Representative sample validation started.'
+                          : 'Sample validation was already running or is unavailable.'
+                      })
                     }
                     pendingKey={pendingKey}
                     proposals={selectedRun.proposals}
