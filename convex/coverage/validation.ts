@@ -252,26 +252,36 @@ export const validateSample = internalAction({
             })
             return
           }
-          const outcome = await ctx.runAction(
-            internal.operations.ingest.ingestRegistrySource,
-            {
-              registryId: context.registryId,
-              urlOverride: sample.canonicalUrl,
-            },
-          )
-          await recordSample(
-            ctx,
-            sample.sampleId,
-            outcome.outcome === 'created' || outcome.outcome === 'reused'
-              ? { outcome: 'retrieved', snapshotId: outcome.snapshotId }
-              : {
-                  outcome: outcome.retryable
-                    ? 'failed_retryable'
-                    : 'failed_terminal',
-                  errorClass: outcome.errorClass,
-                },
-          )
-          await checkLink(ctx, args.proposalId, sample.canonicalUrl, manifest)
+          try {
+            const outcome = await ctx.runAction(
+              internal.operations.ingest.ingestRegistrySource,
+              {
+                registryId: context.registryId,
+                urlOverride: sample.canonicalUrl,
+              },
+            )
+            await recordSample(
+              ctx,
+              sample.sampleId,
+              outcome.outcome === 'created' || outcome.outcome === 'reused'
+                ? { outcome: 'retrieved', snapshotId: outcome.snapshotId }
+                : {
+                    outcome: outcome.retryable
+                      ? 'failed_retryable'
+                      : 'failed_terminal',
+                    errorClass: outcome.errorClass,
+                  },
+            )
+            await checkLink(ctx, args.proposalId, sample.canonicalUrl, manifest)
+          } catch (error) {
+            await recordSample(ctx, sample.sampleId, {
+              outcome: 'failed_retryable',
+              errorClass:
+                error instanceof Error && error.name
+                  ? `unexpected:${error.name}`
+                  : 'unexpected:sample_validation',
+            })
+          }
         }),
       )
     }
