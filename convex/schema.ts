@@ -713,7 +713,13 @@ export default defineSchema({
     status: v.number(),
     passed: v.boolean(),
     checkedAt: v.number(),
-  }).index('by_proposal_and_deployment', ['proposalId', 'deployment']),
+  })
+    .index('by_proposal_and_deployment', ['proposalId', 'deployment'])
+    .index('by_proposal_and_deployment_and_checked_at', [
+      'proposalId',
+      'deployment',
+      'checkedAt',
+    ]),
 
   sourceSnapshots: defineTable({
     registryId: v.id('sourceRegistries'),

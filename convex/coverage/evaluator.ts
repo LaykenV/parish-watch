@@ -86,9 +86,10 @@ export const evaluateProposal = internalMutation({
     const extractionEvidence = await inspectExtractions(ctx, pipelineRuns)
     const productionLinks = await ctx.db
       .query('coverageDirectLinkChecks')
-      .withIndex('by_proposal_and_deployment', (index) =>
+      .withIndex('by_proposal_and_deployment_and_checked_at', (index) =>
         index.eq('proposalId', proposal._id).eq('deployment', 'production'),
       )
+      .order('desc')
       .take(40)
     const latestProductionLinks = new Map<
       string,

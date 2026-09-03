@@ -686,7 +686,8 @@ Indexes: proposal plus gate; proposal plus time.
 
 Source expectations store proposal, registry, kind, cadence, and whether the
 schedule is official or inferred. Link checks store proposal, URL, deployment
-class, response status, result, and time. Only production checks satisfy gate 10.
+class, response status, result, and time. Gate 10 reads the newest checks by
+check time. Only production checks satisfy it.
 
 #### `sourceExpectations`
 

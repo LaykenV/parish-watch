@@ -195,6 +195,67 @@ test('gate evaluation cannot interrupt sample validation', async () => {
   })
 })
 
+test('gate 10 keeps a newer failure inside the bounded link-check window', async () => {
+  const t = convexTest(schema, modules)
+  await signInOwner(t)
+  const seeded = await seedReadyProposal(t, false)
+  const stageId = await t.run(async (ctx) => {
+    await ctx.db.patch(seeded.runId, {
+      state: 'running',
+      currentStage: 'evaluate_gates',
+      completedAt: undefined,
+    })
+    const stageId = await ctx.db.insert('coverageCompilerStages', {
+      runId: seeded.runId,
+      stage: 'evaluate_gates',
+      idempotencyKey: 'latest-link-check',
+      inputHash: 'latest-link-check',
+      attempt: 1,
+      state: 'running',
+      gateVersion: 'representative-sample-v1',
+      startedAt: Date.now(),
+    })
+    for (let checkedAt = 1; checkedAt <= 40; checkedAt += 1) {
+      await ctx.db.insert('coverageDirectLinkChecks', {
+        proposalId: seeded.proposalId,
+        canonicalUrl: 'https://www.lafayettela.gov/current',
+        deployment: 'production',
+        status: 200,
+        passed: true,
+        checkedAt,
+      })
+    }
+    await ctx.db.insert('coverageDirectLinkChecks', {
+      proposalId: seeded.proposalId,
+      canonicalUrl: 'https://www.lafayettela.gov/current',
+      deployment: 'production',
+      status: 503,
+      passed: false,
+      checkedAt: 41,
+    })
+    return stageId
+  })
+
+  await t.mutation(internal.coverage.evaluator.evaluateProposal, {
+    proposalId: seeded.proposalId,
+    stageId,
+  })
+
+  await t.run(async (ctx) => {
+    const result = await ctx.db
+      .query('coverageGateEvaluations')
+      .withIndex('by_proposal_and_gate', (query) =>
+        query.eq('proposalId', seeded.proposalId).eq('gateNumber', 10),
+      )
+      .order('desc')
+      .first()
+    expect(result?.passed).toBe(false)
+    expect(result?.detail).toBe(
+      '0 of 1 source links passed from the production deployment.',
+    )
+  })
+})
+
 async function seedReadyProposal(t: TestConvex, allPass: boolean) {
   const ids = await t.run(async (ctx) => {
     const user = await ctx.db.query('users').first()
