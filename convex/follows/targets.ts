@@ -346,10 +346,13 @@ async function matchTargets(
       ? await ctx.db.get(body.jurisdictionId)
       : null
     if (!body || !jurisdiction) return []
-    const targets: MatchTarget[] = [
-      { targetKind: 'government_body', targetKey: body.slug },
-      { targetKind: 'place', targetKey: jurisdiction.slug },
-    ]
+    const targets: MatchTarget[] = []
+    if (isFollowableCoverage(body.publicStatus)) {
+      targets.push({ targetKind: 'government_body', targetKey: body.slug })
+    }
+    if (isFollowableCoverage(jurisdiction.publicStatus)) {
+      targets.push({ targetKind: 'place', targetKey: jurisdiction.slug })
+    }
     if (jurisdiction.parentJurisdictionId) {
       const parent = await ctx.db.get(jurisdiction.parentJurisdictionId)
       if (parent && isFollowableCoverage(parent.publicStatus)) {
