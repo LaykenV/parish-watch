@@ -51,7 +51,7 @@ export function CoverageOperationsPage() {
         action={
           <Button
             loading={auth.isSigningIn}
-            onClick={() => void auth.signInGoogle('/operations/coverage')}
+            onClick={() => void auth.signInGoogle()}
             size="touch"
           >
             Continue with Google
