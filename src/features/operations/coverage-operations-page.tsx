@@ -292,14 +292,14 @@ function OwnerCoverageOperations() {
                       })
                     }
                     onDiscover={() =>
-                      operate(
-                        `discover:${selectedRun.run.runId}`,
-                        () =>
-                          discoverSources({
-                            runId: selectedRun.run.runId,
-                          }),
-                        'Bounded source discovery started.',
-                      )
+                      operate(`discover:${selectedRun.run.runId}`, async () => {
+                        const result = await discoverSources({
+                          runId: selectedRun.run.runId,
+                        })
+                        return result.started
+                          ? 'Bounded source discovery started.'
+                          : 'Source discovery was already started or is not ready.'
+                      })
                     }
                   />
                 </div>
