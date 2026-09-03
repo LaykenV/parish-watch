@@ -234,6 +234,11 @@ expand the promise.
   targets.
 - Send at most one immediate email per owner and material change, even when
   several follows match. Preserve the matching follows in a separate ledger.
+- A deduplicated email-only alert links to a subscriber-scoped management view
+  that lists every follow for that verified address. Follow-specific links from
+  enrollment remain limited to one follow.
+- Use the AgentMail component outbound ID as the provider idempotency key so a
+  retry after an ambiguous send result cannot create another message.
 - Wait until a refreshed accepted issue contains the changed publication before
   sending an issue-target alert.
 - Treat a newly accepted issue build and a later accepted issue refresh as the

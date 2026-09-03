@@ -255,6 +255,7 @@ export const runMatchFanout = internalMutation({
       )
       .paginate(args.paginationOpts)
     let matchesCreated = 0
+    const immediateOwnerKeys = new Set<string>()
     for (const follow of page.page) {
       if (follow.createdAt > change.createdAt) continue
       const preference = await ctx.db
@@ -278,18 +279,25 @@ export const runMatchFanout = internalMutation({
             .eq('materialChangeId', change._id),
         )
         .unique()
-      if (existing) continue
-      await ctx.db.insert('notificationMatches', {
-        followId: follow._id,
-        materialChangeId: change._id,
-        ownerKind: follow.ownerKind,
-        ownerKey: follow.ownerKey,
-        targetKind: follow.targetKind,
-        targetKey: follow.targetKey,
+      if (!existing) {
+        await ctx.db.insert('notificationMatches', {
+          followId: follow._id,
+          materialChangeId: change._id,
+          ownerKind: follow.ownerKind,
+          ownerKey: follow.ownerKey,
+          targetKind: follow.targetKind,
+          targetKey: follow.targetKey,
           cadenceAtMatch: preference.cadence,
-        matchedAt: Date.now(),
-      })
-      matchesCreated += 1
+          matchedAt: Date.now(),
+        })
+        matchesCreated += 1
+      }
+      if (
+        preference.cadence === 'immediate' ||
+        preference.cadence === 'both'
+      ) {
+        immediateOwnerKeys.add(follow.ownerKey)
+      }
     }
     const nextTargetIndex = page.isDone
       ? fanout.targetIndex + 1
@@ -303,6 +311,16 @@ export const runMatchFanout = internalMutation({
       matchesCreated: fanout.matchesCreated + matchesCreated,
       updatedAt: now,
     })
+    for (const ownerKey of immediateOwnerKeys) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.follows.agentmailClient.reserveImmediateDelivery,
+        {
+          materialChangeId: change._id,
+          ownerKey,
+        },
+      )
+    }
     if (!complete) {
       await ctx.scheduler.runAfter(0, internal.follows.targets.runMatchFanout, {
         fanoutId: fanout._id,

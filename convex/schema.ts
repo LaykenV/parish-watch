@@ -246,6 +246,39 @@ export default defineSchema({
     ])
     .index('by_state_and_updated_at', ['state', 'updatedAt']),
 
+  notificationDeliveries: defineTable({
+    ownerKind: v.union(v.literal('google'), v.literal('email')),
+    ownerKey: v.string(),
+    kind: v.literal('immediate'),
+    materialChangeId: v.id('materialChanges'),
+    state: v.union(
+      v.literal('reserved'),
+      v.literal('pending'),
+      v.literal('sent'),
+      v.literal('delivered'),
+      v.literal('bounced'),
+      v.literal('complained'),
+      v.literal('rejected'),
+      v.literal('failed'),
+      v.literal('suppressed'),
+    ),
+    outboundId: v.optional(v.string()),
+    providerIdempotencyKey: v.optional(v.string()),
+    agentmailMessageId: v.optional(v.string()),
+    agentmailThreadId: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    enqueueAttempts: v.number(),
+    reconcileAttempts: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_owner_key_and_kind_and_material_change_id', [
+      'ownerKey',
+      'kind',
+      'materialChangeId',
+    ])
+    .index('by_state_and_updated_at', ['state', 'updatedAt']),
+
   emailAccessTokens: defineTable({
     subscriberId: v.id('emailSubscribers'),
     followId: v.optional(v.id('follows')),

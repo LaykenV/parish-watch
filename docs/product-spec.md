@@ -458,10 +458,11 @@ The signed-in page shows:
 Do not expose a social follower count.
 
 Each email-only alert contains a secure unsubscribe or management link. A
-management link expires after 30 days and changes one follow. Unsubscribe stops
-all mail to the address. A later verification re-enables the address and the
-requested follow only. A resident must verify another code before adding
-follows or changing delivery preferences outside a management link.
+management link expires after 30 days and lists every follow for the verified
+address. Unsubscribe stops all mail to the address. A later verification
+re-enables the address and the requested follow only. A resident must verify
+another code before adding follows or changing delivery preferences outside a
+management link.
 
 ## Email Alert
 

@@ -463,6 +463,10 @@ Include:
   mutation, then let the component action perform the provider request and
   bounded retries;
 - concise sourced email, official source links, app link, and management link;
+- subscriber-scoped management from a deduplicated email-only alert, while
+  enrollment links remain scoped to the follow they created;
+- pass the durable component outbound ID as AgentMail's provider idempotency
+  key for retry-safe sends;
 - provider thread and delivery state;
 - an hourly scheduler that claims the weekly window during Monday's 7:00 AM
   `America/Chicago` hour, preserving local time across daylight-saving changes;
