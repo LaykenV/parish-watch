@@ -12,9 +12,50 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-03T03:33:46Z
+- **Last updated:** 2026-09-03T18:07:24Z
 
 ## Log
+
+### 2026-09-03 - 41a6d59
+
+Built Slice 7D in two stacked code PRs. PR #78 accepts an alert reply only after
+it verifies the AgentMail inbox, original delivery thread, and enrolled sender.
+It reuses the 24-hour anonymous Ask path, its `MODEL_FAST` route, rate limits,
+published-evidence selector, citation checks, and evidence-not-found response.
+The reply ledger fences duplicate callbacks, concurrent preparation, model
+retries, and outbound delivery. A five-minute sweep recovers interrupted work.
+PR #79 connects the existing source-problem sheet to a separate private
+AgentMail inbox. It keeps the issue, decision, meeting, and selected Source
+route, applies browser and global limits, and never calls the evidence pipeline.
+
+The final reply head `c39eafe` passed Verify run `33781686493` and PR Agent run
+`33781686995`. PR #78 merged as `3f18c126`; production workflow `33786995126`
+and the independent production smoke passed. The final report tree added a
+45-second confirmation bound for unresolved AgentMail receipts, kept retries on
+the same receipt, and preserved honest uncertainty when provider metadata is no
+longer available. The clean report-only head `ec6d003` passed Verify run
+`33787335483` and PR Agent run `33787335475`.
+
+A controlled run on the personal development deployment sent an alert between
+two owned AgentMail inboxes and replied with a question about Johnston Street
+funding. The existing Ask action answered from the published issue evidence and
+returned $7,986,192 in grant funds plus a $2,001,498 local match, totaling
+$9,987,690. AgentMail delivered the answer with absolute development Source
+links. A second reply reused the same Ask thread and delivered another cited
+answer. The browser also opened a live published issue, preserved its selected
+Source in the report attachment, and showed the connected private form. A
+controlled report reached `sent`. Its application row contained hashes, the
+category, the Public Parish route, the outbound ID, and timestamps. It contained
+no report text or address. No pipeline run started after the report.
+
+The development-only probe function and its seeded user, follow, delivery, and
+reply records were removed after the test. The controlled provider email thread
+remains as delivery evidence. The production reports inbox setting was added to
+`befitting-flamingo-587`. PR #79 merged as `41a6d593`; production workflow
+`33788197489` and the independent production smoke passed. A live browser opened
+a published Pafford issue, selected Source `kh7be5xzdyvan21bqzhmctegnn8dqwjd`,
+and confirmed that the connected private form attached the exact Source-bearing
+route. The production availability query returned `available: true`.
 
 ### 2026-09-03 - 6bafeaa
 
