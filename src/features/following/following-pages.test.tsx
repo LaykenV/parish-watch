@@ -42,6 +42,10 @@ const followingPageSource = readFileSync(
   new URL('./following-page.tsx', import.meta.url),
   'utf8',
 )
+const liveFollowsSource = readFileSync(
+  new URL('./live-follows.ts', import.meta.url),
+  'utf8',
+)
 const emailManagementSource = readFileSync(
   new URL('./email-management-page.tsx', import.meta.url),
   'utf8',
@@ -71,7 +75,7 @@ describe('resident following interface', () => {
       areas: [],
       available: true,
       mode: 'live',
-      notificationsAvailable: false,
+      notificationsAvailable: true,
       targets: [],
       topics: [],
     })
@@ -120,6 +124,12 @@ describe('resident following interface', () => {
     expect(html).toContain('Weekly roundup')
     expect(html).toContain('Both')
     expect(html.match(/type="radio"/g)).toHaveLength(3)
+  })
+
+  it('keeps a resident cadence choice when live settings refresh', () => {
+    expect(followSource).toContain('const frequencyChanged = useRef(false)')
+    expect(followSource).toContain('if (open && frequencyChanged.current) return')
+    expect(followSource).toContain('onFrequency={handleFrequencyChange}')
   })
 
   it('keeps destination and coverage health on each managed row', () => {
@@ -225,5 +235,12 @@ describe('resident following interface', () => {
     expect(current).toBeLessThan(consequence)
     expect(consequence).toBeLessThan(sources)
     expect(html).toContain('No changes means no email.')
+    expect(html).toContain(
+      'This development preview does not save notification settings.',
+    )
+    expect(followingPageSource).toContain('disabled={busy || !actions}')
+    expect(html).not.toContain('Reply with a question')
+    expect(liveFollowsSource).toContain('currentNotificationSettings')
+    expect(liveFollowsSource).toContain('updateNotificationDefault')
   })
 })

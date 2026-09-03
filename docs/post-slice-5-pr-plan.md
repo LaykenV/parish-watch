@@ -437,6 +437,11 @@ weekly roundup when selected.
 
 Depends on: 7B and the Slice 5 realtime publication path.
 
+Implementation is split into four stacked pull requests so each review has one
+runtime concern: material events and match fanout; immediate delivery and
+provider reconciliation; weekly roundups; live notification settings. The
+combined stack must pass development proof before any packet merges.
+
 Preflight status on September 2: PR #70 corrected the `place` resolver so a
 supported parish or municipality can be followed. Its Convex regression test
 covers every target kind, both place types, and an unsupported parish that must
@@ -477,7 +482,8 @@ Include:
 - suppression of empty roundups;
 - connect `/following/notifications` to a Google-owned default cadence for new
   follows and the real immediate and weekly delivery states. Changing the
-  default must not rewrite existing follows.
+  default must not rewrite existing follows, and a reactive settings refresh
+  must not replace a cadence the resident already chose in an open follow form.
 
 Required tests:
 

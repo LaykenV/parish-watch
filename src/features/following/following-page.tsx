@@ -34,7 +34,12 @@ import {
 } from './contracts'
 import { FrequencyOptions } from './follow-action'
 import type { FollowingPageData, SavedArea } from './following-page.data'
-import { useGoogleFollows, useGoogleFollowMutations } from './live-follows'
+import {
+  useGoogleFollows,
+  useGoogleFollowMutations,
+  useNotificationSettings,
+  useNotificationSettingsMutation,
+} from './live-follows'
 import { useSavedSetup, useSavedSetupMutations } from './live-saved-setup'
 
 import './following.css'
@@ -84,6 +89,8 @@ function LiveFollowingPage({
   const setup = useSavedSetup(auth.isAuthenticated)
   const follows = useGoogleFollows(auth.isAuthenticated)
   const followMutations = useGoogleFollowMutations()
+  const notificationSettings = useNotificationSettings(auth.isAuthenticated)
+  const updateNotificationDefault = useNotificationSettingsMutation()
   const mutations = useSavedSetupMutations()
 
   useEffect(() => {
@@ -97,7 +104,10 @@ function LiveFollowingPage({
 
   if (
     auth.isLoading ||
-    (auth.isAuthenticated && (setup === undefined || follows === undefined))
+    (auth.isAuthenticated &&
+      (setup === undefined ||
+        follows === undefined ||
+        notificationSettings === undefined))
   ) {
     return <FollowingLoading />
   }
@@ -120,7 +130,7 @@ function LiveFollowingPage({
     })),
     available: true,
     mode: 'live',
-    notificationsAvailable: false,
+    notificationsAvailable: true,
     signedIn: true,
     targets: follows ?? [],
     topics: setup?.topics ?? [],
@@ -131,6 +141,9 @@ function LiveFollowingPage({
       areaActions={{ remove: mutations.removeArea, save: mutations.saveArea }}
       data={liveData}
       followActions={followMutations}
+      notificationActions={{ save: updateNotificationDefault }}
+      notificationDefault={notificationSettings?.defaultCadence}
+      notificationDeliveries={notificationSettings?.deliveries ?? []}
       onSignOut={auth.signOut}
       topicActions={{
         remove: mutations.removeTopic,
@@ -167,6 +180,9 @@ function FollowingDashboard({
   areaActions,
   data,
   followActions,
+  notificationActions,
+  notificationDefault,
+  notificationDeliveries,
   onSignOut,
   topicActions,
   view,
@@ -174,6 +190,16 @@ function FollowingDashboard({
   areaActions?: AreaActions
   data: FollowingPageData
   followActions?: FollowActions
+  notificationActions?: {
+    save: (cadence: DeliveryFrequency) => Promise<unknown>
+  }
+  notificationDefault?: DeliveryFrequency
+  notificationDeliveries?: Array<{
+    id: string
+    kind: 'immediate' | 'weekly'
+    state: string
+    updatedAt: number
+  }>
   onSignOut?: () => Promise<void>
   topicActions?: TopicActions
   view: FollowingView
@@ -215,7 +241,11 @@ function FollowingDashboard({
       ) : null}
       {view === 'notifications' ? (
         data.notificationsAvailable ? (
-          <Notifications />
+          <Notifications
+            actions={notificationActions}
+            defaultFrequency={notificationDefault}
+            deliveries={notificationDeliveries}
+          />
         ) : (
           <NotificationsUnavailable />
         )
@@ -1178,9 +1208,26 @@ function NotificationsUnavailable() {
   )
 }
 
-function Notifications() {
-  const [frequency, setFrequency] = useState<DeliveryFrequency>('both')
+function Notifications({
+  actions,
+  defaultFrequency = 'immediate',
+  deliveries = [],
+}: {
+  actions?: { save: (cadence: DeliveryFrequency) => Promise<unknown> }
+  defaultFrequency?: DeliveryFrequency
+  deliveries?: Array<{
+    id: string
+    kind: 'immediate' | 'weekly'
+    state: string
+    updatedAt: number
+  }>
+}) {
+  const [frequency, setFrequency] = useState<DeliveryFrequency>(defaultFrequency)
   const [saved, setSaved] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(false)
+
+  useEffect(() => setFrequency(defaultFrequency), [defaultFrequency])
 
   return (
     <div className="following-notifications">
@@ -1205,16 +1252,57 @@ function Notifications() {
           />
         </fieldset>
         <div className="following-save-row">
-          <Button onClick={() => setSaved(true)} size="touch">
-            Save notification settings
+          <Button
+            disabled={busy || !actions}
+            onClick={() => {
+              void (async () => {
+                if (!actions) return
+                setBusy(true)
+                setError(false)
+                try {
+                  await actions.save(frequency)
+                  setSaved(true)
+                } catch {
+                  setError(true)
+                } finally {
+                  setBusy(false)
+                }
+              })()
+            }}
+            size="touch"
+          >
+            {busy ? 'Saving...' : 'Save notification settings'}
           </Button>
-          <p aria-live="polite">
-            {saved
+          <p aria-live="polite" role={error ? 'alert' : undefined}>
+            {!actions
+              ? 'This development preview does not save notification settings.'
+              : error
+              ? 'Notification settings could not be saved. Try again.'
+              : saved
               ? 'Notification settings saved.'
               : 'Existing follows keep their own schedule.'}
           </p>
         </div>
       </section>
+
+      {deliveries.length > 0 ? (
+        <section className="following-section" aria-labelledby="delivery-history-title">
+          <div className="following-section-head">
+            <div>
+              <p className="following-count">Latest 10</p>
+              <h2 id="delivery-history-title">Recent delivery status</h2>
+            </div>
+          </div>
+          <ul className="following-activity-list">
+            {deliveries.map((delivery) => (
+              <li key={delivery.id}>
+                <span>{delivery.kind === 'weekly' ? 'Weekly roundup' : 'Immediate alert'}</span>
+                <strong>{delivery.state}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section
         className="following-section"
@@ -1286,7 +1374,6 @@ function EmailPreview({ kind }: { kind: 'immediate' | 'roundup' }) {
       )}
       <footer>
         <span>Open in Public Parish</span>
-        <span>Reply with a question</span>
         <span>Manage delivery</span>
       </footer>
     </article>

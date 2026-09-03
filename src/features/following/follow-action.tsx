@@ -58,6 +58,7 @@ export function FollowAction({
   const [requestingCode, setRequestingCode] = useState(false)
   const [verifyingCode, setVerifyingCode] = useState(false)
   const [savingGoogleFollow, setSavingGoogleFollow] = useState(false)
+  const frequencyChanged = useRef(false)
   const googleIntentHandled = useRef(false)
   const auth = useGoogleAuth()
   const requestEmailFollow = useAction(
@@ -67,14 +68,19 @@ export function FollowAction({
   const createGoogleFollow = useMutation(
     api.follows.enrollment.createGoogleFollow,
   )
+  const notificationSettings = useQuery(
+    api.follows.enrollment.currentNotificationSettings,
+    live && auth.isAuthenticated ? {} : 'skip',
+  )
   const delivery = useQuery(
     api.follows.enrollment.verificationDelivery,
     live && challengeId ? { challengeId } : 'skip',
   )
 
   const reset = () => {
+    frequencyChanged.current = false
     setStep('choose')
-    setFrequency('immediate')
+    setFrequency(notificationSettings?.defaultCadence ?? 'immediate')
     setEmail('')
     setCode('')
     setError('')
@@ -90,6 +96,11 @@ export function FollowAction({
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
     if (!next) reset()
+  }
+
+  const handleFrequencyChange = (value: DeliveryFrequency) => {
+    frequencyChanged.current = true
+    setFrequency(value)
   }
 
   const saveGoogleFollow = useCallback(
@@ -198,6 +209,12 @@ export function FollowAction({
   }
 
   useEffect(() => {
+    if (!notificationSettings || step !== 'choose') return
+    if (open && frequencyChanged.current) return
+    setFrequency(notificationSettings.defaultCadence)
+  }, [notificationSettings, open, step])
+
+  useEffect(() => {
     if (!live || auth.isLoading || googleIntentHandled.current) return
     const intent = readGoogleFollowIntent(window.location.href)
     if (
@@ -208,6 +225,7 @@ export function FollowAction({
       return
     }
     setOpen(true)
+    frequencyChanged.current = true
     setFrequency(intent.cadence)
     if (!auth.isAuthenticated && !auth.error) return
     googleIntentHandled.current = true
@@ -273,7 +291,7 @@ export function FollowAction({
             <FollowChoice
               frequency={frequency}
               onEmail={() => setStep('email')}
-              onFrequency={setFrequency}
+              onFrequency={handleFrequencyChange}
               googleBusy={auth.isSigningIn || savingGoogleFollow}
               onGoogle={() => void startGoogleFollow()}
               onGoogleFailure={() => setStep('google-failed')}

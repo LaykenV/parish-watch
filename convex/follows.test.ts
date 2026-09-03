@@ -366,6 +366,53 @@ test('muting a follow preserves the cadence used when it resumes', async () => {
   ).resolves.toMatchObject([{ cadence: 'both', resumeCadence: 'both' }])
 })
 
+test('Google notification defaults affect new choices without rewriting existing follows', async () => {
+  const t = convexTest(schema, modules)
+  const aliceId = await createGoogleUser(
+    t,
+    'google-default-alice',
+    'default-alice@example.com',
+  )
+  const bobId = await createGoogleUser(
+    t,
+    'google-default-bob',
+    'default-bob@example.com',
+  )
+  const alice = t.withIdentity({ subject: aliceId })
+  const bob = t.withIdentity({ subject: bobId })
+  const existing = await alice.mutation(
+    api.follows.enrollment.createGoogleFollow,
+    {
+      targetKind: 'topic',
+      targetKey: 'housing',
+      cadence: 'immediate',
+    },
+  )
+  await expect(
+    alice.query(api.follows.enrollment.currentNotificationSettings, {}),
+  ).resolves.toMatchObject({ defaultCadence: 'immediate', deliveries: [] })
+  await alice.mutation(api.follows.enrollment.updateNotificationDefault, {
+    cadence: 'weekly',
+  })
+  await expect(
+    alice.query(api.follows.enrollment.currentNotificationSettings, {}),
+  ).resolves.toMatchObject({ defaultCadence: 'weekly' })
+  await expect(
+    bob.query(api.follows.enrollment.currentNotificationSettings, {}),
+  ).resolves.toMatchObject({ defaultCadence: 'immediate' })
+  await expect(
+    t.query(api.follows.enrollment.currentNotificationSettings, {}),
+  ).rejects.toThrow()
+  const [unchanged] = await alice.query(
+    api.follows.enrollment.currentGoogleFollows,
+    {},
+  )
+  expect(unchanged).toMatchObject({
+    id: existing.follow.id,
+    cadence: 'immediate',
+  })
+})
+
 test('management tokens isolate one follow, rotate, expire, and remove', async () => {
   const t = convexTest(schema, modules)
   const subscriberId = await createSubscriber(t, 'address-c')
