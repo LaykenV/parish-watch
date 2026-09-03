@@ -206,6 +206,7 @@ export async function retryCoverageRun(
     manifest.approvedRootUrl,
   )
   await ctx.db.patch(runId, {
+    attempt,
     state: 'running',
     currentStage: 'verify_root',
     completedAt: undefined,

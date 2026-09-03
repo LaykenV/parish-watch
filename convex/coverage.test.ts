@@ -203,6 +203,7 @@ test('a failed root gate makes no paid provider call and can be retried', async 
     runId: started.runId,
   })
   expect(retried?.run.state).toBe('succeeded')
+  expect(retried?.run.attempt).toBe(2)
   expect(retried?.stages).toHaveLength(2)
   expect(retried?.stages.map((stage) => stage.attempt).sort()).toEqual([1, 2])
 })
@@ -271,6 +272,7 @@ test('cancellation stops the run before it spends anything', async () => {
   const t = convexTest(schema, modules)
   const owner = await signInOwner(t)
   const fetchMock = stubHtmlRoot()
+  vi.useFakeTimers()
 
   const started = await owner.mutation(api.coverage.operations.start, {
     bodyKey: 'lafayette-city-council',
