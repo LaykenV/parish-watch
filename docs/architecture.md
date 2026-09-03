@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slices 7A through 7C are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 and 7A through 7D are deployed
 
 ## Architecture Goal
 
@@ -152,8 +152,8 @@ adapters with verified email subscribers, unified Google and email follow
 ownership, hashed rotatable management tokens, and a Svix-verified webhook
 route. PRs #72 through #75 added durable notification matching, deduplicated
 immediate email, weekly roundup windows, provider reconciliation, and live
-notification settings. Coverage-request and private-report adapters remain in
-the post-Slice-5 plan.
+notification settings. PRs #78 and #79 added verified grounded inbound replies
+and private source reports. Coverage requests remain in the post-Slice-5 plan.
 
 ## System Boundaries
 
@@ -875,6 +875,33 @@ owner and roundup window.
 Indexes: owner plus kind plus material change; state plus updated time; roundup
 window plus owner; owner plus updated time.
 
+#### `emailReplyThreads`
+
+Fields: AgentMail thread, originating notification delivery, optional active
+Ask thread and expiry, preparation lease, issue, meeting, or corpus scope,
+optional official contact, owner kind and key, and timestamps. One row binds an
+eligible provider thread to its original resident and published-evidence scope.
+Indexes: AgentMail thread; updated time.
+
+#### `emailReplyEvents`
+
+Fields: provider event and inbound message IDs, AgentMail thread, encrypted
+question while preparation is pending, reply thread, Ask question and answer
+message IDs, ignored, queued, running, answered, not-found, or failed state,
+preparation and answer attempts, outbound reference, bounded error class,
+leases, retry time, and timestamps. The provider event ID fences duplicate
+callbacks. Terminal processing deletes the encrypted inbound question.
+Indexes: provider event; AgentMail thread plus created time; state plus updated
+time; state plus retry time.
+
+#### `sourceProblemReports`
+
+Fields: submission hash, browser hash, report category, attached public route,
+AgentMail outbound reference, and created time. Application rows do not retain
+the description, optional reply address, or optional official URL. A 30-day
+cleanup removes the remaining receipt metadata.
+Indexes: submission hash; browser hash plus created time; created time.
+
 #### `roundupWindows`
 
 Fields: local-time window key, start and end times, collecting, delivering, or
@@ -1278,15 +1305,21 @@ change once even when several follows match, and sends only when at least one
 change exists. The owner and local roundup window form the delivery dedupe key.
 
 The message includes the change, why it matters, official source links, and a
-path back to Public Parish. Once Slice 7D's grounded inbound handler is live, a
-reply stays in the same thread and runs through the same grounded answer path.
-If evidence does not answer it, the email says so and provides the official
-contact. It never forwards automatically to an agency.
+path back to Public Parish. Slice 7D keeps a reply in the same verified thread
+and runs it through the grounded Ask path. The handler accepts only the
+configured inbox, a known notification thread, and the matching Google or
+verified-email sender. A five-minute recovery sweep resumes expired preparation,
+answer, and delivery leases. If evidence does not answer the question, the
+email says so and provides the official contact. It never forwards
+automatically to an agency.
 
 A separate AgentMail address accepts private source-problem reports. The report
 includes the public record URL and the resident's description. It does not
 automatically run Firecrawl, OpenAI, or publication functions. The owner decides
-whether to start the normal evidence pipeline.
+whether to start the normal evidence pipeline. Submission and browser hashes
+provide replay and rate-limit keys. The application keeps only receipt metadata
+for 30 days. The browser stops waiting after 45 seconds and can recheck the same
+receipt without creating another report.
 
 ## Realtime Demonstration
 

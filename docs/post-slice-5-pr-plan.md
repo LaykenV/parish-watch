@@ -1,6 +1,6 @@
 # Post-Slice-5 PR plan
 
-Status: implementation Slice 6 and Slice 7 PRs 7A through 7C are deployed and production-proved; Slice 7 PR 7D is next
+Status: implementation Slices 6 and 7A through 7D are deployed and production-proved; Slice 8 is next
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
@@ -38,9 +38,10 @@ saved areas and topics, the public privacy notice, and the AgentMail follow
 enrollment and alert-delivery paths. Slice 7C added durable matches,
 deduplicated immediate email, weekly roundups, subscriber-wide management from
 alert links, delivery reconciliation, and live notification settings. It does
-not yet have grounded inbound replies or a coverage compiler.
+not yet have a coverage compiler. Slice 7D added verified grounded inbound
+replies and private source reports without opening a public correction workflow.
 Controlled corpus QA also found that one answer displayed Markdown emphasis
-markers as literal text. PR #57 corrected that presentation defect. PR 7D is
+markers as literal text. PR #57 corrected that presentation defect. Slice 8 is
 the active capability.
 
 ## Original starting assumption
@@ -571,6 +572,19 @@ Proof and release gate:
 - one non-empty roundup sends and one empty roundup does not;
 - one resident reply receives a cited answer or honest not-found response;
 - one private source report creates no pipeline run.
+
+Status on September 3: PR #78 merged as `3f18c126` through production workflow
+`33786995126`. It accepts only the configured inbox, a known notification
+thread, and its matching sender before reusing the Slice 6 Ask path. A
+five-minute sweep recovers interrupted preparation, answer, and delivery work.
+PR #79 merged as `41a6d593` through workflow `33788197489`. It sends private
+reports through a separate AgentMail inbox, retains only hashed receipt
+metadata in application tables, expires that metadata after 30 days, and starts
+no evidence-pipeline work. Both workflows and their independent production
+smokes passed. Controlled development proof completed a two-turn sourced reply
+thread and a private report with no duplicate send or pipeline run. Read-only
+production proof confirmed the live report form, its exact selected-Source
+route, and `available: true`; no fake production report was sent.
 
 ## Slice 8: owner-controlled coverage expansion
 

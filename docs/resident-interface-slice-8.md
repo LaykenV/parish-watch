@@ -56,9 +56,9 @@ At the Slice 8 checkpoint, the gates were:
 
 Later releases made accepted issue, decision, meeting, citation, bounded
 anonymous Ask, Google account, private saved setup, follow enrollment,
-per-follow cadence preferences, and scoped email-management paths live. Sourced
-alerts, coverage requests, and private reports remain gated. No fixture
-interaction counts as production proof.
+per-follow cadence preferences, scoped email-management paths, sourced alerts,
+grounded email replies, and private source reports live. Coverage requests
+remain gated. No fixture interaction counts as production proof.
 
 ## Implementation inventory
 

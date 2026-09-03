@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slices 7A and 7B are deployed
+Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 and 7A through 7D are deployed
 
 ## Product Sentence
 
@@ -67,8 +67,10 @@ without raw internal evidence IDs. Google accounts and private saved areas and
 topics are live through Convex Auth v2. Slice 7B replaced the follow,
 verification, preference, and email-management adapters. Google and verified
 email owners can create and manage real follows. Slice 7C replaced the sourced
-alert, weekly roundup, default-cadence, and recent-delivery adapters. Coverage
-requests and private reports remain unavailable until their backend paths pass.
+alert, weekly roundup, default-cadence, and recent-delivery adapters. Slice 7D
+connected verified alert replies to the grounded Ask path and connected private
+source reports to a separate AgentMail inbox. Coverage requests remain
+unavailable until their backend path passes.
 Each integration must replace the matching typed adapter without changing the
 page hierarchy or visual system.
 
@@ -478,11 +480,11 @@ Body:
 3. why it may matter;
 4. official source receipts;
 5. open in Public Parish;
-6. invitation to reply with a question after Slice 7D ships;
+6. invitation to reply with a question;
 7. delivery preference link.
 
-Slice 7C omits the reply invitation. Add it only after Slice 7D's grounded
-inbound handler passes its release gate.
+Slice 7D adds the reply invitation only to messages whose inbound thread can
+reach the verified grounded handler.
 
 The message must be useful without clicking, but concise enough to scan.
 

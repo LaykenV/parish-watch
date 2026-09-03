@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slices 7A and 7B are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 and 7A through 7D are deployed
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -107,14 +107,22 @@ and from the qualifying `convex.site` origin through the canonical callback.
 Implementation Slice 7B is deployed through PRs #66 and #67. Google residents
 and AgentMail-verified email-only residents can now follow an issue, topic,
 government body, or place, and each can manage only their own follow. Coverage
-requests and private source reports remain in implementation Slices 8 and 9.
+requests remain planned for Slice 9.
 Implementation Slice 7C is deployed through PRs #72 through #75. Accepted new
 decisions and later material changes now create durable follow matches,
 deduplicated immediate delivery, evidence-only weekly roundups, and live
 notification settings. A controlled development replay sent two immediate and
 two weekly messages through AgentMail and produced no duplicate on replay. PR
 #57 already corrected the Markdown emphasis markers found during controlled
-corpus QA. Grounded inbound replies remain Slice 7D.
+corpus QA. Implementation Slice 7D is deployed through PRs #78 and #79. It
+verifies an alert's inbox, thread, and sender before reusing the grounded Ask
+path for replies. It also sends private source-problem reports through a
+separate AgentMail inbox without starting Firecrawl, extraction, or publication
+work. Production workflows `33786995126` and `33788197489` passed for merge
+commits `3f18c126` and `41a6d593`, followed by independent production smokes.
+The controlled provider round trip ran in development. Production browser proof
+confirmed the connected report form, its selected-Source attachment, and live
+backend availability without sending a fake report.
 
 ## Executive Decision
 

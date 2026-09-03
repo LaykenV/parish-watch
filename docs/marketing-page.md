@@ -339,10 +339,11 @@ repository. At the time this brief was last updated:
 - Google accounts and verified email subscribers can create and manage follows;
 - AgentMail immediate alerts, weekly roundups, delivery state, and notification
   settings shipped in Slice 7C;
+- grounded inbound email replies and private source reports shipped in Slice
+  7D;
 - coverage claims remain limited to bodies that pass the publication and
   coverage gates in [`sources.md`](./sources.md);
-- grounded inbound email replies and the owner-run coverage compiler remain
-  future work.
+- the owner-run coverage compiler remains future work.
 
 Do not turn planned features into present-tense product claims.
 

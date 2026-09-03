@@ -53,8 +53,10 @@ real follows without sharing ownership. Implementation Slice 7C is deployed
 through PRs #72 through #75. Accepted material changes now create durable
 matches and deduplicated immediate or weekly AgentMail delivery, while signed-in
 residents can manage the default cadence and inspect recent delivery state.
-Grounded email replies remain Slice 7D. Coverage requests and private source
-reports remain later work.
+Implementation Slice 7D is deployed through PRs #78 and #79. Verified replies
+to sourced alerts reuse the grounded Ask path, and private source reports go to
+a separate AgentMail inbox without starting the evidence pipeline. Coverage
+requests remain later work.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)

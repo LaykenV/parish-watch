@@ -229,8 +229,7 @@ later bulk run still needs a cost estimate and separate approval.
 ### Slice 5: Complete Resident Interface
 
 Status: interface design and implementation complete; production data exit gate
-closed; the Slice 7A account and saved-setup gate and Slice 7B follow-enrollment
-gate are closed. Design Slice 1
+closed; implementation Slices 7A through 7D are closed. Design Slice 1
 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
@@ -243,7 +242,8 @@ Design Slice 8 as `85d6947`. Production workflow `33454522729` and the
 independent production smoke passed. Accepted decision, meeting, issue, Ask,
 account, follow-enrollment, preference, email-management, sourced-alert,
 roundup, and notification-settings adapters are live. Coverage requests and
-private reports remain fixture-backed until their integration gates pass.
+private-report adapters are live. Coverage requests remain fixture-backed until
+their integration gate passes.
 
 The deployed Slice 2 release introduced the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163

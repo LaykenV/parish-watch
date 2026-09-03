@@ -11,8 +11,8 @@ release connected Google account ownership and private saved areas and topics.
 Slice 7B then replaced the follow, verification, per-follow preference, and
 email-management adapters. Production now creates real follows for Google and
 verified email owners. Slice 7C connected sourced immediate alerts, weekly
-roundups, delivery state, and notification settings. Grounded replies remain
-Slice 7D.
+roundups, delivery state, and notification settings. Slice 7D connected
+verified grounded replies and private source reports.
 
 ## Decision
 
@@ -99,8 +99,8 @@ neutral coverage-request route instead of appearing saved.
 
 The immediate email example orders information by resident use: what changed,
 the current state or next date, then official sources. Its footer keeps Open in
-Public Parish and Manage delivery visible. Reply with a question joins those
-actions after Slice 7D ships.
+Public Parish and Manage delivery visible. Slice 7D added Reply with a question
+for messages whose thread reaches the verified grounded handler.
 
 The weekly example groups a place before an issue and says that no changes
 means no email. There is no filler roundup state.
@@ -180,7 +180,8 @@ expiry, attempt limits, single use, scoped management, address-wide
 unsubscribe, real verification send, and signed webhook idempotency. Slice 7C
 proved sourced send, retry deduplication, the signed-in default schedule, the
 live Notifications view, and empty-roundup suppression. It deployed through
-PRs #72 through #75. Slice 7D owns reply grounding.
+PRs #72 through #75. Slice 7D proved sender and thread ownership, grounded
+answer reuse, not-found handling, reply deduplication, and recovery.
 
 Passing those gates replaces only their adapters. It does not reopen the page
 hierarchy, delivery receipt, or ownership language.
