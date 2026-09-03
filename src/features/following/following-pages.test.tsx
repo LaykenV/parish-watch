@@ -9,7 +9,7 @@ import {
   EmailManagementPage,
   toEmailManagedTarget,
 } from './email-management-page'
-import { FollowingPage } from './following-page'
+import { FollowingPage, FollowingSignedOut } from './following-page'
 import { loadFollowingPageData } from './following-page.data'
 import type { FollowingPageData } from './following-page.data'
 import { toFollowedTarget } from './live-follows'
@@ -79,6 +79,18 @@ describe('resident following interface', () => {
       targets: [],
       topics: [],
     })
+  })
+
+  it('announces fixture state only when a development fixture is active', () => {
+    const liveHtml = renderToStaticMarkup(
+      <FollowingSignedOut onGoogle={() => {}} />,
+    )
+    const fixtureHtml = renderToStaticMarkup(
+      <FollowingSignedOut onGoogle={() => {}} scenario="signed-out" />,
+    )
+
+    expect(liveHtml).not.toContain('Fixture state:')
+    expect(fixtureHtml).toContain('Fixture state: signed-out')
   })
 
   it('resyncs saved setup when another browser tab changes it', () => {

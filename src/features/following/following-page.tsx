@@ -326,7 +326,7 @@ function FixtureFollowingSignedOut({
   )
 }
 
-function FollowingSignedOut({
+export function FollowingSignedOut({
   busy = false,
   error,
   onGoogle,
@@ -394,7 +394,9 @@ function FollowingSignedOut({
       <p className="following-private-note">
         Reading, search, and Ask never require an account.
       </p>
-      <span className="visually-hidden">Fixture state: {scenario}</span>
+      {fixture ? (
+        <span className="visually-hidden">Fixture state: {scenario}</span>
+      ) : null}
     </main>
   )
 }
