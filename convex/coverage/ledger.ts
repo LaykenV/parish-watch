@@ -183,20 +183,11 @@ export async function retryCoverageRun(
   }
   const bodyRuns = await recentRunsForBody(ctx, run.bodyKey)
   const competingRun = bodyRuns.find(
-    (candidate) =>
-      candidate._id !== run._id &&
-      candidate.rootManifestVersion === run.rootManifestVersion &&
-      candidate.compilerVersion === run.compilerVersion &&
-      isActive(candidate),
+    (candidate) => candidate._id !== run._id && isActive(candidate),
   )
   if (competingRun) {
     return { retried: false, stageId: null, stage: null }
   }
-  const bodyRuns = await recentRunsForBody(ctx, run.bodyKey)
-  const competingRun = bodyRuns.find(
-    (candidate) => candidate._id !== run._id && isActive(candidate),
-  )
-  if (competingRun) return { retried: false, stageId: null }
   const stages = await ctx.db
     .query('coverageCompilerStages')
     .withIndex('by_run_and_stage', (index) => index.eq('runId', runId))
