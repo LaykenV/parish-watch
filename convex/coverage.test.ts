@@ -272,16 +272,19 @@ test('cancellation stops the run before it spends anything', async () => {
   const t = convexTest(schema, modules)
   const owner = await signInOwner(t)
   const fetchMock = stubHtmlRoot()
-  vi.useFakeTimers()
 
   const started = await owner.mutation(api.coverage.operations.start, {
     bodyKey: 'lafayette-city-council',
     rootManifestVersion: 'v1',
   })
+  const stageId = await firstStageId(t, started.runId)
   await expect(
     owner.mutation(api.coverage.operations.cancel, { runId: started.runId }),
   ).resolves.toEqual({ canceled: true })
-  await drainScheduled(t)
+  await t.action(internal.coverage.verifyRoot.verifyRootForRun, {
+    runId: started.runId,
+    stageId,
+  })
 
   const view = await owner.query(api.coverage.operations.run, {
     runId: started.runId,
