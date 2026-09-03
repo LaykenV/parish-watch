@@ -15,10 +15,11 @@ import {
 import { MANAGEMENT_TOKEN_TTL_MS } from './enrollmentContracts'
 import { weeklyRoundupWindowAt } from './roundupTime'
 
-export const agentmail = new AgentMail(components.agentmail, {
+export const agentmail: AgentMail = new AgentMail(components.agentmail, {
   webhookSecret: env.AGENTMAIL_WEBHOOK_SECRET ?? '',
   retryAttempts: 6,
   initialBackoffMs: 30_000,
+  onMessageReceived: internal.emailReplies.intake.onMessageReceived,
 })
 
 export function updatesInboxId(): string {
@@ -714,7 +715,13 @@ async function projectWeeklyEmail(
     lines.push(`- ${item.title}`, `  ${item.change}`, `  ${item.href}`)
     lines.push(`  Official source: ${item.source}`)
   }
-  lines.push('', `Manage alerts: ${managementUrl}`)
+  if (emailRepliesAvailable()) {
+    lines.push(
+      '',
+      'Reply with a question about these updates. Public Parish will answer only from published evidence.',
+    )
+  }
+  lines.push(`Manage alerts: ${managementUrl}`)
   return {
     subject: `${items.length} ${items.length === 1 ? 'update' : 'updates'} in your Public Parish roundup`,
     text: lines.join('\n'),
@@ -782,6 +789,11 @@ async function projectImmediateEmail(
   lines.push('', 'Official sources')
   for (const url of officialUrls) lines.push(url)
   lines.push('', `View in Public Parish: ${appLink}`)
+  if (emailRepliesAvailable()) {
+    lines.push(
+      'Reply with a question about this alert. Public Parish will answer only from published evidence.',
+    )
+  }
   lines.push(`Manage alerts: ${managementUrl}`)
   return {
     subject: `${change.classification === 'new_decision' ? 'New decision' : 'Decision update'}: ${version.payload.title}`,
@@ -821,6 +833,13 @@ async function currentIssueLink(
 
 function appUrl(path: string): string {
   return `${env.CONVEX_SITE_URL.replace(/\/$/, '')}${path}`
+}
+
+function emailRepliesAvailable(): boolean {
+  return Boolean(
+    env.AGENTMAIL_UPDATES_INBOX_ID?.trim() &&
+      env.AGENTMAIL_WEBHOOK_SECRET?.trim(),
+  )
 }
 
 function changeLabel(classification: string): string {

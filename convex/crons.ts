@@ -32,4 +32,18 @@ crons.interval(
   {},
 )
 
+crons.interval(
+  'recover interrupted sourced email replies',
+  { minutes: 5 },
+  internal.emailReplies.recovery.recoverInterruptedReplies,
+  {},
+)
+
+crons.interval(
+  'remove expired sourced email reply metadata',
+  { hours: 24 },
+  internal.emailReplies.recovery.removeExpiredReplyMetadata,
+  {},
+)
+
 export default crons

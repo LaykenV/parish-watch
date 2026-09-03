@@ -152,6 +152,23 @@ index 47ab5db..b8f0248 100644
      };
      let body;
      if (opts.body !== undefined) {
+diff --git a/node_modules/@agentmail/convex/dist/test.js b/node_modules/@agentmail/convex/dist/test.js
+index 4e6d6e6..5de9cfe 100644
+--- a/node_modules/@agentmail/convex/dist/test.js
++++ b/node_modules/@agentmail/convex/dist/test.js
+@@ -1,8 +1,11 @@
++import workpoolTest from "@convex-dev/workpool/test";
+ import schema from "./component/schema.js";
+-const modules = import.meta.glob("./component/**/!(*.*.*)*.ts");
++const modules = import.meta.glob("./component/**/*.ts");
+ export default {
+     register(t, name = "agentmail") {
+         t.registerComponent(name, schema, modules);
++        workpoolTest.register(t, `${name}/sendPool`);
++        workpoolTest.register(t, `${name}/callbackPool`);
+     },
+     schema,
+     modules,
 diff --git a/node_modules/@agentmail/convex/src/component/_generated/component.d.ts b/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
 index 6c2860c..cba4cb3 100644
 --- a/node_modules/@agentmail/convex/src/component/_generated/component.d.ts
@@ -280,3 +297,29 @@ index e20117d..442f284 100644
    };
    let body: string | undefined;
    if (opts.body !== undefined) {
+diff --git a/node_modules/@agentmail/convex/src/test.ts b/node_modules/@agentmail/convex/src/test.ts
+index 166f09e..5494cb1 100644
+--- a/node_modules/@agentmail/convex/src/test.ts
++++ b/node_modules/@agentmail/convex/src/test.ts
+@@ -1,12 +1,19 @@
+ /// <reference types="vite/client" />
+ import type { TestConvex } from "convex-test";
++import type { GenericSchema, SchemaDefinition } from "convex/server";
++import workpoolTest from "@convex-dev/workpool/test";
+ import schema from "./component/schema.js";
+ 
+-const modules = import.meta.glob("./component/**/!(*.*.*)*.ts");
++const modules = import.meta.glob("./component/**/*.ts");
+ 
+ export default {
+-  register(t: TestConvex<typeof schema>, name = "agentmail") {
++  register(
++    t: TestConvex<SchemaDefinition<GenericSchema, boolean>>,
++    name = "agentmail",
++  ) {
+     t.registerComponent(name, schema, modules);
++    workpoolTest.register(t, `${name}/sendPool`);
++    workpoolTest.register(t, `${name}/callbackPool`);
+   },
+   schema,
+   modules,

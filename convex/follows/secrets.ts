@@ -18,18 +18,30 @@ export async function hashAccessToken(token: string): Promise<string> {
   return await hmacHex(`access:${token}`)
 }
 
+export async function deriveEmailReplyToken(threadId: string): Promise<string> {
+  return await hmacHex(`email-reply:${threadId}`)
+}
+
 export async function encryptAddress(address: string): Promise<string> {
+  return await encryptPrivateText(address)
+}
+
+export async function encryptPrivateText(value: string): Promise<string> {
   const key = await importAesKey()
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const ciphertext = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     key,
-    encoder.encode(address),
+    encoder.encode(value),
   )
   return `v1.${toBase64Url(iv)}.${toBase64Url(new Uint8Array(ciphertext))}`
 }
 
 export async function decryptAddress(value: string): Promise<string> {
+  return await decryptPrivateText(value)
+}
+
+export async function decryptPrivateText(value: string): Promise<string> {
   const [version, ivValue, ciphertextValue] = value.split('.')
   if (version !== 'v1' || !ivValue || !ciphertextValue) {
     throw new Error('Encrypted delivery address is invalid')
