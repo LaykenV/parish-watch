@@ -241,6 +241,10 @@ expand the promise.
   create or infer an issue.
 - Match place follows through the publishing body's jurisdiction and its
   supported parent parish. Do not match free-text `affectedPlaces` values.
+- Match topic follows from canonical issue topic labels and accepted,
+  non-absent importance factors for public money, public assets, public safety,
+  and land use. Ignore unknown free-text labels. Housing and drainage require a
+  canonical issue topic label.
 - Run the weekly roundup Monday at 7:00 AM in `America/Chicago`. A periodic
   scheduler checks local civil time and claims one deduplicated weekly window,
   so daylight-saving changes do not shift the resident-facing time.

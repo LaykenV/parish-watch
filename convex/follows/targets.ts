@@ -40,6 +40,13 @@ const TOPIC_ALIASES = new Map<string, TopicSlug>([
   ['land use', 'land-use'],
 ])
 
+const IMPORTANCE_FACTOR_TOPICS = new Map<string, TopicSlug>([
+  ['public_money', 'public-money'],
+  ['public_assets', 'public-assets'],
+  ['health_safety', 'public-safety'],
+  ['land_use', 'land-use'],
+])
+
 export function canonicalTopicSlug(value: string): TopicSlug | null {
   const normalized = value
     .normalize('NFKC')
@@ -47,6 +54,10 @@ export function canonicalTopicSlug(value: string): TopicSlug | null {
     .toLocaleLowerCase('en-US')
     .replace(/[_\s]+/g, ' ')
   return TOPIC_ALIASES.get(normalized) ?? null
+}
+
+export function importanceFactorTopicSlug(value: string): TopicSlug | null {
+  return IMPORTANCE_FACTOR_TOPICS.get(value) ?? null
 }
 
 export async function resolveFollowTarget(
@@ -222,7 +233,7 @@ export const runMatchFanout = internalMutation({
       return null
     }
     const targets = await matchTargets(ctx, fanout, change)
-    const target = targets.at(fanout.targetIndex)
+    const target = targets[fanout.targetIndex]
     if (!target) {
       await ctx.db.patch(fanout._id, {
         state: 'complete',
@@ -355,6 +366,19 @@ async function matchTargets(
   const seen = new Set<string>()
   for (const topic of version.payload.topics) {
     const targetKey = canonicalTopicSlug(topic)
+    if (!targetKey || seen.has(targetKey)) continue
+    seen.add(targetKey)
+    targets.push({ targetKind: 'topic', targetKey })
+  }
+  const assessments = await ctx.db
+    .query('importanceAssessments')
+    .withIndex('by_issue_version_and_factor', (index) =>
+      index.eq('issueVersionId', version._id),
+    )
+    .take(7)
+  for (const assessment of assessments) {
+    if (assessment.level === 'absent') continue
+    const targetKey = importanceFactorTopicSlug(assessment.factor)
     if (!targetKey || seen.has(targetKey)) continue
     seen.add(targetKey)
     targets.push({ targetKind: 'topic', targetKey })

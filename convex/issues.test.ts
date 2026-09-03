@@ -728,6 +728,7 @@ test('two atomic decisions publish one cited issue, score, timeline, and materia
   const seeded = await seedIssueInput(t)
   const topicFollowId = await seedGoogleFollow(t, 'topic', 'public-assets')
   const candidate = issueCandidate(seeded)
+  candidate.topics = ['Surplus 2016 Crew Cab pickups']
   const requests: Array<Record<string, unknown>> = []
   const fetchMock = stubIssueFetch(
     [
@@ -790,7 +791,7 @@ test('two atomic decisions publish one cited issue, score, timeline, and materia
     payload: {
       kind: 'full',
       lifecycleState: 'decided',
-      topics: ['public assets'],
+      topics: ['Surplus 2016 Crew Cab pickups'],
     },
   })
   const issueEvidence = await t.query(
