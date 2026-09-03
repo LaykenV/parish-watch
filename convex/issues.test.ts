@@ -502,8 +502,10 @@ function issueCandidate(
     genericSignal?: boolean
     jurisdictionSignal?: boolean
     secondFactor?: boolean
+    topic?: string
   } = {},
 ): IssueCandidateV1 {
+  const topic = options.topic ?? 'public assets'
   const titleCitations = seeded.citationsByRecord.map(
     (record) => record.titleCitationId,
   )
@@ -578,7 +580,7 @@ function issueCandidate(
     },
     {
       fieldPath: '/topics/0',
-      value: 'public assets',
+      value: topic,
       citationIds: titleCitations,
     },
     ...links.map((link, index) => ({
@@ -611,7 +613,7 @@ function issueCandidate(
       'The Lafayette City Council adopted two separate donations of surplus pickup trucks to Terrebonne Parish Consolidated Government.',
     lifecycleState: 'decided',
     nextKnownAction: null,
-    topics: ['public assets'],
+    topics: [topic],
     links,
     sharedSignals: [
       {
@@ -727,8 +729,9 @@ test('two atomic decisions publish one cited issue, score, timeline, and materia
   const t = initTest()
   const seeded = await seedIssueInput(t)
   const topicFollowId = await seedGoogleFollow(t, 'topic', 'public-assets')
-  const candidate = issueCandidate(seeded)
-  candidate.topics = ['Surplus 2016 Crew Cab pickups']
+  const candidate = issueCandidate(seeded, {
+    topic: 'Surplus 2016 Crew Cab pickups',
+  })
   const requests: Array<Record<string, unknown>> = []
   const fetchMock = stubIssueFetch(
     [
