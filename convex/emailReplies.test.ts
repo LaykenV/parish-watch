@@ -27,7 +27,7 @@ function initTest(): TestConvex {
   vi.stubEnv('EMAIL_ADDRESS_HMAC_KEY', 'dGVzdC1obWFjLWtleQ==')
   const t = convexTest(schema, modules)
   agentTest.register(t)
-  agentmailTest.register(t)
+  agentmailTest.register(t as never)
   return t
 }
 

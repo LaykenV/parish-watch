@@ -148,16 +148,16 @@ export const getPreparation = internalQuery({
       event.state !== 'queued' ||
       event.questionMessageId
     ) {
-      return { kind: 'skip' }
+      return { kind: 'skip' } as const
     }
     const thread = await ctx.db.get(event.replyThreadId)
-    if (!thread) return { kind: 'skip' }
+    if (!thread) return { kind: 'skip' } as const
     const hasActiveThread =
       thread.askThreadId !== undefined &&
       thread.askExpiresAt !== undefined &&
       thread.askExpiresAt > Date.now()
     const ownsPreparation = thread.preparingEventId === event._id
-    if (!hasActiveThread && !ownsPreparation) return { kind: 'wait' }
+    if (!hasActiveThread && !ownsPreparation) return { kind: 'wait' } as const
     return {
       kind: 'ready',
       agentmailThreadId: event.agentmailThreadId,
@@ -165,7 +165,7 @@ export const getPreparation = internalQuery({
       askExpiresAt: hasActiveThread ? thread.askExpiresAt : undefined,
       ownsPreparation,
       scope: storedScope(thread.scopeKind, thread.scopeKey),
-    }
+    } as const
   },
 })
 
@@ -286,7 +286,7 @@ export const claimAnswer = internalMutation({
   handler: async (ctx, args) => {
     const event = await ctx.db.get(args.eventId)
     if (!event?.replyThreadId || !event.questionMessageId)
-      return { kind: 'skip' }
+      return { kind: 'skip' } as const
     const now = Date.now()
     if (
       event.state === 'answered' ||
@@ -300,10 +300,10 @@ export const claimAnswer = internalMutation({
         event.retryAt > now) ||
       event.attempt >= MAX_ANSWER_ATTEMPTS
     ) {
-      return { kind: 'skip' }
+      return { kind: 'skip' } as const
     }
     const thread = await ctx.db.get(event.replyThreadId)
-    if (!thread?.askThreadId) return { kind: 'skip' }
+    if (!thread?.askThreadId) return { kind: 'skip' } as const
     const attempt = event.attempt + 1
     await ctx.db.patch(event._id, {
       state: 'running',
@@ -320,7 +320,7 @@ export const claimAnswer = internalMutation({
       askThreadId: thread.askThreadId,
       questionMessageId: event.questionMessageId,
       officialContactUrl: thread.officialContactUrl,
-    }
+    } as const
   },
 })
 

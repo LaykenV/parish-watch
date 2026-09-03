@@ -15,7 +15,7 @@ import {
 import { MANAGEMENT_TOKEN_TTL_MS } from './enrollmentContracts'
 import { weeklyRoundupWindowAt } from './roundupTime'
 
-export const agentmail = new AgentMail(components.agentmail, {
+export const agentmail: AgentMail = new AgentMail(components.agentmail, {
   webhookSecret: env.AGENTMAIL_WEBHOOK_SECRET ?? '',
   retryAttempts: 6,
   initialBackoffMs: 30_000,
