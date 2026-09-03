@@ -840,6 +840,8 @@ test('a first accepted publication records one new-decision event and matches it
       ? await ctx.db.get(body.jurisdictionId)
       : null
     if (!body || !jurisdiction) throw new Error('Missing alert target fixture')
+    await ctx.db.patch(body._id, { publicStatus: 'supported' })
+    await ctx.db.patch(jurisdiction._id, { publicStatus: 'supported' })
     const userId = await ctx.db.insert('users', {
       googleAccountId: 'alert-match-user',
       email: 'alert-match@example.com',
@@ -1098,6 +1100,65 @@ test('a first accepted publication records one new-decision event and matches it
       updatedAt: expect.any(Number),
     })
     expect((await ctx.db.get(staleWindowId))?.updatedAt).toBeGreaterThan(1)
+  })
+})
+
+test('notification matching stops after body and place coverage lapse', async () => {
+  const t = initTest()
+  const seeded = await seedValidatedCandidate(t, '-coverage-lapse')
+  await t.run(async (ctx) => {
+    const registry = await ctx.db.get(seeded.registryId)
+    const body = registry
+      ? await ctx.db.get(registry.governmentBodyId)
+      : null
+    const jurisdiction = body
+      ? await ctx.db.get(body.jurisdictionId)
+      : null
+    if (!body || !jurisdiction) throw new Error('Missing alert target fixture')
+    const userId = await ctx.db.insert('users', {
+      googleAccountId: 'coverage-lapse-user',
+      email: 'coverage-lapse@example.com',
+      emailVerified: true,
+      createdAt: 1,
+      updatedAt: 1,
+      lastSignedInAt: 1,
+    })
+    const ownerKey = `google:${userId}`
+    for (const [targetKind, targetKey] of [
+      ['government_body', body.slug],
+      ['place', jurisdiction.slug],
+    ] as const) {
+      const followId = await ctx.db.insert('follows', {
+        ownerKind: 'google',
+        ownerKey,
+        userId,
+        targetKind,
+        targetKey,
+        targetTitle: targetKey,
+        targetDetail: 'Test target',
+        createdAt: 1,
+        updatedAt: 1,
+      })
+      await ctx.db.insert('notificationPreferences', {
+        followId,
+        cadence: 'weekly',
+        createdAt: 1,
+        updatedAt: 1,
+      })
+    }
+  })
+  stubReviewFetch(JSON.stringify(reviewResponse(seeded.factIds)))
+  await startAndDrain(t, seeded.candidateId)
+
+  await t.run(async (ctx) => {
+    expect(await ctx.db.query('notificationMatches').take(10)).toHaveLength(0)
+    expect(await ctx.db.query('notificationFanouts').take(10)).toEqual([
+      expect.objectContaining({
+        phase: 'decision',
+        state: 'complete',
+        matchesCreated: 0,
+      }),
+    ])
   })
 })
 
