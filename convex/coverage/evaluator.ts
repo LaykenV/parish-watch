@@ -139,11 +139,6 @@ export const evaluateProposal = internalMutation({
       unsupportedMaterialFactCount: publicationEvidence.unsupportedFacts,
       immutableRevisionCount: changes.length,
       failureHandlingObserved:
-        samples.some(
-          (sample) =>
-            sample.state === 'failed_retryable' ||
-            sample.state === 'failed_terminal',
-        ) ||
         publicationEvidence.limitedOrWithheld ||
         extractionEvidence.failureHandled,
       expectationCount: expectations.length,
@@ -241,12 +236,8 @@ async function inspectPublications(
     ) {
       cited += 1
     }
-    const checksByFact = new Map(
-      checks.map((check) => [check.candidateFactId, check]),
-    )
-    unsupportedFacts += citations.filter(
-      (citation) =>
-        checksByFact.get(citation.candidateFactId)?.assessment !== 'supported',
+    unsupportedFacts += checks.filter(
+      (check) => check.assessment !== 'supported',
     ).length
   }
   return { accepted, cited, unsupportedFacts, limitedOrWithheld }
