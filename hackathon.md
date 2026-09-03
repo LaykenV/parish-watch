@@ -12,9 +12,19 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-03T02:56:18Z
+- **Last updated:** 2026-09-03T03:33:46Z
 
 ## Log
+
+### 2026-09-03 - 6bafeaa
+
+PR #77 removed an empty development-fixture announcement from the live
+signed-out Following page. The fixture label remains available during fixture
+QA but no longer appears in the production accessibility tree when no fixture
+scenario exists. Verify and PR Agent passed on `4a60791`. Production workflow
+`33711607195` and the independent smoke passed after merge. A hard-reloaded
+browser confirmed the signed-out Google and email entry choices remained and
+`Fixture state:` was absent from the accessibility tree.
 
 ### 2026-09-03 - 6db32a3
 
