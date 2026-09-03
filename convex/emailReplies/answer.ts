@@ -3,7 +3,7 @@
 import { v } from 'convex/values'
 
 import { api, internal } from '../_generated/api'
-import { internalAction } from '../_generated/server'
+import { env, internalAction } from '../_generated/server'
 import type { AskAnswerResult } from '../ask/contracts'
 import { decryptPrivateText, deriveEmailReplyToken } from '../follows/secrets'
 
@@ -91,7 +91,11 @@ export const answerInbound = internalAction({
         attempt: claim.attempt,
         answerMessageId: answer.messageId,
         kind: answer.kind,
-        text: formatEmailReply(answer, claim.officialContactUrl),
+        text: formatEmailReply(
+          answer,
+          claim.officialContactUrl,
+          env.CONVEX_SITE_URL,
+        ),
       })
     } catch (error) {
       await ctx.runMutation(internal.emailReplies.intake.failAnswer, {
@@ -107,15 +111,17 @@ export const answerInbound = internalAction({
 export function formatEmailReply(
   answer: AskAnswerResult,
   officialContactUrl?: string,
+  siteOrigin?: string,
 ): string {
   const lines = [answer.answer.trim()]
   if (answer.kind === 'answer' && answer.citations.length > 0) {
     lines.push('', 'Cited evidence')
     const seen = new Set<string>()
     for (const citation of answer.citations) {
-      if (seen.has(citation.sourceHref)) continue
-      seen.add(citation.sourceHref)
-      lines.push(`- ${citation.documentTitle}: ${citation.sourceHref}`)
+      const href = absoluteCitationHref(citation.sourceHref, siteOrigin)
+      if (seen.has(href)) continue
+      seen.add(href)
+      lines.push(`- ${citation.documentTitle}: ${href}`)
     }
   }
   if (answer.kind === 'not_found') {
@@ -131,6 +137,12 @@ export function formatEmailReply(
     'Public Parish answers only from published, checked evidence. Reply with another question about this alert to continue.',
   )
   return lines.join('\n')
+}
+
+function absoluteCitationHref(href: string, siteOrigin?: string): string {
+  if (/^https?:\/\//.test(href) || !siteOrigin) return href
+  const path = href.startsWith('/') ? href : `/${href}`
+  return `${siteOrigin.replace(/\/$/, '')}${path}`
 }
 
 function classifyError(error: unknown): string {

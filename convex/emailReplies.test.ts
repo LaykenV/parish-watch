@@ -241,7 +241,13 @@ test('stale preparation and final answer leases can be reclaimed', async () => {
 
 test('email responses preserve grounded citations and the not-found contact path', () => {
   const grounded = answerResult('answer')
-  expect(formatEmailReply(grounded)).toContain(
+  expect(
+    formatEmailReply(
+      grounded,
+      undefined,
+      'https://public-parish-test.convex.site',
+    ),
+  ).toContain(
     '- Council minutes: https://public-parish-test.convex.site/decisions/drainage?evidence=evidence-1',
   )
   const missing = answerResult('not_found')
@@ -441,8 +447,7 @@ function answerResult(kind: 'answer' | 'not_found'): AskAnswerResult {
               page: 2,
               section: null,
               retrievedAt: 1,
-              sourceHref:
-                'https://public-parish-test.convex.site/decisions/drainage?evidence=evidence-1',
+              sourceHref: '/decisions/drainage?evidence=evidence-1',
             },
           ]
         : [],
