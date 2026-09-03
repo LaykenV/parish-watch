@@ -400,7 +400,13 @@ Status: Google OAuth, centralized user authorization, and private saved areas
 and topics deployed through PRs #58 and #59. Google and email-only follow
 enrollment deployed through PRs #66 and #67. Sourced immediate and weekly
 alerts plus live notification settings deployed through PRs #72 through #75.
-Grounded inbound replies remain PR 7D.
+Slice 7D is ready for production review in stacked PRs #78 and #79. PR #78
+accepts verified alert replies and answers them through the existing grounded Ask
+path. PR #79 sends private source-problem reports without starting the evidence
+pipeline. Both isolated heads and the stacked head passed GitHub verification.
+A controlled development run proved a two-turn AgentMail reply thread with
+absolute Source links and a private report with its selected Source attached.
+Production release and production configuration remain pending.
 
 - pin and install Convex Auth v2 alpha;
 - add Google OAuth account sign-in;
