@@ -274,7 +274,7 @@ test('a terminal failure earns a new attempt instead of reusing the failed run',
   )
 })
 
-test('a failed run cannot retry beside a newer active run', async () => {
+test('a failed run cannot retry beside an active run on a newer compiler contract', async () => {
   const t = convexTest(schema, modules)
   const owner = await signInOwner(t)
   vi.stubGlobal(
@@ -288,17 +288,28 @@ test('a failed run cannot retry beside a newer active run', async () => {
   })
   await drainScheduled(t)
 
-  stubHtmlRoot()
-  const active = await owner.mutation(api.coverage.operations.start, {
-    bodyKey: 'lafayette-city-council',
-    rootManifestVersion: 'v1',
+  const activeRunId = await t.run(async (ctx) => {
+    const user = await ctx.db.query('users').first()
+    if (!user) throw new Error('The owner fixture is missing')
+    return await ctx.db.insert('coverageCompilerRuns', {
+      bodyKey: 'lafayette-city-council',
+      jurisdictionSlug: 'lafayette-parish',
+      rootManifestVersion: 'v2',
+      compilerVersion: 'v2',
+      idempotencyKey: 'newer-active-contract',
+      attempt: 2,
+      state: 'running',
+      currentStage: 'verify_root',
+      requestedByUserId: user._id,
+      startedAt: Date.now(),
+    })
   })
   await expect(
     owner.mutation(api.coverage.operations.retry, { runId: failed.runId }),
   ).resolves.toEqual({ retried: false })
 
   const runs = await owner.query(api.coverage.operations.recentRuns, {})
-  expect(runs.find((run) => run.runId === active.runId)?.state).toBe('running')
+  expect(runs.find((run) => run.runId === activeRunId)?.state).toBe('running')
   expect(runs.find((run) => run.runId === failed.runId)?.state).toBe(
     'failed_terminal',
   )
