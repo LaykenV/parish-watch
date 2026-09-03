@@ -27,6 +27,14 @@ const TERMINAL_STATES = new Set([
   'superseded',
 ])
 
+const COVERAGE_STAGE_LABELS = {
+  verify_root: 'Verify official root',
+  discover_sources: 'Discover source candidates',
+  classify_sources: 'Classify source candidates',
+  validate_sample: 'Validate representative sample',
+  evaluate_gates: 'Evaluate coverage gates',
+} as const
+
 export function CoverageOperationsPage() {
   const auth = useGoogleAuth('/operations/coverage')
   const currentUser = useQuery(
@@ -319,7 +327,7 @@ function OwnerCoverageOperations() {
                         <p>
                           Attempt {stage.attempt} · gate {stage.gateVersion}
                         </p>
-                        <h4>Verify official root</h4>
+                        <h4>{COVERAGE_STAGE_LABELS[stage.stage]}</h4>
                         <RunState state={stage.state} />
                         {stage.resolvedRootUrl ? (
                           <code>{stage.resolvedRootUrl}</code>
