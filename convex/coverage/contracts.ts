@@ -69,7 +69,12 @@ export const coverageFindingCodes = v.union(
   v.literal('classification_candidate_missing'),
   v.literal('classification_body_mismatch'),
   v.literal('proposal_invalid'),
+  v.literal('sample_missing'),
   v.literal('sample_retrieval_failed'),
+  v.literal('sample_parse_failed'),
+  v.literal('sample_citation_incomplete'),
+  v.literal('sample_incomplete_source'),
+  v.literal('sample_stale'),
   v.literal('coverage_gate_failed'),
 )
 

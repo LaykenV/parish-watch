@@ -1,5 +1,7 @@
 export const COVERAGE_EVALUATOR_VERSION = 'coverage-gates-v1'
-export const COVERAGE_GOLD_SET_VERSION = 'launch-bodies-v1'
+import { coverageGoldSetVersion } from './goldSet'
+
+export const COVERAGE_GOLD_SET_VERSION = coverageGoldSetVersion()
 
 export type CoverageGateInputs = {
   expectedArtifactCount: number
@@ -13,6 +15,7 @@ export type CoverageGateInputs = {
   immutableRevisionCount: number
   failureHandlingObserved: boolean
   expectationCount: number
+  staleExpectationCount: number
   recentReplayPassed: boolean
   productionLinkCount: number
   passingProductionLinkCount: number
@@ -90,8 +93,8 @@ export function evaluateCoverageGates(
     gate(
       8,
       'freshness_expectation_present',
-      input.expectationCount > 0,
-      `${input.expectationCount} source freshness expectations are recorded.`,
+      input.expectationCount > 0 && input.staleExpectationCount === 0,
+      `${input.expectationCount} source freshness expectations are recorded; ${input.staleExpectationCount} are stale.`,
       ['sourceExpectations'],
     ),
     gate(

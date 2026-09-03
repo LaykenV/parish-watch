@@ -3,6 +3,7 @@ import { v } from 'convex/values'
 import type { Doc } from '../_generated/dataModel'
 import { internalMutation } from '../_generated/server'
 import type { MutationCtx } from '../_generated/server'
+import type { SourceKind } from '../pipeline/state'
 import { evaluateCoverageGates, COVERAGE_EVALUATOR_VERSION } from './gates'
 import { resolveRootManifest } from './roots'
 
@@ -59,7 +60,10 @@ export const evaluateProposal = internalMutation({
         (index) => index.eq('governmentBodyId', proposal.governmentBodyId),
       )
       .take(MAX_EVIDENCE_RECORDS)
-    const publicationEvidence = await inspectPublications(ctx, records)
+    const publicationEvidence = await inspectPublications(
+      ctx,
+      records.filter((record) => record.registryId === proposal.registryId),
+    )
     const changes = await ctx.db
       .query('sourceSnapshotChanges')
       .withIndex('by_registry_and_created_at', (index) =>
@@ -104,20 +108,19 @@ export const evaluateProposal = internalMutation({
             (run.completedAt ?? 0) >= Date.now() - RECENT_REPLAY_WINDOW_MS,
         )
         .map((run) => run.sourceKind)
-        .filter(
-          (kind): kind is 'agenda' | 'minutes' =>
-            kind === 'agenda' || kind === 'minutes',
-        ),
+        .filter((kind): kind is SourceKind => kind !== undefined),
     )
+    const staleExpectationCount = expectations.filter(
+      (expectation) => !recentKinds.has(expectation.sourceKind),
+    ).length
     const requiredSamples = samples.filter((sample) => sample.required)
     const officialDomainsOnly =
       registry !== null &&
       manifest !== null &&
       sameStrings(registry.officialDomains, manifest.allowedHosts) &&
-      candidates.every(
-        (candidate) =>
-          candidate !== null && candidate.hostDisposition === 'approved',
-      )
+      candidates
+        .filter((candidate) => candidate !== null)
+        .every((candidate) => candidate.hostDisposition === 'approved')
     const results = evaluateCoverageGates({
       expectedArtifactCount: requiredSamples.length,
       retrievedArtifactCount: requiredSamples.filter(
@@ -144,6 +147,7 @@ export const evaluateProposal = internalMutation({
         publicationEvidence.limitedOrWithheld ||
         extractionEvidence.failureHandled,
       expectationCount: expectations.length,
+      staleExpectationCount,
       recentReplayPassed:
         recentKinds.has('agenda') && recentKinds.has('minutes'),
       productionLinkCount: latestProductionLinks.size,
@@ -164,7 +168,7 @@ export const evaluateProposal = internalMutation({
         await ctx.db.insert('coverageCompilerFindings', {
           runId: proposal.runId,
           stageId: stage._id,
-          code: 'coverage_gate_failed',
+          code: findingCodeForGate(result.gateNumber),
           severity: 'blocking',
           summary: `Gate ${result.gateNumber} failed: ${result.detail}`.slice(
             0,
@@ -217,15 +221,32 @@ async function inspectPublications(
         index.eq('publicationVersionId', publication._id),
       )
       .take(100)
-    if (citations.length > 0) cited += 1
     const checks = await ctx.db
       .query('reviewChecks')
       .withIndex('by_review_and_field_path', (index) =>
         index.eq('reviewId', publication.reviewId),
       )
       .take(100)
-    unsupportedFacts += checks.filter(
-      (check) => check.assessment === 'unsupported',
+    const citationsByFact = new Set(
+      citations.map((citation) => citation.candidateFactId),
+    )
+    const supportedChecks = checks.filter(
+      (check) => check.assessment === 'supported',
+    )
+    if (
+      supportedChecks.length > 0 &&
+      supportedChecks.every((check) =>
+        citationsByFact.has(check.candidateFactId),
+      )
+    ) {
+      cited += 1
+    }
+    const checksByFact = new Map(
+      checks.map((check) => [check.candidateFactId, check]),
+    )
+    unsupportedFacts += citations.filter(
+      (citation) =>
+        checksByFact.get(citation.candidateFactId)?.assessment !== 'supported',
     ).length
   }
   return { accepted, cited, unsupportedFacts, limitedOrWithheld }
@@ -249,4 +270,19 @@ async function inspectExtractions(
 
 function sameStrings(left: string[], right: string[]): boolean {
   return JSON.stringify([...left].sort()) === JSON.stringify([...right].sort())
+}
+
+function findingCodeForGate(
+  gateNumber: number,
+):
+  | 'sample_missing'
+  | 'sample_citation_incomplete'
+  | 'sample_incomplete_source'
+  | 'sample_stale'
+  | 'coverage_gate_failed' {
+  if (gateNumber === 1) return 'sample_missing'
+  if (gateNumber === 4) return 'sample_citation_incomplete'
+  if (gateNumber === 7) return 'sample_incomplete_source'
+  if (gateNumber === 8) return 'sample_stale'
+  return 'coverage_gate_failed'
 }

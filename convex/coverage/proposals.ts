@@ -7,6 +7,7 @@ import { requireOwner } from '../auth/authorization'
 import type { SourceKind } from '../pipeline/state'
 import { sha256HexOfText } from '../sources/hashing'
 import { COVERAGE_EVALUATOR_VERSION, COVERAGE_GOLD_SET_VERSION } from './gates'
+import { coverageGoldSetSlots } from './goldSet'
 import { resolveRootManifest } from './roots'
 
 const MAX_PROPOSAL_SEEDS = 20
@@ -281,8 +282,15 @@ function selectSamples(
     role: 'current' | 'historical' | 'revision' | 'negative'
   }> = []
   const used = new Set<Id<'coverageSourceCandidates'>>()
-  const take = (kinds: SourceKind[]) => {
-    const candidate = candidates.find(
+  const take = (
+    kinds: SourceKind[],
+    role: 'current' | 'historical' | 'revision' | 'negative',
+  ) => {
+    const ordered = [...candidates].sort((left, right) => {
+      const delta = candidateDate(right) - candidateDate(left)
+      return role === 'historical' ? -delta : delta
+    })
+    const candidate = ordered.find(
       (entry) =>
         entry.state === 'classified' &&
         !used.has(entry._id) &&
@@ -291,73 +299,50 @@ function selectSamples(
     if (candidate) used.add(candidate._id)
     return candidate
   }
-  selected.push(
-    {
-      candidate: take(['agenda', 'packet']),
-      sourceKind: 'agenda',
-      role: 'current',
-    },
-    {
-      candidate: take(['agenda', 'packet']),
-      sourceKind: 'agenda',
-      role: 'current',
-    },
-    {
-      candidate: take(['minutes']),
-      sourceKind: 'minutes',
-      role: 'current',
-    },
-    {
-      candidate: take(['minutes']),
-      sourceKind: 'minutes',
-      role: 'historical',
-    },
-    {
-      candidate: take(['ordinance', 'resolution']),
-      sourceKind: 'resolution',
-      role: 'current',
-    },
-  )
-  const revision = candidates.find(
-    (candidate) =>
-      !used.has(candidate._id) &&
-      /revis|amend|cancel|postpon|previous/i.test(
-        `${candidate.canonicalUrl} ${candidate.title ?? ''}`,
-      ),
-  )
-  if (revision) used.add(revision._id)
-  selected.push({
-    candidate: revision,
-    sourceKind: 'other',
-    role: 'revision',
-  })
-  const uncertain = candidates.find(
-    (candidate) => candidate.state === 'uncertain',
-  )
-  selected.push({
-    candidate: uncertain,
-    sourceKind: 'other',
-    role: 'negative',
-  })
-  if (
-    bodyKey.includes('planning') ||
-    bodyKey.includes('zoning') ||
-    bodyKey.includes('hearing-examiner')
-  ) {
-    selected.push(
-      {
-        candidate: take(['planning_case']),
-        sourceKind: 'planning_case',
-        role: 'current',
-      },
-      {
-        candidate: take(['planning_case']),
-        sourceKind: 'planning_case',
-        role: 'historical',
-      },
-    )
+  for (const slot of coverageGoldSetSlots(bodyKey)) {
+    let candidate: Doc<'coverageSourceCandidates'> | undefined
+    if (slot.role === 'revision') {
+      candidate = candidates.find(
+        (entry) =>
+          !used.has(entry._id) &&
+          /revis|amend|cancel|postpon|previous/i.test(
+            `${entry.canonicalUrl} ${entry.title ?? ''}`,
+          ),
+      )
+    } else if (slot.role === 'negative') {
+      candidate = candidates.find((entry) => entry.state === 'uncertain')
+    } else {
+      candidate = take(slot.sourceKinds, slot.role)
+    }
+    if (candidate) used.add(candidate._id)
+    selected.push({
+      candidate,
+      sourceKind:
+        normalizeSourceKind(candidate?.sourceKind) ?? slot.sourceKinds[0],
+      role: slot.role,
+    })
   }
   return selected
+}
+
+function candidateDate(candidate: Doc<'coverageSourceCandidates'>): number {
+  const text = `${candidate.title ?? ''} ${candidate.description ?? ''} ${candidate.canonicalUrl}`
+  const yearFirst = text.match(/\b(20\d{2})[-_/](\d{1,2})[-_/](\d{1,2})\b/)
+  const monthFirst = text.match(/\b(\d{1,2})[-_/](\d{1,2})[-_/](20\d{2})\b/)
+  const parsed = yearFirst
+    ? Date.UTC(
+        Number(yearFirst[1]),
+        Number(yearFirst[2]) - 1,
+        Number(yearFirst[3]),
+      )
+    : monthFirst
+      ? Date.UTC(
+          Number(monthFirst[3]),
+          Number(monthFirst[1]) - 1,
+          Number(monthFirst[2]),
+        )
+      : Number.NaN
+  return Number.isFinite(parsed) ? parsed : candidate.createdAt
 }
 
 function proposalError(code: string, message: string) {

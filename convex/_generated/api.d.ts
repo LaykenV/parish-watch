@@ -35,6 +35,7 @@ import type * as coverage_discovery from "../coverage/discovery.js";
 import type * as coverage_discoveryLedger from "../coverage/discoveryLedger.js";
 import type * as coverage_evaluator from "../coverage/evaluator.js";
 import type * as coverage_gates from "../coverage/gates.js";
+import type * as coverage_goldSet from "../coverage/goldSet.js";
 import type * as coverage_ledger from "../coverage/ledger.js";
 import type * as coverage_operations from "../coverage/operations.js";
 import type * as coverage_promotion from "../coverage/promotion.js";
@@ -146,6 +147,7 @@ declare const fullApi: ApiFromModules<{
   "coverage/discoveryLedger": typeof coverage_discoveryLedger;
   "coverage/evaluator": typeof coverage_evaluator;
   "coverage/gates": typeof coverage_gates;
+  "coverage/goldSet": typeof coverage_goldSet;
   "coverage/ledger": typeof coverage_ledger;
   "coverage/operations": typeof coverage_operations;
   "coverage/promotion": typeof coverage_promotion;

@@ -15,6 +15,7 @@ const PASSING: CoverageGateInputs = {
   immutableRevisionCount: 1,
   failureHandlingObserved: true,
   expectationCount: 3,
+  staleExpectationCount: 0,
   recentReplayPassed: true,
   productionLinkCount: 8,
   passingProductionLinkCount: 8,
@@ -38,6 +39,7 @@ test.each([
   ['revision', { immutableRevisionCount: 0 }, 6],
   ['failure handling', { failureHandlingObserved: false }, 7],
   ['schedule', { expectationCount: 0 }, 8],
+  ['stale schedule', { staleExpectationCount: 1 }, 8],
   ['replay', { recentReplayPassed: false }, 9],
   ['production links', { passingProductionLinkCount: 7 }, 10],
 ] as const)(
