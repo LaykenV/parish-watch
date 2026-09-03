@@ -1,4 +1,8 @@
 import { ConvexError, v } from 'convex/values'
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from 'convex/server'
 
 import { internal } from '../_generated/api'
 import { mutation, query } from '../_generated/server'
@@ -10,6 +14,7 @@ import {
   coverageCandidateStates,
   coverageHostDispositions,
   coverageProviderNames,
+  coverageProposalStates,
   coverageRedirectHop,
   coverageRunStates,
   coverageStageNames,
@@ -44,6 +49,9 @@ const runSummary = v.object({
   currentStage: v.union(coverageStageNames, v.null()),
   startedAt: v.number(),
   completedAt: v.union(v.number(), v.null()),
+  budgetUsd: v.number(),
+  reservedCostUsd: v.number(),
+  estimatedSpentUsd: v.number(),
 })
 
 const stageView = v.object({
@@ -95,6 +103,29 @@ const providerCallView = v.object({
   createdAt: v.number(),
 })
 
+const gateView = v.object({
+  gateNumber: v.number(),
+  gateKey: v.string(),
+  passed: v.boolean(),
+  detail: v.string(),
+  evaluatorVersion: v.string(),
+})
+
+const proposalView = v.object({
+  proposalId: v.id('coverageRegistryProposals'),
+  proposalVersion: v.number(),
+  status: coverageProposalStates,
+  goldSetVersion: v.string(),
+  evaluatorVersion: v.string(),
+  diffSummary: v.array(v.string()),
+  sampleCount: v.number(),
+  retrievedSampleCount: v.number(),
+  gates: v.array(gateView),
+  createdAt: v.number(),
+  evaluatedAt: v.union(v.number(), v.null()),
+  promotedAt: v.union(v.number(), v.null()),
+})
+
 export const availableRoots = query({
   args: {},
   returns: v.array(rootView),
@@ -131,7 +162,40 @@ export const recentRuns = query({
       currentStage: run.currentStage ?? null,
       startedAt: run.startedAt,
       completedAt: run.completedAt ?? null,
+      budgetUsd: run.budgetUsd ?? 1,
+      reservedCostUsd: run.reservedCostUsd ?? 0,
+      estimatedSpentUsd: run.estimatedSpentUsd ?? 0,
     }))
+  },
+})
+
+export const paginatedRuns = query({
+  args: { paginationOpts: paginationOptsValidator },
+  returns: paginationResultValidator(runSummary),
+  handler: async (ctx, args) => {
+    await requireOwner(ctx)
+    const page = await ctx.db
+      .query('coverageCompilerRuns')
+      .order('desc')
+      .paginate(args.paginationOpts)
+    return {
+      ...page,
+      page: page.page.map((run) => ({
+        runId: run._id,
+        bodyKey: run.bodyKey,
+        jurisdictionSlug: run.jurisdictionSlug,
+        rootManifestVersion: run.rootManifestVersion,
+        compilerVersion: run.compilerVersion,
+        attempt: run.attempt,
+        state: run.state,
+        currentStage: run.currentStage ?? null,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt ?? null,
+        budgetUsd: run.budgetUsd ?? 1,
+        reservedCostUsd: run.reservedCostUsd ?? 0,
+        estimatedSpentUsd: run.estimatedSpentUsd ?? 0,
+      })),
+    }
   },
 })
 
@@ -145,6 +209,7 @@ export const run = query({
       findings: v.array(findingView),
       candidates: v.array(candidateView),
       providerCalls: v.array(providerCallView),
+      proposals: v.array(proposalView),
     }),
   ),
   handler: async (ctx, args) => {
@@ -174,6 +239,58 @@ export const run = query({
         index.eq('runId', args.runId),
       )
       .take(100)
+    const proposals = await ctx.db
+      .query('coverageRegistryProposals')
+      .withIndex('by_run_and_version', (index) => index.eq('runId', args.runId))
+      .order('desc')
+      .take(10)
+    const proposalViews = await Promise.all(
+      proposals.map(async (proposal) => {
+        const samples = await ctx.db
+          .query('coverageRepresentativeSamples')
+          .withIndex('by_proposal_and_role', (index) =>
+            index.eq('proposalId', proposal._id),
+          )
+          .take(20)
+        const evaluations = await ctx.db
+          .query('coverageGateEvaluations')
+          .withIndex('by_proposal_and_created_at', (index) =>
+            index.eq('proposalId', proposal._id),
+          )
+          .order('desc')
+          .take(100)
+        const latestByGate = new Map<number, (typeof evaluations)[number]>()
+        for (const evaluation of evaluations) {
+          if (!latestByGate.has(evaluation.gateNumber)) {
+            latestByGate.set(evaluation.gateNumber, evaluation)
+          }
+        }
+        return {
+          proposalId: proposal._id,
+          proposalVersion: proposal.proposalVersion,
+          status: proposal.status,
+          goldSetVersion: proposal.goldSetVersion,
+          evaluatorVersion: proposal.evaluatorVersion,
+          diffSummary: proposal.diffSummary,
+          sampleCount: samples.length,
+          retrievedSampleCount: samples.filter(
+            (sample) => sample.state === 'retrieved',
+          ).length,
+          gates: [...latestByGate.values()]
+            .sort((left, right) => left.gateNumber - right.gateNumber)
+            .map((evaluation) => ({
+              gateNumber: evaluation.gateNumber,
+              gateKey: evaluation.gateKey,
+              passed: evaluation.passed,
+              detail: evaluation.detail,
+              evaluatorVersion: evaluation.evaluatorVersion,
+            })),
+          createdAt: proposal.createdAt,
+          evaluatedAt: proposal.evaluatedAt ?? null,
+          promotedAt: proposal.promotedAt ?? null,
+        }
+      }),
+    )
 
     return {
       run: {
@@ -187,6 +304,9 @@ export const run = query({
         currentStage: record.currentStage ?? null,
         startedAt: record.startedAt,
         completedAt: record.completedAt ?? null,
+        budgetUsd: record.budgetUsd ?? 1,
+        reservedCostUsd: record.reservedCostUsd ?? 0,
+        estimatedSpentUsd: record.estimatedSpentUsd ?? 0,
       },
       stages: stages.map((stage) => ({
         stageId: stage._id,
@@ -233,6 +353,7 @@ export const run = query({
         estimatedCostUsd: call.estimatedCostUsd ?? null,
         createdAt: call.createdAt,
       })),
+      proposals: proposalViews,
     }
   },
 })

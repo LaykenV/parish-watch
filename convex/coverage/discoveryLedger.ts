@@ -9,6 +9,7 @@ import { sha256HexOfText } from '../sources/hashing'
 import { MAX_DISCOVERY_CANDIDATES } from './candidates'
 import {
   boundedDetail,
+  DISCOVERY_RESERVATION_USD,
   coverageCadences,
   coverageFindingCodes,
   coverageHostDispositions,
@@ -76,11 +77,17 @@ export async function beginDiscovery(
   ) {
     return { started: false, stageId: null }
   }
+  const reserved = run.reservedCostUsd ?? 0
+  const budget = run.budgetUsd ?? 1
+  if (reserved + DISCOVERY_RESERVATION_USD > budget) {
+    return { started: false, stageId: null }
+  }
   const stageId = await openStage(ctx, runId, 'discover_sources', 1)
   await ctx.db.patch(runId, {
     state: 'running',
     currentStage: 'discover_sources',
     completedAt: undefined,
+    reservedCostUsd: reserved + DISCOVERY_RESERVATION_USD,
   })
   await ctx.scheduler.runAfter(0, internal.coverage.discovery.discoverForRun, {
     runId,
@@ -478,6 +485,14 @@ export const recordProviderCall = internalMutation({
         : { errorDetail: boundedDetail(args.errorDetail) }),
       createdAt: Date.now(),
     })
+    if (estimatedCostUsd !== null) {
+      const run = await ctx.db.get(args.runId)
+      if (run) {
+        await ctx.db.patch(run._id, {
+          estimatedSpentUsd: (run.estimatedSpentUsd ?? 0) + estimatedCostUsd,
+        })
+      }
+    }
     return null
   },
 })

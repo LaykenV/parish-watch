@@ -470,6 +470,30 @@ model route, latency, token use, and estimated cost. Firecrawl 0.1.1 does not
 expose map or search credit totals, so each call records that credits were not
 reported instead of inventing a number.
 
+Each run starts with a $1.00 development budget. Source discovery reserves
+$0.25 before its first paid call. Representative validation reserves the
+remaining $0.75 once, and retries reuse that reservation. The ledger records
+estimated model spend separately. Firecrawl calls stay bounded by candidate and
+sample limits even though the pinned component cannot return their dollar cost.
+
+The owner freezes classified sources into an immutable registry proposal before
+validation. `docs/coverage-gold-sets/launch-bodies.v1.json` defines the required
+sample slots. Missing agendas, minutes, history, revisions, negative controls,
+or planning cases remain failed sample rows, so the evaluator cannot shrink the
+denominator to fit what discovery found. Validation reuses the existing
+Firecrawl retrieval and immutable snapshot path with at most two samples in
+flight. It also reads any extraction, review, publication, citation, and
+revision evidence already produced by the shared pipeline.
+
+`coverage-gates-v1` implements the ten requirements in `docs/sources.md` in
+their published order. Every evaluation appends ten immutable results. An owner
+confirmation promotes only a `ready` proposal whose latest evaluator version
+still has ten passing results. Development link checks are retained for QA but
+cannot satisfy the production-link gate. Promotion changes the proposed
+registry and body in one transaction, pauses the previous live registry, and
+keeps all old snapshots and publications. Degradation and pause never delete
+evidence. Recovery reruns the same ten-gate check.
+
 The gate walks the redirect chain itself with a bounded HTTPS request. Firecrawl
 is the retrieval engine for evidence, and a root that fails verification never
 reaches it, so the probe spends no credits and no model tokens. Each hop is
@@ -634,6 +658,33 @@ Fields: run, stage, provider, operation, status, request and response hashes,
 prompt and schema versions, model role and ID, latency, reported Firecrawl
 credits, model tokens, estimated model cost, bounded error, and time.
 Indexes: run plus time; stage plus time.
+
+#### `coverageRegistryProposals`
+
+Fields: compiler run, body and validating registry, proposal version and state,
+root, gold-set, and evaluator versions, proposed domains, seeds, source kinds,
+diff hash and summary, evaluation time, and promotion receipt.
+Indexes: run plus version; body plus state.
+
+#### `coverageRepresentativeSamples`
+
+Fields: proposal, optional discovered candidate, required source kind and role,
+retrieval state, immutable snapshot link, bounded failure, and timing. A missing
+candidate is stored as a failed required row.
+Indexes: proposal plus role; proposal plus state.
+
+#### `coverageGateEvaluations`
+
+Fields: proposal, gate number and key, pass result, detail, evidence references,
+evaluator version, and time. Evaluations append. Promotion reads the newest
+result for every gate.
+Indexes: proposal plus gate; proposal plus time.
+
+#### `sourceExpectations` and `coverageDirectLinkChecks`
+
+Source expectations store proposal, registry, kind, cadence, and whether the
+schedule is official or inferred. Link checks store proposal, URL, deployment
+class, response status, result, and time. Only production checks satisfy gate 10.
 
 #### `sourceExpectations`
 

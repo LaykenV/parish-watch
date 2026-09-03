@@ -6,6 +6,7 @@ import type { MutationCtx } from '../_generated/server'
 import { sha256HexOfText } from '../sources/hashing'
 import {
   COVERAGE_COMPILER_VERSION,
+  DEFAULT_COVERAGE_BUDGET_USD,
   ROOT_GATE_VERSION,
   coverageFindingCodes,
   coverageFindingSeverities,
@@ -122,6 +123,9 @@ export async function startCoverageRun(
     state: 'running',
     currentStage: 'verify_root',
     requestedByUserId: input.requestedByUserId,
+    budgetUsd: DEFAULT_COVERAGE_BUDGET_USD,
+    reservedCostUsd: 0,
+    estimatedSpentUsd: 0,
     startedAt,
   })
   const stageId = await openRootStage(ctx, runId, 1, manifest.approvedRootUrl)
@@ -202,6 +206,13 @@ export async function retryCoverageRun(
     )
     .sort((left, right) => right.startedAt - left.startedAt)[0]
   if (!failed) return { retried: false, stageId: null, stage: null }
+  if (
+    failed.stage !== 'verify_root' &&
+    failed.stage !== 'discover_sources' &&
+    failed.stage !== 'classify_sources'
+  ) {
+    return { retried: false, stageId: null, stage: null }
+  }
   const stageAttempts = stages.filter((stage) => stage.stage === failed.stage)
   const attempt =
     stageAttempts.reduce(

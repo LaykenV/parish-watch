@@ -10,10 +10,16 @@ export const ROOT_REQUEST_TIMEOUT_MS = 10_000
 
 export const MAX_ERROR_DETAIL_LENGTH = 200
 
+export const DEFAULT_COVERAGE_BUDGET_USD = 1
+export const DISCOVERY_RESERVATION_USD = 0.25
+export const SAMPLE_VALIDATION_RESERVATION_USD = 0.75
+
 export const coverageStageNames = v.union(
   v.literal('verify_root'),
   v.literal('discover_sources'),
   v.literal('classify_sources'),
+  v.literal('validate_sample'),
+  v.literal('evaluate_gates'),
 )
 
 export type CoverageStageName = typeof coverageStageNames.type
@@ -62,6 +68,9 @@ export const coverageFindingCodes = v.union(
   v.literal('classification_contract_invalid'),
   v.literal('classification_candidate_missing'),
   v.literal('classification_body_mismatch'),
+  v.literal('proposal_invalid'),
+  v.literal('sample_retrieval_failed'),
+  v.literal('coverage_gate_failed'),
 )
 
 export type CoverageFindingCode = typeof coverageFindingCodes.type
@@ -112,6 +121,29 @@ export const coverageProviderNames = v.union(
   v.literal('firecrawl'),
   v.literal('ai_gateway'),
   v.literal('direct_openai'),
+)
+
+export const coverageProposalStates = v.union(
+  v.literal('draft'),
+  v.literal('validating'),
+  v.literal('blocked'),
+  v.literal('ready'),
+  v.literal('promoted'),
+  v.literal('superseded'),
+)
+
+export const coverageSampleRoles = v.union(
+  v.literal('current'),
+  v.literal('historical'),
+  v.literal('revision'),
+  v.literal('negative'),
+)
+
+export const coverageSampleStates = v.union(
+  v.literal('pending'),
+  v.literal('retrieved'),
+  v.literal('failed_retryable'),
+  v.literal('failed_terminal'),
 )
 
 export const coverageRedirectHop = v.object({

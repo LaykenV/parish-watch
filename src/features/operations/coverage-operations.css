@@ -413,6 +413,97 @@
   font-size: 0.62rem;
 }
 
+.coverage-ops-proposal {
+  margin-top: 2rem;
+  padding: 1.15rem;
+  border: 1px solid var(--pp-border-strong);
+  background: color-mix(in srgb, var(--info) 3%, white);
+}
+
+.coverage-ops-proposal,
+.coverage-ops-proposal-head,
+.coverage-ops-proposal-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.coverage-ops-proposal-head {
+  width: 100%;
+}
+.coverage-ops-proposal-actions {
+  flex-wrap: wrap;
+  justify-content: end;
+}
+.coverage-ops-proposal h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.coverage-ops-proposal h4 .coverage-ops-state {
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+.coverage-ops-proposal p {
+  margin: 0.45rem 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.coverage-ops-diff {
+  width: 100%;
+  margin: 0.8rem 0 0;
+  padding: 0.8rem 0 0 1.2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.76rem;
+}
+
+.coverage-ops-gates {
+  display: grid;
+  width: 100%;
+  margin: 1rem 0 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+
+.coverage-ops-gates li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: start;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.coverage-ops-gates li > span {
+  display: grid;
+  width: 1.4rem;
+  height: 1.4rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+}
+
+.coverage-ops-gates li > svg {
+  width: 1rem;
+  color: var(--destructive-foreground);
+}
+.coverage-ops-gates li[data-passed] > svg {
+  color: var(--success-foreground);
+}
+.coverage-ops-gates strong {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+.coverage-ops-gates p {
+  margin-top: 0.2rem;
+}
+
 .coverage-ops-empty {
   margin: 0;
   padding: 1.25rem;
@@ -470,6 +561,13 @@
   }
   .coverage-ops-section-head {
     gap: 0.75rem;
+  }
+  .coverage-ops-proposal,
+  .coverage-ops-proposal-head {
+    flex-direction: column;
+  }
+  .coverage-ops-proposal-actions {
+    justify-content: start;
   }
 }
 

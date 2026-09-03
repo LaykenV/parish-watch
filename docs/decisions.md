@@ -83,6 +83,13 @@ expand the promise.
 - Source classification uses `MODEL_FAST`. The model references stored
   candidate IDs and copies evidence from the candidate metadata. Deterministic
   validation rejects invented IDs, changed bodies, omissions, and guesses.
+- A representative sample uses fixed checked-in slots. Missing source kinds
+  stay in the denominator as failed requirements. The compiler never lowers a
+  gate because a portal exposed less evidence than expected.
+- Owner confirmation is the last promotion step, not an override. The current
+  evaluator must have ten passing results, including direct source links from
+  the production deployment. Degrade, pause, and recovery change status while
+  retaining prior snapshots, publications, and registries.
 - Test the backend pipeline against representative real sources before building
   a polished UI.
 - Keep current and upcoming decisions primary, with approximately 12 months of
