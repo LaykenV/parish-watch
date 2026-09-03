@@ -418,10 +418,5 @@ export function ReportProblem({
   available: boolean
   recordUrl: string
 }) {
-  return (
-    <SourceProblemReport
-      available={import.meta.env.DEV && available}
-      recordUrl={recordUrl}
-    />
-  )
+  return <SourceProblemReport available={available} recordUrl={recordUrl} />
 }

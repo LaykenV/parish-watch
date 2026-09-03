@@ -254,7 +254,7 @@ function MeetingView({
                 </p>
                 <ReportProblem
                   available={Boolean(search.fixture)}
-                  recordUrl={`/meetings/${meeting.id}`}
+                  recordUrl={currentMeetingHref}
                 />
               </div>
             </Section>

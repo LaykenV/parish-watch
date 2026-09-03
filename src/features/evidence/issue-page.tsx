@@ -393,7 +393,7 @@ function IssueDetail({
                 </p>
                 <ReportProblem
                   available={Boolean(search.fixture)}
-                  recordUrl={`/issues/${issue.slug}`}
+                  recordUrl={currentIssueHref}
                 />
               </div>
             </Section>

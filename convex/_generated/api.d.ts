@@ -84,6 +84,7 @@ import type * as review_ledger from "../review/ledger.js";
 import type * as review_prepare from "../review/prepare.js";
 import type * as review_promptV1 from "../review/promptV1.js";
 import type * as review_review from "../review/review.js";
+import type * as sourceReports_reports from "../sourceReports/reports.js";
 import type * as sources_discovery from "../sources/discovery.js";
 import type * as sources_domains from "../sources/domains.js";
 import type * as sources_hashing from "../sources/hashing.js";
@@ -178,6 +179,7 @@ declare const fullApi: ApiFromModules<{
   "review/prepare": typeof review_prepare;
   "review/promptV1": typeof review_promptV1;
   "review/review": typeof review_review;
+  "sourceReports/reports": typeof sourceReports_reports;
   "sources/discovery": typeof sources_discovery;
   "sources/domains": typeof sources_domains;
   "sources/hashing": typeof sources_hashing;

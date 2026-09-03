@@ -136,6 +136,24 @@ export default defineSchema({
     .index('by_address_hash', ['addressHash'])
     .index('by_state_and_created_at', ['state', 'createdAt']),
 
+  sourceProblemReports: defineTable({
+    submissionHash: v.string(),
+    browserHash: v.string(),
+    category: v.union(
+      v.literal('wrong-fact'),
+      v.literal('broken-citation'),
+      v.literal('missing-document'),
+      v.literal('wrong-record'),
+      v.literal('importance-factor'),
+    ),
+    recordPath: v.string(),
+    outboundId: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_submission_hash', ['submissionHash'])
+    .index('by_browser_hash_and_created_at', ['browserHash', 'createdAt'])
+    .index('by_created_at', ['createdAt']),
+
   emailVerificationChallenges: defineTable({
     subscriberId: v.id('emailSubscribers'),
     challengeId: v.string(),

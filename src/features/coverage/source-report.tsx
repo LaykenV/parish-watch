@@ -3,8 +3,10 @@ import {
   CircleAlertIcon,
   LockKeyholeIcon,
 } from 'lucide-react'
+import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useId, useRef, useState } from 'react'
 
+import { api } from '../../../convex/_generated/api'
 import { Button } from '../../components/ui/button'
 import { Sheet } from '../discovery/sheet'
 
@@ -23,9 +25,24 @@ export function SourceProblemReport({
 }) {
   const [open, setOpen] = useState(false)
   const [description, setDescription] = useState('')
+  const [category, setCategory] =
+    useState<SourceReportCategory>('wrong-fact')
+  const [officialUrl, setOfficialUrl] = useState('')
+  const [replyEmail, setReplyEmail] = useState('')
   const [error, setError] = useState('')
   const [result, setResult] = useState<'idle' | 'sent'>('idle')
   const [submitting, setSubmitting] = useState(false)
+  const [submissionId, setSubmissionId] = useState<string | null>(null)
+  const [browserToken, setBrowserToken] = useState('')
+  const availability = useQuery(api.sourceReports.reports.availability, {})
+  const submitReport = useMutation(api.sourceReports.reports.submit)
+  const receipt = useQuery(
+    api.sourceReports.reports.receipt,
+    submissionId && browserToken ? { submissionId, browserToken } : 'skip',
+  )
+  const simulated = import.meta.env.DEV && available
+  const checkingAvailability = !simulated && availability === undefined
+  const connected = simulated || availability?.available === true
   const descriptionId = useId()
   const errorId = useId()
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
@@ -35,11 +52,44 @@ export function SourceProblemReport({
     if (result === 'sent') returnActionRef.current?.focus()
   }, [result])
 
+  useEffect(() => {
+    setBrowserToken(readBrowserToken())
+  }, [])
+
+  useEffect(() => {
+    if (!receipt?.found) return
+    if (receipt.status === 'sent') {
+      setSubmitting(false)
+      setResult('sent')
+    } else if (receipt.status === 'failed') {
+      setSubmitting(false)
+      setSubmissionId(null)
+      setError(
+        'The private report was not sent. Your description is still here. Try again in a moment.',
+      )
+    }
+  }, [receipt])
+
+  useEffect(() => {
+    if (!submissionId || !submitting) return
+    const timeoutId = window.setTimeout(() => {
+      setSubmitting(false)
+      setError(
+        'Delivery is taking longer than expected. Your report may still send. Check again in a moment.',
+      )
+    }, REPORT_CONFIRMATION_TIMEOUT_MS)
+    return () => window.clearTimeout(timeoutId)
+  }, [submissionId, submitting])
+
   const reset = () => {
     setDescription('')
+    setCategory('wrong-fact')
+    setOfficialUrl('')
+    setReplyEmail('')
     setError('')
     setResult('idle')
     setSubmitting(false)
+    setSubmissionId(null)
   }
 
   const handleOpenChange = (next: boolean) => {
@@ -61,7 +111,19 @@ export function SourceProblemReport({
         </Button>
       )}
     >
-      {!available ? (
+      {checkingAvailability ? (
+        <div
+          aria-busy="true"
+          className="source-report-unavailable"
+          role="status"
+        >
+          <LockKeyholeIcon aria-hidden="true" />
+          <div>
+            <h2>Checking private reporting</h2>
+            <p>Confirming the private delivery path before opening the form.</p>
+          </div>
+        </div>
+      ) : !connected ? (
         <div className="source-report-unavailable" role="status">
           <CircleAlertIcon aria-hidden="true" />
           <div>
@@ -93,12 +155,12 @@ export function SourceProblemReport({
       ) : (
         <form
           className="source-report-form"
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault()
             const value = description.trim()
-            if (!value) {
+            if (value.length < 10 || value.length > 2_000) {
               setError(
-                'Describe what does not match so the source can be checked.',
+                'Describe what does not match in 10 to 2,000 characters.',
               )
               descriptionRef.current?.focus()
               return
@@ -106,16 +168,50 @@ export function SourceProblemReport({
 
             setSubmitting(true)
             setError('')
-            window.setTimeout(() => {
+            if (simulated) {
+              window.setTimeout(() => {
+                setSubmitting(false)
+                if (scenario === 'provider-failure') {
+                  setError(
+                    'The private report was not sent. Your description is still here. Try again in a moment.',
+                  )
+                  return
+                }
+                setResult('sent')
+              }, 450)
+              return
+            }
+            if (!browserToken) {
               setSubmitting(false)
-              if (scenario === 'provider-failure') {
-                setError(
-                  'The private report was not sent. Your description is still here. Try again in a moment.',
-                )
-                return
+              setError('Private reporting is still connecting. Try again.')
+              return
+            }
+            if (submissionId) {
+              setSubmitting(true)
+              setError('')
+              return
+            }
+            const nextSubmissionId = crypto.randomUUID()
+            setSubmissionId(nextSubmissionId)
+            try {
+              const response = await submitReport({
+                submissionId: nextSubmissionId,
+                browserToken,
+                category,
+                recordUrl,
+                description: value,
+                officialUrl: officialUrl.trim() || undefined,
+                replyEmail: replyEmail.trim() || undefined,
+              })
+              if (response.status === 'sent') {
+                setSubmitting(false)
+                setResult('sent')
               }
-              setResult('sent')
-            }, 450)
+            } catch (submitError) {
+              setSubmitting(false)
+              setSubmissionId(null)
+              setError(sourceReportErrorMessage(submitError))
+            }
           }}
         >
           <div className="source-report-private-note">
@@ -128,7 +224,13 @@ export function SourceProblemReport({
 
           <label className="source-report-field">
             <span>Problem type</span>
-            <select defaultValue="wrong-fact">
+            <select
+              disabled={Boolean(submissionId)}
+              onChange={(event) =>
+                setCategory(event.target.value as SourceReportCategory)
+              }
+              value={category}
+            >
               <option value="wrong-fact">
                 A fact does not match the source
               </option>
@@ -153,6 +255,7 @@ export function SourceProblemReport({
               aria-describedby={error ? errorId : undefined}
               aria-invalid={error ? true : undefined}
               id={descriptionId}
+              disabled={Boolean(submissionId)}
               onChange={(event) => {
                 setDescription(event.target.value)
                 if (error) setError('')
@@ -166,15 +269,25 @@ export function SourceProblemReport({
 
           <label className="source-report-field">
             <span>Official document link, if you have one</span>
-            <input inputMode="url" placeholder="https://" type="url" />
+            <input
+              disabled={Boolean(submissionId)}
+              inputMode="url"
+              onChange={(event) => setOfficialUrl(event.target.value)}
+              placeholder="https://"
+              type="url"
+              value={officialUrl}
+            />
           </label>
 
           <label className="source-report-field">
             <span>Your email, only if you want a reply</span>
             <input
               autoComplete="email"
+              disabled={Boolean(submissionId)}
+              onChange={(event) => setReplyEmail(event.target.value)}
               placeholder="you@example.com"
               type="email"
+              value={replyEmail}
             />
           </label>
 
@@ -185,7 +298,9 @@ export function SourceProblemReport({
 
           <div aria-live="polite" className="source-report-form-footer">
             <Button loading={submitting} size="touch" type="submit">
-              Send report privately
+              {submissionId
+                ? 'Check delivery again'
+                : 'Send report privately'}
             </Button>
             <p className={error ? 'source-report-error' : ''} id={errorId}>
               {error || 'No account or street address is needed.'}
@@ -195,4 +310,38 @@ export function SourceProblemReport({
       )}
     </Sheet>
   )
+}
+
+type SourceReportCategory =
+  | 'wrong-fact'
+  | 'broken-citation'
+  | 'missing-document'
+  | 'wrong-record'
+  | 'importance-factor'
+
+const SOURCE_REPORT_BROWSER_TOKEN = 'public-parish-source-report-browser-v1'
+const REPORT_CONFIRMATION_TIMEOUT_MS = 45_000
+
+function readBrowserToken(): string {
+  if (typeof window === 'undefined' || !window.sessionStorage) return ''
+  const existing = window.sessionStorage.getItem(SOURCE_REPORT_BROWSER_TOKEN)
+  if (existing) return existing
+  const created = `${crypto.randomUUID()}${crypto.randomUUID()}`
+  window.sessionStorage.setItem(SOURCE_REPORT_BROWSER_TOKEN, created)
+  return created
+}
+
+function sourceReportErrorMessage(error: unknown): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'message' in error.data &&
+    typeof error.data.message === 'string'
+  ) {
+    return error.data.message
+  }
+  return 'The private report was not sent. Your description is still here. Try again in a moment.'
 }
