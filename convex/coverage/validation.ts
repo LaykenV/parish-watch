@@ -29,7 +29,12 @@ export const startValidation = mutation({
       return { started: false }
     }
     const run = await ctx.db.get(proposal.runId)
-    if (!run) return { started: false }
+    if (
+      !run ||
+      !['succeeded', 'failed_retryable', 'failed_terminal'].includes(run.state)
+    ) {
+      return { started: false }
+    }
     const runningStage = await ctx.db
       .query('coverageCompilerStages')
       .withIndex('by_run_and_stage', (index) =>
@@ -78,10 +83,13 @@ export const reevaluate = mutation({
   handler: async (ctx, args) => {
     await requireOwner(ctx)
     const proposal = await ctx.db.get(args.proposalId)
+    if (!proposal || !['blocked', 'ready'].includes(proposal.status)) {
+      return { started: false }
+    }
+    const run = await ctx.db.get(proposal.runId)
     if (
-      !proposal ||
-      proposal.status === 'promoted' ||
-      proposal.status === 'superseded'
+      !run ||
+      !['succeeded', 'failed_retryable', 'failed_terminal'].includes(run.state)
     ) {
       return { started: false }
     }

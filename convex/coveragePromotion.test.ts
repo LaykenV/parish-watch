@@ -89,6 +89,69 @@ test('one failed gate cannot be overridden by owner confirmation', async () => {
   })
 })
 
+test('canceled coverage runs cannot restart validation or evaluation', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  const seeded = await seedReadyProposal(t, false)
+  await t.run(async (ctx) => {
+    await ctx.db.patch(seeded.runId, {
+      state: 'canceled',
+      canceledAt: Date.now(),
+    })
+  })
+
+  await expect(
+    owner.mutation(api.coverage.validation.startValidation, {
+      proposalId: seeded.proposalId,
+    }),
+  ).resolves.toEqual({ started: false })
+  await expect(
+    owner.mutation(api.coverage.validation.reevaluate, {
+      proposalId: seeded.proposalId,
+    }),
+  ).resolves.toEqual({ started: false })
+  await expect(
+    t.run(async (ctx) => {
+      return await ctx.db.query('coverageCompilerStages').collect()
+    }),
+  ).resolves.toEqual([])
+})
+
+test('gate evaluation cannot interrupt sample validation', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  const seeded = await seedReadyProposal(t, false)
+  await t.run(async (ctx) => {
+    await ctx.db.patch(seeded.proposalId, { status: 'validating' })
+    await ctx.db.patch(seeded.runId, {
+      state: 'running',
+      currentStage: 'validate_sample',
+      completedAt: undefined,
+    })
+    await ctx.db.insert('coverageCompilerStages', {
+      runId: seeded.runId,
+      stage: 'validate_sample',
+      idempotencyKey: 'validation-in-progress',
+      inputHash: 'validation-in-progress',
+      attempt: 1,
+      state: 'running',
+      gateVersion: 'representative-sample-v1',
+      startedAt: Date.now(),
+    })
+  })
+
+  await expect(
+    owner.mutation(api.coverage.validation.reevaluate, {
+      proposalId: seeded.proposalId,
+    }),
+  ).resolves.toEqual({ started: false })
+  await t.run(async (ctx) => {
+    const stages = await ctx.db.query('coverageCompilerStages').collect()
+    expect(stages.map((stage) => stage.stage)).toEqual(['validate_sample'])
+    expect((await ctx.db.get(seeded.runId))?.state).toBe('running')
+  })
+})
+
 async function seedReadyProposal(t: TestConvex, allPass: boolean) {
   const ids = await t.run(async (ctx) => {
     const user = await ctx.db.query('users').first()
