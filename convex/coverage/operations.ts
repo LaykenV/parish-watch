@@ -152,10 +152,12 @@ export const run = query({
     const record = await ctx.db.get(args.runId)
     if (!record) return null
 
-    const stages = await ctx.db
-      .query('coverageCompilerStages')
-      .withIndex('by_run_and_stage', (index) => index.eq('runId', args.runId))
-      .take(MAX_LISTED_STAGES)
+    const stages = (
+      await ctx.db
+        .query('coverageCompilerStages')
+        .withIndex('by_run_and_stage', (index) => index.eq('runId', args.runId))
+        .take(MAX_LISTED_STAGES)
+    ).sort((left, right) => left._creationTime - right._creationTime)
     const findings = await ctx.db
       .query('coverageCompilerFindings')
       .withIndex('by_run_and_created_at', (index) =>
