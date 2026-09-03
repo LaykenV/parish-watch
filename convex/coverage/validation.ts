@@ -242,6 +242,19 @@ export const validateSample = internalAction({
     }
 
     for (let index = 0; index < context.samples.length; index += 2) {
+      if (
+        index > 0 &&
+        (await ctx.runQuery(
+          internal.coverage.validation.validationContext,
+          args,
+        )) === null
+      ) {
+        await ctx.runMutation(
+          internal.coverage.validation.abandonValidation,
+          args,
+        )
+        return null
+      }
       await Promise.all(
         context.samples.slice(index, index + 2).map(async (sample) => {
           if (sample.state === 'retrieved') return
