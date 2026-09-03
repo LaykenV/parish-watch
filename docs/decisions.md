@@ -70,6 +70,12 @@ expand the promise.
   and repair. Routine runs use targeted scraping and change tracking.
 - Add custom source adapters only after a repeated, documented failure against a
   specific portal.
+- The coverage compiler verifies an official root with its own bounded HTTPS
+  request instead of Firecrawl. A root that fails must cost nothing, and the
+  gate needs the raw redirect chain. Firecrawl remains the retrieval engine for
+  every artifact that becomes evidence.
+- A compiler run names a checked root manifest by body key and version. No
+  function accepts a root URL from a caller, including the owner.
 - Test the backend pipeline against representative real sources before building
   a polished UI.
 - Keep current and upcoming decisions primary, with approximately 12 months of

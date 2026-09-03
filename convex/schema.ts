@@ -3,6 +3,14 @@ import { v } from 'convex/values'
 
 import { aiRoutes, modelRoles } from './ai/types'
 import {
+  coverageFindingCodes,
+  coverageFindingSeverities,
+  coverageRedirectHop,
+  coverageRunStates,
+  coverageStageNames,
+  coverageStageStates,
+} from './coverage/contracts'
+import {
   lifecycleStates,
   publicActionTypes,
   recordTypes,
@@ -532,6 +540,53 @@ export default defineSchema({
   })
     .index('by_body_and_status', ['governmentBodyId', 'status'])
     .index('by_next_scheduled_check', ['nextScheduledCheckAt']),
+
+  coverageCompilerRuns: defineTable({
+    bodyKey: v.string(),
+    jurisdictionSlug: v.string(),
+    rootManifestVersion: v.string(),
+    compilerVersion: v.string(),
+    idempotencyKey: v.string(),
+    attempt: v.number(),
+    state: coverageRunStates,
+    currentStage: v.optional(coverageStageNames),
+    requestedByUserId: v.id('users'),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    canceledAt: v.optional(v.number()),
+  })
+    .index('by_idempotency_key', ['idempotencyKey'])
+    .index('by_body_key_and_started_at', ['bodyKey', 'startedAt'])
+    .index('by_state_and_started_at', ['state', 'startedAt']),
+
+  coverageCompilerStages: defineTable({
+    runId: v.id('coverageCompilerRuns'),
+    stage: coverageStageNames,
+    idempotencyKey: v.string(),
+    inputHash: v.string(),
+    attempt: v.number(),
+    state: coverageStageStates,
+    gateVersion: v.string(),
+    requestedRootUrl: v.optional(v.string()),
+    resolvedRootUrl: v.optional(v.string()),
+    redirectChain: v.optional(v.array(coverageRedirectHop)),
+    errorClass: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_idempotency_key', ['idempotencyKey'])
+    .index('by_run_and_stage', ['runId', 'stage']),
+
+  coverageCompilerFindings: defineTable({
+    runId: v.id('coverageCompilerRuns'),
+    stageId: v.optional(v.id('coverageCompilerStages')),
+    code: coverageFindingCodes,
+    severity: coverageFindingSeverities,
+    summary: v.string(),
+    subjectUrl: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index('by_run_and_created_at', ['runId', 'createdAt']),
 
   sourceSnapshots: defineTable({
     registryId: v.id('sourceRegistries'),
