@@ -120,9 +120,15 @@ path for replies. It also sends private source-problem reports through a
 separate AgentMail inbox without starting Firecrawl, extraction, or publication
 work. Production workflows `33786995126` and `33788197489` passed for merge
 commits `3f18c126` and `41a6d593`, followed by independent production smokes.
-The controlled provider round trip ran in development. Production browser proof
-confirmed the connected report form, its selected-Source attachment, and live
-backend availability without sending a fake report.
+PRs #81 through #83 then made weekly replies cover every roundup item, retained
+private-report delivery results beyond AgentMail payload cleanup, and stopped
+body and place alerts when coverage is no longer supported or degraded. Their
+production workflows `33797222889`, `33797505992`, and `33797772856` passed,
+followed by independent production smokes. A controlled production source
+report reached `sent`, retained that terminal status in the application, and
+left the latest evidence-pipeline run unchanged. The full alert-and-reply
+provider round trip still has development proof only. No real production
+subscriber has completed that path yet.
 
 ## Executive Decision
 

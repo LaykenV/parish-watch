@@ -115,7 +115,7 @@ Phase 0 was completed on August 27:
   and mobile layouts were tested signed out.
 
 The evidence backend through Slice 4, resident-interface Design Slices 1 through
-8, implementation Slice 6, and implementation Slices 7A and 7B are live in
+8, implementation Slice 6, and implementation Slices 7A through 7D are live in
 production.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
@@ -223,8 +223,13 @@ resume, and removal. PRs #72 through #75 deployed durable notification matches,
 deduplicated immediate email, weekly roundups, provider reconciliation, and live
 notification settings. A controlled development replay matched every target
 type, sent two immediate and two weekly AgentMail messages, and sent nothing on
-replay. Coverage integration, the owner compiler, recruited-resident proof, the
-demo, and the vibeapps.dev submission remain pending.
+replay. PRs #78 and #79 deployed grounded alert replies and private source
+reports. PRs #81 through #83 hardened weekly reply scope, retained report
+delivery results beyond provider cleanup, and stopped alerts after coverage
+lapses. A controlled production report reached `sent` and started no evidence
+pipeline run. The production alert-and-reply round trip, coverage integration,
+the owner compiler, recruited-resident proof, the demo, and the vibeapps.dev
+submission remain pending.
 
 PR #70 then corrected Place follow validation so supported parishes and
 municipalities use the same enrollment path while unsupported places still

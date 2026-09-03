@@ -69,8 +69,11 @@ verification, preference, and email-management adapters. Google and verified
 email owners can create and manage real follows. Slice 7C replaced the sourced
 alert, weekly roundup, default-cadence, and recent-delivery adapters. Slice 7D
 connected verified alert replies to the grounded Ask path and connected private
-source reports to a separate AgentMail inbox. Coverage requests remain
-unavailable until their backend path passes.
+source reports to a separate AgentMail inbox. The closure hardening makes weekly
+replies cover every item in a roundup, retains private-report terminal status,
+and stops alerts when body or place coverage leaves the public gate. A
+controlled production report reached `sent` without starting evidence work.
+Coverage requests remain unavailable until their backend path passes.
 Each integration must replace the matching typed adapter without changing the
 page hierarchy or visual system.
 

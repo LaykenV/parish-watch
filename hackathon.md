@@ -12,9 +12,25 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-03T18:07:24Z
+- **Last updated:** 2026-09-03T19:45:56Z
 
 ## Log
+
+### 2026-09-03 - d170fba
+
+Closed three Slice 7 review edges through PRs #81 through #83. Weekly roundup
+replies now search the complete published corpus instead of one representative
+follow. Private source-report receipts keep their terminal delivery result after
+AgentMail removes finalized payloads. Notification matching now stops for bodies
+and places outside supported or degraded coverage (`convex/emailReplies/`,
+`convex/sourceReports/`, `convex/follows/targets.ts`).
+
+The PR checks and production workflows `33797222889`, `33797505992`, and
+`33797772856` passed, followed by independent production smoke checks. A
+clearly labeled production source report reached `sent`, stored that result in
+the application five seconds after submission, and left the latest pipeline run
+unchanged. The controlled development replay remains the only alert-and-reply
+provider proof. No real production subscriber has completed that path yet.
 
 ### 2026-09-03 - 41a6d59
 
