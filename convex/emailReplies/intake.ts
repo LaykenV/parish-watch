@@ -438,27 +438,9 @@ async function replyContext(
   ctx: MutationCtx,
   delivery: Doc<'notificationDeliveries'>,
 ): Promise<{ scope: AskScope; officialContactUrl?: string } | null> {
-  if (delivery.kind === 'weekly' && delivery.representativeFollowId) {
-    const follow = await ctx.db.get(delivery.representativeFollowId)
-    if (follow?.targetKind === 'issue') {
-      return { scope: { kind: 'issue', issueSlug: follow.targetKey } }
-    }
-    if (follow?.targetKind === 'place') {
-      return { scope: { kind: 'corpus', areaKey: follow.targetKey } }
-    }
-    if (follow?.targetKind === 'government_body') {
-      const body = await ctx.db
-        .query('governmentBodies')
-        .withIndex('by_slug', (q) => q.eq('slug', follow.targetKey))
-        .unique()
-      const place = body ? await ctx.db.get(body.jurisdictionId) : null
-      if (body && place) {
-        return {
-          scope: { kind: 'corpus', areaKey: place.slug },
-          officialContactUrl: body.officialUrl,
-        }
-      }
-    }
+  if (delivery.kind === 'weekly') {
+    // A roundup can contain updates from several follows, bodies, and places.
+    // Its reply thread must cover every item named in the message.
     return { scope: { kind: 'corpus' } }
   }
   if (!delivery.materialChangeId) return null

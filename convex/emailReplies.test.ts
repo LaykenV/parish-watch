@@ -145,6 +145,27 @@ test('reply intake rejects unknown senders and threads and deduplicates provider
   })
 })
 
+test('weekly replies can search every update in the roundup', async () => {
+  const t = initTest()
+  const seeded = await seedReplyDelivery(t, 'issue')
+  await receive(
+    t,
+    'weekly-corpus-event-0001',
+    seeded.threadId,
+    'resident@example.com',
+  )
+
+  await t.run(async (ctx) => {
+    const thread = await ctx.db
+      .query('emailReplyThreads')
+      .withIndex('by_agentmail_thread_id', (q) =>
+        q.eq('agentmailThreadId', seeded.threadId),
+      )
+      .unique()
+    expect(thread).toMatchObject({ scopeKind: 'corpus', scopeKey: '*' })
+  })
+})
+
 test('answer delivery queues one reply even when completion is replayed', async () => {
   const t = initTest()
   const eventId = await seedRunningEvent(t, 1)
@@ -292,7 +313,10 @@ test('email responses preserve grounded citations and the not-found contact path
   expect(reply).not.toContain('Cited evidence')
 })
 
-async function seedReplyDelivery(t: TestConvex) {
+async function seedReplyDelivery(
+  t: TestConvex,
+  targetKind: 'place' | 'issue' = 'place',
+) {
   return await t.run(async (ctx) => {
     const jurisdictionId = await ctx.db.insert('jurisdictions', {
       name: 'Lafayette Parish',
@@ -314,10 +338,12 @@ async function seedReplyDelivery(t: TestConvex) {
       ownerKind: 'google',
       ownerKey,
       userId,
-      targetKind: 'place',
-      targetKey: 'lafayette-parish',
-      targetTitle: 'Lafayette Parish',
-      targetDetail: 'Parish',
+      targetKind,
+      targetKey:
+        targetKind === 'place' ? 'lafayette-parish' : 'drainage-project',
+      targetTitle:
+        targetKind === 'place' ? 'Lafayette Parish' : 'Drainage project',
+      targetDetail: targetKind === 'place' ? 'Parish' : 'Published issue',
       createdAt: 1,
       updatedAt: 1,
     })
