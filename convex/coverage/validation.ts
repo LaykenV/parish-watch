@@ -83,7 +83,10 @@ export const reevaluate = mutation({
   handler: async (ctx, args) => {
     await requireOwner(ctx)
     const proposal = await ctx.db.get(args.proposalId)
-    if (!proposal || !['blocked', 'ready'].includes(proposal.status)) {
+    if (
+      !proposal ||
+      !['blocked', 'ready', 'promoted'].includes(proposal.status)
+    ) {
       return { started: false }
     }
     const run = await ctx.db.get(proposal.runId)
@@ -224,90 +227,107 @@ export const validateSample = internalAction({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const context = await ctx.runQuery(
-      internal.coverage.validation.validationContext,
-      args,
-    )
-    if (!context) {
-      await ctx.runMutation(
-        internal.coverage.validation.abandonValidation,
+    try {
+      const context = await ctx.runQuery(
+        internal.coverage.validation.validationContext,
         args,
       )
-      return null
-    }
-    const manifest = resolveRootManifest(
-      context.bodyKey,
-      context.rootManifestVersion,
-    )
-    if (!manifest) {
-      await finishValidation(
-        ctx,
-        args,
-        false,
-        'The checked root manifest disappeared.',
-      )
-      return null
-    }
-
-    for (let index = 0; index < context.samples.length; index += 2) {
-      if (
-        index > 0 &&
-        (await ctx.runQuery(
-          internal.coverage.validation.validationContext,
-          args,
-        )) === null
-      ) {
+      if (!context) {
         await ctx.runMutation(
           internal.coverage.validation.abandonValidation,
           args,
         )
         return null
       }
-      await Promise.all(
-        context.samples.slice(index, index + 2).map(async (sample) => {
-          if (sample.state === 'retrieved') return
-          if (classifyHost(manifest, sample.canonicalUrl) !== 'approved') {
-            await recordSample(ctx, sample.sampleId, {
-              outcome: 'failed_terminal',
-              errorClass: 'document_host_quarantined',
-            })
-            return
-          }
-          try {
-            const outcome = await ctx.runAction(
-              internal.operations.ingest.ingestRegistrySource,
-              {
-                registryId: context.registryId,
-                urlOverride: sample.canonicalUrl,
-              },
-            )
-            await recordSample(
-              ctx,
-              sample.sampleId,
-              outcome.outcome === 'created' || outcome.outcome === 'reused'
-                ? { outcome: 'retrieved', snapshotId: outcome.snapshotId }
-                : {
-                    outcome: outcome.retryable
-                      ? 'failed_retryable'
-                      : 'failed_terminal',
-                    errorClass: outcome.errorClass,
-                  },
-            )
-            await checkLink(ctx, args.proposalId, sample.canonicalUrl, manifest)
-          } catch (error) {
-            await recordSample(ctx, sample.sampleId, {
-              outcome: 'failed_retryable',
-              errorClass:
-                error instanceof Error && error.name
-                  ? `unexpected:${error.name}`
-                  : 'unexpected:sample_validation',
-            })
-          }
-        }),
+      const manifest = resolveRootManifest(
+        context.bodyKey,
+        context.rootManifestVersion,
       )
+      if (!manifest) {
+        await finishValidation(
+          ctx,
+          args,
+          false,
+          'The checked root manifest disappeared.',
+        )
+        return null
+      }
+
+      for (let index = 0; index < context.samples.length; index += 2) {
+        if (
+          index > 0 &&
+          (await ctx.runQuery(
+            internal.coverage.validation.validationContext,
+            args,
+          )) === null
+        ) {
+          await ctx.runMutation(
+            internal.coverage.validation.abandonValidation,
+            args,
+          )
+          return null
+        }
+        await Promise.all(
+          context.samples.slice(index, index + 2).map(async (sample) => {
+            if (sample.state === 'retrieved') return
+            if (classifyHost(manifest, sample.canonicalUrl) !== 'approved') {
+              await recordSample(ctx, sample.sampleId, {
+                outcome: 'failed_terminal',
+                errorClass: 'document_host_quarantined',
+              })
+              return
+            }
+            try {
+              const outcome = await ctx.runAction(
+                internal.operations.ingest.ingestRegistrySource,
+                {
+                  registryId: context.registryId,
+                  urlOverride: sample.canonicalUrl,
+                },
+              )
+              await recordSample(
+                ctx,
+                sample.sampleId,
+                outcome.outcome === 'created' || outcome.outcome === 'reused'
+                  ? { outcome: 'retrieved', snapshotId: outcome.snapshotId }
+                  : {
+                      outcome: outcome.retryable
+                        ? 'failed_retryable'
+                        : 'failed_terminal',
+                      errorClass: outcome.errorClass,
+                    },
+              )
+              await checkLink(
+                ctx,
+                args.proposalId,
+                sample.canonicalUrl,
+                manifest,
+              )
+            } catch (error) {
+              await recordSample(ctx, sample.sampleId, {
+                outcome: 'failed_retryable',
+                errorClass:
+                  error instanceof Error && error.name
+                    ? `unexpected:${error.name}`
+                    : 'unexpected:sample_validation',
+              })
+            }
+          }),
+        )
+      }
+      await finishValidation(ctx, args, true)
+      return null
+    } catch (error) {
+      await finishValidation(
+        ctx,
+        args,
+        false,
+        error instanceof Error
+          ? `Representative validation stopped: ${error.name}`
+          : 'Representative validation stopped unexpectedly.',
+      )
+      return null
     }
-    await finishValidation(ctx, args, true)
-    return null
   },
 })
 

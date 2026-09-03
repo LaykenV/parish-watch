@@ -12,7 +12,10 @@ import schema from './schema'
 const modules = import.meta.glob('./**/*.ts')
 type TestConvex = TestConvexForDataModelAndIdentity<DataModel>
 
-afterEach(() => vi.unstubAllEnvs())
+afterEach(() => {
+  vi.useRealTimers()
+  vi.unstubAllEnvs()
+})
 
 test('ten passing gates promote once and preserve the previous registry', async () => {
   const t = convexTest(schema, modules)
@@ -60,6 +63,46 @@ test('ten passing gates promote once and preserve the previous registry', async 
       status: 'degraded',
     }),
   ).resolves.toEqual({ changed: true, recovered: false })
+  await expect(
+    owner.mutation(api.coverage.promotion.setCoverageStatus, {
+      proposalId: seeded.proposalId,
+      status: 'supported',
+    }),
+  ).rejects.toThrow('cannot recover')
+
+  await expect(
+    owner.mutation(api.coverage.validation.reevaluate, {
+      proposalId: seeded.proposalId,
+    }),
+  ).resolves.toEqual({ started: true })
+  await drainScheduled(t)
+  await t.run(async (ctx) => {
+    expect((await ctx.db.get(seeded.proposalId))?.status).toBe('promoted')
+  })
+  await expect(
+    owner.mutation(api.coverage.promotion.setCoverageStatus, {
+      proposalId: seeded.proposalId,
+      status: 'supported',
+    }),
+  ).rejects.toThrow('cannot recover')
+
+  await t.run(async (ctx) => {
+    const generation =
+      (await ctx.db.get(seeded.registryId))?.statusGeneration ?? 0
+    for (let gateNumber = 1; gateNumber <= 10; gateNumber += 1) {
+      await ctx.db.insert('coverageGateEvaluations', {
+        proposalId: seeded.proposalId,
+        gateNumber,
+        gateKey: `gate_${gateNumber}`,
+        passed: true,
+        detail: 'Fresh test evidence.',
+        evidenceRefs: ['test'],
+        evaluatorVersion: COVERAGE_EVALUATOR_VERSION,
+        registryStatusGeneration: generation,
+        createdAt: Date.now(),
+      })
+    }
+  })
   await expect(
     owner.mutation(api.coverage.promotion.setCoverageStatus, {
       proposalId: seeded.proposalId,
@@ -244,6 +287,12 @@ async function seedReadyProposal(t: TestConvex, allPass: boolean) {
     return { bodyId, previousRegistryId, proposalId, registryId, runId }
   })
   return ids
+}
+
+async function drainScheduled(t: TestConvex): Promise<void> {
+  vi.useFakeTimers()
+  await t.finishAllScheduledFunctions(vi.runAllTimers)
+  vi.useRealTimers()
 }
 
 async function signInOwner(

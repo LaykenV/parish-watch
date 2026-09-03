@@ -492,7 +492,9 @@ still has ten passing results. Development link checks are retained for QA but
 cannot satisfy the production-link gate. Promotion changes the proposed
 registry and body in one transaction, pauses the previous live registry, and
 keeps all old snapshots and publications. Degradation and pause never delete
-evidence. Recovery reruns the same ten-gate check.
+evidence. A status change increments the registry generation. Recovery requires
+a new ten-gate evaluation recorded against that generation, so results from
+before the degradation cannot restore coverage.
 
 The gate walks the redirect chain itself with a bounded HTTPS request. Firecrawl
 is the retrieval engine for evidence, and a root that fails verification never
@@ -619,7 +621,7 @@ Indexes: jurisdiction plus status; jurisdiction plus slug.
 #### `sourceRegistries`
 
 Fields: body, official domains, seed URLs, source kinds, cadence, discovery mode,
-status, last discovery, last healthy time.
+status, status generation, last discovery, last healthy time.
 Indexes: body plus status; next scheduled check.
 
 #### `coverageCompilerRuns`
@@ -676,8 +678,8 @@ Indexes: proposal plus role; proposal plus state.
 #### `coverageGateEvaluations`
 
 Fields: proposal, gate number and key, pass result, detail, evidence references,
-evaluator version, and time. Evaluations append. Promotion reads the newest
-result for every gate.
+evaluator version, registry status generation, and time. Evaluations append.
+Promotion and recovery read the newest result for every gate.
 Indexes: proposal plus gate; proposal plus time.
 
 #### `sourceExpectations` and `coverageDirectLinkChecks`

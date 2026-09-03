@@ -703,6 +703,14 @@ function ProposalPanel({
           {proposal.status === 'promoted' ? (
             <>
               <Button
+                loading={pendingKey === `evaluate:${proposal.proposalId}`}
+                onClick={() => void onReevaluate(proposal.proposalId)}
+                size="sm"
+                variant="outline"
+              >
+                Re-evaluate gates
+              </Button>
+              <Button
                 loading={
                   pendingKey === `status:${proposal.proposalId}:degraded`
                 }

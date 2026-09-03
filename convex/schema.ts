@@ -538,6 +538,7 @@ export default defineSchema({
     }),
     discoveryMode: v.union(v.literal('dynamic'), v.literal('adapter')),
     status: coverageStatuses,
+    statusGeneration: v.optional(v.number()),
     lastDiscoveryAt: v.optional(v.number()),
     lastHealthyAt: v.optional(v.number()),
     nextScheduledCheckAt: v.optional(v.number()),
@@ -689,6 +690,7 @@ export default defineSchema({
     detail: v.string(),
     evidenceRefs: v.array(v.string()),
     evaluatorVersion: v.string(),
+    registryStatusGeneration: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index('by_proposal_and_gate', ['proposalId', 'gateNumber'])

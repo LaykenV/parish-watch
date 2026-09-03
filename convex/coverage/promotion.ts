@@ -50,12 +50,16 @@ export const confirmPromotion = mutation({
         sibling._id !== registry._id &&
         (sibling.status === 'supported' || sibling.status === 'degraded')
       ) {
-        await ctx.db.patch(sibling._id, { status: 'paused' })
+        await ctx.db.patch(sibling._id, {
+          status: 'paused',
+          statusGeneration: (sibling.statusGeneration ?? 0) + 1,
+        })
       }
     }
     const now = Date.now()
     await ctx.db.patch(registry._id, {
       status: 'supported',
+      statusGeneration: (registry.statusGeneration ?? 0) + 1,
       lastHealthyAt: now,
     })
     await ctx.db.patch(body._id, { publicStatus: 'supported' })
@@ -105,6 +109,7 @@ export const setCoverageStatus = mutation({
     await ctx.db.patch(body._id, { publicStatus: args.status })
     await ctx.db.patch(registry._id, {
       status: args.status,
+      statusGeneration: (registry.statusGeneration ?? 0) + 1,
       ...(args.status === 'supported' ? { lastHealthyAt: Date.now() } : {}),
     })
     await updateJurisdictionStatus(ctx, body.jurisdictionId)
@@ -117,6 +122,9 @@ async function allCurrentGatesPass(
   proposal: Doc<'coverageRegistryProposals'>,
 ): Promise<boolean> {
   if (proposal.evaluatorVersion !== COVERAGE_EVALUATOR_VERSION) return false
+  const registry = await ctx.db.get(proposal.registryId)
+  if (!registry) return false
+  const statusGeneration = registry.statusGeneration ?? 0
   const results = await Promise.all(
     Array.from({ length: 10 }, async (_, index) => {
       return await ctx.db
@@ -131,7 +139,8 @@ async function allCurrentGatesPass(
   return results.every(
     (result) =>
       result?.passed === true &&
-      result.evaluatorVersion === COVERAGE_EVALUATOR_VERSION,
+      result.evaluatorVersion === COVERAGE_EVALUATOR_VERSION &&
+      (result.registryStatusGeneration ?? 0) === statusGeneration,
   )
 }
 

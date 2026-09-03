@@ -157,6 +157,7 @@ export const evaluateProposal = internalMutation({
         proposalId: proposal._id,
         ...result,
         evaluatorVersion: COVERAGE_EVALUATOR_VERSION,
+        registryStatusGeneration: registry?.statusGeneration ?? 0,
         createdAt: now,
       })
       if (!result.passed) {
@@ -176,7 +177,12 @@ export const evaluateProposal = internalMutation({
     const ready = results.every((result) => result.passed)
     await ctx.db.patch(stage._id, { state: 'succeeded', completedAt: now })
     await ctx.db.patch(proposal._id, {
-      status: ready ? 'ready' : 'blocked',
+      status:
+        proposal.status === 'promoted'
+          ? 'promoted'
+          : ready
+            ? 'ready'
+            : 'blocked',
       evaluatedAt: now,
     })
     await ctx.db.patch(proposal.runId, {
