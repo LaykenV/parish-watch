@@ -258,7 +258,7 @@ function DecisionView({
                 </p>
                 <ReportProblem
                   available={Boolean(search.fixture)}
-                  recordUrl={`/decisions/${decision.recordKey}`}
+                  recordUrl={currentDecisionHref}
                 />
               </div>
             </Section>

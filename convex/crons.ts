@@ -33,6 +33,13 @@ crons.interval(
 )
 
 crons.interval(
+  'remove expired private source report metadata',
+  { hours: 24 },
+  internal.sourceReports.reports.removeExpiredMetadata,
+  {},
+)
+
+crons.interval(
   'recover interrupted sourced email replies',
   { minutes: 5 },
   internal.emailReplies.recovery.recoverInterruptedReplies,
