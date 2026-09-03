@@ -12,11 +12,11 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-03T04:50:00Z
+- **Last updated:** 2026-09-03T18:07:24Z
 
 ## Log
 
-### 2026-09-03 - Slice 7D development proof
+### 2026-09-03 - 41a6d59
 
 Built Slice 7D in two stacked code PRs. PR #78 accepts an alert reply only after
 it verifies the AgentMail inbox, original delivery thread, and enrolled sender.
@@ -28,10 +28,13 @@ PR #79 connects the existing source-problem sheet to a separate private
 AgentMail inbox. It keeps the issue, decision, meeting, and selected Source
 route, applies browser and global limits, and never calls the evidence pipeline.
 
-GitHub verification passed PR #78 at `9c3bbfc` in run `33716160699`. The
-standalone report branch passed run `33716159016`. The stacked head `30ce920`
-passed run `33716342470`, which checked both features together after Convex
-regenerated the combined API declarations.
+The final reply head `c39eafe` passed Verify run `33781686493` and PR Agent run
+`33781686995`. PR #78 merged as `3f18c126`; production workflow `33786995126`
+and the independent production smoke passed. The final report tree added a
+45-second confirmation bound for unresolved AgentMail receipts, kept retries on
+the same receipt, and preserved honest uncertainty when provider metadata is no
+longer available. The clean report-only head `ec6d003` passed Verify run
+`33787335483` and PR Agent run `33787335475`.
 
 A controlled run on the personal development deployment sent an alert between
 two owned AgentMail inboxes and replied with a question about Johnston Street
@@ -47,9 +50,12 @@ no report text or address. No pipeline run started after the report.
 
 The development-only probe function and its seeded user, follow, delivery, and
 reply records were removed after the test. The controlled provider email thread
-remains as delivery evidence. Production was not changed. The production reports
-inbox setting still needs approval before PR #79 can ship, and both merges will
-start production deployment workflows.
+remains as delivery evidence. The production reports inbox setting was added to
+`befitting-flamingo-587`. PR #79 merged as `41a6d593`; production workflow
+`33788197489` and the independent production smoke passed. A live browser opened
+a published Pafford issue, selected Source `kh7be5xzdyvan21bqzhmctegnn8dqwjd`,
+and confirmed that the connected private form attached the exact Source-bearing
+route. The production availability query returned `available: true`.
 
 ### 2026-09-03 - 6bafeaa
 
