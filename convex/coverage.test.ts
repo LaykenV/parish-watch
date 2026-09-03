@@ -174,9 +174,7 @@ test('a failed root gate makes no paid provider call and can be retried', async 
   expect(failed?.findings.map((finding) => finding.code)).toEqual([
     'root_host_not_approved',
   ])
-  expect(failed?.stages[0].errorClass).toBe(
-    'root_gate:root_host_not_approved',
-  )
+  expect(failed?.stages[0].errorClass).toBe('root_gate:root_host_not_approved')
   // The gate stopped before requesting the lookalike host.
   expect(fetchMock).toHaveBeenCalledTimes(1)
   expect(fetchMock).toHaveBeenCalledWith(
@@ -233,9 +231,39 @@ test('a terminal failure earns a new attempt instead of reusing the failed run',
 
   const runs = await owner.query(api.coverage.operations.recentRuns, {})
   expect(runs.map((entry) => entry.attempt).sort()).toEqual([1, 2])
-  expect(
-    runs.find((entry) => entry.runId === second.runId)?.state,
-  ).toBe('succeeded')
+  expect(runs.find((entry) => entry.runId === second.runId)?.state).toBe(
+    'succeeded',
+  )
+})
+
+test('a failed run cannot retry beside a newer active run', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => Promise.resolve(new Response(null, { status: 404 }))),
+  )
+
+  const failed = await owner.mutation(api.coverage.operations.start, {
+    bodyKey: 'lafayette-city-council',
+    rootManifestVersion: 'v1',
+  })
+  await t.finishInProgressScheduledFunctions()
+
+  stubHtmlRoot()
+  const active = await owner.mutation(api.coverage.operations.start, {
+    bodyKey: 'lafayette-city-council',
+    rootManifestVersion: 'v1',
+  })
+  await expect(
+    owner.mutation(api.coverage.operations.retry, { runId: failed.runId }),
+  ).resolves.toEqual({ retried: false })
+
+  const runs = await owner.query(api.coverage.operations.recentRuns, {})
+  expect(runs.find((run) => run.runId === active.runId)?.state).toBe('running')
+  expect(runs.find((run) => run.runId === failed.runId)?.state).toBe(
+    'failed_terminal',
+  )
 })
 
 test('cancellation stops the run before it spends anything', async () => {

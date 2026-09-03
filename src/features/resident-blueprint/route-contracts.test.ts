@@ -8,7 +8,10 @@ import {
   getResidentBlueprint,
 } from './route-contracts'
 
-type ResidentRoutePath = Exclude<keyof FileRoutesByFullPath, '/'>
+type ResidentRoutePath = Exclude<
+  keyof FileRoutesByFullPath,
+  '/' | '/operations/coverage'
+>
 
 const EXPECTED_RESIDENT_ROUTES = [
   '/for-you',
