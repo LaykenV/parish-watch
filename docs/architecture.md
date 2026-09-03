@@ -453,6 +453,23 @@ The owner starts a run by body key and manifest version. There is no URL
 argument, so owner access cannot turn an unverified address into an official
 root. `.gov` roots use the same mechanism as every other host.
 
+After a root passes, the owner starts paid discovery as a separate operation.
+Firecrawl maps the verified root and runs three body-specific searches across
+the bounded source vocabulary. The compiler keeps meaningful document query
+parameters, removes known tracking parameters, deduplicates canonical URLs,
+rejects unapproved hosts, and caps each run at 100 candidates. A link on an
+approved shared document host remains quarantined.
+
+`MODEL_FAST` receives only stored candidate IDs and their bounded URL metadata.
+Its strict response names every candidate exactly once, copies one evidence
+substring from that candidate, and returns `uncertain` instead of guessing a
+source kind or cadence. Deterministic code rejects changed body keys, invented
+IDs, missing candidates, uncopied evidence, and malformed no-guess results.
+The compiler records request and response hashes, prompt and schema versions,
+model route, latency, token use, and estimated cost. Firecrawl 0.1.1 does not
+expose map or search credit totals, so each call records that credits were not
+reported instead of inventing a number.
+
 The gate walks the redirect chain itself with a bounded HTTPS request. Firecrawl
 is the retrieval engine for evidence, and a root that fails verification never
 reaches it, so the probe spends no credits and no model tokens. Each hop is
@@ -602,6 +619,21 @@ Indexes: idempotency key; run plus stage.
 Fields: run, optional stage, finding code, severity, public-safe summary,
 optional subject URL, and created time.
 Indexes: run plus created time.
+
+#### `coverageSourceCandidates`
+
+Fields: run, discovery stage, canonical URL, bounded title and description,
+discovery provenance, matched terms, host disposition, private classification,
+copied evidence, confidence, and timestamps.
+Indexes: run plus URL; run plus state. Candidate rows do not change a public
+body or registry.
+
+#### `coverageCompilerProviderCalls`
+
+Fields: run, stage, provider, operation, status, request and response hashes,
+prompt and schema versions, model role and ID, latency, reported Firecrawl
+credits, model tokens, estimated model cost, bounded error, and time.
+Indexes: run plus time; stage plus time.
 
 #### `sourceExpectations`
 

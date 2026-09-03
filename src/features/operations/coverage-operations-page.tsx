@@ -87,6 +87,7 @@ function OwnerCoverageOperations() {
   const roots = useQuery(api.coverage.operations.availableRoots, {})
   const runs = useQuery(api.coverage.operations.recentRuns, {})
   const startRun = useMutation(api.coverage.operations.start)
+  const discoverSources = useMutation(api.coverage.operations.discover)
   const cancelRun = useMutation(api.coverage.operations.cancel)
   const retryRun = useMutation(api.coverage.operations.retry)
   const [selectedRunId, setSelectedRunId] = useState<RunId | null>(null)
@@ -262,6 +263,12 @@ function OwnerCoverageOperations() {
                     </h3>
                   </div>
                   <RunActions
+                    canDiscover={
+                      selectedRun.run.state === 'succeeded' &&
+                      selectedRun.stages.every(
+                        (stage) => stage.stage === 'verify_root',
+                      )
+                    }
                     pendingKey={pendingKey}
                     run={selectedRun.run}
                     onCancel={() =>
@@ -283,6 +290,16 @@ function OwnerCoverageOperations() {
                           ? 'Failed stage queued again.'
                           : 'The failed stage could not be queued again.'
                       })
+                    }
+                    onDiscover={() =>
+                      operate(
+                        `discover:${selectedRun.run.runId}`,
+                        () =>
+                          discoverSources({
+                            runId: selectedRun.run.runId,
+                          }),
+                        'Bounded source discovery started.',
+                      )
                     }
                   />
                 </div>
@@ -327,6 +344,84 @@ function OwnerCoverageOperations() {
                   ))}
                 </ol>
 
+                {selectedRun.providerCalls.length > 0 ? (
+                  <section
+                    aria-labelledby="provider-heading"
+                    className="coverage-ops-findings coverage-ops-provider-calls"
+                  >
+                    <h4 id="provider-heading">Provider evidence</h4>
+                    <p>
+                      {selectedRun.providerCalls.length} calls ·{' '}
+                      {formatCost(
+                        selectedRun.providerCalls.reduce(
+                          (total, call) => total + (call.estimatedCostUsd ?? 0),
+                          0,
+                        ),
+                      )}{' '}
+                      estimated model cost
+                    </p>
+                    <ul>
+                      {selectedRun.providerCalls.map((call) => (
+                        <li key={call.providerCallId}>
+                          <Clock3Icon aria-hidden="true" />
+                          <span>
+                            <strong>
+                              {call.provider} · {call.operation}
+                            </strong>
+                            {call.status} in {call.latencyMs} ms
+                            {call.creditsReported
+                              ? ` · ${call.creditsUsed ?? 0} credits`
+                              : call.provider === 'firecrawl'
+                                ? ' · provider did not report credits'
+                                : ''}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+
+                {selectedRun.candidates.length > 0 ? (
+                  <section
+                    aria-labelledby="candidate-heading"
+                    className="coverage-ops-candidates"
+                  >
+                    <h4 id="candidate-heading">
+                      Source candidates{' '}
+                      <span>{selectedRun.candidates.length}</span>
+                    </h4>
+                    <ul>
+                      {selectedRun.candidates.map((candidate) => (
+                        <li key={candidate.candidateId}>
+                          <div>
+                            <strong>
+                              {candidate.title ??
+                                candidate.sourceKind ??
+                                'Unlabeled source'}
+                            </strong>
+                            <a
+                              href={candidate.canonicalUrl}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              {candidate.canonicalUrl}
+                            </a>
+                          </div>
+                          <div>
+                            <RunState state={candidate.state} />
+                            {candidate.sourceKind ? (
+                              <small>
+                                {candidate.sourceKind.replaceAll('_', ' ')} ·{' '}
+                                {candidate.cadence?.replaceAll('_', ' ')}
+                              </small>
+                            ) : null}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+
                 {selectedRun.findings.length > 0 ? (
                   <section
                     aria-labelledby="finding-heading"
@@ -356,16 +451,31 @@ function OwnerCoverageOperations() {
 }
 
 function RunActions({
+  canDiscover,
   onCancel,
+  onDiscover,
   onRetry,
   pendingKey,
   run,
 }: {
+  canDiscover: boolean
   onCancel: () => Promise<unknown>
+  onDiscover: () => Promise<unknown>
   onRetry: () => Promise<unknown>
   pendingKey: string | null
   run: { runId: RunId; state: string }
 }) {
+  if (canDiscover) {
+    return (
+      <Button
+        loading={pendingKey === `discover:${run.runId}`}
+        onClick={() => void onDiscover()}
+        size="sm"
+      >
+        Discover sources
+      </Button>
+    )
+  }
   if (run.state === 'queued' || run.state === 'running') {
     return (
       <Button
@@ -439,6 +549,14 @@ function formatTimestamp(value: number): string {
   return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
+  }).format(value)
+}
+
+function formatCost(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: value < 0.01 ? 4 : 2,
   }).format(value)
 }
 

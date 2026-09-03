@@ -12,6 +12,7 @@ import {
   coverageRedirectHop,
 } from './contracts'
 import type { CoverageRootManifest } from './roots'
+import { openRetryStage } from './discoveryLedger'
 
 const MAX_STORED_HOPS = 8
 const RUN_SCAN_LIMIT = 25
@@ -171,13 +172,25 @@ export async function retryCoverageRun(
 ): Promise<{
   retried: boolean
   stageId: Id<'coverageCompilerStages'> | null
+  stage: 'verify_root' | 'discover_sources' | 'classify_sources' | null
 }> {
   const run = await ctx.db.get(runId)
   if (
     !run ||
     (run.state !== 'failed_retryable' && run.state !== 'failed_terminal')
   ) {
-    return { retried: false, stageId: null }
+    return { retried: false, stageId: null, stage: null }
+  }
+  const bodyRuns = await recentRunsForBody(ctx, run.bodyKey)
+  const competingRun = bodyRuns.find(
+    (candidate) =>
+      candidate._id !== run._id &&
+      candidate.rootManifestVersion === run.rootManifestVersion &&
+      candidate.compilerVersion === run.compilerVersion &&
+      isActive(candidate),
+  )
+  if (competingRun) {
+    return { retried: false, stageId: null, stage: null }
   }
   const bodyRuns = await recentRunsForBody(ctx, run.bodyKey)
   const competingRun = bodyRuns.find(
@@ -188,25 +201,32 @@ export async function retryCoverageRun(
     .query('coverageCompilerStages')
     .withIndex('by_run_and_stage', (index) => index.eq('runId', runId))
     .take(RUN_SCAN_LIMIT)
-  const rootStages = stages.filter((stage) => stage.stage === 'verify_root')
-  if (rootStages.some((stage) => stage.state === 'running')) {
-    return { retried: false, stageId: null }
+  if (stages.some((stage) => stage.state === 'running')) {
+    return { retried: false, stageId: null, stage: null }
   }
+  const failed = stages
+    .filter(
+      (stage) =>
+        stage.state === 'failed_retryable' || stage.state === 'failed_terminal',
+    )
+    .sort((left, right) => right.startedAt - left.startedAt)[0]
+  if (!failed) return { retried: false, stageId: null, stage: null }
+  const stageAttempts = stages.filter((stage) => stage.stage === failed.stage)
   const attempt =
-    rootStages.reduce((highest, stage) => Math.max(highest, stage.attempt), 0) +
-    1
-  const stageId = await openRootStage(
-    ctx,
-    runId,
-    attempt,
-    manifest.approvedRootUrl,
-  )
+    stageAttempts.reduce(
+      (highest, stage) => Math.max(highest, stage.attempt),
+      0,
+    ) + 1
+  const stageId =
+    failed.stage === 'verify_root'
+      ? await openRootStage(ctx, runId, attempt, manifest.approvedRootUrl)
+      : await openRetryStage(ctx, runId, failed.stage, attempt)
   await ctx.db.patch(runId, {
     state: 'running',
-    currentStage: 'verify_root',
+    currentStage: failed.stage,
     completedAt: undefined,
   })
-  return { retried: true, stageId }
+  return { retried: true, stageId, stage: failed.stage }
 }
 
 export const rootVerificationContext = internalQuery({
