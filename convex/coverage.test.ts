@@ -15,6 +15,7 @@ const LAFAYETTE_ROOT =
   'https://www.lafayettela.gov/your-government/city-and-parish-councils/'
 
 afterEach(() => {
+  vi.useRealTimers()
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
 })
@@ -92,7 +93,7 @@ test('a verified official root records its evidence and succeeds', async () => {
     rootManifestVersion: 'v1',
   })
   expect(started.created).toBe(true)
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   const view = await owner.query(api.coverage.operations.run, {
     runId: started.runId,
@@ -135,7 +136,7 @@ test('replaying the same body and manifest version reuses the run', async () => 
   })
   expect(concurrent).toEqual({ runId: first.runId, created: false })
 
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   const afterSuccess = await owner.mutation(api.coverage.operations.start, {
     bodyKey: 'lafayette-city-council',
@@ -165,7 +166,7 @@ test('a failed root gate makes no paid provider call and can be retried', async 
     bodyKey: 'lafayette-city-council',
     rootManifestVersion: 'v1',
   })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   const failed = await owner.query(api.coverage.operations.run, {
     runId: started.runId,
@@ -196,7 +197,7 @@ test('a failed root gate makes no paid provider call and can be retried', async 
   await expect(
     owner.mutation(api.coverage.operations.retry, { runId: started.runId }),
   ).resolves.toEqual({ retried: true })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   const retried = await owner.query(api.coverage.operations.run, {
     runId: started.runId,
@@ -218,7 +219,7 @@ test('a terminal failure earns a new attempt instead of reusing the failed run',
     bodyKey: 'lafayette-city-council',
     rootManifestVersion: 'v1',
   })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   stubHtmlRoot()
   const second = await owner.mutation(api.coverage.operations.start, {
@@ -227,7 +228,7 @@ test('a terminal failure earns a new attempt instead of reusing the failed run',
   })
   expect(second.created).toBe(true)
   expect(second.runId).not.toEqual(first.runId)
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   const runs = await owner.query(api.coverage.operations.recentRuns, {})
   expect(runs.map((entry) => entry.attempt).sort()).toEqual([1, 2])
@@ -248,7 +249,7 @@ test('a failed run cannot retry beside a newer active run', async () => {
     bodyKey: 'lafayette-city-council',
     rootManifestVersion: 'v1',
   })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   stubHtmlRoot()
   const active = await owner.mutation(api.coverage.operations.start, {
@@ -278,7 +279,7 @@ test('cancellation stops the run before it spends anything', async () => {
   await expect(
     owner.mutation(api.coverage.operations.cancel, { runId: started.runId }),
   ).resolves.toEqual({ canceled: true })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   const view = await owner.query(api.coverage.operations.run, {
     runId: started.runId,
@@ -359,6 +360,12 @@ function stubHtmlRoot() {
   )
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
+}
+
+async function drainScheduled(t: TestConvex): Promise<void> {
+  vi.useFakeTimers()
+  await t.finishAllScheduledFunctions(vi.runAllTimers)
+  vi.useRealTimers()
 }
 
 async function firstStageId(
