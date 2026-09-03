@@ -106,16 +106,11 @@ function OwnerCoverageOperations() {
     [roots],
   )
 
-  async function operate(
-    key: string,
-    task: () => Promise<unknown>,
-    success: string,
-  ) {
+  async function operate(key: string, task: () => Promise<string>) {
     setPendingKey(key)
     setMessage(null)
     try {
-      await task()
-      setMessage(success)
+      setMessage(await task())
     } catch (error) {
       setMessage(operationError(error))
     } finally {
@@ -180,17 +175,16 @@ function OwnerCoverageOperations() {
                     <Button
                       loading={pending}
                       onClick={() =>
-                        void operate(
-                          `start:${root.bodyKey}`,
-                          async () => {
-                            const result = await startRun({
-                              bodyKey: root.bodyKey,
-                              rootManifestVersion: root.version,
-                            })
-                            setSelectedRunId(result.runId)
-                          },
-                          `${root.bodyName} run started or reused.`,
-                        )
+                        void operate(`start:${root.bodyKey}`, async () => {
+                          const result = await startRun({
+                            bodyKey: root.bodyKey,
+                            rootManifestVersion: root.version,
+                          })
+                          setSelectedRunId(result.runId)
+                          return result.created
+                            ? `${root.bodyName} run started.`
+                            : `${root.bodyName} already has an active or successful run.`
+                        })
                       }
                       size="sm"
                     >
@@ -271,18 +265,24 @@ function OwnerCoverageOperations() {
                     pendingKey={pendingKey}
                     run={selectedRun.run}
                     onCancel={() =>
-                      operate(
-                        `cancel:${selectedRun.run.runId}`,
-                        () => cancelRun({ runId: selectedRun.run.runId }),
-                        'Run canceled.',
-                      )
+                      operate(`cancel:${selectedRun.run.runId}`, async () => {
+                        const result = await cancelRun({
+                          runId: selectedRun.run.runId,
+                        })
+                        return result.canceled
+                          ? 'Run canceled.'
+                          : 'The run had already stopped, so nothing changed.'
+                      })
                     }
                     onRetry={() =>
-                      operate(
-                        `retry:${selectedRun.run.runId}`,
-                        () => retryRun({ runId: selectedRun.run.runId }),
-                        'Failed stage queued again.',
-                      )
+                      operate(`retry:${selectedRun.run.runId}`, async () => {
+                        const result = await retryRun({
+                          runId: selectedRun.run.runId,
+                        })
+                        return result.retried
+                          ? 'Failed stage queued again.'
+                          : 'The failed stage could not be queued again.'
+                      })
                     }
                   />
                 </div>

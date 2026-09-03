@@ -272,28 +272,51 @@ test('cancellation stops the run before it spends anything', async () => {
   const t = convexTest(schema, modules)
   const owner = await signInOwner(t)
   const fetchMock = stubHtmlRoot()
-
-  const started = await owner.mutation(api.coverage.operations.start, {
-    bodyKey: 'lafayette-city-council',
-    rootManifestVersion: 'v1',
+  const { runId, stageId } = await t.run(async (ctx) => {
+    const user = await ctx.db.query('users').first()
+    if (!user) throw new Error('The owner fixture is missing')
+    const startedAt = Date.now()
+    const runId = await ctx.db.insert('coverageCompilerRuns', {
+      bodyKey: 'lafayette-city-council',
+      jurisdictionSlug: 'lafayette-parish',
+      rootManifestVersion: 'v1',
+      compilerVersion: 'v1',
+      idempotencyKey: 'canceled-before-worker-run',
+      attempt: 1,
+      state: 'running',
+      currentStage: 'verify_root',
+      requestedByUserId: user._id,
+      startedAt,
+    })
+    const stageId = await ctx.db.insert('coverageCompilerStages', {
+      runId,
+      stage: 'verify_root',
+      idempotencyKey: 'canceled-before-worker-stage',
+      inputHash: 'canceled-before-worker-input',
+      attempt: 1,
+      state: 'running',
+      gateVersion: 'v1',
+      requestedRootUrl: LAFAYETTE_ROOT,
+      startedAt,
+    })
+    return { runId, stageId }
   })
-  const stageId = await firstStageId(t, started.runId)
   await expect(
-    owner.mutation(api.coverage.operations.cancel, { runId: started.runId }),
+    owner.mutation(api.coverage.operations.cancel, { runId }),
   ).resolves.toEqual({ canceled: true })
   await t.action(internal.coverage.verifyRoot.verifyRootForRun, {
-    runId: started.runId,
+    runId,
     stageId,
   })
 
   const view = await owner.query(api.coverage.operations.run, {
-    runId: started.runId,
+    runId,
   })
   expect(view?.run.state).toBe('canceled')
   expect(view?.stages[0].state).toBe('canceled')
   expect(fetchMock).not.toHaveBeenCalled()
   await expect(
-    owner.mutation(api.coverage.operations.cancel, { runId: started.runId }),
+    owner.mutation(api.coverage.operations.cancel, { runId }),
   ).resolves.toEqual({ canceled: false })
 })
 
