@@ -148,8 +148,10 @@ As of this file's update:
   setup;
 - PRs #66 and #67 deployed Google and AgentMail-verified email follow
   enrollment and scoped management;
-- sourced alert delivery and the coverage compiler remain later work unless
-  current repository evidence proves otherwise;
+- PRs #72 through #75 deployed sourced immediate alerts, weekly roundups,
+  delivery reconciliation, and live notification settings;
+- grounded inbound email replies and the coverage compiler remain later work
+  unless current repository evidence proves otherwise;
 - Lafayette planning and zoning, Youngsville, Rapides bodies, and East Baton
   Rouge bodies remain candidates until each passes the coverage gate.
 
@@ -168,8 +170,8 @@ Do not replace these roles with Grok.
 - Deterministic code validates model results and decides what may become public.
 - Convex stores pipeline state, evidence, versions, workflows, and public
   projections.
-- AgentMail verifies email-only follows now and will deliver sourced alerts
-  after Slice 7C closes that resident loop.
+- AgentMail verifies email-only follows and delivers sourced immediate and
+  weekly alerts. Grounded inbound reply handling remains Slice 7D.
 
 Grok Bot operates and repairs the system. Grok output is not civic evidence and
 must not become a published claim.

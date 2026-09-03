@@ -49,9 +49,12 @@ authorization. The canonical custom domain and qualifying `convex.site` flow
 both completed real production sign-in and sign-out, and the public privacy
 notice is live on both hosts. Implementation Slice 7B is deployed through PRs
 #66 and #67. Google and AgentMail-verified email owners can create and manage
-real follows without sharing ownership. Sourced immediate and weekly alert
-delivery remains PR 7C. Coverage requests and private source reports remain
-later work.
+real follows without sharing ownership. Implementation Slice 7C is deployed
+through PRs #72 through #75. Accepted material changes now create durable
+matches and deduplicated immediate or weekly AgentMail delivery, while signed-in
+residents can manage the default cadence and inspect recent delivery state.
+Grounded email replies remain Slice 7D. Coverage requests and private source
+reports remain later work.
 
 - Public production app: https://publicparish.com (redirects to the canonical
   Convex-served origin at https://www.publicparish.com)

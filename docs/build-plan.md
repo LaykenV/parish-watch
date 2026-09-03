@@ -241,9 +241,9 @@ the independent production smoke passed. PR #34 deployed Design Slice 6 as
 `0aa7474`, PR #37 deployed Design Slice 7 as `f854c2e`, and PR #43 deployed
 Design Slice 8 as `85d6947`. Production workflow `33454522729` and the
 independent production smoke passed. Accepted decision, meeting, issue, Ask,
-account, follow-enrollment, preference, and email-management adapters are live.
-Sourced alert layouts, coverage requests, and private reports remain
-fixture-backed until their integration gates pass.
+account, follow-enrollment, preference, email-management, sourced-alert,
+roundup, and notification-settings adapters are live. Coverage requests and
+private reports remain fixture-backed until their integration gates pass.
 
 The deployed Slice 2 release introduced the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -295,7 +295,11 @@ adapters with the live AgentMail enrollment path and unified follow ownership.
 Production creates real follows for both owner kinds. Slice 7A pull-request
 verification passed 221 tests across 27 files, typecheck, production builds,
 prerender, and lint. Slice 7B verification passed on both of its stacked pull
-requests.
+requests. Implementation Slice 7C deployed durable match fanout, deduplicated
+immediate delivery, weekly roundup windows, delivery reconciliation, and live
+notification settings through PRs #72 through #75. A controlled development
+replay matched all four target types, sent two immediate and two weekly
+AgentMail messages, and produced no duplicate delivery on replay.
 
 Design Slice 6 completes Coverage, coverage request, public method, area-state,
 and private-report interfaces. Design Slice 7 makes loading, heading focus,
@@ -394,8 +398,9 @@ Slice 6 is closed.
 
 Status: Google OAuth, centralized user authorization, and private saved areas
 and topics deployed through PRs #58 and #59. Google and email-only follow
-enrollment deployed through PRs #66 and #67. Sourced alert delivery remains
-PR 7C.
+enrollment deployed through PRs #66 and #67. Sourced immediate and weekly
+alerts plus live notification settings deployed through PRs #72 through #75.
+Grounded inbound replies remain PR 7D.
 
 - pin and install Convex Auth v2 alpha;
 - add Google OAuth account sign-in;
@@ -414,7 +419,8 @@ PR 7C.
 - send a material-change email with sources;
 - collapse overlapping follows into one immediate delivery per owner and
   material change;
-- wait for a refreshed accepted issue before sending an issue-target alert;
+- wait for a newly accepted issue build or refreshed accepted issue before
+  sending an issue-target alert;
 - offer an optional Monday 7:00 AM `America/Chicago` weekly roundup of material
   changes, using a local-time window claim that survives daylight-saving
   changes, catches up a missed claim for 24 hours, and resumes stale pages from

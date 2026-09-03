@@ -107,11 +107,14 @@ and from the qualifying `convex.site` origin through the canonical callback.
 Implementation Slice 7B is deployed through PRs #66 and #67. Google residents
 and AgentMail-verified email-only residents can now follow an issue, topic,
 government body, or place, and each can manage only their own follow. Coverage
-requests and private source reports remain in implementation Slices 8 and 9,
-and sourced alert delivery is Slice 7C. One controlled corpus answer rendered
-Luna's Markdown emphasis markers as literal text. That presentation defect does
-not affect grounding, but it should be corrected before the final demo. PR 7C
-is the next implementation packet.
+requests and private source reports remain in implementation Slices 8 and 9.
+Implementation Slice 7C is deployed through PRs #72 through #75. Accepted new
+decisions and later material changes now create durable follow matches,
+deduplicated immediate delivery, evidence-only weekly roundups, and live
+notification settings. A controlled development replay sent two immediate and
+two weekly messages through AgentMail and produced no duplicate on replay. PR
+#57 already corrected the Markdown emphasis markers found during controlled
+corpus QA. Grounded inbound replies remain Slice 7D.
 
 ## Executive Decision
 

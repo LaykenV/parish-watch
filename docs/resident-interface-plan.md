@@ -18,11 +18,13 @@ and the independent production smoke passed. The complete design and frontend
 contract is closed. Later releases connected accepted issue, decision, meeting,
 citation, bounded anonymous Ask, Google account, private saved setup, follow
 enrollment, per-follow cadence preferences, and scoped email-management adapters
-without reopening the design. Sourced alerts, coverage requests, and private
-source reports remain gated. The current primary navigation is Home, Explore,
-Ask, and Coverage; legacy `/for-you` and `/issues` index routes redirect to the
-issue-led Home. The public `/privacy` route documents account, Ask, analytics,
-provider, retention, and deletion boundaries.
+without reopening the design. Slice 7C connected sourced immediate alerts,
+weekly roundups, live default cadence, and recent delivery state. Coverage
+requests and private source reports remain gated. The current primary
+navigation is Home, Explore, Ask, and Coverage; legacy `/for-you` and `/issues`
+index routes redirect to the issue-led Home. The public `/privacy` route
+documents account, Ask, analytics, provider, retention, and deletion
+boundaries.
 
 ## Purpose
 
@@ -621,7 +623,7 @@ Immediate email order:
 3. Why it may matter
 4. Official source receipts
 5. Open the issue
-6. Reply with a question
+6. Reply with a question after Slice 7D ships
 7. Manage delivery
 
 Weekly roundups group by followed place, then issue. Put deadlines and outcomes

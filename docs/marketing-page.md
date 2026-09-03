@@ -332,14 +332,17 @@ source. The brief records the transferable rules, not the reference names.
 ## Current truth boundary
 
 Before generating public copy, re-check [`hackathon.md`](./hackathon.md) and the
-repository. At the time this brief was written:
+repository. At the time this brief was last updated:
 
-- the TanStack Start and Convex production shell is public;
-- the Phase 0 page is a setup proof, not the resident application;
-- immutable-source and private extraction work exists in development;
-- no public resident issue experience is ready;
-- no AgentMail alert loop or Google authentication flow is ready;
-- no public region should be called supported yet.
+- the public production app has accepted decisions, issues, exact evidence,
+  and bounded anonymous Ask;
+- Google accounts and verified email subscribers can create and manage follows;
+- AgentMail immediate alerts, weekly roundups, delivery state, and notification
+  settings shipped in Slice 7C;
+- coverage claims remain limited to bodies that pass the publication and
+  coverage gates in [`sources.md`](./sources.md);
+- grounded inbound email replies and the owner-run coverage compiler remain
+  future work.
 
 Do not turn planned features into present-tense product claims.
 

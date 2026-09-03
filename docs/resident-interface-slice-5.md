@@ -10,8 +10,9 @@ and server production builds, prerender, and lint. Production workflow
 release connected Google account ownership and private saved areas and topics.
 Slice 7B then replaced the follow, verification, per-follow preference, and
 email-management adapters. Production now creates real follows for Google and
-verified email owners. Alert delivery stays gated until Slice 7C. Grounded
-replies remain Slice 7D.
+verified email owners. Slice 7C connected sourced immediate alerts, weekly
+roundups, delivery state, and notification settings. Grounded replies remain
+Slice 7D.
 
 ## Decision
 
@@ -98,15 +99,17 @@ neutral coverage-request route instead of appearing saved.
 
 The immediate email example orders information by resident use: what changed,
 the current state or next date, then official sources. Its footer keeps Open in
-Public Parish, Reply with a question, and Manage delivery visible.
+Public Parish and Manage delivery visible. Reply with a question joins those
+actions after Slice 7D ships.
 
 The weekly example groups a place before an issue and says that no changes
 means no email. There is no filler roundup state.
 
-The secure email route displays one subscription only. It cannot reveal a list
-of other subscriptions or imply an authenticated session. Delivery failure
-stays beside that subscription. Expired links can request another short-lived
-code without creating an account.
+An enrollment-scoped secure email route displays only the follow it created. A
+management link generated for a deduplicated alert lists every follow owned by
+the verified subscriber. Neither route creates or implies an authenticated
+account session. Delivery failure stays beside the affected subscription.
+Expired links can request another short-lived code without creating an account.
 
 ## Fixture boundary
 
@@ -175,9 +178,9 @@ typecheck, build, prerender, and lint gate.
 Slice 7A proved Google return and centralized ownership. Slice 7B proved code
 expiry, attempt limits, single use, scoped management, address-wide
 unsubscribe, real verification send, and signed webhook idempotency. Slice 7C
-owns sourced send, retry deduplication, the signed-in default schedule, the live
-Notifications view, and empty-roundup suppression. Slice 7D owns reply
-grounding.
+proved sourced send, retry deduplication, the signed-in default schedule, the
+live Notifications view, and empty-roundup suppression. It deployed through
+PRs #72 through #75. Slice 7D owns reply grounding.
 
 Passing those gates replaces only their adapters. It does not reopen the page
 hierarchy, delivery receipt, or ownership language.

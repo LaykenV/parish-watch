@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slices 7A and 7B are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, implementation Slice 6, and implementation Slices 7A through 7C are deployed
 
 ## Architecture Goal
 
@@ -150,8 +150,10 @@ canonical custom domain and from the qualifying `convex.site` origin through
 the canonical callback. PRs #66 and #67 replaced the follow and AgentMail
 adapters with verified email subscribers, unified Google and email follow
 ownership, hashed rotatable management tokens, and a Svix-verified webhook
-route. Coverage-request and private-report adapters remain in the post-Slice-5
-plan.
+route. PRs #72 through #75 added durable notification matching, deduplicated
+immediate email, weekly roundup windows, provider reconciliation, and live
+notification settings. Coverage-request and private-report adapters remain in
+the post-Slice-5 plan.
 
 ## System Boundaries
 
@@ -823,10 +825,12 @@ Indexes: user plus target; email subscriber plus target; target plus owner kind.
 
 Fields: email subscriber, optional single follow, token purpose, HMAC token hash,
 optional expiry, consumed time, revoked time, and created time. Management tokens
-expire after 30 days and grant access to one follow. Unsubscribe tokens apply to
-the subscriber's whole address and remain valid until used or revoked. A new
-verification can reactivate the subscriber, but it restores only the requested
-follow and cadence. Other follows stay muted.
+expire after 30 days. Enrollment tokens grant access to one follow. Tokens
+created for a deduplicated alert grant access to every follow owned by that
+verified subscriber. Unsubscribe tokens apply to the subscriber's whole address
+and remain valid until used or revoked. A new verification can reactivate the
+subscriber, but it restores only the requested follow and cadence. Other follows
+stay muted.
 Indexes: token hash; subscriber plus purpose; follow plus purpose.
 
 #### `notificationPreferences`
@@ -836,36 +840,55 @@ mute, and created and updated time. Cadence is immediate, weekly, both, or
 muted. Older muted rows without a stored restore value resume as immediate.
 Index: follow.
 
-#### `notificationDefaults` planned for Slice 7C
+#### `notificationDefaults`
 
 Fields: Google user, active default cadence for new follows, created time, and
 updated time. Existing follows keep their own preference when this default
 changes.
 Index: user.
 
-#### `notificationMatches` planned for Slice 7C
+#### `notificationMatches`
 
-Fields: follow, material change, target kind and key, current publication
-version, dedupe key, and created time. One row records each eligible follow even
-when several rows belong to the same owner and change.
-Indexes: follow plus material change; material change plus created time.
+Fields: follow, material change, owner kind and key, target kind and key,
+cadence at match time, and matched time. One row records each eligible follow
+even when several rows belong to the same owner and change.
+Indexes: follow plus material change; material change plus owner; owner plus
+matched time; matched time.
 
-#### `notificationDeliveries` planned for Slice 7C
+#### `notificationFanouts`
+
+Fields: material change, decision or issue phase, optional issue version,
+target index, optional reserved cursor, pending or complete state, match count,
+and timestamps. A row records each phase and prevents duplicate scheduling for
+the same accepted issue version. Continuation cursors travel in scheduled job
+arguments.
+Indexes: material change plus phase plus issue version; state plus updated time.
+
+#### `notificationDeliveries`
 
 Fields: owner kind and reference, immediate or weekly kind, optional material
-change, roundup window, dedupe key, AgentMail outbound and thread references,
-delivery state, created time, sent time, and terminal failure metadata. An
-immediate delivery is unique by owner and material change. A weekly delivery is
-unique by owner and roundup window.
-Indexes: dedupe key; delivery state plus created time; user plus created time;
-email subscriber plus created time.
+change, optional roundup window, optional representative follow, delivery state,
+AgentMail outbound, provider idempotency, message, and thread references, error
+detail, enqueue and reconciliation attempt counts, and timestamps. An immediate
+delivery is unique by owner and material change. A weekly delivery is unique by
+owner and roundup window.
+Indexes: owner plus kind plus material change; state plus updated time; roundup
+window plus owner; owner plus updated time.
 
-#### `roundupEntries` planned for Slice 7C
+#### `roundupWindows`
 
-Fields: weekly delivery, material change, and created time. Separate rows avoid
-an unbounded change array on the delivery document and let the sender include
-each material change once when several follows match. The match ledger preserves
-which follows qualified.
+Fields: local-time window key, start and end times, collecting, delivering, or
+complete state, optional match and delivery cursors, entry and delivery counts,
+timestamps, and optional completion time. The stored cursors resume a stale or
+partially processed window without moving it into a later week.
+Indexes: window key; state plus updated time.
+
+#### `roundupEntries`
+
+Fields: roundup window, weekly delivery, material change, contributing follows,
+and created time. Separate rows avoid an unbounded change array on the delivery
+document and let the sender include each material change once when several
+follows match.
 Indexes: weekly delivery plus created time; delivery plus material change.
 
 Google-authenticated users should use the Convex Auth v2 alpha data model rather

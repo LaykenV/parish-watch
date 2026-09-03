@@ -8,13 +8,32 @@
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://befitting-flamingo-587.convex.cloud
 - **Components:** `@convex-dev/static-hosting`, `@firecrawl/firecrawl-convex`, `@convex-dev/workflow`, `@convex-dev/rate-limiter`, `@convex-dev/agent`, `@convex-dev/auth`, `@agentmail/convex`
-- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, scheduled functions, durable workflows, authentication
+- **Convex features:** queries, mutations, internal actions, HTTP actions, realtime queries, file storage, crons, scheduled functions, durable workflows, authentication
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` independent review and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-02T21:01:53Z
+- **Last updated:** 2026-09-03T02:56:18Z
 
 ## Log
+
+### 2026-09-03 - 6db32a3
+
+Released Slice 7C through PRs #72 through #75. Accepted new decisions and
+material revisions now create durable follow matches, deduplicate immediate
+email per owner and change, link verified email subscribers to all their
+follows, and assemble Monday roundups from stored local-time windows and
+accepted evidence. The Following page now exposes live notification settings
+and recent delivery state (`convex/follows/`, `convex/crons.ts`,
+`src/features/following/`).
+
+A controlled development replay matched government body, place, issue, and
+topic follows, sent two immediate and two weekly messages through AgentMail,
+validated the official source, app, and management links, and created no
+duplicate on replay. Production workflows `33706796984`, `33707795958`,
+`33708562803`, and `33709247528` passed. Independent smoke passed the direct
+Convex host, canonical domain, apex redirect, and backend readiness after each
+merge. A signed-out production browser showed the real account entry page with
+no notification controls. The replay used no resident address.
 
 ### 2026-09-02 - Slice 7C planning checkpoint
 

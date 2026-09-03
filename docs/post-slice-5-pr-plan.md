@@ -1,6 +1,6 @@
 # Post-Slice-5 PR plan
 
-Status: implementation Slice 6 and Slice 7 PRs 7A and 7B are deployed and production-proved; Slice 7 PR 7C is next
+Status: implementation Slice 6 and Slice 7 PRs 7A through 7C are deployed and production-proved; Slice 7 PR 7D is next
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
@@ -35,11 +35,13 @@ found, thread restoration, and answer prose without raw internal evidence IDs.
 The original PR sections below remain as the historical delivery record.
 Production now has mounted Convex Auth v2, Google account ownership, private
 saved areas and topics, the public privacy notice, and the AgentMail follow
-enrollment path. It does not yet have alert delivery or a coverage compiler.
+enrollment and alert-delivery paths. Slice 7C added durable matches,
+deduplicated immediate email, weekly roundups, subscriber-wide management from
+alert links, delivery reconciliation, and live notification settings. It does
+not yet have grounded inbound replies or a coverage compiler.
 Controlled corpus QA also found that one answer displayed Markdown emphasis
-markers as literal text. That presentation defect does not affect the grounded
-answer path, but it remains a pre-demo correction. PR 7C is the active
-capability.
+markers as literal text. PR #57 corrected that presentation defect. PR 7D is
+the active capability.
 
 ## Original starting assumption
 
@@ -424,8 +426,9 @@ changes, mute, resume, and removal. Production browser QA loaded a published
 issue, opened the live follow sheet, and confirmed development fixture
 parameters cannot replace production data. No production subscriber was created
 during that read-only pass. One boundary stays open. No natural
-provider-signed delivery callback has been observed in production yet. Sourced
-alert delivery belongs to PR 7C and will exercise that path.
+provider-signed delivery callback had been observed in production at that
+checkpoint. Slice 7C later exercised the outbound path against controlled
+development owners without creating a production subscriber.
 
 ### PR 7C: deliver immediate and weekly sourced alerts
 
@@ -437,10 +440,11 @@ weekly roundup when selected.
 
 Depends on: 7B and the Slice 5 realtime publication path.
 
-Implementation is split into four stacked pull requests so each review has one
+Implementation was split into four stacked pull requests so each review had one
 runtime concern: material events and match fanout; immediate delivery and
 provider reconciliation; weekly roundups; live notification settings. The
-combined stack must pass development proof before any packet merges.
+combined stack passed controlled development proof before the first packet
+merged.
 
 Preflight status on September 2: PR #70 corrected the `place` resolver so a
 supported parish or municipality can be followed. Its Convex regression test
@@ -510,6 +514,15 @@ Exclude:
 Proof: one deterministic material change produces one immediate sourced email
 per owner and one eligible weekly entry, while replay and overlapping follows
 produce no duplicate send.
+
+Status on September 2: PRs #72 through #75 deployed as `8ff1c79`, `d40983a`,
+`ec08168`, and `6db32a3`. Production workflows `33706796984`, `33707795958`,
+`33708562803`, and `33709247528` passed, followed by an independent smoke after
+each merge. A controlled development replay matched government body, place,
+issue, and topic follows. It sent two immediate and two weekly AgentMail
+messages, resolved every official source, app, and management link, and sent
+nothing on replay. The proof exercised both Google and email-only owners and
+used no resident address.
 
 ### PR 7D: handle grounded replies and private source reports
 

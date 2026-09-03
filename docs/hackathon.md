@@ -219,15 +219,25 @@ qualifying `convex.site` origin through the canonical callback. PRs #66 and #67
 deployed Google and AgentMail-verified email follow enrollment, ownership,
 preferences, and scoped management. Development proved real verification mail,
 signed webhook handling, Google OAuth follow creation, cadence changes, mute,
-resume, and removal. Sourced alert delivery, coverage integration, the owner
-compiler, resident proof, the demo, and the vibeapps.dev submission remain
-pending.
+resume, and removal. PRs #72 through #75 deployed durable notification matches,
+deduplicated immediate email, weekly roundups, provider reconciliation, and live
+notification settings. A controlled development replay matched every target
+type, sent two immediate and two weekly AgentMail messages, and sent nothing on
+replay. Coverage integration, the owner compiler, recruited-resident proof, the
+demo, and the vibeapps.dev submission remain pending.
 
 PR #70 then corrected Place follow validation so supported parishes and
 municipalities use the same enrollment path while unsupported places still
 fail closed. Pull-request checks, production workflow `33682483792`, and the
 independent production smoke passed on merge commit `1ece03d`. This clears the
 follow-target preflight for Slice 7C without adding alert delivery.
+
+PRs #72 through #75 then deployed Slice 7C as `8ff1c79`, `d40983a`,
+`ec08168`, and `6db32a3`. Production workflows `33706796984`, `33707795958`,
+`33708562803`, and `33709247528` passed. An independent production smoke passed
+after every merge. The controlled replay used project-owned addresses, not a
+resident address, and validated the official source, app, and management links
+in all four provider messages.
 
 During the hackathon, branches use the local Vite frontend with the personal
 Convex development deployment. There is no staging deployment. Pull requests
@@ -504,8 +514,8 @@ other contested project.
 - [x] Terra issue linking and separate Luna issue review work in development
 - [x] Convex Auth v2 alpha Google OAuth works
 - [x] AgentMail sends and verifies a real email-only subscription in development
-- [ ] AgentMail sends one sourced production alert
-- [ ] Signed-out resident path works
+- [x] AgentMail sends sourced alerts through a controlled development replay
+- [x] Signed-out resident path works
 - [ ] Three named launch regions pass or public claims are narrowed honestly
 - [x] One development issue reaches two approved vote outcomes
 - [ ] Citations, revisions, uncertainty, and coverage health work
