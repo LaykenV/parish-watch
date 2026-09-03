@@ -49,6 +49,7 @@ test('private reports enqueue once and keep resident content out of app tables',
   expect(report).toMatchObject({
     category: 'broken-citation',
     recordPath: '/issues/drainage-project?source=evidence-7',
+    deliveryStatus: 'sending',
   })
 })
 
@@ -68,6 +69,56 @@ test('receipt access is scoped to the browser token', async () => {
       browserToken: 'different-browser-token-0000000000000000',
     }),
   ).resolves.toEqual({ found: false })
+})
+
+test('a terminal receipt survives provider payload cleanup', async () => {
+  const t = initTest()
+  const input = reportInput('submission-terminal-0001')
+  const submissionHash = await sha256HexOfText(input.submissionId)
+  const browserHash = await sha256HexOfText(input.browserToken)
+  await t.run(async (ctx) => {
+    await ctx.db.insert('sourceProblemReports', {
+      submissionHash,
+      browserHash,
+      category: input.category,
+      recordPath: '/issues/drainage-project',
+      outboundId: 'already-cleaned-outbound',
+      deliveryStatus: 'sent',
+      deliveryCheckedAt: 2,
+      createdAt: 1,
+    })
+  })
+
+  await expect(
+    t.query(api.sourceReports.reports.receipt, {
+      submissionId: input.submissionId,
+      browserToken: input.browserToken,
+    }),
+  ).resolves.toEqual({ found: true, status: 'sent' })
+})
+
+test('delivery reconciliation stops an unavailable provider record', async () => {
+  const t = initTest()
+  const reportId = await t.run(async (ctx) => {
+    return await ctx.db.insert('sourceProblemReports', {
+      submissionHash: 'unavailable-provider-submission',
+      browserHash: 'unavailable-provider-browser',
+      category: 'wrong-fact',
+      recordPath: '/decisions/unavailable-provider',
+      outboundId: 'unavailable-provider-outbound',
+      deliveryStatus: 'sending',
+      createdAt: 1,
+    })
+  })
+  await t.mutation(internal.sourceReports.reports.reconcileDelivery, {
+    reportId,
+    attempt: 70,
+  })
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(reportId)).toMatchObject({
+      deliveryStatus: 'failed',
+    })
+  })
 })
 
 test('issue, decision, meeting, and selected Source routes stay attached', async () => {

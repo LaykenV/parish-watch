@@ -148,6 +148,14 @@ export default defineSchema({
     ),
     recordPath: v.string(),
     outboundId: v.string(),
+    deliveryStatus: v.optional(
+      v.union(
+        v.literal('sending'),
+        v.literal('sent'),
+        v.literal('failed'),
+      ),
+    ),
+    deliveryCheckedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index('by_submission_hash', ['submissionHash'])
