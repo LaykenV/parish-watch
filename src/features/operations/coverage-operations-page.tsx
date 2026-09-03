@@ -588,6 +588,13 @@ type Proposal = {
   diffSummary: string[]
   sampleCount: number
   retrievedSampleCount: number
+  samples: Array<{
+    sourceKind: string
+    role: string
+    state: string
+    canonicalUrl: string | null
+    errorClass: string | null
+  }>
   gates: Array<{
     gateNumber: number
     gateKey: string
@@ -726,6 +733,32 @@ function ProposalPanel({
       <ul className="coverage-ops-diff">
         {proposal.diffSummary.map((change) => (
           <li key={change}>{change}</li>
+        ))}
+      </ul>
+      <ul
+        aria-label="Representative source health"
+        className="coverage-ops-samples"
+      >
+        {proposal.samples.map((sample, index) => (
+          <li key={`${sample.sourceKind}:${sample.role}:${index}`}>
+            <div>
+              <strong>{sample.sourceKind.replaceAll('_', ' ')}</strong>
+              <span>{sample.role.replaceAll('_', ' ')}</span>
+            </div>
+            <div>
+              <RunState state={sample.state} />
+              {sample.errorClass ? (
+                <code>{sample.errorClass.replaceAll('_', ' ')}</code>
+              ) : null}
+            </div>
+            {sample.canonicalUrl ? (
+              <a href={sample.canonicalUrl} rel="noreferrer" target="_blank">
+                Inspect source <ExternalLinkIcon aria-hidden="true" />
+              </a>
+            ) : (
+              <span>No candidate found</span>
+            )}
+          </li>
         ))}
       </ul>
       {proposal.gates.length > 0 ? (

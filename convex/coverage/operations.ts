@@ -17,6 +17,8 @@ import {
   coverageProposalStates,
   coverageRedirectHop,
   coverageRunStates,
+  coverageSampleRoles,
+  coverageSampleStates,
   coverageStageNames,
   coverageStageStates,
   coverageSourceKinds,
@@ -120,6 +122,15 @@ const proposalView = v.object({
   diffSummary: v.array(v.string()),
   sampleCount: v.number(),
   retrievedSampleCount: v.number(),
+  samples: v.array(
+    v.object({
+      sourceKind: coverageSourceKinds,
+      role: coverageSampleRoles,
+      state: coverageSampleStates,
+      canonicalUrl: v.union(v.string(), v.null()),
+      errorClass: v.union(v.string(), v.null()),
+    }),
+  ),
   gates: v.array(gateView),
   createdAt: v.number(),
   evaluatedAt: v.union(v.number(), v.null()),
@@ -276,6 +287,16 @@ export const run = query({
           retrievedSampleCount: samples.filter(
             (sample) => sample.state === 'retrieved',
           ).length,
+          samples: samples.map((sample) => ({
+            sourceKind: sample.sourceKind,
+            role: sample.role,
+            state: sample.state,
+            canonicalUrl:
+              candidates.find(
+                (candidate) => candidate._id === sample.candidateId,
+              )?.canonicalUrl ?? null,
+            errorClass: sample.errorClass ?? null,
+          })),
           gates: [...latestByGate.values()]
             .sort((left, right) => left.gateNumber - right.gateNumber)
             .map((evaluation) => ({

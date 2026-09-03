@@ -35,6 +35,25 @@ test('ten passing gates promote once and preserve the previous registry', async 
     expect((await ctx.db.get(seeded.previousRegistryId))?.status).toBe('paused')
   })
 
+  const firstPage = await owner.query(api.coverage.operations.paginatedRuns, {
+    paginationOpts: { numItems: 1, cursor: null },
+  })
+  expect(firstPage.page).toHaveLength(1)
+  expect(firstPage.page[0].runId).toBe(seeded.runId)
+  const ownerView = await owner.query(api.coverage.operations.run, {
+    runId: seeded.runId,
+  })
+  expect(ownerView?.proposals[0].samples).toEqual([
+    {
+      sourceKind: 'agenda',
+      role: 'current',
+      state: 'failed_terminal',
+      canonicalUrl: null,
+      errorClass: 'missing_required_candidate',
+    },
+  ])
+  expect(ownerView?.proposals[0].samples[0]).not.toHaveProperty('snapshotId')
+
   await expect(
     owner.mutation(api.coverage.promotion.setCoverageStatus, {
       proposalId: seeded.proposalId,
@@ -136,6 +155,16 @@ async function seedReadyProposal(t: TestConvex, allPass: boolean) {
       diffSummary: ['Replace the source seed set.'],
       createdAt: Date.now(),
       evaluatedAt: Date.now(),
+    })
+    await ctx.db.insert('coverageRepresentativeSamples', {
+      proposalId,
+      sourceKind: 'agenda',
+      role: 'current',
+      required: true,
+      state: 'failed_terminal',
+      errorClass: 'missing_required_candidate',
+      createdAt: Date.now(),
+      completedAt: Date.now(),
     })
     for (let gateNumber = 1; gateNumber <= 10; gateNumber += 1) {
       await ctx.db.insert('coverageGateEvaluations', {

@@ -468,6 +468,58 @@
   list-style: none;
 }
 
+.coverage-ops-samples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.6rem;
+  width: 100%;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coverage-ops-samples li {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+}
+
+.coverage-ops-samples li > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coverage-ops-samples strong,
+.coverage-ops-samples code {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+.coverage-ops-samples span,
+.coverage-ops-samples a {
+  font-size: 0.74rem;
+}
+
+.coverage-ops-samples a {
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+
+.coverage-ops-samples a svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
 .coverage-ops-gates li {
   display: grid;
   grid-template-columns: 1.5rem minmax(0, 1fr) auto;
