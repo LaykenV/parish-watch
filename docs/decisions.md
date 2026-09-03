@@ -227,13 +227,24 @@ expand the promise.
   bodies, and places.
 - AgentMail verifies email-only subscriptions with a short-lived six-digit
   code. This is subscription verification, not account authentication.
-- Send alerts only for material changes.
+- Treat a first accepted publication as a material `new_decision` event. Later
+  alerts require a deterministic material change. Do not backfill earlier
+  publications into the alert stream.
 - Offer an optional weekly roundup containing only material updates to followed
   targets.
 - Send at most one immediate email per owner and material change, even when
   several follows match. Preserve the matching follows in a separate ledger.
 - Wait until a refreshed accepted issue contains the changed publication before
   sending an issue-target alert.
+- Treat a newly accepted issue build and a later accepted issue refresh as the
+  issue and topic alert commit points. A first decision publication does not
+  create or infer an issue.
+- Match place follows through the publishing body's jurisdiction and its
+  supported parent parish. Do not match free-text `affectedPlaces` values.
+- Match topic follows from canonical issue topic labels and accepted,
+  non-absent importance factors for public money, public assets, public safety,
+  and land use. Ignore unknown free-text labels. Housing and drainage require a
+  canonical issue topic label.
 - Run the weekly roundup Monday at 7:00 AM in `America/Chicago`. A periodic
   scheduler checks local civil time and claims one deduplicated weekly window,
   so daylight-saving changes do not shift the resident-facing time.

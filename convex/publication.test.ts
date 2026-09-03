@@ -817,7 +817,104 @@ test('a later withheld review does not replace the last published version', asyn
   })
   expect(result.record?.currentPublishedVersionId).toBe(result.firstVersion._id)
   expect(result.record?.currentMode).toBe('full')
-  expect(result.changes).toHaveLength(0)
+  expect(result.changes).toEqual([
+    expect.objectContaining({
+      currentPublicationVersionId: result.firstVersion._id,
+      classification: 'new_decision',
+      material: true,
+    }),
+  ])
+})
+
+test('a first accepted publication records one new-decision event and matches its publishing body and place once', async () => {
+  const t = initTest()
+  const seeded = await seedValidatedCandidate(t, '-alert-match')
+  const followIds = await t.run(async (ctx) => {
+    const registry = await ctx.db.get(seeded.registryId)
+    const body = registry
+      ? await ctx.db.get(registry.governmentBodyId)
+      : null
+    const jurisdiction = body
+      ? await ctx.db.get(body.jurisdictionId)
+      : null
+    if (!body || !jurisdiction) throw new Error('Missing alert target fixture')
+    const userId = await ctx.db.insert('users', {
+      googleAccountId: 'alert-match-user',
+      email: 'alert-match@example.com',
+      emailVerified: true,
+      createdAt: 1,
+      updatedAt: 1,
+      lastSignedInAt: 1,
+    })
+    const ownerKey = `google:${userId}`
+    const targets = [
+      ['government_body', body.slug],
+      ['place', jurisdiction.slug],
+      ['place', 'terrebonne-parish'],
+    ] as const
+    const ids: Id<'follows'>[] = []
+    for (const [targetKind, targetKey] of targets) {
+      const followId = await ctx.db.insert('follows', {
+        ownerKind: 'google',
+        ownerKey,
+        userId,
+        targetKind,
+        targetKey,
+        targetTitle: targetKey,
+        targetDetail: 'Test target',
+        createdAt: 1,
+        updatedAt: 1,
+      })
+      await ctx.db.insert('notificationPreferences', {
+        followId,
+        cadence: 'immediate',
+        createdAt: 1,
+        updatedAt: 1,
+      })
+      ids.push(followId)
+    }
+    return ids
+  })
+  stubReviewFetch(JSON.stringify(reviewResponse(seeded.factIds)))
+  await startAndDrain(t, seeded.candidateId)
+
+  const result = await t.run(async (ctx) => {
+    const changes = await ctx.db
+      .query('materialChanges')
+      .withIndex('by_record_and_created_at')
+      .take(10)
+    const matches = await ctx.db.query('notificationMatches').take(10)
+    const fanouts = await ctx.db.query('notificationFanouts').take(10)
+    return { changes, matches, fanouts }
+  })
+  expect(result.changes).toEqual([
+    expect.objectContaining({
+      classification: 'new_decision',
+      material: true,
+      fieldChanges: [],
+    }),
+  ])
+  expect(result.matches.map((match) => match.followId).sort()).toEqual(
+    followIds.slice(0, 2).sort(),
+  )
+  expect(result.fanouts).toEqual([
+    expect.objectContaining({
+      phase: 'decision',
+      state: 'complete',
+      matchesCreated: 2,
+    }),
+  ])
+
+  await t.mutation(internal.follows.targets.startDecisionMatchFanout, {
+    materialChangeId: result.changes[0]._id,
+  })
+  vi.useFakeTimers()
+  await t.finishAllScheduledFunctions(vi.runAllTimers)
+  vi.useRealTimers()
+  await t.run(async (ctx) => {
+    expect(await ctx.db.query('notificationMatches').take(10)).toHaveLength(2)
+    expect(await ctx.db.query('notificationFanouts').take(10)).toHaveLength(1)
+  })
 })
 
 test('a later accepted version records a comparison even when the public payload is unchanged', async () => {

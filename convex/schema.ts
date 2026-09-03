@@ -208,6 +208,44 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index('by_follow_id', ['followId']),
 
+  notificationMatches: defineTable({
+    followId: v.id('follows'),
+    materialChangeId: v.id('materialChanges'),
+    ownerKind: v.union(v.literal('google'), v.literal('email')),
+    ownerKey: v.string(),
+    targetKind: followTargetKind,
+    targetKey: v.string(),
+    cadenceAtMatch: activeDeliveryCadence,
+    matchedAt: v.number(),
+  })
+    .index('by_follow_id_and_material_change_id', [
+      'followId',
+      'materialChangeId',
+    ])
+    .index('by_material_change_id_and_owner_key', [
+      'materialChangeId',
+      'ownerKey',
+    ])
+    .index('by_owner_key_and_matched_at', ['ownerKey', 'matchedAt']),
+
+  notificationFanouts: defineTable({
+    materialChangeId: v.id('materialChanges'),
+    phase: v.union(v.literal('decision'), v.literal('issue')),
+    issueVersionId: v.optional(v.id('issueVersions')),
+    targetIndex: v.number(),
+    cursor: v.optional(v.string()),
+    state: v.union(v.literal('pending'), v.literal('complete')),
+    matchesCreated: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_material_change_id_and_phase_and_issue_version_id', [
+      'materialChangeId',
+      'phase',
+      'issueVersionId',
+    ])
+    .index('by_state_and_updated_at', ['state', 'updatedAt']),
+
   emailAccessTokens: defineTable({
     subscriberId: v.id('emailSubscribers'),
     followId: v.optional(v.id('follows')),
@@ -754,9 +792,10 @@ export default defineSchema({
 
   materialChanges: defineTable({
     recordId: v.id('decisionRecords'),
-    previousPublicationVersionId: v.id('publicationVersions'),
+    previousPublicationVersionId: v.optional(v.id('publicationVersions')),
     currentPublicationVersionId: v.id('publicationVersions'),
     classification: v.union(
+      v.literal('new_decision'),
       v.literal('information_expanded'),
       v.literal('information_limited'),
       v.literal('date_changed'),
