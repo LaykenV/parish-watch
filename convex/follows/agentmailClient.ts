@@ -26,7 +26,9 @@ export function updatesInboxId(): string {
 }
 
 const MAX_ENQUEUE_ATTEMPTS = 3
-const MAX_RECONCILE_ATTEMPTS = 30
+// Six provider attempts can span 23.25 minutes at maximum backoff jitter.
+// Keep polling beyond that window so the app records the component's terminal state.
+const MAX_RECONCILE_ATTEMPTS = 70
 const ENQUEUE_RETRY_DELAY_MS = 60_000
 
 export const reserveImmediateDelivery = internalMutation({
