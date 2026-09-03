@@ -21,7 +21,7 @@ import {
 import {
   classificationContractError,
   classifierRequest,
-  discardUncertainGuesses,
+  sanitizeSourceClassifications,
   SOURCE_CLASSIFIER_PROMPT_VERSION,
   SOURCE_CLASSIFIER_SCHEMA_VERSION,
   sourceClassificationResponse,
@@ -203,7 +203,10 @@ export const classifyForRun = internalAction({
           classificationContractError(
             context.bodyKey,
             candidates,
-            discardUncertainGuesses(parsed as SourceClassificationResponse),
+            sanitizeSourceClassifications(
+              candidates,
+              parsed as SourceClassificationResponse,
+            ),
           ),
         )
       } catch (error) {
@@ -238,7 +241,8 @@ export const classifyForRun = internalAction({
         )
         return null
       }
-      const parsed = discardUncertainGuesses(
+      const parsed = sanitizeSourceClassifications(
+        candidates,
         outcome.result.parsed as SourceClassificationResponse,
       )
       classifications.push(...parsed.classifications)

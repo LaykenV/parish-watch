@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import {
   classificationContractError,
   classifierRequest,
-  discardUncertainGuesses,
+  sanitizeSourceClassifications,
 } from './classifier'
 import type {
   ClassifierCandidate,
@@ -89,11 +89,27 @@ test('an uncertain source must use the explicit no-guess shape', () => {
   expect(
     classificationContractError('test-council', CANDIDATES, guessed),
   ).toContain('guessed')
-  const normalized = discardUncertainGuesses(guessed)
+  const normalized = sanitizeSourceClassifications(CANDIDATES, guessed)
   expect(normalized.classifications[0]).toMatchObject({
     outcome: 'uncertain',
     sourceKind: 'unknown',
     cadence: 'unknown',
+  })
+  expect(
+    classificationContractError('test-council', CANDIDATES, normalized),
+  ).toBeNull()
+})
+
+test('invented evidence downgrades the row instead of storing the model claim', () => {
+  const normalized = sanitizeSourceClassifications(
+    CANDIDATES,
+    response({ evidenceText: 'invented classification basis' }),
+  )
+  expect(normalized.classifications[0]).toMatchObject({
+    outcome: 'uncertain',
+    sourceKind: 'unknown',
+    cadence: 'unknown',
+    evidenceText: 'https://www.test.gov/agenda.pdf',
   })
   expect(
     classificationContractError('test-council', CANDIDATES, normalized),

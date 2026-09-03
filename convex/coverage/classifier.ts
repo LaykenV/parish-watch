@@ -180,19 +180,41 @@ export function classificationContractError(
   return null
 }
 
-export function discardUncertainGuesses(
+export function sanitizeSourceClassifications(
+  candidates: ClassifierCandidate[],
   parsed: SourceClassificationResponse,
 ): SourceClassificationResponse {
+  const byId = new Map(
+    candidates.map((candidate) => [candidate.candidateId, candidate]),
+  )
   return {
     ...parsed,
-    classifications: parsed.classifications.map((classification) =>
-      classification.outcome === 'uncertain'
-        ? {
-            ...classification,
-            sourceKind: 'unknown',
-            cadence: 'unknown',
-          }
-        : classification,
-    ),
+    classifications: parsed.classifications.map((classification) => {
+      const candidate = byId.get(
+        classification.candidateId as Id<'coverageSourceCandidates'>,
+      )
+      if (!candidate) return classification
+      const evidence = classification.evidenceText.trim()
+      const copied = [
+        candidate.canonicalUrl,
+        candidate.title,
+        candidate.description,
+      ]
+        .filter((value): value is string => value !== undefined)
+        .some((value) => evidence !== '' && value.includes(evidence))
+      if (classification.outcome === 'classified' && copied) {
+        return classification
+      }
+      return {
+        ...classification,
+        outcome: 'uncertain',
+        sourceKind: 'unknown',
+        cadence: 'unknown',
+        evidenceText: copied ? evidence : candidate.canonicalUrl,
+        noGuessReason:
+          classification.noGuessReason.trim() ||
+          'The model did not supply an exact classification basis.',
+      }
+    }),
   }
 }
