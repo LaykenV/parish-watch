@@ -35,6 +35,7 @@ const MAP_SEARCH =
   'agenda minutes meeting packet ordinance resolution planning zoning notice calendar hearing'
 const MAP_LIMIT = 100
 const SEARCH_LIMIT = 25
+const CLASSIFIER_BATCH_SIZE = 20
 
 type ProviderEvidence = {
   provider: 'firecrawl'
@@ -180,59 +181,71 @@ export const classifyForRun = internalAction({
       args,
     )
     if (!context) return null
-    const request = classifierRequest(
-      context.bodyKey,
-      context.bodyName,
-      context.candidates,
-    )
-    const requestHash = await sha256HexOfText(JSON.stringify(request))
-    let outcome: StructuredOutcome
-    try {
-      outcome = await classifyWithProvider(request, (parsed) =>
-        classificationContractError(
-          context.bodyKey,
-          context.candidates,
-          discardUncertainGuesses(parsed as SourceClassificationResponse),
-        ),
+    const classifications: SourceClassificationResponse['classifications'] = []
+    for (
+      let offset = 0;
+      offset < context.candidates.length;
+      offset += CLASSIFIER_BATCH_SIZE
+    ) {
+      const candidates = context.candidates.slice(
+        offset,
+        offset + CLASSIFIER_BATCH_SIZE,
       )
-    } catch (error) {
-      await recordThrownModelCall(ctx, args, requestHash, error)
-      await fail(
-        ctx,
-        args,
-        'classification_provider_failed',
-        error instanceof Error ? error.message : String(error),
-        true,
+      const request = classifierRequest(
+        context.bodyKey,
+        context.bodyName,
+        candidates,
       )
-      return null
-    }
+      const requestHash = await sha256HexOfText(JSON.stringify(request))
+      let outcome: StructuredOutcome
+      try {
+        outcome = await classifyWithProvider(request, (parsed) =>
+          classificationContractError(
+            context.bodyKey,
+            candidates,
+            discardUncertainGuesses(parsed as SourceClassificationResponse),
+          ),
+        )
+      } catch (error) {
+        await recordThrownModelCall(ctx, args, requestHash, error)
+        await fail(
+          ctx,
+          args,
+          'classification_provider_failed',
+          error instanceof Error ? error.message : String(error),
+          true,
+        )
+        return null
+      }
 
-    const responseContent =
-      outcome.outcome === 'success'
-        ? outcome.result.content
-        : outcome.failure.content
-    const responseHash = responseContent
-      ? await sha256HexOfText(responseContent)
-      : undefined
-    for (const attempt of outcome.attempts) {
-      await recordModelAttempt(ctx, args, requestHash, responseHash, attempt)
-    }
-    if (outcome.outcome === 'failed') {
-      await fail(
-        ctx,
-        args,
-        'classification_contract_invalid',
-        outcome.failure.detail,
-        false,
+      const responseContent =
+        outcome.outcome === 'success'
+          ? outcome.result.content
+          : outcome.failure.content
+      const responseHash = responseContent
+        ? await sha256HexOfText(responseContent)
+        : undefined
+      for (const attempt of outcome.attempts) {
+        await recordModelAttempt(ctx, args, requestHash, responseHash, attempt)
+      }
+      if (outcome.outcome === 'failed') {
+        await fail(
+          ctx,
+          args,
+          'classification_contract_invalid',
+          outcome.failure.detail,
+          false,
+        )
+        return null
+      }
+      const parsed = discardUncertainGuesses(
+        outcome.result.parsed as SourceClassificationResponse,
       )
-      return null
+      classifications.push(...parsed.classifications)
     }
-    const parsed = discardUncertainGuesses(
-      outcome.result.parsed as SourceClassificationResponse,
-    )
     await ctx.runMutation(
       internal.coverage.discoveryLedger.persistClassifications,
-      { ...args, classifications: parsed.classifications },
+      { ...args, classifications },
     )
     return null
   },
