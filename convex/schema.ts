@@ -292,7 +292,59 @@ export default defineSchema({
       'roundupWindowId',
       'ownerKey',
     ])
+    .index('by_agentmail_thread_id', ['agentmailThreadId'])
     .index('by_owner_key_and_updated_at', ['ownerKey', 'updatedAt']),
+
+  emailReplyThreads: defineTable({
+    agentmailThreadId: v.string(),
+    notificationDeliveryId: v.id('notificationDeliveries'),
+    askThreadId: v.optional(v.string()),
+    askExpiresAt: v.optional(v.number()),
+    preparingEventId: v.optional(v.id('emailReplyEvents')),
+    scopeKind: v.union(
+      v.literal('corpus'),
+      v.literal('issue'),
+      v.literal('meeting'),
+    ),
+    scopeKey: v.string(),
+    officialContactUrl: v.optional(v.string()),
+    ownerKind: v.union(v.literal('google'), v.literal('email')),
+    ownerKey: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index('by_agentmail_thread_id', ['agentmailThreadId']),
+
+  emailReplyEvents: defineTable({
+    providerEventId: v.string(),
+    agentmailThreadId: v.string(),
+    inboundMessageId: v.string(),
+    replyThreadId: v.optional(v.id('emailReplyThreads')),
+    questionMessageId: v.optional(v.string()),
+    state: v.union(
+      v.literal('ignored'),
+      v.literal('queued'),
+      v.literal('running'),
+      v.literal('answered'),
+      v.literal('not_found'),
+      v.literal('failed'),
+    ),
+    preparationAttempts: v.number(),
+    attempt: v.number(),
+    outboundId: v.optional(v.string()),
+    answerMessageId: v.optional(v.string()),
+    errorClass: v.optional(v.string()),
+    startedAt: v.optional(v.number()),
+    retryAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_provider_event_id', ['providerEventId'])
+    .index('by_agentmail_thread_id_and_created_at', [
+      'agentmailThreadId',
+      'createdAt',
+    ])
+    .index('by_state_and_updated_at', ['state', 'updatedAt']),
 
   roundupWindows: defineTable({
     windowKey: v.string(),

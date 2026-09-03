@@ -18,6 +18,10 @@ export async function hashAccessToken(token: string): Promise<string> {
   return await hmacHex(`access:${token}`)
 }
 
+export async function deriveEmailReplyToken(threadId: string): Promise<string> {
+  return await hmacHex(`email-reply:${threadId}`)
+}
+
 export async function encryptAddress(address: string): Promise<string> {
   const key = await importAesKey()
   const iv = crypto.getRandomValues(new Uint8Array(12))
