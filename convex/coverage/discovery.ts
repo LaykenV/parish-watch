@@ -348,33 +348,35 @@ function searchLink(result: SearchResult | FirecrawlDocument): MapLink | null {
     typeof result.metadata === 'object'
       ? result.metadata
       : undefined
+  const metadataUrl =
+    readString(metadata, 'url') ?? readString(metadata, 'sourceURL')
   const url =
     ('url' in result && typeof result.url === 'string'
       ? result.url
-      : undefined) ??
-    (typeof metadata?.url === 'string'
-      ? metadata.url
-      : typeof metadata?.sourceURL === 'string'
-        ? metadata.sourceURL
-        : undefined)
+      : undefined) ?? metadataUrl
   if (!url) return null
   const title =
     'title' in result && typeof result.title === 'string'
       ? result.title
-      : typeof metadata?.title === 'string'
-        ? metadata.title
-        : undefined
+      : readString(metadata, 'title')
   const description =
     'description' in result && typeof result.description === 'string'
       ? result.description
-      : typeof metadata?.description === 'string'
-        ? metadata.description
-        : undefined
+      : readString(metadata, 'description')
   return {
     url,
     ...(title ? { title } : {}),
     ...(description ? { description } : {}),
   }
+}
+
+function readString(
+  value: object | undefined,
+  key: string,
+): string | undefined {
+  if (value === undefined || !(key in value)) return undefined
+  const candidate = (value as Record<string, unknown>)[key]
+  return typeof candidate === 'string' ? candidate : undefined
 }
 
 async function recordModelAttempt(
