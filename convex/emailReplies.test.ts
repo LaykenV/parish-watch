@@ -32,7 +32,7 @@ function initTest(): TestConvex {
   )
   const t = convexTest(schema, modules)
   agentTest.register(t)
-  agentmailTest.register(t as never)
+  agentmailTest.register(t)
   return t
 }
 
