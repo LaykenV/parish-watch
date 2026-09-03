@@ -33,6 +33,7 @@ import type * as emailReplies_answer from "../emailReplies/answer.js";
 import type * as emailReplies_contracts from "../emailReplies/contracts.js";
 import type * as emailReplies_delivery from "../emailReplies/delivery.js";
 import type * as emailReplies_intake from "../emailReplies/intake.js";
+import type * as emailReplies_recovery from "../emailReplies/recovery.js";
 import type * as extraction_contractV1 from "../extraction/contractV1.js";
 import type * as extraction_extract from "../extraction/extract.js";
 import type * as extraction_ledger from "../extraction/ledger.js";
@@ -126,6 +127,7 @@ declare const fullApi: ApiFromModules<{
   "emailReplies/contracts": typeof emailReplies_contracts;
   "emailReplies/delivery": typeof emailReplies_delivery;
   "emailReplies/intake": typeof emailReplies_intake;
+  "emailReplies/recovery": typeof emailReplies_recovery;
   "extraction/contractV1": typeof extraction_contractV1;
   "extraction/extract": typeof extraction_extract;
   "extraction/ledger": typeof extraction_ledger;

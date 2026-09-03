@@ -301,6 +301,7 @@ export default defineSchema({
     askThreadId: v.optional(v.string()),
     askExpiresAt: v.optional(v.number()),
     preparingEventId: v.optional(v.id('emailReplyEvents')),
+    preparingStartedAt: v.optional(v.number()),
     scopeKind: v.union(
       v.literal('corpus'),
       v.literal('issue'),
@@ -312,12 +313,15 @@ export default defineSchema({
     ownerKey: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index('by_agentmail_thread_id', ['agentmailThreadId']),
+  })
+    .index('by_agentmail_thread_id', ['agentmailThreadId'])
+    .index('by_updated_at', ['updatedAt']),
 
   emailReplyEvents: defineTable({
     providerEventId: v.string(),
     agentmailThreadId: v.string(),
     inboundMessageId: v.string(),
+    encryptedQuestion: v.optional(v.string()),
     replyThreadId: v.optional(v.id('emailReplyThreads')),
     questionMessageId: v.optional(v.string()),
     state: v.union(
@@ -344,7 +348,8 @@ export default defineSchema({
       'agentmailThreadId',
       'createdAt',
     ])
-    .index('by_state_and_updated_at', ['state', 'updatedAt']),
+    .index('by_state_and_updated_at', ['state', 'updatedAt'])
+    .index('by_state_and_retry_at', ['state', 'retryAt']),
 
   roundupWindows: defineTable({
     windowKey: v.string(),

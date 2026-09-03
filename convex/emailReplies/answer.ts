@@ -5,25 +5,21 @@ import { v } from 'convex/values'
 import { api, internal } from '../_generated/api'
 import { internalAction } from '../_generated/server'
 import type { AskAnswerResult } from '../ask/contracts'
-import { deriveEmailReplyToken } from '../follows/secrets'
+import { decryptPrivateText, deriveEmailReplyToken } from '../follows/secrets'
 
 export const prepareInbound = internalAction({
   args: {
     eventId: v.id('emailReplyEvents'),
-    question: v.string(),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const preparation = await ctx.runQuery(
+    const preparation = await ctx.runMutation(
       internal.emailReplies.intake.getPreparation,
       { eventId: args.eventId },
     )
     if (preparation.kind === 'skip') return null
     if (preparation.kind === 'wait') {
-      await ctx.runMutation(internal.emailReplies.intake.retryPreparation, {
-        ...args,
-        errorClass: 'thread_preparation_in_progress',
-      })
+      await ctx.runMutation(internal.emailReplies.intake.deferPreparation, args)
       return null
     }
     try {
@@ -54,7 +50,7 @@ export const prepareInbound = internalAction({
       const receipt = await ctx.runMutation(api.ask.threads.appendQuestion, {
         token,
         threadId: askThreadId,
-        question: args.question,
+        question: await decryptPrivateText(preparation.encryptedQuestion),
         idempotencyKey: `email-reply-${args.eventId}`,
       })
       await ctx.runMutation(internal.emailReplies.intake.completePreparation, {
@@ -64,7 +60,7 @@ export const prepareInbound = internalAction({
       })
     } catch (error) {
       await ctx.runMutation(internal.emailReplies.intake.retryPreparation, {
-        ...args,
+        eventId: args.eventId,
         errorClass: classifyError(error),
       })
     }

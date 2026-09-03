@@ -25,6 +25,10 @@ type TestConvex = TestConvexForDataModelAndIdentity<DataModel>
 function initTest(): TestConvex {
   vi.stubEnv('AGENTMAIL_UPDATES_INBOX_ID', 'updates-test')
   vi.stubEnv('EMAIL_ADDRESS_HMAC_KEY', 'dGVzdC1obWFjLWtleQ==')
+  vi.stubEnv(
+    'EMAIL_ENCRYPTION_KEY',
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+  )
   const t = convexTest(schema, modules)
   agentTest.register(t)
   agentmailTest.register(t as never)
@@ -100,7 +104,6 @@ test('reply intake rejects unknown senders and threads and deduplicates provider
   })
   await t.action(internal.emailReplies.answer.prepareInbound, {
     eventId: acceptedEventId,
-    question: 'What changed in this update?',
   })
   await receive(
     t,
@@ -210,6 +213,29 @@ test('answer attempts fence an active lease and stop after the bounded retry', a
       errorClass: 'provider_unavailable',
     })
   })
+})
+
+test('stale preparation and final answer leases can be reclaimed', async () => {
+  const t = initTest()
+  const waitingEventId = await seedStalePreparation(t)
+  await expect(
+    t.mutation(internal.emailReplies.intake.getPreparation, {
+      eventId: waitingEventId,
+    }),
+  ).resolves.toMatchObject({
+    kind: 'ready',
+    ownsPreparation: true,
+  })
+
+  const staleAnswerId = await seedRunningEvent(t, 2)
+  await t.run(async (ctx) => {
+    await ctx.db.patch(staleAnswerId, { startedAt: 0, updatedAt: 0 })
+  })
+  await expect(
+    t.mutation(internal.emailReplies.intake.claimAnswer, {
+      eventId: staleAnswerId,
+    }),
+  ).resolves.toMatchObject({ kind: 'claimed', attempt: 2 })
 })
 
 test('email responses preserve grounded citations and the not-found contact path', () => {
@@ -333,6 +359,61 @@ async function seedRunningEvent(
       startedAt: state === 'running' ? Date.now() : undefined,
       createdAt: 1,
       updatedAt: 1,
+    })
+  })
+}
+
+async function seedStalePreparation(
+  t: TestConvex,
+): Promise<Id<'emailReplyEvents'>> {
+  return await t.run(async (ctx) => {
+    const deliveryId = await ctx.db.insert('notificationDeliveries', {
+      ownerKind: 'google',
+      ownerKey: 'google:stale-preparation',
+      kind: 'weekly',
+      state: 'delivered',
+      enqueueAttempts: 1,
+      reconcileAttempts: 1,
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    const replyThreadId = await ctx.db.insert('emailReplyThreads', {
+      agentmailThreadId: 'stale-preparation-thread',
+      notificationDeliveryId: deliveryId,
+      scopeKind: 'corpus',
+      scopeKey: '*',
+      ownerKind: 'google',
+      ownerKey: 'google:stale-preparation',
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    const formerOwnerId = await ctx.db.insert('emailReplyEvents', {
+      providerEventId: 'former-preparation-owner',
+      agentmailThreadId: 'stale-preparation-thread',
+      inboundMessageId: 'former-message',
+      replyThreadId,
+      encryptedQuestion: 'v1.former.encrypted',
+      state: 'queued',
+      preparationAttempts: 0,
+      attempt: 0,
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    await ctx.db.patch(replyThreadId, {
+      preparingEventId: formerOwnerId,
+      preparingStartedAt: 0,
+    })
+    return await ctx.db.insert('emailReplyEvents', {
+      providerEventId: 'waiting-preparation-event',
+      agentmailThreadId: 'stale-preparation-thread',
+      inboundMessageId: 'waiting-message',
+      replyThreadId,
+      encryptedQuestion: 'v1.waiting.encrypted',
+      state: 'queued',
+      preparationAttempts: 0,
+      attempt: 0,
+      createdAt: 2,
+      updatedAt: 2,
     })
   })
 }

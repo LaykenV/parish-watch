@@ -1,3 +1,32 @@
+diff --git a/node_modules/@agentmail/convex/dist/test.js b/node_modules/@agentmail/convex/dist/test.js
+index f56ea75..b50235c 100644
+--- a/node_modules/@agentmail/convex/dist/test.js
++++ b/node_modules/@agentmail/convex/dist/test.js
+@@ -1,5 +1,5 @@
+ import schema from "./component/schema.js";
+-const modules = import.meta.glob("./component/**/!(*.*.*)*.ts");
++const modules = import.meta.glob("./component/**/*.ts");
+ export default {
+     register(t, name = "agentmail") {
+         t.registerComponent(name, schema, modules);
+diff --git a/node_modules/@agentmail/convex/src/test.ts b/node_modules/@agentmail/convex/src/test.ts
+index bc9176b..af804e2 100644
+--- a/node_modules/@agentmail/convex/src/test.ts
++++ b/node_modules/@agentmail/convex/src/test.ts
+@@ -1,8 +1,10 @@
+ /// <reference types="vite/client" />
+ import type { TestConvex } from "convex-test";
++import type { GenericSchema, SchemaDefinition } from "convex/server";
+ import schema from "./component/schema.js";
+ 
+-const modules = import.meta.glob("./component/**/!(*.*.*)*.ts");
++const modules = import.meta.glob("./component/**/*.ts");
+ 
+ export default {
+-  register(t: TestConvex<typeof schema>, name = "agentmail") {
++  register(t: TestConvex<SchemaDefinition<GenericSchema, boolean>>, name = "agentmail") {
+     t.registerComponent(name, schema, modules);
+   },
 diff --git a/node_modules/@agentmail/convex/dist/component/_generated/component.d.ts b/node_modules/@agentmail/convex/dist/component/_generated/component.d.ts
 index 6c2860c..cba4cb3 100644
 --- a/node_modules/@agentmail/convex/dist/component/_generated/component.d.ts

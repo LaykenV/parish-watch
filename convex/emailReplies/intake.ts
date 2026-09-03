@@ -3,16 +3,21 @@ import { v } from 'convex/values'
 import { internal } from '../_generated/api'
 import type { Doc } from '../_generated/dataModel'
 import type { MutationCtx } from '../_generated/server'
-import { env, internalMutation, internalQuery } from '../_generated/server'
+import { env, internalMutation } from '../_generated/server'
 import { scopeKey, storedScope } from '../ask/contracts'
 import type { AskScope } from '../ask/contracts'
-import { hashAddress, normalizeEmail } from '../follows/secrets'
+import {
+  encryptPrivateText,
+  hashAddress,
+  normalizeEmail,
+} from '../follows/secrets'
 import { parseInboundEmail } from './contracts'
 
 const RUNNING_LEASE_MS = 10 * 60 * 1000
 const MAX_ANSWER_ATTEMPTS = 2
 const MAX_PREPARATION_ATTEMPTS = 3
 const PREPARATION_RETRY_DELAY_MS = 5_000
+const PREPARATION_LEASE_MS = 2 * 60 * 1_000
 const RETRY_DELAY_MS = 60_000
 
 export const onMessageReceived = internalMutation({
@@ -83,6 +88,7 @@ export const onMessageReceived = internalMutation({
         agentmailThreadId: inbound.threadId,
         notificationDeliveryId: delivery._id,
         preparingEventId: eventId,
+        preparingStartedAt: now,
         scopeKind: context.scope.kind,
         scopeKey: scopeKey(context.scope),
         officialContactUrl: context.officialContactUrl,
@@ -95,6 +101,7 @@ export const onMessageReceived = internalMutation({
     } else if (needsAskThread && !replyThread.preparingEventId) {
       await ctx.db.patch(replyThread._id, {
         preparingEventId: eventId,
+        preparingStartedAt: now,
         scopeKind: context.scope.kind,
         scopeKey: scopeKey(context.scope),
         officialContactUrl: context.officialContactUrl,
@@ -104,6 +111,7 @@ export const onMessageReceived = internalMutation({
     }
     await ctx.db.patch(eventId, {
       replyThreadId: replyThread._id,
+      encryptedQuestion: await encryptPrivateText(inbound.question),
       state: 'queued',
       errorClass: undefined,
       updatedAt: Date.now(),
@@ -111,16 +119,13 @@ export const onMessageReceived = internalMutation({
     await ctx.scheduler.runAfter(
       0,
       internal.emailReplies.answer.prepareInbound,
-      {
-        eventId,
-        question: inbound.question,
-      },
+      { eventId },
     )
     return null
   },
 })
 
-export const getPreparation = internalQuery({
+export const getPreparation = internalMutation({
   args: { eventId: v.id('emailReplyEvents') },
   returns: v.union(
     v.object({ kind: v.literal('skip') }),
@@ -131,6 +136,7 @@ export const getPreparation = internalQuery({
       askThreadId: v.optional(v.string()),
       askExpiresAt: v.optional(v.number()),
       ownsPreparation: v.boolean(),
+      encryptedQuestion: v.string(),
       scope: v.union(
         v.object({
           kind: v.literal('corpus'),
@@ -146,7 +152,8 @@ export const getPreparation = internalQuery({
     if (
       !event?.replyThreadId ||
       event.state !== 'queued' ||
-      event.questionMessageId
+      event.questionMessageId ||
+      !event.encryptedQuestion
     ) {
       return { kind: 'skip' } as const
     }
@@ -156,14 +163,26 @@ export const getPreparation = internalQuery({
       thread.askThreadId !== undefined &&
       thread.askExpiresAt !== undefined &&
       thread.askExpiresAt > Date.now()
-    const ownsPreparation = thread.preparingEventId === event._id
-    if (!hasActiveThread && !ownsPreparation) return { kind: 'wait' } as const
+    let ownsPreparation = thread.preparingEventId === event._id
+    if (!hasActiveThread && !ownsPreparation) {
+      const preparationIsActive =
+        thread.preparingStartedAt !== undefined &&
+        thread.preparingStartedAt > Date.now() - PREPARATION_LEASE_MS
+      if (preparationIsActive) return { kind: 'wait' } as const
+      ownsPreparation = true
+      await ctx.db.patch(thread._id, {
+        preparingEventId: event._id,
+        preparingStartedAt: Date.now(),
+        updatedAt: Date.now(),
+      })
+    }
     return {
       kind: 'ready',
       agentmailThreadId: event.agentmailThreadId,
       askThreadId: hasActiveThread ? thread.askThreadId : undefined,
       askExpiresAt: hasActiveThread ? thread.askExpiresAt : undefined,
       ownsPreparation,
+      encryptedQuestion: event.encryptedQuestion,
       scope: storedScope(thread.scopeKind, thread.scopeKey),
     } as const
   },
@@ -186,6 +205,7 @@ export const attachAskThread = internalMutation({
       askThreadId: args.askThreadId,
       askExpiresAt: args.askExpiresAt,
       preparingEventId: undefined,
+      preparingStartedAt: undefined,
       updatedAt: Date.now(),
     })
     return true
@@ -215,6 +235,7 @@ export const completePreparation = internalMutation({
     }
     await ctx.db.patch(event._id, {
       questionMessageId: args.questionMessageId,
+      encryptedQuestion: undefined,
       errorClass: undefined,
       updatedAt: Date.now(),
     })
@@ -229,10 +250,25 @@ export const completePreparation = internalMutation({
   },
 })
 
+export const deferPreparation = internalMutation({
+  args: { eventId: v.id('emailReplyEvents') },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const event = await ctx.db.get(args.eventId)
+    if (!event || event.state !== 'queued' || event.questionMessageId)
+      return null
+    await ctx.scheduler.runAfter(
+      PREPARATION_RETRY_DELAY_MS,
+      internal.emailReplies.answer.prepareInbound,
+      { eventId: event._id },
+    )
+    return null
+  },
+})
+
 export const retryPreparation = internalMutation({
   args: {
     eventId: v.id('emailReplyEvents'),
-    question: v.string(),
     errorClass: v.string(),
   },
   returns: v.null(),
@@ -244,6 +280,7 @@ export const retryPreparation = internalMutation({
     const terminal = preparationAttempts >= MAX_PREPARATION_ATTEMPTS
     await ctx.db.patch(event._id, {
       state: terminal ? 'failed' : 'queued',
+      encryptedQuestion: terminal ? undefined : event.encryptedQuestion,
       preparationAttempts,
       errorClass: args.errorClass.slice(0, 100),
       completedAt: terminal ? Date.now() : undefined,
@@ -254,6 +291,7 @@ export const retryPreparation = internalMutation({
       if (thread?.preparingEventId === event._id) {
         await ctx.db.patch(thread._id, {
           preparingEventId: undefined,
+          preparingStartedAt: undefined,
           updatedAt: Date.now(),
         })
       }
@@ -262,7 +300,7 @@ export const retryPreparation = internalMutation({
       await ctx.scheduler.runAfter(
         PREPARATION_RETRY_DELAY_MS,
         internal.emailReplies.answer.prepareInbound,
-        { eventId: event._id, question: args.question },
+        { eventId: event._id },
       )
     }
     return null
@@ -288,6 +326,10 @@ export const claimAnswer = internalMutation({
     if (!event?.replyThreadId || !event.questionMessageId)
       return { kind: 'skip' } as const
     const now = Date.now()
+    const staleRunning =
+      event.state === 'running' &&
+      event.startedAt !== undefined &&
+      event.startedAt <= now - RUNNING_LEASE_MS
     if (
       event.state === 'answered' ||
       event.state === 'not_found' ||
@@ -298,13 +340,13 @@ export const claimAnswer = internalMutation({
       (event.state === 'failed' &&
         event.retryAt !== undefined &&
         event.retryAt > now) ||
-      event.attempt >= MAX_ANSWER_ATTEMPTS
+      (event.attempt >= MAX_ANSWER_ATTEMPTS && !staleRunning)
     ) {
       return { kind: 'skip' } as const
     }
     const thread = await ctx.db.get(event.replyThreadId)
     if (!thread?.askThreadId) return { kind: 'skip' } as const
-    const attempt = event.attempt + 1
+    const attempt = staleRunning ? event.attempt : event.attempt + 1
     await ctx.db.patch(event._id, {
       state: 'running',
       attempt,
