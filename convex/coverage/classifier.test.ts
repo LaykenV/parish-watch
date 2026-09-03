@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 
-import { classificationContractError, classifierRequest } from './classifier'
+import {
+  classificationContractError,
+  classifierRequest,
+  discardUncertainGuesses,
+} from './classifier'
 import type {
   ClassifierCandidate,
   SourceClassificationResponse,
@@ -75,30 +79,23 @@ test('classification rejects invented IDs, changed bodies, and invented evidence
 })
 
 test('an uncertain source must use the explicit no-guess shape', () => {
+  const guessed = response({
+    outcome: 'uncertain',
+    sourceKind: 'agenda',
+    cadence: 'monthly',
+    confidence: 0.2,
+    noGuessReason: 'The title does not establish the document type.',
+  })
   expect(
-    classificationContractError(
-      'test-council',
-      CANDIDATES,
-      response({
-        outcome: 'uncertain',
-        sourceKind: 'agenda',
-        cadence: 'unknown',
-        confidence: 0.2,
-        noGuessReason: 'The title does not establish the document type.',
-      }),
-    ),
+    classificationContractError('test-council', CANDIDATES, guessed),
   ).toContain('guessed')
+  const normalized = discardUncertainGuesses(guessed)
+  expect(normalized.classifications[0]).toMatchObject({
+    outcome: 'uncertain',
+    sourceKind: 'unknown',
+    cadence: 'unknown',
+  })
   expect(
-    classificationContractError(
-      'test-council',
-      CANDIDATES,
-      response({
-        outcome: 'uncertain',
-        sourceKind: 'unknown',
-        cadence: 'unknown',
-        confidence: 0.2,
-        noGuessReason: 'The title does not establish the document type.',
-      }),
-    ),
+    classificationContractError('test-council', CANDIDATES, normalized),
   ).toBeNull()
 })

@@ -21,10 +21,12 @@ import {
 import {
   classificationContractError,
   classifierRequest,
+  discardUncertainGuesses,
   SOURCE_CLASSIFIER_PROMPT_VERSION,
   SOURCE_CLASSIFIER_SCHEMA_VERSION,
   sourceClassificationResponse,
 } from './classifier'
+import type { SourceClassificationResponse } from './classifier'
 import { resolveRootManifest } from './roots'
 import type { CoverageRootManifest } from './roots'
 
@@ -190,7 +192,7 @@ export const classifyForRun = internalAction({
         classificationContractError(
           context.bodyKey,
           context.candidates,
-          parsed,
+          discardUncertainGuesses(parsed as SourceClassificationResponse),
         ),
       )
     } catch (error) {
@@ -225,35 +227,9 @@ export const classifyForRun = internalAction({
       )
       return null
     }
-    const parsed = outcome.result.parsed as {
-      bodyKey: string
-      classifications: Array<{
-        candidateId: string
-        outcome: 'classified' | 'uncertain'
-        sourceKind:
-          | 'agenda'
-          | 'minutes'
-          | 'packet'
-          | 'ordinance'
-          | 'resolution'
-          | 'planning_case'
-          | 'zoning_case'
-          | 'notice'
-          | 'calendar'
-          | 'other'
-          | 'unknown'
-        cadence:
-          | 'meeting_cycle'
-          | 'weekly'
-          | 'monthly'
-          | 'annual'
-          | 'irregular'
-          | 'unknown'
-        confidence: number
-        evidenceText: string
-        noGuessReason: string
-      }>
-    }
+    const parsed = discardUncertainGuesses(
+      outcome.result.parsed as SourceClassificationResponse,
+    )
     await ctx.runMutation(
       internal.coverage.discoveryLedger.persistClassifications,
       { ...args, classifications: parsed.classifications },

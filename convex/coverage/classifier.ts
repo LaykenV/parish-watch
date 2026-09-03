@@ -179,3 +179,20 @@ export function classificationContractError(
   }
   return null
 }
+
+export function discardUncertainGuesses(
+  parsed: SourceClassificationResponse,
+): SourceClassificationResponse {
+  return {
+    ...parsed,
+    classifications: parsed.classifications.map((classification) =>
+      classification.outcome === 'uncertain'
+        ? {
+            ...classification,
+            sourceKind: 'unknown',
+            cadence: 'unknown',
+          }
+        : classification,
+    ),
+  }
+}
