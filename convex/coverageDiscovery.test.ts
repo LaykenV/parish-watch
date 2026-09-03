@@ -151,6 +151,32 @@ test('an empty discovery fails its stage and can retry later', async () => {
   ).toBe('succeeded')
 })
 
+test('cancellation stops the remaining paid discovery calls', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  stubRoot()
+  const runId = await verifiedRun(t, owner)
+  overrideCoverageDiscoveryForTests(
+    async (_ctx, _manifest, _rootUrl, shouldContinue) => {
+      expect(await shouldContinue()).toBe(true)
+      await owner.mutation(api.coverage.operations.cancel, { runId })
+      expect(await shouldContinue()).toBe(false)
+      return { inputs: [], evidence: [], canceled: true }
+    },
+  )
+
+  await owner.mutation(api.coverage.operations.discover, { runId })
+  await drainScheduled(t)
+
+  const view = await owner.query(api.coverage.operations.run, { runId })
+  expect(view?.run.state).toBe('canceled')
+  expect(
+    view?.stages.find((stage) => stage.stage === 'discover_sources')?.state,
+  ).toBe('canceled')
+  expect(view?.providerCalls).toEqual([])
+  expect(view?.candidates).toEqual([])
+})
+
 function stubSuccessfulProviders() {
   overrideCoverageDiscoveryForTests(async () => ({
     inputs: [
