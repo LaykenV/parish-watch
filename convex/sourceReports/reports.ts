@@ -1,6 +1,7 @@
-import type { OutboundId } from '@agentmail/convex'
+import type { OutboundId, OutboundStatus } from '@agentmail/convex'
 import { ConvexError, v } from 'convex/values'
 
+import type { Doc } from '../_generated/dataModel'
 import type { MutationCtx, QueryCtx } from '../_generated/server'
 import { internal } from '../_generated/api'
 import { env, internalMutation, mutation, query } from '../_generated/server'
@@ -15,6 +16,8 @@ const MAX_REPORTS_GLOBAL_HOUR = 100
 const ONE_HOUR_MS = 60 * 60 * 1_000
 const REPORT_RETENTION_MS = 30 * 24 * 60 * 60 * 1_000
 const RETENTION_BATCH_SIZE = 100
+const DELIVERY_CHECK_DELAY_MS = 30_000
+const MAX_DELIVERY_CHECKS = 70
 
 const category = v.union(
   v.literal('wrong-fact'),
@@ -62,7 +65,7 @@ export const submit = mutation({
     if (replay) {
       if (replay.browserHash !== browserHash) throw reportError('not_found')
       return {
-        status: await currentStatus(ctx, replay.outboundId),
+        status: await currentStatus(ctx, replay),
         replayed: true,
       } as const
     }
@@ -98,14 +101,21 @@ export const submit = mutation({
       replyTo: replyEmail,
       labels: ['public-parish', 'private-source-report'],
     })
-    await ctx.db.insert('sourceProblemReports', {
+    const reportId = await ctx.db.insert('sourceProblemReports', {
       submissionHash,
       browserHash,
       category: args.category,
       recordPath,
       outboundId,
+      deliveryStatus: 'sending',
+      deliveryCheckedAt: now,
       createdAt: now,
     })
+    await ctx.scheduler.runAfter(
+      5_000,
+      internal.sourceReports.reports.reconcileDelivery,
+      { reportId, attempt: 1 },
+    )
     return { status: 'sending', replayed: false } as const
   },
 })
@@ -135,8 +145,56 @@ export const receipt = query({
     }
     return {
       found: true,
-      status: await currentStatus(ctx, report.outboundId),
+      status: await currentStatus(ctx, report),
     } as const
+  },
+})
+
+export const reconcileDelivery = internalMutation({
+  args: {
+    reportId: v.id('sourceProblemReports'),
+    attempt: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const report = await ctx.db.get(args.reportId)
+    if (
+      !report ||
+      report.deliveryStatus === 'sent' ||
+      report.deliveryStatus === 'failed'
+    ) {
+      return null
+    }
+    const outbound = await agentmail.status(
+      ctx,
+      report.outboundId as OutboundId,
+    )
+    const checkedAt = Date.now()
+    const status = outbound ? mapStatus(outbound.status) : 'sending'
+    if (status !== 'sending') {
+      await ctx.db.patch(report._id, {
+        deliveryStatus: status,
+        deliveryCheckedAt: checkedAt,
+      })
+      return null
+    }
+    if (args.attempt >= MAX_DELIVERY_CHECKS) {
+      await ctx.db.patch(report._id, {
+        deliveryStatus: 'failed',
+        deliveryCheckedAt: checkedAt,
+      })
+      return null
+    }
+    await ctx.db.patch(report._id, {
+      deliveryStatus: 'sending',
+      deliveryCheckedAt: checkedAt,
+    })
+    await ctx.scheduler.runAfter(
+      DELIVERY_CHECK_DELAY_MS,
+      internal.sourceReports.reports.reconcileDelivery,
+      { reportId: report._id, attempt: args.attempt + 1 },
+    )
+    return null
   },
 })
 
@@ -193,11 +251,21 @@ async function requireRateCapacity(
 
 async function currentStatus(
   ctx: QueryCtx | MutationCtx,
-  outboundId: string,
+  report: Doc<'sourceProblemReports'>,
 ): Promise<typeof receiptStatus.type> {
-  const status = await agentmail.status(ctx, outboundId as OutboundId)
-  if (!status || status.status === 'pending') return 'sending'
-  if (status.status === 'sent' || status.status === 'delivered') return 'sent'
+  if (
+    report.deliveryStatus === 'sent' ||
+    report.deliveryStatus === 'failed'
+  ) {
+    return report.deliveryStatus
+  }
+  const outbound = await agentmail.status(ctx, report.outboundId as OutboundId)
+  return outbound ? mapStatus(outbound.status) : 'sending'
+}
+
+function mapStatus(status: OutboundStatus): typeof receiptStatus.type {
+  if (status === 'pending') return 'sending'
+  if (status === 'sent' || status === 'delivered') return 'sent'
   return 'failed'
 }
 
