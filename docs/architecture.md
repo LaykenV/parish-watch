@@ -530,13 +530,15 @@ never become source snapshots.
 
 ## Core Data Model
 
-The schema through Slice 7B implements `jurisdictions`, `governmentBodies`,
+The schema through Slice 7D implements `jurisdictions`, `governmentBodies`,
 `sourceRegistries`, `sourceSnapshots`, `pipelineRuns`, `pipelineStages`, private
 extraction evidence, independent reviews, stable decision records, immutable
 publication versions, citations, material changes, issues, anonymous chat
 ownership, Google users, saved setup, verified email subscribers, follows,
-notification preferences, and email access tokens. Coverage expectations,
-incidents, and the notification delivery ledger remain planned.
+notification preferences, email access tokens, notification matching and
+delivery, weekly roundup windows, grounded reply state, and private source
+reports. Coverage expectations, incidents, and coverage requests remain
+planned.
 
 ### Coverage
 
@@ -897,9 +899,10 @@ time; state plus retry time.
 #### `sourceProblemReports`
 
 Fields: submission hash, browser hash, report category, attached public route,
-AgentMail outbound reference, and created time. Application rows do not retain
-the description, optional reply address, or optional official URL. A 30-day
-cleanup removes the remaining receipt metadata.
+AgentMail outbound reference, retained delivery status and check time, and
+created time. Application rows do not retain the description, optional reply
+address, or optional official URL. A 30-day cleanup removes the remaining
+receipt metadata.
 Indexes: submission hash; browser hash plus created time; created time.
 
 #### `roundupWindows`
@@ -1317,9 +1320,11 @@ A separate AgentMail address accepts private source-problem reports. The report
 includes the public record URL and the resident's description. It does not
 automatically run Firecrawl, OpenAI, or publication functions. The owner decides
 whether to start the normal evidence pipeline. Submission and browser hashes
-provide replay and rate-limit keys. The application keeps only receipt metadata
-for 30 days. The browser stops waiting after 45 seconds and can recheck the same
-receipt without creating another report.
+provide replay and rate-limit keys. A bounded reconciliation job copies `sent`
+or `failed` into the application receipt before AgentMail removes its finalized
+payload. The application keeps only that receipt metadata for 30 days. The
+browser stops waiting after 45 seconds and can recheck the same receipt without
+creating another report.
 
 ## Realtime Demonstration
 

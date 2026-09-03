@@ -407,7 +407,14 @@ development run proved a two-turn AgentMail reply thread with absolute Source
 links and a private report with its selected Source attached. Production
 workflows `33786995126` and `33788197489` passed for merge commits `3f18c126` and
 `41a6d593`, followed by independent production smokes. A live production browser
-confirmed the connected report form and exact selected-Source attachment.
+confirmed the connected report form and exact selected-Source attachment. PRs
+#81 through #83 hardened roundup reply scope, report receipt retention, and the
+notification coverage gate. Production workflows `33797222889`, `33797505992`,
+and `33797772856` passed, followed by independent smokes. A controlled
+production report reached `sent`, retained that result, and started no evidence
+pipeline run. The alert-and-reply provider round trip remains development-only,
+so the Week 2 exit gate still needs one real production subscriber to receive a
+sourced change.
 
 - pin and install Convex Auth v2 alpha;
 - add Google OAuth account sign-in;

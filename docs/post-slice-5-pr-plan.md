@@ -1,6 +1,6 @@
 # Post-Slice-5 PR plan
 
-Status: implementation Slices 6 and 7A through 7D are deployed and production-proved; Slice 8 is next
+Status: implementation Slices 6 and 7A through 7D are deployed and release-tested; Slice 8 is next
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
@@ -584,7 +584,16 @@ no evidence-pipeline work. Both workflows and their independent production
 smokes passed. Controlled development proof completed a two-turn sourced reply
 thread and a private report with no duplicate send or pipeline run. Read-only
 production proof confirmed the live report form, its exact selected-Source
-route, and `available: true`; no fake production report was sent.
+route, and `available: true`. PRs #81 through #83 then corrected three closure
+edges. Weekly replies now use a corpus scope that covers every item named in the
+roundup. Private-report receipts retain their terminal delivery state after
+AgentMail removes its finalized payload. Body and place follows stop matching
+when coverage leaves supported or degraded status. Production workflows
+`33797222889`, `33797505992`, and `33797772856` passed, followed by independent
+smokes. A clearly labeled production report reached `sent`, stored that result,
+and did not change the latest evidence-pipeline run. The production
+subscriber-to-alert-to-reply round trip remains unrun; its provider proof is
+still the controlled development replay.
 
 ## Slice 8: owner-controlled coverage expansion
 
