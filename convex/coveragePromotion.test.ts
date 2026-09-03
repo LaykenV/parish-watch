@@ -178,7 +178,7 @@ async function seedReadyProposal(t: TestConvex, allPass: boolean) {
         createdAt: Date.now(),
       })
     }
-    return { bodyId, previousRegistryId, proposalId, registryId }
+    return { bodyId, previousRegistryId, proposalId, registryId, runId }
   })
   return ids
 }
