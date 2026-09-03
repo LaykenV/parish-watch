@@ -187,7 +187,7 @@ const ROOT_MANIFESTS: CoverageRootManifest[] = [
     checkedAt: '2026-09-03',
   },
   {
-    bodyKey: 'baton-rouge-metropolitan-council',
+    bodyKey: 'ebr-metropolitan-council',
     version: 'v1',
     jurisdictionSlug: 'east-baton-rouge-parish',
     jurisdictionName: 'East Baton Rouge Parish',
