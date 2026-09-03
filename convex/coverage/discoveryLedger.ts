@@ -209,14 +209,21 @@ export const persistDiscovery = internalMutation({
       }
     }
 
-    await ctx.db.patch(stage._id, { state: 'succeeded', completedAt: now })
     if (args.candidates.length === 0) {
+      const summary =
+        'Bounded discovery found no source candidates for this body.'
+      await ctx.db.patch(stage._id, {
+        state: 'failed_terminal',
+        errorClass: 'coverage:discovery_no_candidates',
+        errorDetail: summary,
+        completedAt: now,
+      })
       await ctx.db.insert('coverageCompilerFindings', {
         runId: run._id,
         stageId: stage._id,
         code: 'discovery_no_candidates',
         severity: 'blocking',
-        summary: 'Bounded discovery found no source candidates for this body.',
+        summary,
         createdAt: now,
       })
       await ctx.db.patch(run._id, {
@@ -226,6 +233,7 @@ export const persistDiscovery = internalMutation({
       return { candidateCount: 0, classificationStageId: null }
     }
 
+    await ctx.db.patch(stage._id, { state: 'succeeded', completedAt: now })
     const classificationStageId = await openStage(
       ctx,
       run._id,

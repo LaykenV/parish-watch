@@ -17,6 +17,7 @@ const modules = import.meta.glob('./**/*.ts')
 type TestConvex = TestConvexForDataModelAndIdentity<DataModel>
 
 afterEach(() => {
+  vi.useRealTimers()
   resetCoverageProvidersForTests()
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
@@ -32,7 +33,7 @@ test('a verified run stores bounded candidates and model evidence without activa
   await expect(
     owner.mutation(api.coverage.operations.discover, { runId }),
   ).resolves.toEqual({ started: true })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
 
   const view = await owner.query(api.coverage.operations.run, { runId })
   expect(view?.run).toMatchObject({
@@ -56,7 +57,20 @@ test('a verified run stores bounded candidates and model evidence without activa
   expect(view?.providerCalls.map((call) => call.provider)).toEqual([
     'firecrawl',
     'ai_gateway',
+    'direct_openai',
   ])
+  const providerEvidence = await t.run(
+    async (ctx) =>
+      await ctx.db.query('coverageCompilerProviderCalls').collect(),
+  )
+  expect(
+    providerEvidence.find((call) => call.provider === 'ai_gateway')
+      ?.responseHash,
+  ).toBeUndefined()
+  expect(
+    providerEvidence.find((call) => call.provider === 'direct_openai')
+      ?.responseHash,
+  ).toEqual(expect.any(String))
   expect(
     view?.findings.some(
       (finding) =>
@@ -86,7 +100,7 @@ test('a Firecrawl failure is recorded and retry resumes discovery', async () => 
 
   const runId = await verifiedRun(t, owner)
   await owner.mutation(api.coverage.operations.discover, { runId })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
   expect(
     (await owner.query(api.coverage.operations.run, { runId }))?.run.state,
   ).toBe('failed_retryable')
@@ -95,7 +109,7 @@ test('a Firecrawl failure is recorded and retry resumes discovery', async () => 
   await expect(
     owner.mutation(api.coverage.operations.retry, { runId }),
   ).resolves.toEqual({ retried: true })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
   const retried = await owner.query(api.coverage.operations.run, { runId })
   expect(retried?.run.state).toBe('succeeded')
   expect(
@@ -103,6 +117,38 @@ test('a Firecrawl failure is recorded and retry resumes discovery', async () => 
       .filter((stage) => stage.stage === 'discover_sources')
       .map((stage) => stage.attempt),
   ).toEqual([1, 2])
+})
+
+test('an empty discovery fails its stage and can retry later', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  stubRoot()
+  overrideCoverageDiscoveryForTests(async () => ({
+    inputs: [],
+    evidence: [],
+  }))
+
+  const runId = await verifiedRun(t, owner)
+  await owner.mutation(api.coverage.operations.discover, { runId })
+  await drainScheduled(t)
+
+  const failed = await owner.query(api.coverage.operations.run, { runId })
+  expect(failed?.run.state).toBe('failed_terminal')
+  expect(
+    failed?.stages.find((stage) => stage.stage === 'discover_sources'),
+  ).toMatchObject({
+    state: 'failed_terminal',
+    errorClass: 'coverage:discovery_no_candidates',
+  })
+
+  stubSuccessfulProviders()
+  await expect(
+    owner.mutation(api.coverage.operations.retry, { runId }),
+  ).resolves.toEqual({ retried: true })
+  await drainScheduled(t)
+  expect(
+    (await owner.query(api.coverage.operations.run, { runId }))?.run.state,
+  ).toBe('succeeded')
 })
 
 function stubSuccessfulProviders() {
@@ -166,7 +212,7 @@ function stubSuccessfulProviders() {
       outcome: 'success',
       result: {
         kind: 'success',
-        route: 'ai_gateway',
+        route: 'direct_openai',
         modelId: 'openai/gpt-5.6-luna',
         requestId: 'request-1',
         finishReason: 'stop',
@@ -184,6 +230,18 @@ function stubSuccessfulProviders() {
       attempts: [
         {
           route: 'ai_gateway',
+          modelId: 'openai/gpt-5.6-luna',
+          status: 'failed',
+          httpStatus: 503,
+          latencyMs: 20,
+          requestId: null,
+          usage: null,
+          retryAfterMs: null,
+          errorClass: 'gateway_unavailable',
+          errorDetail: 'Gateway unavailable',
+        },
+        {
+          route: 'direct_openai',
           modelId: 'openai/gpt-5.6-luna',
           status: 'success',
           httpStatus: 200,
@@ -213,8 +271,14 @@ async function verifiedRun(
     bodyKey: 'lafayette-planning-commission',
     rootManifestVersion: 'v1',
   })
-  await t.finishInProgressScheduledFunctions()
+  await drainScheduled(t)
   return started.runId
+}
+
+async function drainScheduled(t: TestConvex): Promise<void> {
+  vi.useFakeTimers()
+  await t.finishAllScheduledFunctions(vi.runAllTimers)
+  vi.useRealTimers()
 }
 
 function stubRoot() {

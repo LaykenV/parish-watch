@@ -228,8 +228,14 @@ export const classifyForRun = internalAction({
       const responseHash = responseContent
         ? await sha256HexOfText(responseContent)
         : undefined
-      for (const attempt of outcome.attempts) {
-        await recordModelAttempt(ctx, args, requestHash, responseHash, attempt)
+      for (const [index, attempt] of outcome.attempts.entries()) {
+        await recordModelAttempt(
+          ctx,
+          args,
+          requestHash,
+          index === outcome.attempts.length - 1 ? responseHash : undefined,
+          attempt,
+        )
       }
       if (outcome.outcome === 'failed') {
         await fail(
