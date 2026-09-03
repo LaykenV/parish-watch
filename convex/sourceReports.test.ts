@@ -97,18 +97,20 @@ test('a terminal receipt survives provider payload cleanup', async () => {
   ).resolves.toEqual({ found: true, status: 'sent' })
 })
 
-test('delivery reconciliation stops an unavailable provider record', async () => {
+test('delivery reconciliation stops after the bounded provider window', async () => {
   const t = initTest()
+  const input = reportInput('submission-reconcile-0001')
+  await t.mutation(api.sourceReports.reports.submit, input)
+  const submissionHash = await sha256HexOfText(input.submissionId)
   const reportId = await t.run(async (ctx) => {
-    return await ctx.db.insert('sourceProblemReports', {
-      submissionHash: 'unavailable-provider-submission',
-      browserHash: 'unavailable-provider-browser',
-      category: 'wrong-fact',
-      recordPath: '/decisions/unavailable-provider',
-      outboundId: 'unavailable-provider-outbound',
-      deliveryStatus: 'sending',
-      createdAt: 1,
-    })
+    const report = await ctx.db
+      .query('sourceProblemReports')
+      .withIndex('by_submission_hash', (q) =>
+        q.eq('submissionHash', submissionHash),
+      )
+      .unique()
+    if (!report) throw new Error('Missing source report fixture')
+    return report._id
   })
   await t.mutation(internal.sourceReports.reports.reconcileDelivery, {
     reportId,
