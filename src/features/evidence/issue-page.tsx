@@ -174,10 +174,14 @@ function IssueDetail({
   updated: boolean
 }) {
   const { citations, issue } = fixture
+  const countedVisit = useRef<string | null>(null)
   useEffect(() => {
     if (!liveFollow) return
     const key = `pp-issue-visited:${issue.slug}`
-    try { if (sessionStorage.getItem(key)) recordCivicEvent('issue_returned'); sessionStorage.setItem(key, '1') } catch { /* Reading remains available without storage. */ }
+    if (countedVisit.current !== issue.slug) {
+      countedVisit.current = issue.slug
+      try { if (sessionStorage.getItem(key)) recordCivicEvent('issue_returned'); sessionStorage.setItem(key, '1') } catch { /* Reading remains available without storage. */ }
+    }
     if (!issue.latestOutcome || typeof IntersectionObserver === 'undefined') return
     const timeline = document.getElementById('timeline')
     if (!timeline) return

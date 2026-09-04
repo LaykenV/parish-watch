@@ -31,7 +31,7 @@ test('daily provider rollups retain unknown usage and never count a ledger row t
   await t.run(async ctx => {
     const userId = await ctx.db.insert('users', { email: 'owner@example.test', googleAccountId: 'rollup', emailVerified: true, createdAt: 1, updatedAt: 1, lastSignedInAt: 1 })
     const runId = await ctx.db.insert('coverageCompilerRuns', { bodyKey: 'test', jurisdictionSlug: 'test', rootManifestVersion: 'v1', compilerVersion: 'test', idempotencyKey: 'usage', attempt: 1, state: 'succeeded', requestedByUserId: userId, startedAt: 1 })
-    const stageId = await ctx.db.insert('coverageCompilerStages', { runId, stage: 'discover_sources', idempotencyKey: 'usage-stage', inputHash: 'test', attempt: 1, state: 'succeeded', gateVersion: 'test' })
+    const stageId = await ctx.db.insert('coverageCompilerStages', { runId, stage: 'discover_sources', idempotencyKey: 'usage-stage', inputHash: 'test', attempt: 1, state: 'succeeded', gateVersion: 'test', startedAt: 1 })
     for (const status of ['succeeded', 'failed']) await ctx.db.insert('coverageCompilerProviderCalls', { runId, stageId, requestHash: 'test', creditsReported: false, operation: 'test', provider: 'firecrawl', status, latencyMs: 50, createdAt: Date.now() })
   })
   expect(await t.mutation(internal.operations.usage.aggregate, { kind: 'compiler' })).toBe(2)
