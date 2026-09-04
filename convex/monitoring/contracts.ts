@@ -22,6 +22,7 @@ export const inventoryTarget = v.object({
 })
 export const inventoryResult = v.object({
   complete: v.boolean(),
+  reason: v.optional(v.string()),
   bodyName: v.string(),
   sourceKind: sourceKindUnion,
   meetingDate: v.union(v.string(), v.null()),
@@ -31,7 +32,7 @@ export const inventoryResult = v.object({
 export type InventoryResult = typeof inventoryResult.type
 
 export function inventoryContract(value: InventoryResult, source: string, bodyName: string): string | null {
-  if (!value.complete) return 'Document inventory is incomplete.'
+  if (!value.complete) return `Document inventory is incomplete. ${value.reason ?? ''}`
   if (value.bodyName !== bodyName) return 'Inventory changed the government body.'
   if (value.targets.length > MAX_TARGETS_PER_CHUNK) return 'Inventory target overflow.'
   if (value.targets.length && (!value.meetingDate || !/^\d{4}-\d{2}-\d{2}$/.test(value.meetingDate) || !Number.isFinite(Date.parse(value.meetingDate)) || new Date(value.meetingDate).toISOString().slice(0, 10) !== value.meetingDate)) {
@@ -52,14 +53,14 @@ export function inventoryContract(value: InventoryResult, source: string, bodyNa
 
 export const inventoryJsonSchema = {
   type: 'object', additionalProperties: false,
-  required: ['complete', 'bodyName', 'sourceKind', 'meetingDate', 'dateExcerpt', 'targets'],
+  required: ['complete', 'reason', 'bodyName', 'sourceKind', 'meetingDate', 'dateExcerpt', 'targets'],
   properties: {
-    complete: { type: 'boolean' }, bodyName: { type: 'string' },
+    complete: { type: 'boolean' }, reason: { type: 'string', maxLength: 500 }, bodyName: { type: 'string' },
     sourceKind: { type: 'string', enum: ['agenda', 'minutes', 'ordinance', 'resolution', 'notice', 'calendar', 'packet', 'planning_case', 'other'] },
     meetingDate: { type: ['string', 'null'] }, dateExcerpt: { type: ['string', 'null'] },
     targets: { type: 'array', items: { type: 'object', additionalProperties: false,
       required: ['printedId', 'title', 'excerpt'], properties: {
-        printedId: { type: ['string', 'null'] }, title: { type: 'string' }, excerpt: { type: 'string' },
+        printedId: { type: ['string', 'null'], maxLength: 100 }, title: { type: 'string', maxLength: 300 }, excerpt: { type: 'string', maxLength: 1000 },
       } } },
   },
 }
