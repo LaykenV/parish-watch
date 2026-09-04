@@ -182,20 +182,23 @@ test('a rejected revision candidate cannot fill a required sample slot', async (
       startedAt: Date.now(),
       completedAt: Date.now(),
     })
-    const stageId = await ctx.db.insert('coverageCompilerStages', {
-      runId,
-      stage: 'classify_sources',
-      idempotencyKey: 'rejected-revision-stage',
-      inputHash: 'rejected-revision-stage',
-      attempt: 1,
-      state: 'succeeded',
-      gateVersion: 'v1',
-      startedAt: Date.now(),
-      completedAt: Date.now(),
-    })
+    const classificationStageId = await ctx.db.insert(
+      'coverageCompilerStages',
+      {
+        runId,
+        stage: 'classify_sources',
+        idempotencyKey: 'rejected-revision-stage',
+        inputHash: 'rejected-revision-stage',
+        attempt: 1,
+        state: 'succeeded',
+        gateVersion: 'v1',
+        startedAt: Date.now(),
+        completedAt: Date.now(),
+      },
+    )
     await ctx.db.insert('coverageSourceCandidates', {
       runId,
-      stageId,
+      stageId: classificationStageId,
       canonicalUrl: 'https://www.youngsville.us/current-agenda',
       title: 'Current agenda',
       discoveredFrom: ['map'],
@@ -208,7 +211,7 @@ test('a rejected revision candidate cannot fill a required sample slot', async (
     })
     const rejectedId = await ctx.db.insert('coverageSourceCandidates', {
       runId,
-      stageId,
+      stageId: classificationStageId,
       canonicalUrl: 'https://www.youngsville.us/revised-agenda',
       title: 'Revised agenda',
       discoveredFrom: ['map'],

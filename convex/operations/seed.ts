@@ -141,7 +141,7 @@ async function seedRegistry(
         ...registryFields,
         status: config.registry.initialStatus,
       })
-  if (existingSeedRegistry && !protectedRegistry) {
+  if (existingSeedRegistry) {
     await ctx.db.patch(registryId, registryFields)
   }
 
