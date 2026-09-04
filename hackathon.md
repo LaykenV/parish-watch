@@ -12,9 +12,19 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-03T23:35:20Z
+- **Last updated:** 2026-09-04T14:25:32Z
 
 ## Log
+
+### 2026-09-04 - 783d5b2
+
+Closed the Slice 8 review gaps before release. Post-deploy seed replay now
+preserves supported, degraded, paused, and ambiguous multi-registry state.
+Evaluator v2 names the checks it actually performs, rejected candidates cannot
+fill revision slots, and body promotion cannot clear an operator-set parish
+pause or degradation. The owner view and architecture now state that sample
+validation stores snapshots but does not run extraction, review, or publication
+(`convex/operations/seed.ts`, `convex/coverage/`, `docs/architecture.md`).
 
 ### 2026-09-03 - cc056f3
 
@@ -29,21 +39,23 @@ fixed representative sample through the immutable snapshot path, evaluates the
 ten coverage gates, and permits promotion only when the latest evaluation has
 ten passes. No override can turn a blocked proposal into supported coverage.
 
-The personal development deployment ran the complete path for the nine target
-bodies. Every root passed before discovery spent provider credits. Every
-proposal remained blocked, and no resident-visible coverage state changed.
+The personal development deployment ran root verification, discovery,
+classification, snapshot validation, and gate evaluation for the nine target
+bodies. It did not run extraction, review, or publication. Every root passed
+before discovery spent provider credits. Every proposal remained blocked, and
+no resident-visible coverage state changed.
 
-| Body | Samples retrieved | Gates passed |
-| --- | ---: | --- |
-| Lafayette Planning Commission | 7 of 9 | 2, 3 |
-| Lafayette Board of Zoning Adjustment | 5 of 9 | 2, 3 |
-| Lafayette Hearing Examiner | 5 of 9 | 2, 3 |
-| Youngsville City Council | 2 of 7 | 2 |
-| Alexandria City Council | 5 of 7 | 2, 3 |
-| Pineville City Council | 4 of 7 | 2, 3 |
-| Rapides Parish Police Jury | 6 of 7 | 2, 3 |
-| Baton Rouge Metropolitan Council | 7 of 7 | 1, 2, 3 |
-| Baton Rouge Planning Commission | 8 of 9 | 2, 3 |
+| Body                                 | Samples retrieved | Gates passed |
+| ------------------------------------ | ----------------: | ------------ |
+| Lafayette Planning Commission        |            7 of 9 | 2, 3         |
+| Lafayette Board of Zoning Adjustment |            5 of 9 | 2, 3         |
+| Lafayette Hearing Examiner           |            5 of 9 | 2, 3         |
+| Youngsville City Council             |            2 of 7 | 2            |
+| Alexandria City Council              |            5 of 7 | 2, 3         |
+| Pineville City Council               |            4 of 7 | 2, 3         |
+| Rapides Parish Police Jury           |            6 of 7 | 2, 3         |
+| Baton Rouge Metropolitan Council     |            7 of 7 | 1, 2, 3      |
+| Baton Rouge Planning Commission      |            8 of 9 | 2, 3         |
 
 The results exposed real source limits instead of hiding them. Youngsville's
 current packet, agenda, and minutes returned unsuccessful target responses.
