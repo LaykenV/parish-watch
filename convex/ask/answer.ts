@@ -212,7 +212,7 @@ export const answerQuestion = action({
         }))
         selectedIds = [...new Set([...selectedIds, ...selected.flat()])]
         if (selectedIds.length > 1_500) throw askError('ask_scope_too_large', 'Choose a place, issue, meeting or date to narrow this question.')
-        await ctx.runMutation(internal.ask.ledger.checkpointCatalogScan, { receiptId: claim.receiptId, answerAttempt: claim.attempt, revision, cursor, complete: done, evidenceIds: selectedIds, batches: pages.length })
+        await ctx.runMutation(internal.ask.ledger.checkpointCatalogScan, { receiptId: claim.receiptId, answerAttempt: claim.attempt, revision, cursor: cursor ?? '', complete: done, evidenceIds: selectedIds, batches: pages.length })
       }
       selectedEvidence = await ctx.runQuery(internal.ask.evidence.retrieveSelectedCatalog, { token: args.token, threadId: args.threadId, revision, evidenceIds: selectedIds })
     } catch (error) {

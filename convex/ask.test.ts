@@ -1266,7 +1266,7 @@ test('a thousand-record corpus searches old history and selects evidence across 
   let searchCursor: string | null = null
   let indexed = false
   while (!indexed) {
-    const page = await t.mutation(internal.resident.search.backfill, { kind: 'decision', paginationOpts: { numItems: 25, cursor: searchCursor } })
+    const page: { isDone: boolean; continueCursor: string; indexed: number } = await t.mutation(internal.resident.search.backfill, { kind: 'decision', paginationOpts: { numItems: 25, cursor: searchCursor } })
     indexed = page.isDone
     searchCursor = page.continueCursor
   }
