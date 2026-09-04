@@ -40,7 +40,7 @@ export function MonitoringPanel() {
     <h3>Provider usage</h3>
     <label>Work type <select value={kind} onChange={event => setKind(event.target.value as typeof kind)}><option value="monitoring">Source monitoring</option><option value="pipeline">Evidence pipeline</option><option value="compiler">Coverage compiler</option><option value="ask">Resident Ask</option></select></label>
     <p>Costs are estimates. Missing provider usage means unknown, not zero. This list shows the loaded page, not a complete spending total.</p>
-    <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Time</th><th>Operation</th><th>Provider and model</th><th>Status</th><th>Tokens</th><th>Estimated USD</th><th>Credits</th></tr></thead><tbody>{usage.results.map(row => <tr key={row.id}><td>{new Date(row.at).toLocaleString()}</td><td>{row.operation}</td><td>{row.provider} {row.model ?? ''}</td><td>{row.status}</td><td>{row.tokens ?? 'Unknown'}</td><td>{row.estimatedCostUsd ?? 'Unknown'}</td><td>{row.credits ?? 'Unknown'}</td></tr>)}</tbody></table></div>
+    <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Time</th><th>Operation</th><th>Provider and model</th><th>Status</th><th>Tokens</th><th>Estimated USD</th><th>Credits</th></tr></thead><tbody>{usage.results.map(row => <tr key={row.id}><td>{new Date(row.at).toLocaleString()}</td><td>{row.operation}</td><td>{row.provider} {row.model ?? ''}</td><td>{row.status}</td><td>{row.tokens ?? 'Unknown'}</td><td>{row.estimatedCostUsd ?? 'Unknown'}</td><td>{('credits' in row ? row.credits : undefined) ?? 'Unknown'}</td></tr>)}</tbody></table></div>
     {usage.status === 'CanLoadMore' ? <Button onClick={() => usage.loadMore(25)}>More provider calls</Button> : null}
   </section>
 }
