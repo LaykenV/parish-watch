@@ -4,7 +4,7 @@ import agentTest from '@convex-dev/agent/test'
 import rateLimiterTest from '@convex-dev/rate-limiter/test'
 import { convexTest } from 'convex-test'
 import type { TestConvexForDataModelAndIdentity } from 'convex-test'
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 
 import { api, internal } from './_generated/api'
 import type { DataModel, Id } from './_generated/dataModel'
@@ -28,7 +28,7 @@ function initTest(): TestConvex {
   return t
 }
 
-afterEach(() => resetAskGatewayForTests())
+afterEach(() => { resetAskGatewayForTests(); vi.restoreAllMocks() })
 
 test('opaque sessions isolate Agent threads and detach expired access', async () => {
   const t = initTest()
@@ -692,6 +692,8 @@ test('releases abandoned answers and cools down repeated requests', async () => 
 })
 
 test('caps rotated anonymous sessions without using token budgets', async () => {
+  // Keep all 61 requests in one rate-limit window even on a busy CI runner.
+  vi.spyOn(Date, 'now').mockReturnValue(1_788_000_001_000)
   const t = initTest()
   await seedEvidence(t)
 
