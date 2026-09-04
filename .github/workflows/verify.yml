@@ -33,6 +33,20 @@ jobs:
       - name: Verify the application
         run: npm run verify
 
+      - name: Install browser engines
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Check desktop and mobile development journeys
+        run: npx playwright test
+
+      - name: Preserve browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-${{ github.event.pull_request.head.sha }}
+          path: test-results
+          if-no-files-found: ignore
+
       - name: Preserve the verified development frontend
         uses: actions/upload-artifact@v4
         with:
