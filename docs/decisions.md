@@ -429,3 +429,17 @@ These do not reopen the product plan:
   August 27, 2026;
 - benchmark the strong and fast stage assignment against a labeled source set;
 - verify official September meeting schedules before relying on a live cycle.
+
+
+## Slice 9 development release candidate
+
+PRs #93 through #99 implement the final build slice. They remain open while
+combined development certification runs on `woozy-wren-227`. Production has
+not changed. [The certification record](slice-9-development-certification.md) separates CI, development provider
+proof, and the production steps that follow an authorized merge.
+
+Approved-source monitoring remains bounded by an owner policy and a deployment
+switch. Accepted history uses paginated search and corpus Ask scans evidence in
+batches. Coverage requests save demand without starting source work. Verified
+launch notices, current issue share HTML, and private operating reports complete
+the remaining public integrations.
