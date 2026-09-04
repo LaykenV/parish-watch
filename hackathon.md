@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-04T17:22:28Z
+- **Last updated:** 2026-09-04T17:31:09Z
 
 ## Log
 
@@ -26,6 +26,12 @@ replay. Gate 10 remains production-only. Lafayette's planning commission,
 zoning board, and hearing examiner stay blocked because their live document
 links return 404 or route through an events host that returns 502. No body was
 promoted and no production data changed.
+
+Connected the resident area selector to a public, realtime jurisdiction-status
+query. It enables a parish only when exactly one live jurisdiction row is
+`supported`; missing, duplicate, candidate, validating, degraded, and paused
+states remain unavailable. The selector therefore follows promotion instead of
+hard-coded fixture claims.
 
 ### 2026-09-04 - 76b806d
 

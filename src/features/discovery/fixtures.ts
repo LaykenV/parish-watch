@@ -21,20 +21,17 @@ export const AREA_FIXTURES: AreaRecord[] = [
   {
     name: 'Lafayette Parish',
     slug: 'lafayette-parish',
-    status: 'available',
-    note: 'Accepted decision records are available. Complete government-body coverage is a separate gate.',
+    status: 'validating',
   },
   {
     name: 'East Baton Rouge Parish',
     slug: 'east-baton-rouge-parish',
     status: 'validating',
-    note: 'Sources are being validated. This area opens after accepted decision records are available.',
   },
   {
     name: 'Rapides Parish',
     slug: 'rapides-parish',
     status: 'validating',
-    note: 'Sources are being validated. This area opens after they pass the same evidence gate.',
   },
 ]
 

@@ -12,6 +12,44 @@ const modules = import.meta.glob('./**/*.ts')
 type TestConvex = TestConvexForDataModelAndIdentity<DataModel>
 type TestCtx = Parameters<Parameters<TestConvex['run']>[0]>[0]
 
+test('lists launch areas from live jurisdiction support status', async () => {
+  const t = convexTest(schema, modules)
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert('jurisdictions', {
+      name: 'Lafayette Parish',
+      slug: 'lafayette-parish',
+      type: 'parish',
+      state: 'LA',
+      publicStatus: 'supported',
+    })
+    await ctx.db.insert('jurisdictions', {
+      name: 'Rapides Parish',
+      slug: 'rapides-parish',
+      type: 'parish',
+      state: 'LA',
+      publicStatus: 'degraded',
+    })
+    for (const name of ['East Baton Rouge Parish', 'Duplicate EBR']) {
+      await ctx.db.insert('jurisdictions', {
+        name,
+        slug: 'east-baton-rouge-parish',
+        type: 'parish',
+        state: 'LA',
+        publicStatus: 'supported',
+      })
+    }
+  })
+
+  expect(
+    await t.query(api.resident.discovery.listCoverageAreas, {}),
+  ).toEqual([
+    { slug: 'lafayette-parish', status: 'available' },
+    { slug: 'east-baton-rouge-parish', status: 'validating' },
+    { slug: 'rapides-parish', status: 'validating' },
+  ])
+})
+
 test('returns only current accepted publication fields to residents', async () => {
   const t = convexTest(schema, modules)
 
