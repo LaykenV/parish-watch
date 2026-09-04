@@ -6,16 +6,18 @@ import { requireOwner } from '../auth/authorization'
 import {
   coverageFindingCodes,
   coverageFindingSeverities,
+  coverageCadences,
+  coverageCandidateStates,
+  coverageHostDispositions,
+  coverageProviderNames,
   coverageRedirectHop,
   coverageRunStates,
   coverageStageNames,
   coverageStageStates,
+  coverageSourceKinds,
 } from './contracts'
-import {
-  cancelCoverageRun,
-  retryCoverageRun,
-  startCoverageRun,
-} from './ledger'
+import { cancelCoverageRun, retryCoverageRun, startCoverageRun } from './ledger'
+import { beginDiscovery } from './discoveryLedger'
 import { listRootManifests, resolveRootManifest } from './roots'
 
 const MAX_LISTED_RUNS = 20
@@ -68,6 +70,31 @@ const findingView = v.object({
   createdAt: v.number(),
 })
 
+const candidateView = v.object({
+  candidateId: v.id('coverageSourceCandidates'),
+  canonicalUrl: v.string(),
+  title: v.union(v.string(), v.null()),
+  hostDisposition: coverageHostDispositions,
+  state: coverageCandidateStates,
+  sourceKind: v.union(coverageSourceKinds, v.null()),
+  cadence: v.union(coverageCadences, v.null()),
+  confidence: v.union(v.number(), v.null()),
+})
+
+const providerCallView = v.object({
+  providerCallId: v.id('coverageCompilerProviderCalls'),
+  provider: coverageProviderNames,
+  operation: v.string(),
+  status: v.string(),
+  modelId: v.union(v.string(), v.null()),
+  latencyMs: v.number(),
+  creditsUsed: v.union(v.number(), v.null()),
+  creditsReported: v.boolean(),
+  totalTokens: v.union(v.number(), v.null()),
+  estimatedCostUsd: v.union(v.number(), v.null()),
+  createdAt: v.number(),
+})
+
 export const availableRoots = query({
   args: {},
   returns: v.array(rootView),
@@ -116,6 +143,8 @@ export const run = query({
       run: runSummary,
       stages: v.array(stageView),
       findings: v.array(findingView),
+      candidates: v.array(candidateView),
+      providerCalls: v.array(providerCallView),
     }),
   ),
   handler: async (ctx, args) => {
@@ -123,16 +152,28 @@ export const run = query({
     const record = await ctx.db.get(args.runId)
     if (!record) return null
 
-    const stages = await ctx.db
-      .query('coverageCompilerStages')
-      .withIndex('by_run_and_stage', (index) => index.eq('runId', args.runId))
-      .take(MAX_LISTED_STAGES)
+    const stages = (
+      await ctx.db
+        .query('coverageCompilerStages')
+        .withIndex('by_run_and_stage', (index) => index.eq('runId', args.runId))
+        .take(MAX_LISTED_STAGES)
+    ).sort((left, right) => left._creationTime - right._creationTime)
     const findings = await ctx.db
       .query('coverageCompilerFindings')
       .withIndex('by_run_and_created_at', (index) =>
         index.eq('runId', args.runId),
       )
       .take(MAX_LISTED_FINDINGS)
+    const candidates = await ctx.db
+      .query('coverageSourceCandidates')
+      .withIndex('by_run_and_url', (index) => index.eq('runId', args.runId))
+      .take(100)
+    const providerCalls = await ctx.db
+      .query('coverageCompilerProviderCalls')
+      .withIndex('by_run_and_created_at', (index) =>
+        index.eq('runId', args.runId),
+      )
+      .take(100)
 
     return {
       run: {
@@ -169,6 +210,29 @@ export const run = query({
         subjectUrl: finding.subjectUrl ?? null,
         createdAt: finding.createdAt,
       })),
+      candidates: candidates.map((candidate) => ({
+        candidateId: candidate._id,
+        canonicalUrl: candidate.canonicalUrl,
+        title: candidate.title ?? null,
+        hostDisposition: candidate.hostDisposition,
+        state: candidate.state,
+        sourceKind: candidate.sourceKind ?? null,
+        cadence: candidate.cadence ?? null,
+        confidence: candidate.confidence ?? null,
+      })),
+      providerCalls: providerCalls.map((call) => ({
+        providerCallId: call._id,
+        provider: call.provider,
+        operation: call.operation,
+        status: call.status,
+        modelId: call.modelId ?? null,
+        latencyMs: call.latencyMs,
+        creditsUsed: call.creditsUsed ?? null,
+        creditsReported: call.creditsReported,
+        totalTokens: call.totalTokens ?? null,
+        estimatedCostUsd: call.estimatedCostUsd ?? null,
+        createdAt: call.createdAt,
+      })),
     }
   },
 })
@@ -185,10 +249,7 @@ export const start = mutation({
   }),
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx)
-    const manifest = resolveRootManifest(
-      args.bodyKey,
-      args.rootManifestVersion,
-    )
+    const manifest = resolveRootManifest(args.bodyKey, args.rootManifestVersion)
     if (manifest === null) {
       throw new ConvexError({
         code: 'UNKNOWN_ROOT',
@@ -219,6 +280,16 @@ export const cancel = mutation({
   },
 })
 
+export const discover = mutation({
+  args: { runId: v.id('coverageCompilerRuns') },
+  returns: v.object({ started: v.boolean() }),
+  handler: async (ctx, args) => {
+    await requireOwner(ctx)
+    const result = await beginDiscovery(ctx, args.runId)
+    return { started: result.started }
+  },
+})
+
 export const retry = mutation({
   args: { runId: v.id('coverageCompilerRuns') },
   returns: v.object({ retried: v.boolean() }),
@@ -238,11 +309,16 @@ export const retry = mutation({
     }
     const retried = await retryCoverageRun(ctx, args.runId, manifest)
     if (retried.retried && retried.stageId !== null) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.coverage.verifyRoot.verifyRootForRun,
-        { runId: args.runId, stageId: retried.stageId },
-      )
+      const fn =
+        retried.stage === 'verify_root'
+          ? internal.coverage.verifyRoot.verifyRootForRun
+          : retried.stage === 'discover_sources'
+            ? internal.coverage.discovery.discoverForRun
+            : internal.coverage.discovery.classifyForRun
+      await ctx.scheduler.runAfter(0, fn, {
+        runId: args.runId,
+        stageId: retried.stageId,
+      })
     }
     return { retried: retried.retried }
   },

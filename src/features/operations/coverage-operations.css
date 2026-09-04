@@ -338,6 +338,81 @@
   text-transform: uppercase;
 }
 
+.coverage-ops-provider-calls > p {
+  margin: -0.35rem 0 0.8rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+.coverage-ops-candidates {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.coverage-ops-candidates h4 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 0.75rem;
+}
+
+.coverage-ops-candidates h4 span {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.coverage-ops-candidates ul {
+  max-height: 24rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+
+.coverage-ops-candidates li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.coverage-ops-candidates li > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: end;
+}
+
+.coverage-ops-candidates li strong {
+  display: block;
+  overflow: hidden;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coverage-ops-candidates a {
+  display: block;
+  max-width: 38rem;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coverage-ops-candidates small {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+}
+
 .coverage-ops-empty {
   margin: 0;
   padding: 1.25rem;

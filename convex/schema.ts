@@ -5,8 +5,13 @@ import { aiRoutes, modelRoles } from './ai/types'
 import {
   coverageFindingCodes,
   coverageFindingSeverities,
+  coverageCadences,
+  coverageCandidateStates,
+  coverageHostDispositions,
+  coverageProviderNames,
   coverageRedirectHop,
   coverageRunStates,
+  coverageSourceKinds,
   coverageStageNames,
   coverageStageStates,
 } from './coverage/contracts'
@@ -157,11 +162,7 @@ export default defineSchema({
     recordPath: v.string(),
     outboundId: v.string(),
     deliveryStatus: v.optional(
-      v.union(
-        v.literal('sending'),
-        v.literal('sent'),
-        v.literal('failed'),
-      ),
+      v.union(v.literal('sending'), v.literal('sent'), v.literal('failed')),
     ),
     deliveryCheckedAt: v.optional(v.number()),
     createdAt: v.number(),
@@ -587,6 +588,53 @@ export default defineSchema({
     subjectUrl: v.optional(v.string()),
     createdAt: v.number(),
   }).index('by_run_and_created_at', ['runId', 'createdAt']),
+
+  coverageSourceCandidates: defineTable({
+    runId: v.id('coverageCompilerRuns'),
+    stageId: v.id('coverageCompilerStages'),
+    canonicalUrl: v.string(),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    discoveredFrom: v.array(v.string()),
+    matchedTerms: v.array(v.string()),
+    hostDisposition: coverageHostDispositions,
+    state: coverageCandidateStates,
+    sourceKind: v.optional(coverageSourceKinds),
+    cadence: v.optional(coverageCadences),
+    confidence: v.optional(v.number()),
+    evidenceText: v.optional(v.string()),
+    noGuessReason: v.optional(v.string()),
+    createdAt: v.number(),
+    classifiedAt: v.optional(v.number()),
+  })
+    .index('by_run_and_url', ['runId', 'canonicalUrl'])
+    .index('by_run_and_state', ['runId', 'state']),
+
+  coverageCompilerProviderCalls: defineTable({
+    runId: v.id('coverageCompilerRuns'),
+    stageId: v.id('coverageCompilerStages'),
+    provider: coverageProviderNames,
+    operation: v.string(),
+    status: v.string(),
+    requestHash: v.string(),
+    responseHash: v.optional(v.string()),
+    promptVersion: v.optional(v.string()),
+    schemaVersion: v.optional(v.string()),
+    modelRole: v.optional(modelRoles),
+    modelId: v.optional(v.string()),
+    latencyMs: v.number(),
+    creditsUsed: v.optional(v.number()),
+    creditsReported: v.boolean(),
+    promptTokens: v.optional(v.number()),
+    completionTokens: v.optional(v.number()),
+    totalTokens: v.optional(v.number()),
+    estimatedCostUsd: v.optional(v.number()),
+    errorClass: v.optional(v.string()),
+    errorDetail: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index('by_run_and_created_at', ['runId', 'createdAt'])
+    .index('by_stage_and_created_at', ['stageId', 'createdAt']),
 
   sourceSnapshots: defineTable({
     registryId: v.id('sourceRegistries'),

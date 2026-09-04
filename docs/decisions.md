@@ -76,6 +76,13 @@ expand the promise.
   every artifact that becomes evidence.
 - A compiler run names a checked root manifest by body key and version. No
   function accepts a root URL from a caller, including the owner.
+- Paid source discovery starts only after the root run succeeds and the owner
+  chooses `Discover sources`. The Firecrawl component does not report credit
+  totals for map or search calls in the pinned version, so the ledger records
+  each call and marks the credit count unreported.
+- Source classification uses `MODEL_FAST`. The model references stored
+  candidate IDs and copies evidence from the candidate metadata. Deterministic
+  validation rejects invented IDs, changed bodies, omissions, and guesses.
 - Test the backend pipeline against representative real sources before building
   a polished UI.
 - Keep current and upcoming decisions primary, with approximately 12 months of
