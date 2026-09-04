@@ -599,7 +599,7 @@ export default defineSchema({
     .index('by_document_id_and_snapshot_id', ['documentId', 'snapshotId']),
 
   monitoringProviderCalls: defineTable({
-    runId: v.id('sourceMonitoringRuns'), operation: v.string(), provider: v.string(),
+    runId: v.optional(v.id('sourceMonitoringRuns')), pipelineRunId: v.optional(v.id('pipelineRuns')), operation: v.string(), provider: v.string(),
     status: v.string(), modelId: v.optional(v.string()), modelRole: v.optional(modelRoles),
     promptTokens: v.optional(v.number()), completionTokens: v.optional(v.number()),
     estimatedCostUsd: v.optional(v.number()), creditsUsed: v.optional(v.number()),
