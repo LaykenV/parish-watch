@@ -7,7 +7,10 @@ function requireDevelopment() {
 }
 async function mailboxApi(path: string, body?: object): Promise<unknown> {
   const response = await fetch(`https://api.agentmail.to/v0${path}`, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${env.AGENTMAIL_API_KEY}`, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}) })
-  if (!response.ok) throw new Error(`Proof mailbox request failed with HTTP ${response.status}`)
+  if (!response.ok) {
+    const detail = await response.json() as { name?: string; message?: string }
+    throw new Error(`Proof mailbox request failed with HTTP ${response.status}: ${detail.name ?? ''} ${(detail.message ?? '').slice(0, 300)}`)
+  }
   return response.json()
 }
 export const createMailbox = internalAction({
