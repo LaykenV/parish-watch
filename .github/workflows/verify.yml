@@ -32,3 +32,11 @@ jobs:
 
       - name: Verify the application
         run: npm run verify
+
+      - name: Preserve the verified development frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: development-frontend-${{ github.event.pull_request.head.sha }}
+          path: dist/client
+          if-no-files-found: error
+          retention-days: 14
