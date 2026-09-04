@@ -43,7 +43,7 @@ export function inventoryContract(value: InventoryResult, source: string, bodyNa
   if (value.meetingDate && (!value.dateExcerpt || !normalized.includes(normalizeForMatch(value.dateExcerpt)))) return 'Inventory date citation does not resolve.'
   const identities = new Set<string>()
   for (const target of value.targets) {
-    if (!target.title.trim() || target.title.length > 300 || target.excerpt.length > 1_000 || !target.excerpt.trim() || !normalized.includes(normalizeForMatch(target.excerpt))) return 'Inventory target citation does not resolve.'
+    if (!target.title.trim() || target.title.length > 300 || target.excerpt.length > 1_000 || !target.excerpt.trim() || !normalized.includes(normalizeForMatch(target.excerpt))) return `Inventory target citation does not resolve for ${JSON.stringify(target.title.slice(0, 120))}. Copy a contiguous source excerpt under 1000 characters, without omissions or ellipses. Rejected excerpt: ${JSON.stringify(target.excerpt.slice(0, 240))}`
     if (target.printedId !== null && (!target.printedId.trim() || target.printedId.length > 100 || /[\r\n]/.test(target.printedId) || !normalizeForMatch(target.excerpt).includes(normalizeForMatch(target.printedId)))) return `Printed identifier ${JSON.stringify(target.printedId)} is not in its cited item. Use null when the item has no printed identifier.`
     const identity = target.printedId ?? target.title
     if (identities.has(identity)) return 'Inventory contains ambiguous duplicate targets.'
