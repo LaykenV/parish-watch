@@ -1,3 +1,4 @@
+import { recordCivicEvent } from '../analytics/product-analytics'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
@@ -172,6 +173,19 @@ function IssueDetail({
   search: EvidenceSearch
   updated: boolean
 }) {
+  useEffect(() => {
+    if (!liveFollow) return
+    const key = `pp-issue-visited:${issue.slug}`
+    try { if (sessionStorage.getItem(key)) recordCivicEvent('issue_returned'); sessionStorage.setItem(key, '1') } catch { /* Reading remains available without storage. */ }
+    if (!issue.latestOutcome || typeof IntersectionObserver === 'undefined') return
+    const timeline = document.getElementById('timeline')
+    if (!timeline) return
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { recordCivicEvent('outcome_read'); observer.disconnect() }
+    }, { threshold: 0.5 })
+    observer.observe(timeline)
+    return () => observer.disconnect()
+  }, [issue.slug, issue.latestOutcome, liveFollow])
   const { citations, issue } = fixture
   const sections = issueSections(fixture)
   const selected = resolveCitationId(citations, search.source)

@@ -1,3 +1,4 @@
+import { civicEvent } from './analytics/civicContracts'
 import { searchEntry } from './resident/searchContracts'
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
@@ -445,6 +446,9 @@ export default defineSchema({
       'kind',
       'createdAt',
     ]),
+
+  civicEventReceipts: defineTable({ eventKey: v.string(), kind: civicEvent, expiresAt: v.number() }).index('by_event_key', ['eventKey']).index('by_expires_at', ['expiresAt']),
+  civicEventCounters: defineTable({ kind: civicEvent, environment: v.union(v.literal('production'), v.literal('development')), count: v.number(), updatedAt: v.number() }).index('by_kind_and_environment', ['kind', 'environment']),
 
   analyticsSubjects: defineTable({
     visitorKeyHash: v.string(),

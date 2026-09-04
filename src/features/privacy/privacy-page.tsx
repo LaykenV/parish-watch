@@ -79,8 +79,7 @@ export function PrivacyPage() {
               Anonymous product counts
             </dt>
             <dd>
-              In production, Public Parish counts visits and selected launch
-              areas. A random browser ID is hashed before upload. These events
+              In production, Public Parish counts visits, selected launch areas, evidence and official-document opens, issue returns, and outcome reads. Server counts record successful questions, answers, follows, and coverage requests. A random browser ID is hashed before upload. These events
               do not include your name, email, question text, or exact location.
             </dd>
             <dd className="privacy-retention">

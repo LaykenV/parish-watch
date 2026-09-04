@@ -58,4 +58,6 @@ crons.interval('check approved government sources', { minutes: 15 }, internal.mo
 crons.interval('deliver verified place launch notices', { minutes: 15 }, internal.coverage.requests.sweep, { paginationOpts: { numItems: 25, cursor: null } })
 crons.interval('remove expired coverage request metadata', { hours: 24 }, internal.coverage.requests.cleanup, {})
 
+crons.interval('remove expired civic event receipts', { hours: 24 }, internal.analytics.civic.cleanup, {})
+
 export default crons

@@ -11,6 +11,8 @@
 import type * as ai_chatCompletions from "../ai/chatCompletions.js";
 import type * as ai_provider from "../ai/provider.js";
 import type * as ai_types from "../ai/types.js";
+import type * as analytics_civic from "../analytics/civic.js";
+import type * as analytics_civicContracts from "../analytics/civicContracts.js";
 import type * as analytics_contracts from "../analytics/contracts.js";
 import type * as analytics_events from "../analytics/events.js";
 import type * as analytics_http from "../analytics/http.js";
@@ -87,6 +89,7 @@ import type * as monitoring_actions from "../monitoring/actions.js";
 import type * as monitoring_contracts from "../monitoring/contracts.js";
 import type * as monitoring_ledger from "../monitoring/ledger.js";
 import type * as monitoring_workflow from "../monitoring/workflow.js";
+import type * as operations_dashboard from "../operations/dashboard.js";
 import type * as operations_discover from "../operations/discover.js";
 import type * as operations_extract from "../operations/extract.js";
 import type * as operations_ingest from "../operations/ingest.js";
@@ -136,6 +139,8 @@ declare const fullApi: ApiFromModules<{
   "ai/chatCompletions": typeof ai_chatCompletions;
   "ai/provider": typeof ai_provider;
   "ai/types": typeof ai_types;
+  "analytics/civic": typeof analytics_civic;
+  "analytics/civicContracts": typeof analytics_civicContracts;
   "analytics/contracts": typeof analytics_contracts;
   "analytics/events": typeof analytics_events;
   "analytics/http": typeof analytics_http;
@@ -212,6 +217,7 @@ declare const fullApi: ApiFromModules<{
   "monitoring/contracts": typeof monitoring_contracts;
   "monitoring/ledger": typeof monitoring_ledger;
   "monitoring/workflow": typeof monitoring_workflow;
+  "operations/dashboard": typeof operations_dashboard;
   "operations/discover": typeof operations_discover;
   "operations/extract": typeof operations_extract;
   "operations/ingest": typeof operations_ingest;

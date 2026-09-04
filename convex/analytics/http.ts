@@ -1,3 +1,5 @@
+import { BROWSER_CIVIC_EVENTS } from './civicContracts'
+import type { BrowserCivicEvent } from './civicContracts'
 import { isRateLimitError } from '@convex-dev/rate-limiter'
 
 import { internal } from '../_generated/api'
@@ -10,7 +12,7 @@ const ALLOWED_ORIGINS = new Set([
 ])
 const MAX_BODY_BYTES = 512
 
-type AnalyticsPayload =
+type AnalyticsPayload = { kind: BrowserCivicEvent; visitorKeyHash: string; eventKey: string } |
   | {
       kind: 'app_visit'
       visitorKeyHash: string
@@ -48,13 +50,14 @@ export const recordProductAnalytics = httpAction(async (ctx, request) => {
         visitorKeyHash: payload.visitorKeyHash,
         eventKey: payload.eventKey,
       })
-    } else {
+    } else if (payload.kind === 'area_selected') {
       await ctx.runMutation(internal.analytics.events.recordAreaSelection, {
         visitorKeyHash: payload.visitorKeyHash,
         eventKey: payload.eventKey,
         areaSlug: payload.areaSlug,
       })
     }
+    else await ctx.runMutation(internal.analytics.civic.recordBrowserEvent, payload)
     return response(204)
   } catch (error) {
     if (isRateLimitError(error)) {
@@ -95,6 +98,7 @@ function parsePayload(value: unknown): AnalyticsPayload | null {
       areaSlug: value.areaSlug,
     }
   }
+  if (typeof value.kind === 'string' && BROWSER_CIVIC_EVENTS.includes(value.kind) && hasOnlyKeys(value, ['eventKey', 'kind', 'visitorKeyHash'])) return { kind: value.kind as BrowserCivicEvent, eventKey: value.eventKey, visitorKeyHash: value.visitorKeyHash }
   return null
 }
 

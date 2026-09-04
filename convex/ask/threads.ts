@@ -1,3 +1,4 @@
+import { recordConfirmedEvent } from '../analytics/civic'
 import {
   createThread as createAgentThread,
   listMessages,
@@ -171,6 +172,7 @@ export const appendQuestion = mutation({
       messageId: saved.messageId,
       createdAt: now,
     })
+    await recordConfirmedEvent(ctx, 'ask_submitted', saved.messageId)
     await ctx.db.patch(access.mapping._id, { lastActivityAt: now })
     await ctx.db.patch(access.session._id, { lastSeenAt: now })
     return { messageId: saved.messageId, replayed: false }

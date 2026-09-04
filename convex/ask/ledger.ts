@@ -1,3 +1,4 @@
+import { recordConfirmedEvent } from '../analytics/civic'
 import { saveMessage } from '@convex-dev/agent'
 import { ConvexError, v } from 'convex/values'
 
@@ -285,6 +286,7 @@ export const persistAnswer = internalMutation({
       completedAt: Date.now(),
       errorClass: undefined,
     })
+    if (args.answer.kind === 'answer') await recordConfirmedEvent(ctx, 'ask_answered', receipt._id)
     return saved.messageId
   },
 })

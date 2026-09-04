@@ -1,3 +1,4 @@
+import { recordConfirmedEvent } from '../analytics/civic'
 import { HOUR, MINUTE, RateLimiter } from '@convex-dev/rate-limiter'
 import type { OutboundId } from '@agentmail/convex'
 import { ConvexError, v } from 'convex/values'
@@ -423,6 +424,7 @@ export const consumeEmailFollowChallenge = internalMutation({
         createdAt: now,
         updatedAt: now,
       }))
+    if (!existingFollow) await recordConfirmedEvent(ctx, 'follow_created', followId)
     if (existingFollow) {
       await ctx.db.patch('follows', existingFollow._id, {
         targetTitle: target.title,
@@ -485,6 +487,7 @@ export const createGoogleFollow = mutation({
         createdAt: now,
         updatedAt: now,
       }))
+    if (!existing) await recordConfirmedEvent(ctx, 'follow_created', followId)
     if (existing) {
       await ctx.db.patch('follows', existing._id, {
         targetTitle: target.title,
