@@ -101,6 +101,8 @@ import type * as publication_workflow from "../publication/workflow.js";
 import type * as resident_discovery from "../resident/discovery.js";
 import type * as resident_evidence from "../resident/evidence.js";
 import type * as resident_meetingKey from "../resident/meetingKey.js";
+import type * as resident_search from "../resident/search.js";
+import type * as resident_searchContracts from "../resident/searchContracts.js";
 import type * as review_completionBudget from "../review/completionBudget.js";
 import type * as review_contractV1 from "../review/contractV1.js";
 import type * as review_ledger from "../review/ledger.js";
@@ -219,6 +221,8 @@ declare const fullApi: ApiFromModules<{
   "resident/discovery": typeof resident_discovery;
   "resident/evidence": typeof resident_evidence;
   "resident/meetingKey": typeof resident_meetingKey;
+  "resident/search": typeof resident_search;
+  "resident/searchContracts": typeof resident_searchContracts;
   "review/completionBudget": typeof review_completionBudget;
   "review/contractV1": typeof review_contractV1;
   "review/ledger": typeof review_ledger;

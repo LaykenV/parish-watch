@@ -1,3 +1,4 @@
+import { indexDecision } from '../resident/search'
 import { assertPipelineMonitoring } from '../monitoring/ledger'
 import { ConvexError, v } from 'convex/values'
 
@@ -315,6 +316,7 @@ export const finalizePublication = internalMutation({
           },
     )
     if (policy.mode !== 'withheld') {
+      await indexDecision(ctx, record._id)
       if (materialChangeId && !run.suppressNotifications) {
         await ctx.scheduler.runAfter(
           0,

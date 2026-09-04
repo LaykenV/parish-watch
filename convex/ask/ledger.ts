@@ -146,6 +146,7 @@ export const claimAnswer = internalMutation({
         completedAt: undefined,
         errorClass: undefined,
         reservationState: 'held',
+        accountedTokens: 0, accountedAttempts: 0, unknownUsage: false,
         reservedTokens: ASK_TOKEN_RESERVATION,
         ...reservation,
       })
@@ -206,6 +207,7 @@ export const recordModelAttempt = internalMutation({
       cachedTokens: args.cachedTokens ?? null,
       reasoningTokens: args.reasoningTokens ?? null,
     }
+    await ctx.db.patch(receipt._id, { accountedTokens: (receipt.accountedTokens ?? 0) + (args.totalTokens ?? 0), accountedAttempts: (receipt.accountedAttempts ?? 0) + 1, unknownUsage: receipt.unknownUsage === true || args.totalTokens === undefined })
     await ctx.db.insert('askModelAttempts', {
       answerReceiptId: receipt._id,
       sessionId: receipt.sessionId,
@@ -251,6 +253,10 @@ export const persistAnswer = internalMutation({
       receipt.attempt !== args.answerAttempt
     ) {
       throw askError('answer_state_mismatch', 'Answer attempt is not running')
+    }
+    if (receipt.corpusRevision !== undefined) {
+      const revision = (await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique())?.revision ?? 0
+      if (!receipt.selectorComplete || receipt.corpusRevision !== revision) throw askError('ask_evidence_changed', 'Published evidence changed. Retry the question.')
     }
     const saved = await saveMessage(ctx, components.agent, {
       threadId: receipt.threadId,
@@ -363,8 +369,9 @@ async function scheduleAbandonedRelease(
 
 async function currentAttemptUsage(
   ctx: Parameters<typeof reserveAskCapacity>[0],
-  receipt: { _id: Id<'askAnswerReceipts'>; attempt: number },
+  receipt: { _id: Id<'askAnswerReceipts'>; attempt: number; accountedTokens?: number; accountedAttempts?: number; unknownUsage?: boolean },
 ) {
+  if (receipt.accountedAttempts !== undefined) return { attempted: receipt.accountedAttempts > 0, hasUnknownUsage: receipt.unknownUsage === true, tokens: receipt.accountedTokens ?? 0 }
   const attempts = await ctx.db
     .query('askModelAttempts')
     .withIndex('by_answer_receipt_and_attempt', (q) =>
@@ -407,3 +414,27 @@ function askError(code: string, message: string) {
 }
 
 export type AskAnswerReceiptId = Id<'askAnswerReceipts'>
+
+export const beginCatalogScan = internalMutation({
+  args: { receiptId: v.id('askAnswerReceipts'), answerAttempt: v.number() },
+  returns: v.object({ revision: v.number(), cursor: v.union(v.string(), v.null()), complete: v.boolean(), evidenceIds: v.array(v.string()) }),
+  handler: async (ctx, args) => {
+    const receipt = await ctx.db.get(args.receiptId)
+    if (!receipt || receipt.state !== 'running' || receipt.attempt !== args.answerAttempt) throw askError('answer_state_mismatch', 'Answer attempt is not running')
+    const revision = (await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique())?.revision ?? 0
+    if (receipt.corpusRevision === revision) return { revision, cursor: receipt.selectorCursor ?? null, complete: receipt.selectorComplete ?? false, evidenceIds: receipt.selectorEvidenceIds ?? [] }
+    await ctx.db.patch(receipt._id, { corpusRevision: revision, selectorCursor: null, selectorEvidenceIds: [], selectorComplete: false, selectorBatches: 0 })
+    return { revision, cursor: null, complete: false, evidenceIds: [] }
+  },
+})
+export const checkpointCatalogScan = internalMutation({
+  args: { receiptId: v.id('askAnswerReceipts'), answerAttempt: v.number(), revision: v.number(), cursor: v.string(), complete: v.boolean(), evidenceIds: v.array(v.string()), batches: v.number() }, returns: v.null(),
+  handler: async (ctx, args) => {
+    const receipt = await ctx.db.get(args.receiptId)
+    const revision = (await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique())?.revision ?? 0
+    if (!receipt || receipt.state !== 'running' || receipt.attempt !== args.answerAttempt || receipt.corpusRevision !== revision || args.revision !== revision) throw askError('ask_evidence_changed', 'Published evidence changed. Retry the question.')
+    if (args.evidenceIds.length > 1_500) throw askError('ask_scope_too_large', 'Narrow the question to a place, issue or meeting.')
+    await ctx.db.patch(receipt._id, { selectorCursor: args.cursor, selectorComplete: args.complete, selectorEvidenceIds: args.evidenceIds, selectorBatches: (receipt.selectorBatches ?? 0) + args.batches })
+    return null
+  },
+})

@@ -1,3 +1,4 @@
+import { indexIssue } from '../resident/search'
 import { assertPipelineMonitoring } from '../monitoring/ledger'
 import { loadTimelineMembers, MAX_TIMELINE_MEMBERS } from './membership'
 import { ConvexError, v } from 'convex/values'
@@ -1113,6 +1114,7 @@ export const publishIssueBuild = internalMutation({
         currentMode: ranked.mode,
         updatedAt: now,
       })
+      await indexIssue(ctx, issue._id)
       await scheduleNewIssueLinkFanouts(ctx, {
         issueVersionId,
         previousIssueVersionId: previousAcceptedIssueVersionId,

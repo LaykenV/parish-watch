@@ -1249,3 +1249,50 @@ async function seedPublication(
     snapshotId,
   }
 }
+
+test('a thousand-record corpus searches old history and selects evidence across catalog batches', async () => {
+  const t = initTest()
+  const seeded = await seedEvidence(t)
+  let lastKey = ''
+  for (let batch = 0; batch < 20; batch++) {
+    await t.run(async ctx => {
+      const first = await ctx.db.query('decisionRecords').withIndex('by_record_key', q => q.eq('recordKey', seeded.recordKey)).unique()
+      for (let index = batch * 50; index < Math.min(998, (batch + 1) * 50); index++) {
+        const added = await seedPublication(ctx, { registryId: first!.registryId, bodyId: first!.governmentBodyId, sourceRecordId: `HISTORY-${index}`, title: `Historic drainage decision ${index}`, excerpt: `The council approved drainage project ${index}.`, current: true, meetingKey: `history-${index}` })
+        lastKey = added.recordKey
+      }
+    })
+  }
+  let searchCursor: string | null = null
+  let indexed = false
+  while (!indexed) {
+    const page = await t.mutation(internal.resident.search.backfill, { kind: 'decision', paginationOpts: { numItems: 25, cursor: searchCursor } })
+    indexed = page.isDone
+    searchCursor = page.continueCursor
+  }
+  const found = await t.query(api.resident.search.search, { q: 'Audubon', kind: 'decision', paginationOpts: { numItems: 25, cursor: null } })
+  expect(found.page.some(entry => entry.key === seeded.recordKey)).toBe(true)
+  expect(JSON.stringify(found.page)).not.toContain('superseded drainage wording')
+  const token = 'large-corpus-token-00000000000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, { token, scope: { kind: 'corpus' } })
+  const question = await t.mutation(api.ask.threads.appendQuestion, { token, threadId: thread.threadId, question: 'Compare the Audubon agreement with drainage project 997.', idempotencyKey: 'large-corpus-question-0001' })
+  let selectorCalls = 0
+  overrideAskGatewayForTests(async (_ctx, args) => {
+    if (args.stage === 'selector') {
+      selectorCalls++
+      const targets = [seeded.recordKey, lastKey].filter(id => args.prompt.includes(`"recordKey":"${id}"`)).map(id => ({ kind: 'decision', id }))
+      return gatewayResult({ retrievalMode: targets.length ? 'focused' : 'not_found', targets })
+    }
+    expect(args.prompt).toContain(seeded.recordKey)
+    expect(args.prompt).toContain(lastKey)
+    const evidenceIds = [seeded.recordKey, lastKey].map(key => args.prompt.match(new RegExp(`"evidenceId":"([^"]+)","recordKey":"${key}"`))?.[1]).filter(Boolean)
+    return gatewayResult({ kind: 'answer', answer: 'The council approved the Audubon agreement and drainage project 997.', evidenceIds, followUps: [] })
+  })
+  const answer = await t.action(api.ask.answer.answerQuestion, { token, threadId: thread.threadId, questionMessageId: question.messageId })
+  expect(answer.kind).toBe('answer')
+  expect(selectorCalls).toBeGreaterThan(30)
+  const receipt = await t.run(ctx => ctx.db.query('askAnswerReceipts').first())
+  expect(receipt?.selectorComplete).toBe(true)
+  expect(receipt?.selectorBatches).toBeGreaterThan(30)
+})
