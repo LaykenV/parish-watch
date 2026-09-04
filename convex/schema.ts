@@ -600,7 +600,7 @@ export default defineSchema({
     status: v.string(), modelId: v.optional(v.string()), modelRole: v.optional(modelRoles),
     promptTokens: v.optional(v.number()), completionTokens: v.optional(v.number()),
     estimatedCostUsd: v.optional(v.number()), creditsUsed: v.optional(v.number()),
-    latencyMs: v.number(), createdAt: v.number(),
+    errorClass: v.optional(v.string()), errorDetail: v.optional(v.string()), latencyMs: v.number(), createdAt: v.number(),
   }).index('by_run_id_and_created_at', ['runId', 'createdAt'])
     .index('by_created_at', ['createdAt']),
 

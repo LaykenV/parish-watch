@@ -309,7 +309,7 @@ async function recordIncident(ctx: MutationCtx, registryId: Id<'sourceRegistries
   }
 }
 export const recordCall = internalMutation({
-  args: { runId: v.id('sourceMonitoringRuns'), operation: v.string(), provider: v.string(), status: v.string(), modelId: v.optional(v.string()), modelRole: v.optional(v.union(v.literal('MODEL_STRONG'), v.literal('MODEL_FAST'))), promptTokens: v.optional(v.number()), completionTokens: v.optional(v.number()), estimatedCostUsd: v.optional(v.number()), creditsUsed: v.optional(v.number()), latencyMs: v.number() },
+  args: { runId: v.id('sourceMonitoringRuns'), operation: v.string(), provider: v.string(), status: v.string(), modelId: v.optional(v.string()), modelRole: v.optional(v.union(v.literal('MODEL_STRONG'), v.literal('MODEL_FAST'))), promptTokens: v.optional(v.number()), completionTokens: v.optional(v.number()), estimatedCostUsd: v.optional(v.number()), creditsUsed: v.optional(v.number()), errorClass: v.optional(v.string()), errorDetail: v.optional(v.string()), latencyMs: v.number() },
   returns: v.null(), handler: async (ctx, args) => { await ctx.db.insert('monitoringProviderCalls', { ...args, createdAt: Date.now() }); return null },
 })
 
