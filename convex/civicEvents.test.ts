@@ -47,8 +47,10 @@ test('daily provider rollups retain unknown usage and never count a ledger row t
 test('retrieval rollups keep failed calls with unknown credits beside reported credits', async () => {
   const t = convexTest(schema, modules)
   await t.run(async ctx => {
-    // IDs remain typed while this test exercises only the provider ledger.
-    const runId = 'pipelineRuns:controlled' as import('./_generated/dataModel').Id<'pipelineRuns'>
+    const jurisdictionId = await ctx.db.insert('jurisdictions', { name: 'Lafayette Parish', slug: 'lafayette-parish', state: 'LA', type: 'parish', publicStatus: 'supported' })
+    const bodyId = await ctx.db.insert('governmentBodies', { jurisdictionId, name: 'Lafayette City Council', slug: 'lafayette-city-council', bodyType: 'city_council', publicStatus: 'supported' })
+    const registryId = await ctx.db.insert('sourceRegistries', { governmentBodyId: bodyId, officialDomains: ['www.lafayettela.gov'], seedUrls: [], sourceKinds: ['agenda'], expectedCadence: { kind: 'monthly' }, discoveryMode: 'dynamic', status: 'supported' })
+    const runId = await ctx.db.insert('pipelineRuns', { registryId, trigger: 'manual_ingest', state: 'succeeded', processorVersion: 'test', startedAt: 1788560000000 })
     await ctx.db.insert('retrievalProviderCalls', { runId, status: 'succeeded', creditsUsed: 31, latencyMs: 100, createdAt: 1788560000000 })
     await ctx.db.insert('retrievalProviderCalls', { runId, status: 'failed', latencyMs: 50, createdAt: 1788560000000 })
   })
