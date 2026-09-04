@@ -175,6 +175,7 @@ function IssueDetail({
 }) {
   const { citations, issue } = fixture
   const countedVisit = useRef<string | null>(null)
+  const countedOutcome = useRef<string | null>(null)
   useEffect(() => {
     if (!liveFollow) return
     const key = `pp-issue-visited:${issue.slug}`
@@ -183,10 +184,12 @@ function IssueDetail({
       try { if (sessionStorage.getItem(key)) recordCivicEvent('issue_returned'); sessionStorage.setItem(key, '1') } catch { /* Reading remains available without storage. */ }
     }
     if (!issue.latestOutcome || typeof IntersectionObserver === 'undefined') return
+    const outcomeKey = `${issue.slug}:${JSON.stringify(issue.latestOutcome)}`
+    if (countedOutcome.current === outcomeKey) return
     const timeline = document.getElementById('timeline')
     if (!timeline) return
     const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) { recordCivicEvent('outcome_read'); observer.disconnect() }
+      if (entries.some(entry => entry.isIntersecting)) { countedOutcome.current = outcomeKey; recordCivicEvent('outcome_read'); observer.disconnect() }
     }, { threshold: 0.5 })
     observer.observe(timeline)
     return () => observer.disconnect()
