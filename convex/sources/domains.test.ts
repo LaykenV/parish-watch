@@ -65,3 +65,11 @@ test('allows a vendor document only when its full url is registered', () => {
     ),
   ).toBe(false)
 })
+
+test('approved document hosts stay inside the checked tenant path', () => {
+  const hosts = [{ host: 'files.example.test', pathPrefixes: ['/public-body/'] }]
+  expect(isRegisteredSourceUrl('https://files.example.test/public-body/new.pdf', [], [], hosts)).toBe(true)
+  expect(isRegisteredSourceUrl('https://files.example.test/other-body/new.pdf', [], [], hosts)).toBe(false)
+  expect(isRegisteredSourceUrl('https://files.example.test/public-body/../other-body/new.pdf', [], [], hosts)).toBe(false)
+  expect(isRegisteredSourceUrl('http://files.example.test/public-body/new.pdf', [], [], hosts)).toBe(false)
+})

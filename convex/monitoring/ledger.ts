@@ -14,6 +14,7 @@ import { classifyHost } from '../coverage/rootGate'
 import { resolveRootManifest } from '../coverage/roots'
 import { sha256HexOfText } from '../sources/hashing'
 import schema from '../schema'
+import { isBeforeSourceWindow } from './discovery'
 import { DAY_MS, inventoryResult, MONITOR_VERSION, monitorState } from './contracts'
 
 const limiter = new RateLimiter(components.rateLimiter, {
@@ -69,6 +70,9 @@ export async function configurePolicy(ctx: MutationCtx, args: { proposalId: Id<'
   for (const [value, min, max] of [[args.intervalHours, 1, 168], [args.documentsPerRun, 1, 10], [args.targetsPerRun, 1, 20], [args.dailyCallLimit, 10, 500]]) {
     if (!Number.isInteger(value) || value < min || value > max) throw new Error('Monitoring limits are outside the allowed bounds.')
   }
+  const manifest = resolveRootManifest(proposal.bodyKey, proposal.rootManifestVersion)
+  if (!manifest) throw new Error('Approved root manifest is missing.')
+  await ctx.db.patch(registry._id, { approvedDocumentHosts: manifest.documentHosts })
   const now = Date.now()
   if (!Number.isFinite(args.startsAt) || (args.enabled && args.startsAt < now - 366 * DAY_MS) || args.startsAt > now) throw new Error('Choose an explicit source window within the previous year.')
   const existing = await ctx.db.query('sourceMonitoringPolicies').withIndex('by_registry_id', q => q.eq('registryId', registry._id)).unique()
@@ -159,14 +163,14 @@ export const reserve = internalMutation({
 export const addDocuments = internalMutation({
   args: { runId: v.id('sourceMonitoringRuns'), urls: v.array(v.string()) }, returns: v.number(),
   handler: async (ctx, args) => {
-    const { run, registry, proposal, body } = await assertMonitoringRun(ctx, args.runId)
+    const { run, registry, proposal, body, policy } = await assertMonitoringRun(ctx, args.runId)
     if (args.urls.length > 100) throw new Error('Listing page overflow.')
     const manifest = resolveRootManifest(body.slug, proposal.rootManifestVersion)
     if (!manifest) throw new Error('Approved root manifest is missing.')
     let count = 0
     for (const raw of args.urls) {
       const url = canonicalizeCandidateUrl(raw)
-      if (!url || classifyHost(manifest, url) === 'unapproved' || !isRegisteredSourceUrl(url, registry.officialDomains, registry.seedUrls)) continue
+      if (!url || isBeforeSourceWindow(url, policy.startsAt) || classifyHost(manifest, url) === 'unapproved' || !isRegisteredSourceUrl(url, registry.officialDomains, registry.seedUrls, registry.approvedDocumentHosts)) continue
       const existing = await ctx.db.query('monitoredDocuments').withIndex('by_policy_id_and_url', q => q.eq('policyId', run.policyId).eq('canonicalUrl', url)).unique()
       if (!existing) {
         await ctx.db.insert('monitoredDocuments', { policyId: run.policyId, registryId: registry._id, canonicalUrl: url, nextCheckAt: 0, firstSeenAt: Date.now(), notificationEligible: !run.baseline, inventoryComplete: false })
@@ -380,5 +384,14 @@ export const retryTarget = mutation({
     await ctx.db.patch(target._id, { state: 'pending', attempts: 0, retryAt: undefined, updatedAt: Date.now() })
     await ctx.db.patch(policy._id, { nextCheckAt: Date.now() })
     return true
+  },
+})
+
+export const discoveryAttention = internalMutation({
+  args: { runId: v.id('sourceMonitoringRuns'), code: v.string() }, returns: v.null(),
+  handler: async (ctx, args) => {
+    const { registry } = await assertMonitoringRun(ctx, args.runId)
+    await recordIncident(ctx, registry._id, args.code)
+    return null
   },
 })

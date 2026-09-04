@@ -531,6 +531,7 @@ export default defineSchema({
   sourceRegistries: defineTable({
     governmentBodyId: v.id('governmentBodies'),
     officialDomains: v.array(v.string()),
+    approvedDocumentHosts: v.optional(v.array(v.object({ host: v.string(), pathPrefixes: v.array(v.string()) }))),
     seedUrls: v.array(v.string()),
     sourceKinds: v.array(sourceKinds),
     expectedCadence: v.object({

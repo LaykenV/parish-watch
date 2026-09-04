@@ -10,6 +10,7 @@ import {
   canonicalizeUrl,
   firstSeedUrl,
   isAllowedOfficialHost,
+  isRegisteredSourceUrl,
 } from '../sources/domains'
 import { sha256HexOfBytes, sha256HexOfText } from '../sources/hashing'
 import { normalizeFirecrawlMetadata } from '../sources/metadata'
@@ -225,6 +226,7 @@ export const ingestRegistrySource = internalAction({
         registry.officialDomains,
         registry.seedUrls,
         requestedUrl,
+        registry.approvedDocumentHosts,
       ),
       requestedUrl,
       args.monitorRunId,
@@ -260,6 +262,7 @@ export const ingestBodySource = internalAction({
         resolved.registry.officialDomains,
         resolved.registry.seedUrls,
         requestedUrl,
+        resolved.registry.approvedDocumentHosts,
       ),
       requestedUrl,
     )
@@ -270,13 +273,12 @@ function retrievalDomains(
   officialDomains: string[],
   seedUrls: string[],
   requestedUrl: string,
+  documentHosts: Array<{ host: string; pathPrefixes: string[] }> = [],
 ): string[] {
   const canonicalRequested = canonicalizeUrl(requestedUrl)
   if (
     !canonicalRequested ||
-    !seedUrls.some(
-      (seedUrl) => canonicalizeUrl(seedUrl) === canonicalRequested,
-    )
+    !isRegisteredSourceUrl(canonicalRequested, officialDomains, seedUrls, documentHosts)
   ) {
     return officialDomains
   }

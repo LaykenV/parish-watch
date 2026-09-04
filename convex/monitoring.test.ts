@@ -2,6 +2,7 @@
 import { convexTest } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
 import { api, internal } from './_generated/api'
+import { isBeforeSourceWindow, isDocumentUrl } from './monitoring/discovery'
 import { inventoryContract } from './monitoring/contracts'
 import type { InventoryResult } from './monitoring/contracts'
 import schema from './schema'
@@ -74,4 +75,13 @@ test('pause invalidates in-flight monitoring and publication authority', async (
   })
   await expect(t.query(internal.monitoring.ledger.context, { runId })).rejects.toThrow('monitoring_stopped')
   await expect(t.query(internal.monitoring.ledger.pipelineGuard, { runId: pipelineId })).rejects.toThrow('monitoring_stopped')
+})
+
+test('source window skips dated old archives and keeps opaque document links', () => {
+  const start = Date.parse('2026-01-01')
+  expect(isBeforeSourceWindow('https://rppj.com/2020-police-jury-meetings', start)).toBe(true)
+  expect(isBeforeSourceWindow('https://rppj.com/wp-content/uploads/2026/08/agenda.pdf', start)).toBe(false)
+  expect(isBeforeSourceWindow('https://rppj.com/agenda/2392', start)).toBe(false)
+  expect(isDocumentUrl('https://www.brla.gov/AgendaCenter/ViewFile/Agenda/_08122026-2419')).toBe(true)
+  expect(isDocumentUrl('https://rppj.com/2026-police-jury-meetings')).toBe(false)
 })

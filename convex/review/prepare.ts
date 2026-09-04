@@ -249,11 +249,13 @@ export const prepareCandidateReview = internalAction({
         snapshot.canonicalUrl,
         registry.officialDomains,
         registry.seedUrls,
+        registry.approvedDocumentHosts,
       ) ||
       !isRegisteredSourceUrl(
         snapshot.retrievedUrl,
         registry.officialDomains,
         registry.seedUrls,
+        registry.approvedDocumentHosts,
       )
     ) {
       return fail(

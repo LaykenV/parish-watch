@@ -179,11 +179,13 @@ export const runValidation = internalAction({
         snapshot.canonicalUrl,
         officialDomains,
         seedUrls,
+        rows.approvedDocumentHosts,
       )
       const retrievedAllowed = isRegisteredSourceUrl(
         snapshot.retrievedUrl,
         officialDomains,
         seedUrls,
+        rows.approvedDocumentHosts,
       )
       if (!canonicalAllowed || !retrievedAllowed) {
         addFinding({
