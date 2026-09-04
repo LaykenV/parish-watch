@@ -96,6 +96,7 @@ import type * as operations_ingest from "../operations/ingest.js";
 import type * as operations_issues from "../operations/issues.js";
 import type * as operations_publication from "../operations/publication.js";
 import type * as operations_seed from "../operations/seed.js";
+import type * as operations_usage from "../operations/usage.js";
 import type * as pipeline_keys from "../pipeline/keys.js";
 import type * as pipeline_runs from "../pipeline/runs.js";
 import type * as pipeline_state from "../pipeline/state.js";
@@ -224,6 +225,7 @@ declare const fullApi: ApiFromModules<{
   "operations/issues": typeof operations_issues;
   "operations/publication": typeof operations_publication;
   "operations/seed": typeof operations_seed;
+  "operations/usage": typeof operations_usage;
   "pipeline/keys": typeof pipeline_keys;
   "pipeline/runs": typeof pipeline_runs;
   "pipeline/state": typeof pipeline_state;
