@@ -46,12 +46,33 @@ export async function indexIssue(ctx: MutationCtx, issueId: Id<'issues'>) {
   await advanceCorpusRevision(ctx)
 }
 export const search = query({
-  args: { paginationOpts: paginationOptsValidator, q: v.optional(v.string()), kind: v.optional(v.string()), place: v.optional(v.string()), body: v.optional(v.string()), lifecycle: v.optional(v.string()), source: v.optional(v.string()), topic: v.optional(v.string()), date: v.optional(v.string()), sort: v.optional(v.union(v.literal('newest'), v.literal('oldest'))) },
+  args: { paginationOpts: paginationOptsValidator, q: v.optional(v.string()), kind: v.optional(v.union(v.literal('decision'), v.literal('issue'), v.literal('meeting'), v.literal('body'))), place: v.optional(v.string()), body: v.optional(v.string()), lifecycle: v.optional(v.string()), source: v.optional(v.string()), topic: v.optional(v.string()), date: v.optional(v.string()), sort: v.optional(v.union(v.literal('newest'), v.literal('oldest'))) },
   returns: paginationResultValidator(searchEntry),
   handler: async (ctx, args) => {
     if ((args.q?.length ?? 0) > 300 || args.paginationOpts.numItems > 50) throw new Error('Search request exceeds its bounds.')
     const needle = args.q?.trim()
-    const records = needle ? await ctx.db.query('publishedSearchEntries').withSearchIndex('search_text', q => q.search('searchText', needle)).paginate(args.paginationOpts) : await ctx.db.query('publishedSearchEntries').withIndex('by_date').order(args.sort === 'oldest' ? 'asc' : 'desc').paginate(args.paginationOpts)
+    const now = Date.now()
+    const day = 86_400_000
+    const lowerDate = args.date === 'next-30' ? now : args.date === 'past-30' ? now - 30 * day : args.date === 'past-year' ? now - 365 * day : undefined
+    const upperDate = args.date === 'next-30' ? now + 30 * day : lowerDate !== undefined ? now : undefined
+    const sourceMode = args.source === 'Evidence available' ? 'full' : args.source === 'Limited information' ? 'limited' : undefined
+    let rows = needle ? ctx.db.query('publishedSearchEntries').withSearchIndex('search_text', q => {
+      let search = q.search('searchText', needle)
+      if (args.kind) search = search.eq('kind', args.kind)
+      if (args.place) search = search.eq('placeName', args.place)
+      if (args.body) search = search.eq('bodyName', args.body)
+      if (args.lifecycle) search = search.eq('lifecycle', args.lifecycle)
+      if (sourceMode) search = search.eq('mode', sourceMode)
+      return search
+    }) : ctx.db.query('publishedSearchEntries').withIndex('by_date', q => lowerDate !== undefined && upperDate !== undefined ? q.gte('dateAt', lowerDate).lte('dateAt', upperDate) : q).order(args.sort === 'oldest' ? 'asc' : 'desc')
+    if (!needle) {
+      if (args.kind) rows = rows.filter(q => q.eq(q.field('kind'), args.kind))
+      if (args.place) rows = rows.filter(q => q.eq(q.field('placeName'), args.place))
+      if (args.body) rows = rows.filter(q => q.eq(q.field('bodyName'), args.body))
+      if (args.lifecycle) rows = rows.filter(q => q.eq(q.field('lifecycle'), args.lifecycle))
+      if (sourceMode) rows = rows.filter(q => q.eq(q.field('mode'), sourceMode))
+    } else if (lowerDate !== undefined && upperDate !== undefined) rows = rows.filter(q => q.and(q.gte(q.field('dateAt'), lowerDate), q.lte(q.field('dateAt'), upperDate)))
+    const records = await rows.paginate({ ...args.paginationOpts, maximumRowsRead: 1_000 })
     const currentRows = []
     for (const row of records.page) {
       if (row.kind === 'issue') {
@@ -70,8 +91,6 @@ export const search = query({
       }
       currentRows.push(row)
     }
-    const now = Date.now()
-    const day = 86_400_000
     return { ...records, page: currentRows.filter(row => {
       if (args.kind && row.kind !== args.kind) return false
       if (args.place && row.placeName !== args.place) return false
