@@ -6,7 +6,7 @@ import type { ExploreEntry } from './explore-model'
 
 export function usePublishedSearch(enabled: boolean, search: ExploreSearch) {
   return usePaginatedQuery(api.resident.search.search, enabled ? {
-    q: search.q, kind: search.type, place: search.place, body: search.body,
+    q: search.q, kind: search.type === 'decision' || search.type === 'issue' || search.type === 'meeting' || search.type === 'body' ? search.type : undefined, place: search.place, body: search.body,
     lifecycle: search.lifecycle, source: search.source, topic: search.topic, date: search.date, sort: search.sort,
   } : 'skip', { initialNumItems: 25 })
 }

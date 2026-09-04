@@ -298,6 +298,10 @@ export class LiveAskAdapter implements AskAdapter {
       this.push({ kind: 'expired' })
       return
     }
+    if (code === 'ask_scope_too_large') {
+      this.updateTurn(turnId, turn => ({ ...turn, state: 'scope_too_large' }))
+      return
+    }
     const retryAt = errorRetryAt(error)
     if (
       code === 'ask_request_limited' ||
@@ -318,6 +322,8 @@ export class LiveAskAdapter implements AskAdapter {
       return
     }
     const retryable =
+      code === 'ask_evidence_changed' ||
+      code === 'answer_context_failed' ||
       code === 'answer_provider_failed' ||
       code === 'answer_storage_failed' ||
       code === 'answer_abandoned' ||

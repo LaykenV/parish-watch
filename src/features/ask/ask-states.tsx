@@ -109,6 +109,8 @@ export function AskTurnFailure({
   onRetry: () => void
   state: AskTurnState
 }) {
+  if (state === 'scope_too_large') return <div className="ask-notice" data-tone="muted"><p className="ask-notice-title">This question covers too much evidence</p><p className="ask-notice-text">Choose a parish above, or open an issue or meeting in Explore and ask from that page. Your question is still here.</p><a href="/explore">Explore issues and meetings</a></div>
+
   if (state === 'retryable_failure') {
     if (dismissed) {
       return (
