@@ -1,7 +1,10 @@
 /// <reference types="vite/client" />
+import rateLimiterTest from '@convex-dev/rate-limiter/test'
+import { DAY, RateLimiter, calculateRateLimit } from '@convex-dev/rate-limiter'
+import { configurePolicy } from './monitoring/ledger'
 import { convexTest } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
-import { api, internal } from './_generated/api'
+import { api, components, internal } from './_generated/api'
 import { isBeforeSourceWindow, isDocumentUrl } from './monitoring/discovery'
 import { inventoryContract } from './monitoring/contracts'
 import type { InventoryResult } from './monitoring/contracts'
@@ -84,4 +87,19 @@ test('source window skips dated old archives and keeps opaque document links', (
   expect(isBeforeSourceWindow('https://rppj.com/agenda/2392', start)).toBe(false)
   expect(isDocumentUrl('https://www.brla.gov/AgendaCenter/ViewFile/Agenda/_08122026-2419')).toBe(true)
   expect(isDocumentUrl('https://rppj.com/2026-police-jury-meetings')).toBe(false)
+})
+
+test('changing a daily limit preserves admissions already used in the window', async () => {
+  const { t, runId, policyId, proposalId } = await monitoringFixture()
+  rateLimiterTest.register(t)
+  expect(await t.mutation(internal.monitoring.ledger.reserve, { runId, units: 6 })).toBe(true)
+  const rate = new RateLimiter(components.rateLimiter, {})
+  for (const dailyCallLimit of [20, 10]) {
+    await t.run(ctx => configurePolicy(ctx, { proposalId, enabled: true, intervalHours: 24, documentsPerRun: 1, targetsPerRun: 1, dailyCallLimit, startsAt: Date.now() - DAY }))
+    const remaining = await t.run(async ctx => {
+      const value = await rate.getValue(ctx, 'calls', { key: policyId, config: { kind: 'fixed window', rate: dailyCallLimit, period: DAY } })
+      return calculateRateLimit(value, value.config).value
+    })
+    expect(remaining).toBe(dailyCallLimit - 6)
+  }
 })
