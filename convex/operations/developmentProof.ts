@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { paginationOptsValidator } from 'convex/server'
 import { internal } from '../_generated/api'
+import type { Id } from '../_generated/dataModel'
 import { completeStructuredDirectFallback } from '../ai/provider'
 import { decryptAddress } from '../follows/secrets'
 import { normalizeForMatch } from '../extraction/textMatch'
@@ -163,11 +164,11 @@ export const replayControlledDelivery = internalMutation({
   args: {}, returns: v.id('roundupWindows'),
   handler: async ctx => {
     requireDevelopment()
-    const follow = await ctx.db.get('qd74bbz6hcz0vethe63xmz73p98dsn05' as import('../_generated/dataModel').Id<'follows'>)
+    const follow = await ctx.db.get('qd74bbz6hcz0vethe63xmz73p98dsn05' as Id<'follows'>)
     if (!follow || follow.ownerKind !== 'email') throw new Error('Controlled follow is missing.')
     const subscriber = await ctx.db.get(follow.emailSubscriberId)
     if (!subscriber || subscriber.state !== 'verified' || await decryptAddress(subscriber.encryptedAddress) !== env.AGENTMAIL_REPORTS_INBOX_ID) throw new Error('Controlled recipient is not verified.')
-    const changeId = 'n97ecb6wpzb93t6kbtpqk6qnf98dpxv7' as import('../_generated/dataModel').Id<'materialChanges'>
+    const changeId = 'n97ecb6wpzb93t6kbtpqk6qnf98dpxv7' as Id<'materialChanges'>
     const change = await ctx.db.get(changeId)
     const record = change ? await ctx.db.get(change.recordId) : null
     if (!change?.material || change.notificationEligible === false || record?.currentPublishedVersionId !== change.currentPublicationVersionId) throw new Error('Accepted replay evidence changed.')

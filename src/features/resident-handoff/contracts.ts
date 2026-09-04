@@ -19,7 +19,7 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/',
     contract: 'issue-led home with accepted issue and decision projections',
     fixtureOwner: 'features/discovery/fixtures.ts',
-    gate: 'partial',
+    gate: 'live',
     owner: 'public issue and decision queries plus saved areas',
   },
   {
@@ -32,7 +32,7 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/explore',
     contract: 'mixed published search projection and URL filters',
     fixtureOwner: 'features/discovery/fixtures.ts',
-    gate: 'partial',
+    gate: 'live',
     owner: 'public search',
   },
   {
@@ -81,7 +81,7 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/following/notifications',
     contract: 'notification preferences projection',
     fixtureOwner: 'features/following/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'follows and AgentMail',
   },
   {
@@ -157,7 +157,7 @@ export const RESIDENT_INTERACTION_HANDOFFS = [
   },
   {
     interaction: 'Follow government body from Coverage',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'Convex Auth or verified email follows',
   },
   {
