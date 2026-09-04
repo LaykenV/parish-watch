@@ -592,6 +592,7 @@ export default defineSchema({
     attempts: v.optional(v.number()), retryAt: v.optional(v.number()), createdAt: v.number(), updatedAt: v.number(),
   }).index('by_snapshot_id_and_target_key', ['snapshotId', 'targetKey'])
     .index('by_policy_id_and_state', ['policyId', 'state'])
+    .index('by_policy_state_and_retry', ['policyId', 'state', 'retryAt'])
     .index('by_document_id_and_snapshot_id', ['documentId', 'snapshotId']),
 
   monitoringProviderCalls: defineTable({

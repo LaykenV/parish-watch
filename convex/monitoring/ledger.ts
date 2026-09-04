@@ -246,7 +246,7 @@ export const dispatchTargets = internalMutation({
   args: { runId: v.id('sourceMonitoringRuns') }, returns: v.number(),
   handler: async (ctx, args) => {
     const { policy } = await assertMonitoringRun(ctx, args.runId)
-    const targets = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'pending')).take(policy.targetsPerRun)
+    const targets = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_state_and_retry', q => q.eq('policyId', policy._id).eq('state', 'pending').lte('retryAt', Date.now())).take(policy.targetsPerRun)
     let started = 0
     for (const target of targets) {
       if ((target.retryAt ?? 0) > Date.now()) continue
