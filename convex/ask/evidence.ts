@@ -668,3 +668,30 @@ export const retrieveSelectedCatalog = internalQuery({
     return { kind: evidence.length ? 'evidence' : 'no_evidence', scope, issues: await issueCatalog(ctx, decisions), meetings: meetingCatalog(decisions), records: decisions.map(recordContext), evidence }
   },
 })
+
+export const expandCatalogSelection = internalQuery({
+  args: { token: v.string(), threadId: v.string(), revision: v.number(), targets: v.array(v.object({ kind: v.union(v.literal('issue'), v.literal('meeting')), id: v.string() })) }, returns: v.array(v.string()),
+  handler: async (ctx, args) => {
+    if (args.targets.length > 20) throw new ConvexError({ code: 'ask_scope_too_large', message: 'Choose one issue or meeting.' })
+    const revision = (await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique())?.revision ?? 0
+    if (revision !== args.revision) throw new ConvexError({ code: 'ask_evidence_changed', message: 'Published evidence changed. Retry the question.' })
+    const access = await authorizeThreadRead(ctx, args.token, args.threadId)
+    const scope = storedScope(access.mapping.scopeKind, access.mapping.scopeKey)
+    const issueKeys = await issueRecordKeys(ctx, scope)
+    const keys = new Set<string>()
+    for (const target of args.targets) {
+      if (target.kind === 'issue') {
+        const issue = await ctx.runQuery(api.resident.evidence.getPublishedIssue, { slug: target.id })
+        for (const link of issue?.links ?? []) keys.add(link.recordKey)
+      } else {
+        const meeting = await ctx.runQuery(api.resident.evidence.getPublishedMeeting, { meetingKey: target.id })
+        for (const decision of meeting?.decisions ?? []) keys.add(decision.recordKey)
+      }
+    }
+    if (keys.size > 200) throw new ConvexError({ code: 'ask_scope_too_large', message: 'Choose one issue or meeting.' })
+    const decisions = await loadDecisions(ctx, [...keys])
+    const ids = decisions.filter(decision => scope.kind === 'corpus' ? !scope.areaKey || decision.placeSlug === scope.areaKey : scope.kind === 'issue' ? issueKeys?.has(decision.recordKey) : decision.meetingKey === scope.meetingId).flatMap(decision => decision.citations.map(citation => citation.id))
+    if (ids.length > MAX_SCOPE_EVIDENCE_ITEMS) throw new ConvexError({ code: 'ask_scope_too_large', message: 'Choose a narrower question.' })
+    return [...new Set(ids)]
+  },
+})

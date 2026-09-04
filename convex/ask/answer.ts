@@ -208,7 +208,11 @@ export const answerQuestion = action({
             receiptId: claim.receiptId, answerAttempt: claim.attempt, threadId: args.threadId,
             questionMessageId: args.questionMessageId, question: context.question, prior: context.prior, catalog: page.catalog,
           })
-          return selection.retrievalMode === 'not_found' ? [] : applySelection(page.catalog, selection).evidence.map(item => item.evidenceId)
+          if (selection.retrievalMode === 'not_found') return []
+          const ids = applySelection(page.catalog, selection).evidence.map(item => item.evidenceId)
+          const targets = selection.targets.flatMap(target => target.kind === 'issue' || target.kind === 'meeting' ? [{ kind: target.kind, id: target.id }] : [])
+          if (targets.length) ids.push(...await ctx.runQuery(internal.ask.evidence.expandCatalogSelection, { token: args.token, threadId: args.threadId, revision: page.revision, targets }))
+          return ids
         }))
         selectedIds = [...new Set([...selectedIds, ...selected.flat()])]
         if (selectedIds.length > 1_500) throw askError('ask_scope_too_large', 'Choose a place, issue, meeting or date to narrow this question.')
