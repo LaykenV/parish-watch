@@ -671,7 +671,7 @@ export const retrieveSelectedCatalog = internalQuery({
 
 export const expandCatalogSelection = internalQuery({
   args: { token: v.string(), threadId: v.string(), revision: v.number(), targets: v.array(v.object({ kind: v.union(v.literal('issue'), v.literal('meeting')), id: v.string() })) }, returns: v.array(v.string()),
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<string[]> => {
     if (args.targets.length > 20) throw new ConvexError({ code: 'ask_scope_too_large', message: 'Choose one issue or meeting.' })
     const revision = (await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique())?.revision ?? 0
     if (revision !== args.revision) throw new ConvexError({ code: 'ask_evidence_changed', message: 'Published evidence changed. Retry the question.' })
