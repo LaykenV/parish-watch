@@ -13,7 +13,7 @@ export const checkSources = extractionWorkflowManager.define({
   try {
     const { policy } = await step.runQuery(internal.monitoring.ledger.context, args)
     await step.runMutation(internal.monitoring.ledger.reconcileTargets, { policyId: policy._id })
-    await step.runAction(internal.monitoring.actions.discover, args, { retry: false })
+    if (!await step.runAction(internal.monitoring.actions.discover, args, { retry: false })) incomplete = true
     const documents = await step.runQuery(internal.monitoring.ledger.dueDocuments, args)
     for (const document of documents) {
       try {

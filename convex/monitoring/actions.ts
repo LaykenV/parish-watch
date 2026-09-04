@@ -13,7 +13,7 @@ import type { InventoryResult } from './contracts'
 const firecrawl = new FirecrawlClient(components.firecrawl)
 
 export const discover = internalAction({
-  args: { runId: v.id('sourceMonitoringRuns') }, returns: v.null(),
+  args: { runId: v.id('sourceMonitoringRuns') }, returns: v.boolean(),
   handler: async (ctx, args) => {
     const { registry, proposal } = await ctx.runQuery(internal.monitoring.ledger.context, args)
     if (registry.seedUrls.length > 10) throw new Error('monitoring_seed_limit')
@@ -44,7 +44,7 @@ export const discover = internalAction({
       }
     }
     if (failures === listingUrls.length) throw new Error('monitoring_listings_unavailable')
-    return null
+    return failures === 0
   },
 })
 
