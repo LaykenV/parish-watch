@@ -1,3 +1,4 @@
+import { loadTimelineMembers } from '../issues/membership'
 import { paginationOptsValidator } from 'convex/server'
 import { v } from 'convex/values'
 
@@ -509,10 +510,7 @@ async function projectPublishedIssue(
   const [place, build, links, factors, versions] = await Promise.all([
     ctx.db.get(body.jurisdictionId),
     ctx.db.get(current.buildId),
-    ctx.db
-      .query('issueDecisionLinks')
-      .withIndex('by_issue_version', (q) => q.eq('issueVersionId', current._id))
-      .take(11),
+    loadTimelineMembers(ctx, current._id),
     ctx.db
       .query('importanceAssessments')
       .withIndex('by_issue_version_and_factor', (q) =>
@@ -529,7 +527,6 @@ async function projectPublishedIssue(
     !place ||
     !build?.candidate ||
     !build.rankedResult ||
-    links.length > 10 ||
     factors.length > 7
   ) {
     return null

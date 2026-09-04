@@ -1109,6 +1109,7 @@ export default defineSchema({
       'updatedAt',
     ])
     .index('by_current_meeting_key', ['currentMeetingKey'])
+    .index('by_government_body_and_created_at', ['governmentBodyId', 'createdAt'])
     .index('by_registry_and_source_record', ['registryId', 'sourceRecordId'])
     .index('by_registry_and_updated_at', ['registryId', 'updatedAt']),
 
@@ -1254,7 +1255,17 @@ export default defineSchema({
     .index('by_current_publication', ['currentPublicationVersionId'])
     .index('by_record_and_created_at', ['recordId', 'createdAt']),
 
+  issueLinkProposals: defineTable({
+    recordId: v.id('decisionRecords'), publicationVersionId: v.id('publicationVersions'), originRunId: v.id('pipelineRuns'),
+    state: v.union(v.literal('pending'), v.literal('scanning'), v.literal('proposed'), v.literal('no_match'), v.literal('ambiguous'), v.literal('failed')),
+    cursor: v.union(v.string(), v.null()), matchedRecordIds: v.array(v.id('decisionRecords')),
+    scanned: v.number(), startedAt: v.number(), updatedAt: v.number(), workflowId: v.optional(v.string()),
+    issueBuildId: v.optional(v.id('issueBuilds')), errorClass: v.optional(v.string()),
+  }).index('by_publication_version', ['publicationVersionId']).index('by_state_and_updated_at', ['state', 'updatedAt']),
+
   issueBuilds: defineTable({
+    targetIssueId: v.optional(v.id('issues')),
+    expectedIssueVersionId: v.optional(v.id('issueVersions')),
     runId: v.id('pipelineRuns'),
     registryId: v.id('sourceRegistries'),
     governmentBodyId: v.id('governmentBodies'),

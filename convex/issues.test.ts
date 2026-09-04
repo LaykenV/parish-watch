@@ -1264,3 +1264,40 @@ test('a published decision refresh creates one new issue version and replays wit
   expect(finalReplay.currentVersion?.version).toBe(2)
   expect(withheldFetch).toHaveBeenCalledTimes(2)
 })
+
+test('an extension retains the original issue URL and old members beyond the model window', async () => {
+  const t = initTest()
+  const seeded = await seedIssueInput(t)
+  const candidate = issueCandidate(seeded)
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const started = await startAndDrain(t, seeded.recordIds)
+  const first = await t.query(internal.operations.issues.readIssueBuildEvidence, { runId: started.runId })
+  const issueId = first.issue!._id
+  const originalSlug = first.issue!.slug
+  // Prior accepted members need not be sent back through the model to remain members.
+  await t.run(async ctx => {
+    const template = first.links[0]
+    const record = await ctx.db.get(template.recordId)
+    const publication = await ctx.db.get(template.publicationVersionId)
+    for (let index = 0; index < 9; index++) {
+      const { _id: recordId, _creationTime: recordTime, ...recordFields } = record!
+      const newRecordId = await ctx.db.insert('decisionRecords', { ...recordFields, recordKey: `retained-${index}`, sourceRecordId: `retained-${index}` })
+      const { _id: publicationId, _creationTime: publicationTime, ...publicationFields } = publication!
+      const newPublicationId = await ctx.db.insert('publicationVersions', { ...publicationFields, recordId: newRecordId })
+      await ctx.db.patch(newRecordId, { currentPublishedVersionId: newPublicationId })
+      const { _id, _creationTime, ...link } = template
+      await ctx.db.insert('issueDecisionLinks', { ...link, recordId: newRecordId, publicationVersionId: newPublicationId })
+    }
+  })
+  vi.unstubAllGlobals()
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const extension = await t.mutation(internal.operations.issues.startIssueBuild, { recordIds: seeded.recordIds, targetIssueId: issueId, trigger: 'decision_published' })
+  vi.useFakeTimers()
+  await t.finishAllScheduledFunctions(vi.runAllTimers)
+  vi.useRealTimers()
+  const second = await t.query(internal.operations.issues.readIssueBuildEvidence, { runId: extension.runId })
+  expect(second.issue?._id).toBe(issueId)
+  expect(second.issue?.slug).toBe(originalSlug)
+  const members = await t.run(ctx => ctx.db.query('issueDecisionLinks').withIndex('by_issue_version', q => q.eq('issueVersionId', second.issueVersion!._id)).collect())
+  expect(members).toHaveLength(11)
+})
