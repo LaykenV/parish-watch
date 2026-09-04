@@ -16,6 +16,9 @@ export const regions = query({
       const policy = registry ? await ctx.db.query('sourceMonitoringPolicies').withIndex('by_registry_id', q => q.eq('registryId', registry._id)).unique() : null
       const status = body?.publicStatus === 'paused' ? 'paused' : registry?.status ?? body?.publicStatus ?? 'validating'
       const state = status === 'supported' && proposal ? 'Supported' as const : status === 'degraded' ? 'Degraded' as const : status === 'paused' ? 'Paused' as const : 'Validating sources' as const
+      const expectations = registry ? await ctx.db.query('sourceExpectations').withIndex('by_registry_and_source_kind', q => q.eq('registryId', registry._id)).take(30) : []
+      const next = expectations.filter(item => item.expectedBy !== undefined).sort((a, b) => a.expectedBy! - b.expectedBy!)[0]
+      const nextExpectedArtifact = next ? `${next.sourceKind} expected by ${new Date(next.expectedBy!).toISOString().slice(0, 10)}, based on observed cadence. This is an estimate.` : 'The official sources have not established the next artifact date.'
       const last = policy?.lastCompletedAt ?? registry?.lastHealthyAt
       const limitation = state === 'Supported'
         ? `Coverage includes ${registry?.sourceKinds.join(', ') || 'the approved source types'} for this body. ${policy?.enabled ? 'Scheduled checks are enabled.' : 'An owner currently starts source updates.'} Other bodies and source types are not implied.`
@@ -23,7 +26,7 @@ export const regions = query({
         : state === 'Paused' ? 'Source monitoring is paused. Previously accepted evidence remains available with its dates.'
         : 'This body has not completed the publication and coverage checks. A reachable source page alone does not establish support.'
       const region = regions.get(manifest.jurisdictionSlug) ?? { name: manifest.jurisdictionName, bodies: [] }
-      region.bodies.push({ id: manifest.bodyKey, name: manifest.bodyName, state, sourceKinds: registry?.sourceKinds ?? [], ...(last ? { lastSuccessfulCheck: new Date(last).toISOString() } : {}), limitation, followAvailable: state === 'Supported' })
+      region.bodies.push({ id: manifest.bodyKey, name: manifest.bodyName, state, sourceKinds: registry?.sourceKinds ?? [], ...(last ? { lastSuccessfulCheck: new Date(last).toISOString() } : {}), nextExpectedArtifact, limitation, followAvailable: state === 'Supported' })
       regions.set(manifest.jurisdictionSlug, region)
     }
     return [...regions.values()]

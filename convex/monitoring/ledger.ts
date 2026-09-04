@@ -278,6 +278,14 @@ export const saveInventory = internalMutation({
       })
       added++
     }
+    if (args.inventory.targets.length && args.inventory.meetingDate) {
+      const observedAt = Date.parse(args.inventory.meetingDate)
+      const expectations = await ctx.db.query('sourceExpectations').withIndex('by_registry_and_source_kind', q => q.eq('registryId', registry._id).eq('sourceKind', args.inventory.sourceKind)).take(30)
+      for (const expectation of expectations) {
+        const days = expectation.cadence === 'daily' ? 1 : expectation.cadence === 'weekly' ? 7 : expectation.cadence === 'monthly' ? 31 : null
+        if (days && observedAt <= Date.now() && observedAt + days * DAY_MS > (expectation.expectedFrom ?? 0)) await ctx.db.patch(expectation._id, { expectedFrom: observedAt + days * DAY_MS, expectedBy: observedAt + (days + 7) * DAY_MS, matchedSnapshotId: document.snapshotId, basis: 'inferred' })
+      }
+    }
     await ctx.db.patch(document._id, { completedChunks: args.chunk + 1, chunkCount: args.chunks, inventoryComplete: args.chunk + 1 === args.chunks, ...(args.chunk + 1 === args.chunks ? { nextCheckAt: Date.now() + policy.intervalHours * 3_600_000 } : {}) })
     return added
   },
@@ -327,10 +335,12 @@ export const finish = internalMutation({
       const unfinished = await ctx.db.query('monitoredDocuments').withIndex('by_policy_id_and_inventory_complete', q => q.eq('policyId', policy._id).eq('inventoryComplete', false)).first()
       const listingPending = Boolean(policy.discoveryPendingUrls?.length)
       const running = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'running')).first()
-      const healthy = args.state === 'completed'
+      const expectations = await ctx.db.query('sourceExpectations').withIndex('by_registry_and_source_kind', q => q.eq('registryId', policy.registryId)).take(30)
+      const overdue = expectations.some(item => item.expectedBy !== undefined && item.expectedBy < now)
+      const healthy = args.state === 'completed' && !overdue
       const budgetPaused = args.errorClass === 'monitoring_daily_limit'
       await ctx.db.patch(policy._id, { activeRunId: undefined, baselineComplete: policy.baselineComplete || (healthy && !remaining && !unfinished && !pending && !running && !listingPending), nextCheckAt: now + (remaining || pending || running || listingPending || !healthy ? 900_000 : policy.intervalHours * 3_600_000), failures: healthy ? 0 : budgetPaused || args.state === 'stopped' ? policy.failures : policy.failures + 1, ...(healthy && !remaining && !unfinished && !pending && !running && !listingPending ? { lastCompletedAt: now } : {}), updatedAt: now })
-      if (!healthy && !budgetPaused && args.state !== 'stopped') await recordIncident(ctx, policy.registryId, args.errorClass ?? 'monitoring_failed')
+      if (!healthy && !budgetPaused && args.state !== 'stopped') await recordIncident(ctx, policy.registryId, overdue ? 'expected_artifact_missing' : args.errorClass ?? 'monitoring_failed')
     }
     return null
   },
