@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import type { QueryCtx, MutationCtx } from '../_generated/server'
-import { query } from '../_generated/server'
+import { env, query } from '../_generated/server'
 import { listRootManifests } from './roots'
 
 const bodyView = v.object({ id: v.string(), name: v.string(), state: v.union(v.literal('Supported'), v.literal('Degraded'), v.literal('Paused'), v.literal('Validating sources'), v.literal('Not supported')), sourceKinds: v.array(v.string()), lastSuccessfulCheck: v.optional(v.string()), nextExpectedArtifact: v.optional(v.string()), limitation: v.string(), followAvailable: v.boolean() })
@@ -21,7 +21,7 @@ export const regions = query({
       const nextExpectedArtifact = next ? `${next.sourceKind} expected by ${new Date(next.expectedBy!).toISOString().slice(0, 10)}, based on observed cadence. This is an estimate.` : 'The official sources have not established the next artifact date.'
       const last = policy?.lastCompletedAt ?? registry?.lastHealthyAt
       const limitation = state === 'Supported'
-        ? `Coverage includes ${registry?.sourceKinds.join(', ') || 'the approved source types'} for this body. ${policy?.enabled ? 'Scheduled checks are enabled.' : 'An owner currently starts source updates.'} Other bodies and source types are not implied.`
+        ? `Coverage includes ${registry?.sourceKinds.join(', ') || 'the approved source types'} for this body. ${policy?.enabled && env.SOURCE_MONITORING_ENABLED === 'true' ? 'Scheduled checks are enabled.' : 'An owner currently starts source updates.'} Other bodies and source types are not implied.`
         : state === 'Degraded' ? 'Current decisions may be missing after an incomplete source check. Previously accepted evidence remains available with its dates.'
         : state === 'Paused' ? 'Source monitoring is paused. Previously accepted evidence remains available with its dates.'
         : 'This body has not completed the publication and coverage checks. A reachable source page alone does not establish support.'
