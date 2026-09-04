@@ -447,6 +447,9 @@ export default defineSchema({
       'createdAt',
     ]),
 
+  providerUsageCheckpoints: defineTable({ kind: v.string(), position: v.number(), updatedAt: v.number() }).index('by_kind', ['kind']),
+  providerUsageDaily: defineTable({ key: v.string(), day: v.string(), kind: v.string(), provider: v.string(), calls: v.number(), failures: v.number(), reportedTokens: v.number(), estimatedCostUsd: v.number(), reportedCredits: v.number(), unknownTokenCalls: v.number(), unknownCostCalls: v.number(), unknownCreditCalls: v.number(), totalLatencyMs: v.number(), maxLatencyMs: v.number(), updatedAt: v.number() }).index('by_key', ['key']).index('by_day', ['day']),
+
   civicEventReceipts: defineTable({ eventKey: v.string(), kind: civicEvent, expiresAt: v.number() }).index('by_event_key', ['eventKey']).index('by_expires_at', ['expiresAt']),
   civicEventCounters: defineTable({ kind: civicEvent, environment: v.union(v.literal('production'), v.literal('development')), count: v.number(), updatedAt: v.number() }).index('by_kind_and_environment', ['kind', 'environment']),
 

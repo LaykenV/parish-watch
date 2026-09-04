@@ -10,6 +10,7 @@ export function MonitoringPanel() {
   const [notice, setNotice] = useState('')
   const [kind, setKind] = useState<'pipeline' | 'ask' | 'compiler' | 'monitoring'>('monitoring')
   const usage = usePaginatedQuery(api.operations.dashboard.providerUsage, { kind }, { initialNumItems: 25 })
+  const daily = usePaginatedQuery(api.operations.usage.daily, {}, { initialNumItems: 10 })
   const incidents = usePaginatedQuery(api.operations.dashboard.incidents, {}, { initialNumItems: 10 })
   const proposals = usePaginatedQuery(api.operations.dashboard.issueProposals, {}, { initialNumItems: 10 })
   if (!overview) return <p role="status">Loading source monitoring...</p>
@@ -37,6 +38,10 @@ export function MonitoringPanel() {
     <h3>Civic activity counts</h3>
     <p>Evidence opens, document opens, returns, and outcome reads are browser-reported. Question, answer, follow, and request counts come from successful server operations. Development and production stay separate. These counts do not prove resident benefit.</p>
     <ul>{overview.counters.map(counter => <li key={counter._id}>{counter.environment}: {counter.kind.replaceAll('_', ' ')}: {counter.count}</li>)}</ul>
+    <h3>Daily provider totals</h3>
+    <p>Totals update every five minutes as ledger batches are processed. Unknown usage remains separate from reported amounts.</p>
+    {daily.results.map(row => <p key={row._id}>{row.day}, {row.kind}, {row.provider}: {row.calls} calls, {row.failures} unsuccessful attempts, {row.reportedTokens} reported tokens, ${row.estimatedCostUsd.toFixed(4)} estimated cost, {row.reportedCredits} reported credits. Unknown cost for {row.unknownCostCalls} calls. Mean latency {Math.round(row.totalLatencyMs / row.calls)} ms.</p>)}
+    {daily.status === 'CanLoadMore' ? <Button onClick={() => daily.loadMore(10)}>More daily totals</Button> : null}
     <h3>Provider usage</h3>
     <label>Work type <select value={kind} onChange={event => setKind(event.target.value as typeof kind)}><option value="monitoring">Source monitoring</option><option value="pipeline">Evidence pipeline</option><option value="compiler">Coverage compiler</option><option value="ask">Resident Ask</option></select></label>
     <p>Costs are estimates. Missing provider usage means unknown, not zero. This list shows the loaded page, not a complete spending total.</p>

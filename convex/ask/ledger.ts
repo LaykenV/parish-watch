@@ -286,7 +286,7 @@ export const persistAnswer = internalMutation({
       completedAt: Date.now(),
       errorClass: undefined,
     })
-    if (args.answer.kind === 'answer') await recordConfirmedEvent(ctx, 'ask_answered', receipt._id)
+    await recordConfirmedEvent(ctx, args.answer.kind === 'answer' ? 'ask_answered' : 'ask_not_found', receipt._id)
     return saved.messageId
   },
 })
