@@ -18,12 +18,17 @@ export function ShareButton({
   title,
 }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
+  const [failedUrl, setFailedUrl] = useState('')
   const timer = useRef(0)
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
   const share = async () => {
-    const url = `${window.location.origin}${path}`
+    const backend = import.meta.env.VITE_CONVEX_URL as string | undefined
+    const base = backend ? backend.replace(/\.convex\.cloud\/?$/, '.convex.site') : window.location.origin
+    const sharePath = path.startsWith('/issues/') ? `/share${path}` : path
+    const url = `${base}${sharePath}`
+    setFailedUrl('')
 
     if (typeof navigator.share === 'function') {
       try {
@@ -43,11 +48,12 @@ export function ShareButton({
       window.clearTimeout(timer.current)
       timer.current = window.setTimeout(() => setCopied(false), 2200)
     } catch {
-      // Clipboard access denied. The control stays quiet rather than faking success.
+      setFailedUrl(url)
     }
   }
 
   return (
+    <>
     <Button
       className={cn('pp-inline-action', className)}
       data-copied={copied || undefined}
@@ -65,5 +71,7 @@ export function ShareButton({
         {copied ? 'Link copied' : ''}
       </span>
     </Button>
+    {failedUrl ? <span role="status">Copy this link: <a href={failedUrl}>{failedUrl}</a></span> : null}
+    </>
   )
 }
