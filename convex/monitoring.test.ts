@@ -23,7 +23,7 @@ test('inventory refuses fabricated locators, ambiguous items and invalid dates',
 test('monitoring controls and ledgers require the owner', async () => {
   const t = convexTest(schema, modules)
   await expect(t.query(api.monitoring.ledger.policies, { paginationOpts: { numItems: 10, cursor: null } })).rejects.toThrow()
-  const userId = await t.run(ctx => ctx.db.insert('users', { email: 'resident@example.test' }))
+  const userId = await t.run(ctx => ctx.db.insert('users', { email: 'resident@example.test', googleAccountId: 'monitoring-test', emailVerified: true, createdAt: 1, updatedAt: 1, lastSignedInAt: 1 }))
   await expect(t.withIdentity({ subject: userId }).query(api.monitoring.ledger.policies, { paginationOpts: { numItems: 10, cursor: null } })).rejects.toThrow()
 })
 

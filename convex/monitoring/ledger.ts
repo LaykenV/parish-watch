@@ -17,7 +17,6 @@ import schema from '../schema'
 import { DAY_MS, inventoryResult, MONITOR_VERSION, monitorState } from './contracts'
 
 const limiter = new RateLimiter(components.rateLimiter, {
-  calls: { kind: 'fixed window', rate: 500, period: DAY },
   globalCalls: { kind: 'fixed window', rate: 1_000, period: DAY },
 })
 
@@ -326,7 +325,7 @@ export const reconcileTargets = internalMutation({
     const targets = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', args.policyId).eq('state', 'running')).take(100)
     for (const target of targets) {
       const run = target.pipelineRunId ? await ctx.db.get(target.pipelineRunId) : null
-      if (!run || run.state === 'failed') {
+      if (!run || run.state === 'failed_retryable' || run.state === 'failed_terminal' || run.state === 'superseded') {
         await ctx.db.patch(target._id, { state: 'failed', updatedAt: Date.now() })
         continue
       }
