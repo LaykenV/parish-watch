@@ -12,18 +12,19 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-04T14:25:32Z
+- **Last updated:** 2026-09-04T15:08:16Z
 
 ## Log
 
-### 2026-09-04 - 783d5b2
+### 2026-09-04 - 47d2c12
 
 Closed the Slice 8 review gaps before release. Post-deploy seed replay now
 preserves supported, degraded, paused, and ambiguous multi-registry state.
 Evaluator v2 names the checks it actually performs, rejected candidates cannot
 fill revision slots, and body promotion cannot clear an operator-set parish
-pause or degradation. The owner view and architecture now state that sample
-validation stores snapshots but does not run extraction, review, or publication
+pause or degradation. A stale proposal cannot replace or control a newer live
+registry. The owner view and architecture now state that sample validation
+stores snapshots but does not run extraction, review, or publication
 (`convex/operations/seed.ts`, `convex/coverage/`, `docs/architecture.md`).
 
 ### 2026-09-03 - cc056f3
