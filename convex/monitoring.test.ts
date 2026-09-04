@@ -103,3 +103,24 @@ test('changing a daily limit preserves admissions already used in the window', a
     expect(remaining).toBe(dailyCallLimit - 6)
   }
 })
+
+
+test('a daily limit cannot erase admissions by dropping below usage', async () => {
+  const { t, runId, policyId, proposalId } = await monitoringFixture()
+  rateLimiterTest.register(t)
+  await t.run(ctx => ctx.db.patch(policyId, { dailyCallLimit: 20 }))
+  expect(await t.mutation(internal.monitoring.ledger.reserve, { runId, units: 16 })).toBe(true)
+  await expect(t.run(ctx => configurePolicy(ctx, { proposalId, enabled: true, intervalHours: 24, documentsPerRun: 1, targetsPerRun: 1, dailyCallLimit: 10, startsAt: Date.now() - DAY }))).rejects.toThrow('below calls already used')
+  expect(await t.mutation(internal.monitoring.ledger.reserve, { runId, units: 5 })).toBe(false)
+})
+
+test('daily admission exhaustion preserves source health and resumable work', async () => {
+  const { t, runId, policyId, registryId } = await monitoringFixture()
+  await t.mutation(internal.monitoring.ledger.finish, { runId, state: 'incomplete', documentsChecked: 0, targetsStarted: 0, errorClass: 'monitoring_daily_limit' })
+  const result = await t.run(async ctx => ({ policy: await ctx.db.get(policyId), registry: await ctx.db.get(registryId), incidents: await ctx.db.query('coverageIncidents').collect() }))
+  expect(result.policy?.failures).toBe(0)
+  expect(result.policy?.baselineComplete).toBe(false)
+  expect(result.policy?.activeRunId).toBeUndefined()
+  expect(result.registry?.status).toBe('supported')
+  expect(result.incidents).toEqual([])
+})

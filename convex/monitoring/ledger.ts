@@ -82,8 +82,9 @@ export async function configurePolicy(ctx: MutationCtx, args: { proposalId: Id<'
       const prior = await limiter.getValue(ctx, 'calls', { key: existing._id, config: { kind: 'fixed window', rate: existing.dailyCallLimit, period: DAY } })
       const current = calculateRateLimit(prior, prior.config, now)
       const used = Math.max(0, existing.dailyCallLimit - current.value)
+      if (used > args.dailyCallLimit) throw new Error('The new daily limit is below calls already used in this window. Wait for the next window or choose a higher limit.')
       await limiter.reset(ctx, 'calls', { key: existing._id })
-      await limiter.limit(ctx, 'calls', { key: existing._id, count: Math.min(used, args.dailyCallLimit), config: { kind: 'fixed window', rate: args.dailyCallLimit, period: DAY, start: current.ts }, throws: true })
+      await limiter.limit(ctx, 'calls', { key: existing._id, count: used, config: { kind: 'fixed window', rate: args.dailyCallLimit, period: DAY, start: current.ts }, throws: true })
     }
     await ctx.db.patch(existing._id, fields)
     return existing._id
@@ -303,8 +304,9 @@ export const finish = internalMutation({
       const pending = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'pending')).first()
       const unfinished = await ctx.db.query('monitoredDocuments').withIndex('by_policy_id_and_inventory_complete', q => q.eq('policyId', policy._id).eq('inventoryComplete', false)).first()
       const healthy = args.state === 'completed'
-      await ctx.db.patch(policy._id, { activeRunId: undefined, baselineComplete: policy.baselineComplete || (healthy && !remaining && !unfinished), nextCheckAt: now + (remaining || pending || !healthy ? 900_000 : policy.intervalHours * 3_600_000), failures: healthy ? 0 : policy.failures + 1, ...(healthy && !remaining && !unfinished ? { lastCompletedAt: now } : {}), updatedAt: now })
-      if (!healthy && args.state !== 'stopped') await recordIncident(ctx, policy.registryId, args.errorClass ?? 'monitoring_failed')
+      const budgetPaused = args.errorClass === 'monitoring_daily_limit'
+      await ctx.db.patch(policy._id, { activeRunId: undefined, baselineComplete: policy.baselineComplete || (healthy && !remaining && !unfinished), nextCheckAt: now + (remaining || pending || !healthy ? 900_000 : policy.intervalHours * 3_600_000), failures: healthy ? 0 : budgetPaused || args.state === 'stopped' ? policy.failures : policy.failures + 1, ...(healthy && !remaining && !unfinished ? { lastCompletedAt: now } : {}), updatedAt: now })
+      if (!healthy && !budgetPaused && args.state !== 'stopped') await recordIncident(ctx, policy.registryId, args.errorClass ?? 'monitoring_failed')
     }
     return null
   },

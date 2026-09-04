@@ -534,10 +534,11 @@ async function ingestSeedUrl(
       cleanupFailures.length === 0
         ? classified.errorDetail
         : `${classified.errorDetail}; storage cleanup failed ${cleanupFailures.length} time(s)`
+    const monitoringControl = monitorRunId && ['monitoring_stopped', 'monitoring_daily_limit'].find(code => String(error).includes(code))
     return await failOutcome(
-      classified.errorClass,
+      monitoringControl || classified.errorClass,
       errorDetail,
-      classified.retryable,
+      monitoringControl ? true : classified.retryable,
     )
   }
 }
