@@ -87,6 +87,7 @@ import type * as issues_scoringV1 from "../issues/scoringV1.js";
 import type * as issues_workflow from "../issues/workflow.js";
 import type * as monitoring_actions from "../monitoring/actions.js";
 import type * as monitoring_contracts from "../monitoring/contracts.js";
+import type * as monitoring_discovery from "../monitoring/discovery.js";
 import type * as monitoring_ledger from "../monitoring/ledger.js";
 import type * as monitoring_workflow from "../monitoring/workflow.js";
 import type * as operations_dashboard from "../operations/dashboard.js";
@@ -217,6 +218,7 @@ declare const fullApi: ApiFromModules<{
   "issues/workflow": typeof issues_workflow;
   "monitoring/actions": typeof monitoring_actions;
   "monitoring/contracts": typeof monitoring_contracts;
+  "monitoring/discovery": typeof monitoring_discovery;
   "monitoring/ledger": typeof monitoring_ledger;
   "monitoring/workflow": typeof monitoring_workflow;
   "operations/dashboard": typeof operations_dashboard;

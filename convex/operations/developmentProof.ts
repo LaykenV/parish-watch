@@ -17,8 +17,10 @@ export const createMailbox = internalAction({
   args: {}, returns: v.string(),
   handler: async () => {
     requireDevelopment()
-    const inbox = await mailboxApi('/inboxes', { username: PROOF_INBOX, display_name: 'Public Parish development proof', client_id: PROOF_INBOX }) as { inbox_id?: string }
-    if (!inbox.inbox_id?.startsWith(`${PROOF_INBOX}@`)) throw new Error('Unexpected proof inbox.')
+    const recipient = env.AGENTMAIL_REPORTS_INBOX_ID?.trim()
+    if (!recipient || recipient === env.AGENTMAIL_UPDATES_INBOX_ID) throw new Error('A separate controlled reports inbox is required.')
+    const inbox = await mailboxApi(`/inboxes/${encodeURIComponent(recipient)}`) as { inbox_id?: string }
+    if (inbox.inbox_id !== recipient) throw new Error('Unexpected proof inbox.')
     return inbox.inbox_id
   },
 })
@@ -26,13 +28,26 @@ export const mailboxReceipts = internalAction({
   args: { inboxId: v.string() }, returns: v.array(v.object({ subject: v.string(), messageId: v.string(), verificationCode: v.union(v.string(), v.null()), unsubscribeUrl: v.union(v.string(), v.null()) })),
   handler: async (_ctx, args): Promise<Array<{ subject: string; messageId: string; verificationCode: string | null; unsubscribeUrl: string | null }>> => {
     requireDevelopment()
-    if (!args.inboxId.startsWith(`${PROOF_INBOX}@`)) throw new Error('Only the controlled proof inbox is readable.')
+    if (!args.inboxId.startsWith(`${PROOF_INBOX}@`) && args.inboxId !== env.AGENTMAIL_REPORTS_INBOX_ID) throw new Error('Only the controlled proof inbox is readable.')
     const result = await mailboxApi(`/inboxes/${encodeURIComponent(args.inboxId)}/threads?limit=10`) as { threads?: Array<{ thread_id: string }> }
     const receipts = []
     for (const thread of result.threads ?? []) {
       const detail = await mailboxApi(`/inboxes/${encodeURIComponent(args.inboxId)}/threads/${encodeURIComponent(thread.thread_id)}`) as { messages?: Array<{ message_id: string; subject?: string; text?: string }> }
-      for (const message of detail.messages ?? []) receipts.push({ subject: message.subject ?? '', messageId: message.message_id, verificationCode: message.text?.match(/verification code is (\d{6})/i)?.[1] ?? null, unsubscribeUrl: message.text?.match(/https:\/\/woozy-wren-227\.convex\.site\/coverage\/unsubscribe\/[A-Za-z0-9_-]+/)?.[0] ?? null })
+      for (const message of detail.messages ?? []) if (message.subject === 'Verify your Public Parish coverage notice' || message.subject?.startsWith('Public Parish coverage is available for ')) receipts.push({ subject: message.subject ?? '', messageId: message.message_id, verificationCode: message.text?.match(/verification code is (\d{6})/i)?.[1] ?? null, unsubscribeUrl: message.text?.match(/https:\/\/woozy-wren-227\.convex\.site\/coverage\/unsubscribe\/[A-Za-z0-9_-]+/)?.[0] ?? null })
     }
     return receipts
+  },
+})
+
+export const providerAccess = internalAction({
+  args: {}, returns: v.array(v.object({ operation: v.string(), status: v.number() })),
+  handler: async () => {
+    requireDevelopment()
+    const results = []
+    for (const [operation, path] of [['list inboxes', '/inboxes?limit=1'], ['configured updates inbox', `/inboxes/${encodeURIComponent(env.AGENTMAIL_UPDATES_INBOX_ID ?? '')}`]]) {
+      const response = await fetch(`https://api.agentmail.to/v0${path}`, { headers: { Authorization: `Bearer ${env.AGENTMAIL_API_KEY}` } })
+      results.push({ operation, status: response.status })
+    }
+    return results
   },
 })
