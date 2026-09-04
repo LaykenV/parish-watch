@@ -619,12 +619,13 @@ export default defineSchema({
     .index('by_document_id_and_snapshot_id', ['documentId', 'snapshotId']),
 
   monitoringProviderCalls: defineTable({
+    usageAggregatedAt: v.optional(v.number()),
     runId: v.optional(v.id('sourceMonitoringRuns')), pipelineRunId: v.optional(v.id('pipelineRuns')), operation: v.string(), provider: v.string(),
     status: v.string(), modelId: v.optional(v.string()), modelRole: v.optional(modelRoles),
     promptTokens: v.optional(v.number()), completionTokens: v.optional(v.number()),
     estimatedCostUsd: v.optional(v.number()), creditsUsed: v.optional(v.number()),
     errorClass: v.optional(v.string()), errorDetail: v.optional(v.string()), latencyMs: v.number(), createdAt: v.number(),
-  }).index('by_run_id_and_created_at', ['runId', 'createdAt'])
+  }).index('by_usage_aggregated', ['usageAggregatedAt']).index('by_run_id_and_created_at', ['runId', 'createdAt'])
     .index('by_created_at', ['createdAt']),
 
   coverageIncidents: defineTable({
@@ -705,6 +706,7 @@ export default defineSchema({
     .index('by_run_and_state', ['runId', 'state']),
 
   coverageCompilerProviderCalls: defineTable({
+    usageAggregatedAt: v.optional(v.number()),
     runId: v.id('coverageCompilerRuns'),
     stageId: v.id('coverageCompilerStages'),
     provider: coverageProviderNames,
@@ -726,7 +728,7 @@ export default defineSchema({
     errorClass: v.optional(v.string()),
     errorDetail: v.optional(v.string()),
     createdAt: v.number(),
-  })
+  }).index('by_usage_aggregated', ['usageAggregatedAt'])
     .index('by_run_and_created_at', ['runId', 'createdAt'])
     .index('by_stage_and_created_at', ['stageId', 'createdAt']),
 
@@ -925,6 +927,7 @@ export default defineSchema({
     .index('by_run_and_stage', ['runId', 'stage']),
 
   aiCalls: defineTable({
+    usageAggregatedAt: v.optional(v.number()),
     runId: v.id('pipelineRuns'),
     stageId: v.optional(v.id('pipelineStages')),
     extractionId: v.optional(v.id('extractions')),
@@ -951,7 +954,7 @@ export default defineSchema({
     errorClass: v.optional(v.string()),
     errorDetail: v.optional(v.string()),
     createdAt: v.number(),
-  })
+  }).index('by_usage_aggregated', ['usageAggregatedAt'])
     .index('by_run_and_created_at', ['runId', 'createdAt'])
     .index('by_extraction', ['extractionId'])
     .index('by_review', ['reviewId'])
@@ -1540,6 +1543,7 @@ export default defineSchema({
   }).index('by_session_kind_and_window', ['sessionId', 'kind', 'windowStart']),
 
   askModelAttempts: defineTable({
+    usageAggregatedAt: v.optional(v.number()),
     answerReceiptId: v.id('askAnswerReceipts'),
     sessionId: v.id('anonymousSessions'),
     threadId: v.string(),
@@ -1562,7 +1566,7 @@ export default defineSchema({
     errorClass: v.optional(v.string()),
     errorDetail: v.optional(v.string()),
     createdAt: v.number(),
-  })
+  }).index('by_usage_aggregated', ['usageAggregatedAt'])
     .index('by_answer_receipt_and_attempt', ['answerReceiptId', 'attempt'])
     .index('by_session_and_created_at', ['sessionId', 'createdAt']),
 })
