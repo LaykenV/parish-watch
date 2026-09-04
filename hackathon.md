@@ -12,9 +12,20 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-04T15:08:16Z
+- **Last updated:** 2026-09-04T15:25:28Z
 
 ## Log
+
+### 2026-09-04 - b5583ed
+
+Released Implementation Slice 8 through PRs #85 through #88. The PR #87
+production attempt stopped before backend activation because Convex's deployment
+compiler rejected `Array.prototype.at`; PR #88 replaced that call with a
+supported lookup. Production workflow `33889157140` then verified the exact
+merge commit, deployed the backend and frontend, ran the guarded launch seed,
+and passed its smoke test. An independent `npm run smoke:production` passed both
+public origins, the canonical redirect, and production backend readiness. No
+coverage proposal was promoted, so resident-visible coverage did not change.
 
 ### 2026-09-04 - 47d2c12
 
