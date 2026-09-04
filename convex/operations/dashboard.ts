@@ -43,7 +43,7 @@ export const providerUsage = query({
     if (args.paginationOpts.numItems > 50) throw new Error('Use report pages of at most 50.')
     if (args.kind === 'retrieval') {
       const page = await ctx.db.query('retrievalProviderCalls').order('desc').paginate(args.paginationOpts)
-      return { ...page, page: page.page.map(row => ({ id: row._id, provider: 'firecrawl', operation: 'retrieval', status: row.status, credits: row.creditsUsed, at: row.createdAt })) }
+      return { ...page, page: page.page.map(row => ({ id: row._id, provider: 'firecrawl', operation: 'retrieval', status: row.status, model: undefined, role: undefined, tokens: undefined, estimatedCostUsd: undefined, credits: row.creditsUsed, at: row.createdAt })) }
     }
     if (args.kind === 'pipeline') {
       const page = await ctx.db.query('aiCalls').order('desc').paginate(args.paginationOpts)
