@@ -1,3 +1,4 @@
+import { matchesIssueEtag } from './issues'
 import { expect, test } from 'vitest'
 import { issueShareHtml } from './html'
 
@@ -9,4 +10,11 @@ test('share metadata escapes hostile title and summary content while retaining a
   expect(html).toContain('name="twitter:card"')
   expect(html).toContain('Limited information')
   expect(html).toContain('href="https://example.test/issues/record"')
+})
+
+test('share revalidation accepts the ETag returned by compressed hosting', () => {
+  expect(matchesIssueEtag('W/"version-gzip"', 'version')).toBe(true)
+  expect(matchesIssueEtag('"older", W/"version"', 'version')).toBe(true)
+  expect(matchesIssueEtag('"older-gzip"', 'version')).toBe(false)
+  expect(matchesIssueEtag(null, 'version')).toBe(false)
 })
