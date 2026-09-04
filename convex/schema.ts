@@ -1365,6 +1365,7 @@ export default defineSchema({
     .index('by_build', ['issueBuildId']),
 
   issues: defineTable({
+    attentionReason: v.optional(v.string()),
     issueKey: v.string(),
     slug: v.string(),
     governmentBodyId: v.id('governmentBodies'),

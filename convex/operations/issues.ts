@@ -279,9 +279,14 @@ export const refreshLinkedIssues = internalMutation({
         if (record?.currentPublishedVersionId !== member.publicationVersionId) changed = true
       }
       if (!changed) continue
-      const recordIds = await extensionInputs(ctx, issue._id, args.recordId)
-      refreshed.add(issue._id)
-      await startIssueBuildTransaction(ctx, { recordIds, targetIssueId: issue._id, trigger: 'decision_published', originRunId: args.originRunId })
+      try {
+        const recordIds = await extensionInputs(ctx, issue._id, args.recordId)
+        refreshed.add(issue._id)
+        await startIssueBuildTransaction(ctx, { recordIds, targetIssueId: issue._id, trigger: 'decision_published', originRunId: args.originRunId })
+      } catch (error) {
+        if (!String(error).includes('issue_extension_requires_owner')) throw error
+        await ctx.db.patch(issue._id, { attentionReason: 'More than nine members changed together. Review this timeline before refreshing it.' })
+      }
     }
     return null
   },

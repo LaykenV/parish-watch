@@ -1280,9 +1280,9 @@ test('an extension retains the original issue URL and old members beyond the mod
     const record = await ctx.db.get(template.recordId)
     const publication = await ctx.db.get(template.publicationVersionId)
     for (let index = 0; index < 9; index++) {
-      const { _id: recordId, _creationTime: recordTime, ...recordFields } = record!
+      const { _id: _recordId, _creationTime: _recordTime, ...recordFields } = record!
       const newRecordId = await ctx.db.insert('decisionRecords', { ...recordFields, recordKey: `retained-${index}`, sourceRecordId: `retained-${index}` })
-      const { _id: publicationId, _creationTime: publicationTime, ...publicationFields } = publication!
+      const { _id: _publicationId, _creationTime: _publicationTime, ...publicationFields } = publication!
       const newPublicationId = await ctx.db.insert('publicationVersions', { ...publicationFields, recordId: newRecordId })
       await ctx.db.patch(newRecordId, { currentPublishedVersionId: newPublicationId })
       const { _id, _creationTime, ...link } = template
