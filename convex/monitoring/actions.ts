@@ -14,7 +14,7 @@ const firecrawl = new FirecrawlClient(components.firecrawl)
 
 export const discover = internalAction({
   args: { runId: v.id('sourceMonitoringRuns') }, returns: v.boolean(),
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<boolean> => {
     const { registry, proposal } = await ctx.runQuery(internal.monitoring.ledger.context, args)
     if (registry.seedUrls.length > 10) throw new Error('monitoring_seed_limit')
     await ctx.runMutation(internal.monitoring.ledger.addDocuments, { ...args, urls: registry.seedUrls })
