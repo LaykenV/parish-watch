@@ -52,9 +52,27 @@ export const search = query({
     if ((args.q?.length ?? 0) > 300 || args.paginationOpts.numItems > 50) throw new Error('Search request exceeds its bounds.')
     const needle = args.q?.trim()
     const records = needle ? await ctx.db.query('publishedSearchEntries').withSearchIndex('search_text', q => q.search('searchText', needle)).paginate(args.paginationOpts) : await ctx.db.query('publishedSearchEntries').withIndex('by_date').order(args.sort === 'oldest' ? 'asc' : 'desc').paginate(args.paginationOpts)
+    const currentRows = []
+    for (const row of records.page) {
+      if (row.kind === 'issue') {
+        const issue = await ctx.db.query('issues').withIndex('by_slug', q => q.eq('slug', row.key.slice('issue:'.length))).unique()
+        if (!issue?.currentVersionId || issue.currentVersionId !== row.revision) continue
+        const links = await ctx.db.query('issueDecisionLinks').withIndex('by_issue_version', q => q.eq('issueVersionId', issue.currentVersionId!)).take(201)
+        if (links.length > 200) continue
+        let current = true
+        for (const link of links) if ((await ctx.db.get(link.recordId))?.currentPublishedVersionId !== link.publicationVersionId) current = false
+        if (!current) continue
+      } else {
+        const versionId = ctx.db.normalizeId('publicationVersions', row.revision)
+        const version = versionId ? await ctx.db.get(versionId) : null
+        const record = version ? await ctx.db.get(version.recordId) : null
+        if (!version?.payload || version.mode === 'withheld' || record?.currentPublishedVersionId !== version._id) continue
+      }
+      currentRows.push(row)
+    }
     const now = Date.now()
     const day = 86_400_000
-    return { ...records, page: records.page.filter(row => {
+    return { ...records, page: currentRows.filter(row => {
       if (args.kind && row.kind !== args.kind) return false
       if (args.place && row.placeName !== args.place) return false
       if (args.body && row.bodyName !== args.body) return false

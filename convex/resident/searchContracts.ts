@@ -1,4 +1,5 @@
 import { v } from 'convex/values'
+
 export const searchEntry = v.object({
   key: v.string(), kind: v.union(v.literal('decision'), v.literal('issue'), v.literal('meeting'), v.literal('body')),
   revision: v.string(), href: v.string(), title: v.string(), summary: v.string(),
