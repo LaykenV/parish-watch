@@ -37,6 +37,7 @@ test('ten passing gates promote once and preserve the previous registry', async 
 
   await t.run(async (ctx) => {
     expect((await ctx.db.get(seeded.bodyId))?.publicStatus).toBe('supported')
+    expect((await ctx.db.query('coverageIncidents').withIndex('by_registry_id_and_state', q => q.eq('registryId', seeded.registryId).eq('state', 'resolved')).take(30))).toHaveLength(1)
     expect((await ctx.db.get(seeded.registryId))?.status).toBe('supported')
     expect((await ctx.db.get(seeded.previousRegistryId))?.status).toBe('paused')
     expect((await ctx.db.get(seeded.jurisdictionId))?.publicStatus).toBe(
@@ -95,6 +96,7 @@ test('ten passing gates promote once and preserve the previous registry', async 
   ).rejects.toThrow('cannot recover')
 
   await t.run(async (ctx) => {
+    await ctx.db.insert('coverageIncidents', { registryId: seeded.registryId, code: 'source_check_incomplete', state: 'open', summary: 'Source check incomplete.', firstSeenAt: 1, lastSeenAt: 1, attempts: 3 })
     const generation =
       (await ctx.db.get(seeded.registryId))?.statusGeneration ?? 0
     for (let gateNumber = 1; gateNumber <= 10; gateNumber += 1) {
