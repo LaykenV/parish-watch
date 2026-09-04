@@ -10,11 +10,13 @@ export async function loadTimelineMembers(ctx: Pick<QueryCtx | MutationCtx, 'db'
   return links
 }
 
-export async function extensionInputs(ctx: Pick<QueryCtx | MutationCtx, 'db'>, issueId: Id<'issues'>, recordId: Id<'decisionRecords'>): Promise<Id<'decisionRecords'>[]> {
+export async function extensionInputs(ctx: Pick<QueryCtx | MutationCtx, 'db'>, issueId: Id<'issues'>, recordId: Id<'decisionRecords'>, matchedRecordIds: Id<'decisionRecords'>[] = []): Promise<Id<'decisionRecords'>[]> {
   const issue = await ctx.db.get(issueId)
   if (!issue?.currentVersionId) throw new Error('issue_not_published')
   const links = await loadTimelineMembers(ctx, issue.currentVersionId)
   const changed = new Set<Id<'decisionRecords'>>([recordId])
+  const retained = new Set(links.map(link => link.recordId))
+  for (const match of matchedRecordIds) if (!retained.has(match)) changed.add(match)
   for (const link of links) {
     const record = await ctx.db.get(link.recordId)
     if (record?.currentPublishedVersionId !== link.publicationVersionId) changed.add(link.recordId)

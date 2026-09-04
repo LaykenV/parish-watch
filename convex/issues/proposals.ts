@@ -101,7 +101,7 @@ export const checkpoint = internalMutation({
       return true
     }
     const targetIssueId = [...issueIds][0]
-    const recordIds = targetIssueId ? await extensionInputs(ctx, targetIssueId, proposal.recordId) : [proposal.recordId, ...matches]
+    const recordIds = targetIssueId ? await extensionInputs(ctx, targetIssueId, proposal.recordId, matches) : [proposal.recordId, ...matches]
     const build = await startIssueBuildTransaction(ctx, { recordIds, targetIssueId, originRunId: proposal.originRunId, trigger: 'decision_published' })
     await ctx.db.patch(proposal._id, { state: 'proposed', issueBuildId: build.issueBuildId, updatedAt: Date.now() })
     return true
