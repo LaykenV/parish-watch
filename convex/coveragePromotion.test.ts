@@ -52,15 +52,17 @@ test('ten passing gates promote once and preserve the previous registry', async 
   const ownerView = await owner.query(api.coverage.operations.run, {
     runId: seeded.runId,
   })
-  expect(ownerView?.proposals[0].samples).toEqual([
-    {
-      sourceKind: 'agenda',
-      role: 'current',
-      state: 'failed_terminal',
-      canonicalUrl: null,
-      errorClass: 'missing_required_candidate',
-    },
-  ])
+  expect(ownerView?.proposals[0].samples).toHaveLength(1)
+  expect(ownerView?.proposals[0].samples[0]).toMatchObject({
+    sourceKind: 'agenda',
+    role: 'current',
+    state: 'failed_terminal',
+    canonicalUrl: null,
+    errorClass: 'missing_required_candidate',
+    pipelineRunId: null,
+    canExtractEvidence: false,
+    canRunFailureProbe: false,
+  })
   expect(ownerView?.proposals[0].samples[0]).not.toHaveProperty('snapshotId')
 
   await expect(
@@ -163,7 +165,7 @@ test('the launch seed never rewrites a live registry', async () => {
   })
 })
 
-test('a rejected revision candidate cannot fill a required sample slot', async () => {
+test('a rejected discovery candidate cannot replace checked samples', async () => {
   const t = convexTest(schema, modules)
   const owner = await signInOwner(t)
   const ids = await t.run(async (ctx) => {
@@ -234,16 +236,16 @@ test('a rejected revision candidate cannot fill a required sample slot', async (
     const samples = await ctx.db
       .query('coverageRepresentativeSamples')
       .withIndex('by_proposal_and_role', (query) =>
-        query.eq('proposalId', proposal.proposalId).eq('role', 'revision'),
+        query.eq('proposalId', proposal.proposalId),
       )
       .collect()
-    expect(samples).toHaveLength(1)
-    expect(samples[0]).toMatchObject({
-      state: 'failed_terminal',
-      errorClass: 'missing_required_candidate',
-    })
-    expect(samples[0].candidateId).toBeUndefined()
-    expect(samples[0].candidateId).not.toBe(ids.rejectedId)
+    expect(samples).toHaveLength(4)
+    expect(samples.every((sample) => sample.candidateId !== undefined)).toBe(
+      true,
+    )
+    expect(
+      samples.every((sample) => sample.candidateId !== ids.rejectedId),
+    ).toBe(true)
   })
 })
 

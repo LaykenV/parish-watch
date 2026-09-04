@@ -841,7 +841,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
   expect(messages[0].content).toContain('JSON Pointer with a leading slash')
   expect(messages[0].content).toContain('Do not add JSON quotes')
   expect(messages[0].content).toContain(
-    'one contiguous source span states both the meeting date and time',
+    'one contiguous source span that contains both the date and time',
   )
   expect(messages[0].content).toContain(
     'When minutes record a motion and vote, use vote',
