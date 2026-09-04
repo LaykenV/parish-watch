@@ -41,7 +41,7 @@ export const discover = internalAction({
         if (links.length > 500) throw new Error('monitoring_listing_overflow')
         const documents = links.filter(isDocumentUrl)
         for (let start = 0; start < documents.length; start += 100) await ctx.runMutation(internal.monitoring.ledger.addDocuments, { ...args, urls: documents.slice(start, start + 100) })
-        for (const link of links.filter(link => !isDocumentUrl(link) && /(?:20\d{2}.*(?:meeting|agenda|minute)|(?:meeting|agenda|minute).*20\d{2})/i.test(link))) if (!visited.has(link) && !listingUrls.includes(link)) listingUrls.push(link)
+        for (const link of links.filter(candidate => !isDocumentUrl(candidate) && /(?:20\d{2}.*(?:meeting|agenda|minute)|(?:meeting|agenda|minute).*20\d{2})/i.test(candidate))) if (!visited.has(link) && !listingUrls.includes(link)) listingUrls.push(link)
         status = 'succeeded'
       } catch {
         failures++
