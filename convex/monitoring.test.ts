@@ -33,3 +33,44 @@ test('deployment switch keeps scheduled monitoring dormant', async () => {
   await t.mutation(internal.monitoring.ledger.tick, {})
   expect(await t.run(ctx => ctx.db.query('sourceMonitoringRuns').collect())).toEqual([])
 })
+
+async function monitoringFixture() {
+  const t = convexTest(schema, modules)
+  vi.stubEnv('SOURCE_MONITORING_ENABLED', 'true')
+  const ids = await t.run(async ctx => {
+    const jurisdictionId = await ctx.db.insert('jurisdictions', { name: 'Lafayette Parish', slug: 'lafayette-parish', state: 'LA', type: 'parish', publicStatus: 'supported' })
+    const bodyId = await ctx.db.insert('governmentBodies', { jurisdictionId, name: 'Lafayette City Council', slug: 'lafayette-city-council', bodyType: 'city_council', publicStatus: 'supported' })
+    const registryId = await ctx.db.insert('sourceRegistries', { governmentBodyId: bodyId, officialDomains: ['www.lafayettela.gov'], seedUrls: ['https://www.lafayettela.gov/agenda.pdf'], sourceKinds: ['agenda'], expectedCadence: { kind: 'monthly' }, discoveryMode: 'dynamic', status: 'supported', statusGeneration: 1 })
+    const userId = await ctx.db.insert('users', { email: 'owner@example.test', googleAccountId: 'owner', emailVerified: true, createdAt: 1, updatedAt: 1, lastSignedInAt: 1 })
+    const compilerRunId = await ctx.db.insert('coverageCompilerRuns', { bodyKey: 'lafayette-city-council', jurisdictionSlug: 'lafayette-parish', rootManifestVersion: 'v1', compilerVersion: 'test', idempotencyKey: 'monitor-test', attempt: 1, state: 'succeeded', requestedByUserId: userId, startedAt: 1 })
+    const proposalId = await ctx.db.insert('coverageRegistryProposals', { runId: compilerRunId, governmentBodyId: bodyId, registryId, bodyKey: 'lafayette-city-council', proposalVersion: 1, status: 'promoted', rootManifestVersion: 'v1', goldSetVersion: 'test', evaluatorVersion: 'test', proposedDomains: ['www.lafayettela.gov'], proposedSeedUrls: ['https://www.lafayettela.gov/agenda.pdf'], proposedSourceKinds: ['agenda'], diffHash: 'test', diffSummary: [], createdAt: 1 })
+    const policyId = await ctx.db.insert('sourceMonitoringPolicies', { registryId, proposalId, enabled: true, generation: 1, intervalHours: 24, documentsPerRun: 1, targetsPerRun: 1, dailyCallLimit: 10, startsAt: Date.now() - 86_400_000, activatedAt: Date.now(), baselineComplete: false, nextCheckAt: 0, failures: 0, createdAt: 1, updatedAt: 1 })
+    const runId = await ctx.db.insert('sourceMonitoringRuns', { policyId, registryId, generation: 1, registryGeneration: 1, state: 'running', baseline: true, documentsChecked: 0, targetsStarted: 0, startedAt: Date.now() })
+    await ctx.db.patch(policyId, { activeRunId: runId })
+    return { registryId, policyId, runId, bodyId, proposalId, userId }
+  })
+  return { t, ...ids }
+}
+
+test('a failed document backs off so the next approved document can run', async () => {
+  const { t, runId } = await monitoringFixture()
+  await t.mutation(internal.monitoring.ledger.addDocuments, { runId, urls: ['https://www.lafayettela.gov/dead-agenda.pdf', 'https://www.lafayettela.gov/good-agenda.pdf', 'https://unapproved.example/agenda.pdf'] })
+  const first = await t.query(internal.monitoring.ledger.dueDocuments, { runId })
+  expect(first).toHaveLength(1)
+  await t.mutation(internal.monitoring.ledger.deferDocument, { runId, documentId: first[0]._id })
+  const next = await t.query(internal.monitoring.ledger.dueDocuments, { runId })
+  expect(next).toHaveLength(1)
+  expect(next[0]._id).not.toBe(first[0]._id)
+  expect(await t.run(ctx => ctx.db.query('monitoredDocuments').collect())).toHaveLength(2)
+})
+
+test('pause invalidates in-flight monitoring and publication authority', async () => {
+  const { t, runId, policyId, registryId } = await monitoringFixture()
+  const pipelineId = await t.run(async ctx => {
+    const id = await ctx.db.insert('pipelineRuns', { registryId, trigger: 'manual_extraction', state: 'running', processorVersion: 'test', startedAt: Date.now(), monitorPolicyId: policyId, monitorGeneration: 1, monitorRegistryGeneration: 1 })
+    await ctx.db.patch(policyId, { enabled: false, generation: 2 })
+    return id
+  })
+  await expect(t.query(internal.monitoring.ledger.context, { runId })).rejects.toThrow('monitoring_stopped')
+  await expect(t.query(internal.monitoring.ledger.pipelineGuard, { runId: pipelineId })).rejects.toThrow('monitoring_stopped')
+})
