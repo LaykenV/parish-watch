@@ -664,7 +664,8 @@ export default defineSchema({
     promotedByUserId: v.optional(v.id('users')),
   })
     .index('by_run_and_version', ['runId', 'proposalVersion'])
-    .index('by_body_and_status', ['bodyKey', 'status']),
+    .index('by_body_and_status', ['bodyKey', 'status'])
+    .index('by_body_and_created_at', ['bodyKey', 'createdAt']),
 
   coverageRepresentativeSamples: defineTable({
     proposalId: v.id('coverageRegistryProposals'),

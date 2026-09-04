@@ -93,6 +93,9 @@ expand the promise.
   evaluator must have ten passing results, including representative source URLs
   checked by the production backend. Degrade, pause, and recovery change status
   while retaining prior snapshots, publications, and registries.
+- A body accepts promotion only from its newest active proposal. Promotion
+  supersedes sibling proposals, and status controls reject stale promoted
+  proposals.
 - Test the backend pipeline against representative real sources before building
   a polished UI.
 - Keep current and upcoming decisions primary, with approximately 12 months of

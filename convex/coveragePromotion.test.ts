@@ -263,6 +263,41 @@ test('one failed gate cannot be overridden by owner confirmation', async () => {
   })
 })
 
+test('only the newest proposal can promote or change coverage status', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  const older = await seedReadyProposal(t, true)
+  const newer = await seedReplacementProposal(t, older)
+
+  await expect(
+    owner.mutation(api.coverage.promotion.confirmPromotion, {
+      proposalId: older.proposalId,
+    }),
+  ).rejects.toThrow('newer registry proposal')
+  await expect(
+    owner.mutation(api.coverage.promotion.confirmPromotion, {
+      proposalId: newer.proposalId,
+    }),
+  ).resolves.toEqual({ promoted: true, replayed: false })
+
+  await t.run(async (ctx) => {
+    expect((await ctx.db.get(older.proposalId))?.status).toBe('superseded')
+    expect((await ctx.db.get(newer.proposalId))?.status).toBe('promoted')
+    expect((await ctx.db.get(newer.registryId))?.status).toBe('supported')
+    await ctx.db.patch(older.proposalId, { status: 'promoted' })
+  })
+  await expect(
+    owner.mutation(api.coverage.promotion.setCoverageStatus, {
+      proposalId: older.proposalId,
+      status: 'degraded',
+    }),
+  ).resolves.toEqual({ changed: false, recovered: false })
+  await t.run(async (ctx) => {
+    expect((await ctx.db.get(older.bodyId))?.publicStatus).toBe('supported')
+    expect((await ctx.db.get(newer.registryId))?.status).toBe('supported')
+  })
+})
+
 test('canceled coverage runs cannot restart validation or evaluation', async () => {
   const t = convexTest(schema, modules)
   const owner = await signInOwner(t)
@@ -524,6 +559,70 @@ async function seedReadyProposal(t: TestConvex, allPass: boolean) {
     }
   })
   return ids
+}
+
+async function seedReplacementProposal(
+  t: TestConvex,
+  older: Awaited<ReturnType<typeof seedReadyProposal>>,
+) {
+  return await t.run(async (ctx) => {
+    const user = await ctx.db.query('users').first()
+    const olderProposal = await ctx.db.get(older.proposalId)
+    if (!user || !olderProposal) throw new Error('Older proposal is missing')
+    const registryId = await ctx.db.insert('sourceRegistries', {
+      governmentBodyId: older.bodyId,
+      officialDomains: ['www.lafayettela.gov'],
+      seedUrls: ['https://www.lafayettela.gov/newer'],
+      sourceKinds: ['agenda', 'minutes'],
+      expectedCadence: { kind: 'meeting_cycle' },
+      discoveryMode: 'dynamic',
+      status: 'validating',
+    })
+    const runId = await ctx.db.insert('coverageCompilerRuns', {
+      bodyKey: 'lafayette-planning-commission',
+      jurisdictionSlug: 'lafayette-parish',
+      rootManifestVersion: 'v1',
+      compilerVersion: 'v1',
+      idempotencyKey: 'replacement-promotion-test',
+      attempt: 1,
+      state: 'succeeded',
+      currentStage: 'evaluate_gates',
+      requestedByUserId: user._id,
+      startedAt: Date.now(),
+      completedAt: Date.now(),
+    })
+    const proposalId = await ctx.db.insert('coverageRegistryProposals', {
+      runId,
+      governmentBodyId: older.bodyId,
+      registryId,
+      bodyKey: 'lafayette-planning-commission',
+      proposalVersion: 1,
+      status: 'ready',
+      rootManifestVersion: 'v1',
+      goldSetVersion: 'launch-bodies-v1',
+      evaluatorVersion: COVERAGE_EVALUATOR_VERSION,
+      proposedDomains: ['www.lafayettela.gov'],
+      proposedSeedUrls: ['https://www.lafayettela.gov/newer'],
+      proposedSourceKinds: ['agenda', 'minutes'],
+      diffHash: 'replacement-diff-hash',
+      diffSummary: ['Replace the source seed set.'],
+      createdAt: olderProposal.createdAt + 1,
+      evaluatedAt: Date.now(),
+    })
+    for (let gateNumber = 1; gateNumber <= 10; gateNumber += 1) {
+      await ctx.db.insert('coverageGateEvaluations', {
+        proposalId,
+        gateNumber,
+        gateKey: `gate_${gateNumber}`,
+        passed: true,
+        detail: 'Fresh replacement evidence.',
+        evidenceRefs: ['test'],
+        evaluatorVersion: COVERAGE_EVALUATOR_VERSION,
+        createdAt: Date.now(),
+      })
+    }
+    return { proposalId, registryId, runId }
+  })
 }
 
 async function drainScheduled(t: TestConvex): Promise<void> {

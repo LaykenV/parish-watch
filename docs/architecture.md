@@ -499,8 +499,10 @@ immutable results. An owner confirmation promotes only a `ready` proposal whose
 latest evaluator version still has ten passing results. Development link checks
 remain available for QA but cannot satisfy gate 10. Promotion changes the
 proposed registry and body in one transaction, pauses the previous live
-registry, and keeps all old snapshots and publications. Degradation and pause
-never delete evidence. A status change increments the registry generation.
+registry, and supersedes every other proposal for that body. Status controls
+act only on the newest promoted proposal. The system keeps all old snapshots
+and publications. Degradation and pause never delete evidence. A status change
+increments the registry generation.
 Recovery requires a new ten-gate evaluation recorded against that generation,
 so results from before the degradation cannot restore coverage.
 

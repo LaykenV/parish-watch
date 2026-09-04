@@ -24,6 +24,12 @@ export const confirmPromotion = mutation({
         'Owner confirmation cannot override a blocked coverage gate.',
       )
     }
+    if (!(await isNewestActiveProposal(ctx, proposal))) {
+      throw promotionError(
+        'proposal_stale',
+        'A newer registry proposal exists for this body.',
+      )
+    }
     if (!(await allCurrentGatesPass(ctx, proposal))) {
       throw promotionError(
         'coverage_gates_stale',
@@ -68,6 +74,18 @@ export const confirmPromotion = mutation({
       promotedAt: now,
       promotedByUserId: owner._id,
     })
+    const siblingProposals = await ctx.db
+      .query('coverageRegistryProposals')
+      .withIndex('by_body_and_created_at', (index) =>
+        index.eq('bodyKey', proposal.bodyKey),
+      )
+      .order('desc')
+      .take(50)
+    for (const sibling of siblingProposals) {
+      if (sibling._id !== proposal._id && sibling.status !== 'superseded') {
+        await ctx.db.patch(sibling._id, { status: 'superseded' })
+      }
+    }
     await updateJurisdictionStatus(ctx, body.jurisdictionId)
     return { promoted: true, replayed: false }
   },
@@ -92,6 +110,16 @@ export const setCoverageStatus = mutation({
     const body = await ctx.db.get(proposal.governmentBodyId)
     const registry = await ctx.db.get(proposal.registryId)
     if (!body || !registry) return { changed: false, recovered: false }
+    const latestPromoted = await ctx.db
+      .query('coverageRegistryProposals')
+      .withIndex('by_body_and_status', (index) =>
+        index.eq('bodyKey', proposal.bodyKey).eq('status', 'promoted'),
+      )
+      .order('desc')
+      .first()
+    if (latestPromoted?._id !== proposal._id) {
+      return { changed: false, recovered: false }
+    }
     if (
       args.status === 'supported' &&
       !(await allCurrentGatesPass(ctx, proposal))
@@ -141,6 +169,23 @@ async function allCurrentGatesPass(
       result?.passed === true &&
       result.evaluatorVersion === COVERAGE_EVALUATOR_VERSION &&
       (result.registryStatusGeneration ?? 0) === statusGeneration,
+  )
+}
+
+async function isNewestActiveProposal(
+  ctx: MutationCtx,
+  proposal: Doc<'coverageRegistryProposals'>,
+): Promise<boolean> {
+  const proposals = await ctx.db
+    .query('coverageRegistryProposals')
+    .withIndex('by_body_and_created_at', (index) =>
+      index.eq('bodyKey', proposal.bodyKey),
+    )
+    .order('desc')
+    .take(50)
+  return (
+    proposals.find((candidate) => candidate.status !== 'superseded')?._id ===
+    proposal._id
   )
 }
 
