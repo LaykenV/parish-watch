@@ -42,7 +42,7 @@ export function inventoryContract(value: InventoryResult, source: string, bodyNa
   const identities = new Set<string>()
   for (const target of value.targets) {
     if (!target.title.trim() || target.title.length > 300 || target.excerpt.length > 1_000 || !target.excerpt.trim() || !normalized.includes(target.excerpt.replace(/\s+/g, ' '))) return 'Inventory target citation does not resolve.'
-    if (target.printedId !== null && (!target.printedId.trim() || target.printedId.length > 100 || !target.excerpt.includes(target.printedId))) return 'Printed identifier is not in the cited item.'
+    if (target.printedId !== null && (!target.printedId.trim() || target.printedId.length > 100 || /[\r\n]/.test(target.printedId) || !target.excerpt.includes(target.printedId))) return 'Printed identifier is not in the cited item.'
     const identity = target.printedId ?? target.title
     if (identities.has(identity)) return 'Inventory contains ambiguous duplicate targets.'
     identities.add(identity)

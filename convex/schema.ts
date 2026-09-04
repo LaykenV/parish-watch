@@ -862,6 +862,7 @@ export default defineSchema({
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
   })
+    .index('by_upstream_run', ['upstreamRunId'])
     .index('by_state_and_started_time', ['state', 'startedAt'])
     .index('by_registry_and_started_time', ['registryId', 'startedAt'])
     .index('by_idempotency_key', ['idempotencyKey']),

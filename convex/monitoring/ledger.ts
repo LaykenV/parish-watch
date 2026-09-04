@@ -256,6 +256,7 @@ export const dispatchTargets = internalMutation({
         await ctx.db.patch(target._id, { state: 'failed', updatedAt: Date.now() })
         continue
       }
+      try {
       const result = await ctx.runMutation(internal.operations.extract.startSnapshotExtraction, {
         registryId: target.registryId, snapshotId: target.snapshotId, sourceKind: target.sourceKind,
         targetRecordId: target.targetRecordId, sourceRecordIdProvenance: target.sourceRecordIdProvenance,
@@ -263,6 +264,11 @@ export const dispatchTargets = internalMutation({
       })
       await ctx.db.patch(target._id, { pipelineRunId: result.runId, state: 'running', attempts: (target.attempts ?? 0) + 1, retryAt: undefined, updatedAt: Date.now() })
       started++
+      } catch (error) {
+        if (String(error).includes('monitoring_stopped')) throw error
+        const attempts = (target.attempts ?? 0) + 1
+        await ctx.db.patch(target._id, { state: attempts < 3 ? 'pending' : 'failed', attempts, retryAt: Date.now() + DAY_MS, updatedAt: Date.now() })
+      }
     }
     return started
   },
@@ -342,6 +348,10 @@ export const reconcileTargets = internalMutation({
       if (!extraction?.candidateId) continue
       const versions = await ctx.db.query('publicationVersions').withIndex('by_candidate', q => q.eq('candidateId', extraction.candidateId!)).order('desc').first()
       const version = versions
+      if (!version) {
+        const publication = await ctx.db.query('pipelineRuns').withIndex('by_upstream_run', q => q.eq('upstreamRunId', run._id)).order('desc').first()
+        if (publication?.state === 'failed_terminal' || publication?.state === 'failed_retryable' || publication?.state === 'superseded' || (!publication && (run.completedAt ?? 0) < Date.now() - DAY_MS)) await ctx.db.patch(target._id, { state: (target.attempts ?? 1) < 3 ? 'pending' : 'failed', retryAt: Date.now() + DAY_MS, updatedAt: Date.now() })
+      }
       if (version) await ctx.db.patch(target._id, { state: version.mode === 'withheld' ? 'withheld' : 'published', updatedAt: Date.now() })
     }
     return null
