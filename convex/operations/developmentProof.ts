@@ -1,10 +1,15 @@
 import { v } from 'convex/values'
 import { paginationOptsValidator } from 'convex/server'
 import { internal } from '../_generated/api'
+import { completeStructuredDirectFallback } from '../ai/provider'
 import { normalizeForMatch } from '../extraction/textMatch'
 import { sha256HexOfText } from '../sources/hashing'
 import { env, internalAction, internalMutation, internalQuery } from '../_generated/server'
 
+// Exact normalization used by the first published corpus at 74ce97e.
+function originalCitationMatch(text: string): string {
+  return text.replace(/\u00a0/g, ' ').replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim()
+}
 const PROOF_INBOX = 'public-parish-slice9-dev-20260904'
 function requireDevelopment() {
   if (env.CONVEX_SITE_URL !== 'https://woozy-wren-227.convex.site') throw new Error('Development proof is unavailable on this deployment.')
@@ -86,7 +91,7 @@ export const auditPublishedEvidence = internalAction({
   handler: async (ctx, args): Promise<{ records: number; citations: number; legacyOffsets: number; problems: string[]; isDone: boolean; continueCursor: string }> => {
     requireDevelopment()
     const page = await ctx.runQuery(internal.operations.developmentProof.publishedEvidencePage, args)
-    const texts = new Map<string, { current: string; legacy: string }>()
+    const texts = new Map<string, { current: string; legacy: string; original: string }>()
     const problems: string[] = []
     let citations = 0
     let legacyOffsets = 0
@@ -97,14 +102,14 @@ export const auditPublishedEvidence = internalAction({
         const blob = await ctx.storage.get(snapshot.normalizedStorageId)
         const text = blob ? await blob.text() : ''
         if (!blob || await sha256HexOfText(text) !== snapshot.normalizedContentHash) problems.push(`${record.recordKey}: snapshot hash`)
-        texts.set(snapshot._id, { current: normalizeForMatch(text), legacy: normalizeForMatch(text, { preserveBoldEmphasis: true }) })
+        texts.set(snapshot._id, { current: normalizeForMatch(text), legacy: normalizeForMatch(text, { preserveBoldEmphasis: true }), original: originalCitationMatch(text) })
       }
       for (const citation of record.citations) {
         citations++
         const text = texts.get(citation.snapshotId)
         if (text?.current.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt)) continue
         // Publication offsets before 78df4a6 retained bold Markdown markers.
-        if (text?.legacy.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt, { preserveBoldEmphasis: true })) legacyOffsets++
+        if (text?.legacy.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt, { preserveBoldEmphasis: true }) || text?.original.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === originalCitationMatch(citation.excerpt)) legacyOffsets++
         else problems.push(`${record.recordKey} ${citation.fieldPath}: offsets ${citation.normalizedStartOffset}-${citation.normalizedEndOffset}, current ${text?.current.indexOf(normalizeForMatch(citation.excerpt))}, legacy ${text?.legacy.indexOf(normalizeForMatch(citation.excerpt, { preserveBoldEmphasis: true }))}`)
       }
     }
@@ -128,5 +133,18 @@ export const resetUsageRollups = internalMutation({
     for (const row of rows) await ctx.db.patch(row._id, { usageAggregatedAt: undefined })
     for (const row of daily) await ctx.db.delete(row._id)
     return daily.length
+  },
+})
+
+export const directFallbackProbe = internalAction({
+  args: {}, returns: v.object({ outcome: v.string(), route: v.string(), model: v.string(), tokens: v.union(v.number(), v.null()) }),
+  handler: async () => {
+    requireDevelopment()
+    const result = await completeStructuredDirectFallback({
+      request: { role: 'MODEL_FAST', reasoningEffort: 'low', maxCompletionTokens: 200, schemaName: 'development_provider_probe', jsonSchema: { type: 'object', additionalProperties: false, required: ['status'], properties: { status: { type: 'string', enum: ['ready'] } } }, messages: [{ role: 'user', content: 'Return status ready. This checks the development provider route and makes no civic claim.' }] },
+      responseValidator: v.object({ status: v.literal('ready') }), contractCheck: () => null,
+    })
+    if (result.outcome !== 'success') throw new Error('Development fallback probe did not produce valid structured output.')
+    return { outcome: result.outcome, route: result.result.route, model: result.result.modelId, tokens: result.result.usage.totalTokens }
   },
 })
