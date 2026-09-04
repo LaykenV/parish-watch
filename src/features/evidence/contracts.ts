@@ -110,6 +110,7 @@ export type MarkedDate = {
 }
 
 export type IssueDetailData = {
+  coverageNote?: string
   body: string
   changes: ChangeEntry[]
   deadline?: MarkedDate
@@ -153,6 +154,7 @@ export type DecisionField = {
 }
 
 export type DecisionDetailData = {
+  coverageNote?: string
   body: string
   changes: ChangeEntry[]
   documents: SourceDocument[]
@@ -204,6 +206,7 @@ export type MeetingDecisionRow = {
 }
 
 export type MeetingDetailData = {
+  coverageNote?: string
   artifacts: MeetingArtifact[]
   body: string
   date: string

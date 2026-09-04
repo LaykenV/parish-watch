@@ -46,7 +46,7 @@ export function toIssueFixture(
 ): IssueDetailFixture | null {
   const placeSlug = toAreaSlug(published.placeSlug)
   if (!placeSlug) return null
-  const citations = toCitationMap(published.citations)
+  const citations = toCitationMap(published.citations, coverageWarning(published.coverageStatus))
   const firstCitation = (ids: string[]) =>
     ids.find((id) => citations[id] !== undefined)
   const checked = newestRetrieval(published.citations)
@@ -71,6 +71,7 @@ export function toIssueFixture(
     citations,
     issue: {
       body: published.bodyName,
+      coverageNote: coverageWarning(published.coverageStatus),
       changes: published.changes.map((change) => ({
         citationId: published.citations.find((citation) =>
           change.fieldPaths.includes(citation.fieldPath),
@@ -158,7 +159,7 @@ export function toDecisionFixture(
   published: PublishedDecision,
 ): DecisionDetailFixture | null {
   if (!toAreaSlug(published.placeSlug)) return null
-  const citations = toCitationMap(published.citations)
+  const citations = toCitationMap(published.citations, coverageWarning(published.coverageStatus))
   const citationFor = (path: string) =>
     published.citations.find((citation) => citation.fieldPath === path)?.id
   const fields = [
@@ -218,6 +219,7 @@ export function toDecisionFixture(
     citations,
     decision: {
       body: published.bodyName,
+      coverageNote: coverageWarning(published.coverageStatus),
       changes: published.changes.map((change) => ({
         citationId: published.citations.find((citation) =>
           change.fieldPaths.includes(citation.fieldPath),
@@ -276,7 +278,7 @@ export function toMeetingFixture(
 ): { fixture: MeetingDetailFixture; issues: [] } | null {
   const placeSlug = toAreaSlug(published.placeSlug)
   if (!placeSlug) return null
-  const citations = toCitationMap(published.citations)
+  const citations = toCitationMap(published.citations, coverageWarning(published.coverageStatus))
   const documents = toDocuments(published.citations)
   const checked = newestRetrieval(published.citations)
   const issueSlugs = [
@@ -299,6 +301,7 @@ export function toMeetingFixture(
           status: 'Available',
         })),
         body: published.bodyName,
+      coverageNote: coverageWarning(published.coverageStatus),
         date: published.meetingAt,
         decisions: published.decisions.map((decision) => ({
           citationId: decision.citations.find(
@@ -342,11 +345,12 @@ export function toMeetingFixture(
   }
 }
 
-function toCitationMap(values: PublishedCitation[]): CitationMap {
+function toCitationMap(values: PublishedCitation[], warning?: string): CitationMap {
   return Object.fromEntries(
     values.map((citation) => {
       const value: CitationData = {
         body: citation.bodyName,
+        warning,
         documentKind: documentKind(citation.sourceKind),
         documentTitle: citation.documentTitle,
         excerpt: { quote: citation.excerpt },
@@ -583,4 +587,11 @@ function meetingStatus(decisions: PublishedMeeting['decisions']): string {
     return 'Postponed'
   }
   return 'Status not stated'
+}
+
+export function coverageWarning(status?: string): string | undefined {
+  if (status === 'degraded') return 'Some source checks for this government body are incomplete. Dated accepted evidence remains available; newer decisions may be missing. See Coverage for current limitations.'
+  if (status === 'paused') return 'Source checks for this government body are paused. This page preserves dated accepted evidence and does not promise current coverage.'
+  if (status && status !== 'supported') return 'Coverage for this government body is still being validated. This page shows only its dated accepted evidence.'
+  return undefined
 }
