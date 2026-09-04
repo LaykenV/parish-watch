@@ -1,4 +1,4 @@
-import { DAY, RateLimiter } from '@convex-dev/rate-limiter'
+import { DAY, RateLimiter, calculateRateLimit } from '@convex-dev/rate-limiter'
 import { v } from 'convex/values'
 import { paginationOptsValidator, paginationResultValidator } from 'convex/server'
 
@@ -78,6 +78,13 @@ export async function configurePolicy(ctx: MutationCtx, args: { proposalId: Id<'
   const existing = await ctx.db.query('sourceMonitoringPolicies').withIndex('by_registry_id', q => q.eq('registryId', registry._id)).unique()
   const fields = { ...args, registryId: registry._id, generation: (existing?.generation ?? 0) + 1, nextCheckAt: now, activeRunId: undefined, updatedAt: now }
   if (existing) {
+    if (existing.dailyCallLimit !== args.dailyCallLimit) {
+      const prior = await limiter.getValue(ctx, 'calls', { key: existing._id, config: { kind: 'fixed window', rate: existing.dailyCallLimit, period: DAY } })
+      const current = calculateRateLimit(prior, prior.config, now)
+      const used = Math.max(0, existing.dailyCallLimit - current.value)
+      await limiter.reset(ctx, 'calls', { key: existing._id })
+      await limiter.limit(ctx, 'calls', { key: existing._id, count: Math.min(used, args.dailyCallLimit), config: { kind: 'fixed window', rate: args.dailyCallLimit, period: DAY, start: current.ts }, throws: true })
+    }
     await ctx.db.patch(existing._id, fields)
     return existing._id
   }
