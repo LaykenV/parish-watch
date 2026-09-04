@@ -11,7 +11,7 @@ const limiter = new RateLimiter(components.rateLimiter, { civicBrowser: { kind: 
 export async function recordConfirmedEvent(ctx: MutationCtx, kind: CivicEvent, key: string): Promise<boolean> {
   const eventKey = await sha256HexOfText(`${kind}:${key}`)
   if (await ctx.db.query('civicEventReceipts').withIndex('by_event_key', q => q.eq('eventKey', eventKey)).unique()) return false
-  const environment = env.CONVEX_SITE_URL === 'https://befitting-flamingo-587.convex.site' ? 'production' as const : 'development' as const
+  const environment = ['https://befitting-flamingo-587.convex.site', 'https://www.publicparish.com'].includes(env.CONVEX_SITE_URL) ? 'production' as const : 'development' as const
   const counter = await ctx.db.query('civicEventCounters').withIndex('by_kind_and_environment', q => q.eq('kind', kind).eq('environment', environment)).unique()
   if (counter) await ctx.db.patch(counter._id, { count: counter.count + 1, updatedAt: Date.now() })
   else await ctx.db.insert('civicEventCounters', { kind, environment, count: 1, updatedAt: Date.now() })
