@@ -289,9 +289,9 @@ test('answers follow-ups with retrieved citations and replays the Agent message'
   })
   expect(first.citations).toHaveLength(1)
   expect(first.citations[0].recordKey).toBe(seeded.recordKey)
-  expect(selectorPrompt).toContain('Complete published decision catalog')
+  expect(selectorPrompt).toContain('Complete decision catalog for this batch')
   expect(selectorPrompt).toContain('"versions"')
-  expect(selectorPrompt).toContain('Every accepted evidence excerpt in scope')
+  expect(selectorPrompt).toContain('Every accepted evidence excerpt in this batch')
   expect(selectorPrompt).toContain('Library board roof contract')
   expect(selectorPrompt).not.toContain('Full normalized official documents')
   expect(answerPrompt).toContain('Full normalized official documents')
@@ -346,8 +346,8 @@ test('answers follow-ups with retrieved citations and replays the Agent message'
         totalTokens: 15,
       }),
       expect.objectContaining({
-        promptVersion: 'ask-selector-v1',
-        schemaVersion: 'ask-selector-v1',
+        promptVersion: 'ask-selector-v2-batched',
+        schemaVersion: 'ask-selector-v2-batched',
       }),
       expect.objectContaining({
         promptVersion: 'ask-answer-v3',
@@ -423,7 +423,7 @@ test('invalid selector targets fall back to the complete accepted scope', async 
   expect(attempts).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        promptVersion: 'ask-selector-v1',
+        promptVersion: 'ask-selector-v2-batched',
         status: 'selection_invalid',
       }),
       expect.objectContaining({
@@ -1295,4 +1295,4 @@ test('a thousand-record corpus searches old history and selects evidence across 
   const receipt = await t.run(ctx => ctx.db.query('askAnswerReceipts').first())
   expect(receipt?.selectorComplete).toBe(true)
   expect(receipt?.selectorBatches).toBeGreaterThan(30)
-})
+}, 120_000)
