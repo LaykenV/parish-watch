@@ -3,7 +3,7 @@ import { paginationOptsValidator } from 'convex/server'
 import { internal } from '../_generated/api'
 import { normalizeForMatch } from '../extraction/textMatch'
 import { sha256HexOfText } from '../sources/hashing'
-import { env, internalAction, internalQuery } from '../_generated/server'
+import { env, internalAction, internalMutation, internalQuery } from '../_generated/server'
 
 const PROOF_INBOX = 'public-parish-slice9-dev-20260904'
 function requireDevelopment() {
@@ -109,5 +109,24 @@ export const auditPublishedEvidence = internalAction({
       }
     }
     return { records: page.evidence.length, citations, legacyOffsets, problems, isDone: page.isDone, continueCursor: page.continueCursor }
+  },
+})
+
+// Rebuild only derived development usage after changing the rollup algorithm.
+export const resetUsageRollups = internalMutation({
+  args: {}, returns: v.number(),
+  handler: async ctx => {
+    requireDevelopment()
+    const daily = await ctx.db.query('providerUsageDaily').take(101)
+    if (daily.length > 100) throw new Error('Development rollup reset exceeds its bound.')
+    const rows = []
+    for (const table of ['aiCalls', 'askModelAttempts', 'coverageCompilerProviderCalls', 'monitoringProviderCalls'] as const) {
+      const page = await ctx.db.query(table).withIndex('by_usage_aggregated', q => q.gt('usageAggregatedAt', undefined)).take(1001)
+      if (page.length > 1000) throw new Error('Development usage reset exceeds its bound.')
+      rows.push(...page)
+    }
+    for (const row of rows) await ctx.db.patch(row._id, { usageAggregatedAt: undefined })
+    for (const row of daily) await ctx.db.delete(row._id)
+    return daily.length
   },
 })
