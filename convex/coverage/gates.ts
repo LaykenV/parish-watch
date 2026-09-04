@@ -17,6 +17,7 @@ export type CoverageGateInputs = {
   expectationCount: number
   staleExpectationCount: number
   recentReplayPassed: boolean
+  linkDeployment?: 'development' | 'production'
   productionLinkCount: number
   passingProductionLinkCount: number
 }
@@ -108,10 +109,10 @@ export function evaluateCoverageGates(
     ),
     gate(
       10,
-      'production_source_urls_reachable',
+      input.linkDeployment === 'development' ? 'development_source_urls_reachable' : 'production_source_urls_reachable',
       input.productionLinkCount > 0 &&
         input.productionLinkCount === input.passingProductionLinkCount,
-      `${input.passingProductionLinkCount} of ${input.productionLinkCount} representative source URLs answered from the production backend.`,
+      `${input.passingProductionLinkCount} of ${input.productionLinkCount} representative source URLs answered from the ${input.linkDeployment ?? 'production'} backend.`,
       ['coverageDirectLinkChecks'],
     ),
   ]
