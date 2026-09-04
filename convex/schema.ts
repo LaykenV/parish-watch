@@ -1035,7 +1035,8 @@ export default defineSchema({
       'updatedAt',
     ])
     .index('by_current_meeting_key', ['currentMeetingKey'])
-    .index('by_registry_and_source_record', ['registryId', 'sourceRecordId']),
+    .index('by_registry_and_source_record', ['registryId', 'sourceRecordId'])
+    .index('by_registry_and_updated_at', ['registryId', 'updatedAt']),
 
   publicationVersions: defineTable({
     recordId: v.id('decisionRecords'),

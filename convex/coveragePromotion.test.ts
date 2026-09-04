@@ -256,6 +256,44 @@ test('gate 10 keeps a newer failure inside the bounded link-check window', async
   })
 })
 
+test('registry evidence ignores more than 200 records from an older registry', async () => {
+  const t = convexTest(schema, modules)
+  await signInOwner(t)
+  const seeded = await seedReadyProposal(t, false)
+
+  await t.run(async (ctx) => {
+    for (let index = 0; index < 201; index += 1) {
+      await ctx.db.insert('decisionRecords', {
+        recordKey: `historic-${index}`,
+        registryId: seeded.previousRegistryId,
+        governmentBodyId: seeded.bodyId,
+        sourceRecordId: `historic-${index}`,
+        createdAt: index,
+        updatedAt: index,
+      })
+    }
+    await ctx.db.insert('decisionRecords', {
+      recordKey: 'current-proposal-record',
+      registryId: seeded.registryId,
+      governmentBodyId: seeded.bodyId,
+      sourceRecordId: 'current-proposal-record',
+      createdAt: 1_000,
+      updatedAt: 1_000,
+    })
+
+    const records = await ctx.db
+      .query('decisionRecords')
+      .withIndex('by_registry_and_updated_at', (query) =>
+        query.eq('registryId', seeded.registryId),
+      )
+      .order('desc')
+      .take(200)
+    expect(records.map((record) => record.recordKey)).toEqual([
+      'current-proposal-record',
+    ])
+  })
+})
+
 async function seedReadyProposal(t: TestConvex, allPass: boolean) {
   const ids = await t.run(async (ctx) => {
     const user = await ctx.db.query('users').first()

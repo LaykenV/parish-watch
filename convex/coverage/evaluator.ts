@@ -55,15 +55,12 @@ export const evaluateProposal = internalMutation({
     )
     const records = await ctx.db
       .query('decisionRecords')
-      .withIndex(
-        'by_government_body_and_current_mode_and_updated_at',
-        (index) => index.eq('governmentBodyId', proposal.governmentBodyId),
+      .withIndex('by_registry_and_updated_at', (index) =>
+        index.eq('registryId', proposal.registryId),
       )
+      .order('desc')
       .take(MAX_EVIDENCE_RECORDS)
-    const publicationEvidence = await inspectPublications(
-      ctx,
-      records.filter((record) => record.registryId === proposal.registryId),
-    )
+    const publicationEvidence = await inspectPublications(ctx, records)
     const changes = await ctx.db
       .query('sourceSnapshotChanges')
       .withIndex('by_registry_and_created_at', (index) =>

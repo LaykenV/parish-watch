@@ -799,7 +799,7 @@ published version, current mode, and creation and update times. Issue links
 refer to these records without replacing them.
 Indexes: stable record key; current mode plus update time; government body plus
 current mode plus update time; current meeting key; registry plus source record
-ID.
+ID; registry plus update time.
 
 #### `issueBuilds`, `issueBuildReviews`, and `issueBuildReviewChecks`
 
