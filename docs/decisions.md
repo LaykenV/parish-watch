@@ -6,6 +6,7 @@ Environment and checkpoint amendment completed: August 27, 2026
 Brand and domain amendment completed: August 27, 2026
 Issue and importance contract amendment completed: August 29, 2026
 Resident interface amendment completed: August 29, 2026
+Coverage compiler amendment completed: September 4, 2026
 Product name: Public Parish
 
 This file records the settled product decisions from the planning grill. It
@@ -93,6 +94,18 @@ expand the promise.
   evaluator must have ten passing results, including representative source URLs
   checked by the production backend. Degrade, pause, and recovery change status
   while retaining prior snapshots, publications, and registries.
+- Close the coverage-compiler slice when every checked body has an honest gate
+  report, only passing bodies are supported, and public claims narrow around a
+  documented source failure. An upstream failure does not lower the gate or keep
+  the compiler implementation open indefinitely.
+- A parish becomes selectable only when every checked body in that parish is
+  supported. Rapides and East Baton Rouge met that rule on September 4.
+  Lafayette remains validating because three planning bodies lack reachable
+  agenda and outcome evidence.
+- Slice 8 covers owner-triggered onboarding and repair. Scheduled routine source
+  checks, automatic document-to-decision fanout, and automatic new issue
+  proposals require a separate implementation decision before they become a
+  resident-facing promise.
 - A body accepts promotion only from its newest active proposal. Promotion
   supersedes sibling proposals, and status controls reject stale promoted
   proposals.

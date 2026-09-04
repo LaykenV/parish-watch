@@ -12,35 +12,41 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-04T17:31:09Z
+- **Last updated:** 2026-09-04T19:11:18Z
 
 ## Log
 
-### 2026-09-04 - working tree
+### 2026-09-04 - 2fa1cff
 
 Replaced the launch slot template with exact official artifact fixtures and ran
 the complete development lifecycle. Seven bodies now pass gates 1 through 9
 with immutable retrieval, extraction, deterministic validation, independent
 review, publication, a missing-record probe, and paired agenda and minutes
-replay. Gate 10 remains production-only. Lafayette's planning commission,
-zoning board, and hearing examiner stay blocked because their live document
-links return 404 or route through an events host that returns 502. No body was
-promoted and no production data changed.
+replay. Production then promoted Alexandria City Council, Pineville City
+Council, Rapides Parish Police Jury, Baton Rouge Metropolitan Council, and Baton
+Rouge Planning and Zoning Commission after each passed Gate 10 and all ten current Gate v3
+checks. Production workflows `33902515233` and `33902885913` passed for PRs #91
+and #92. Rapides and East Baton Rouge are supported. Lafayette stays validating
+because its planning commission, zoning board, and hearing examiner lack stable
+meeting-specific agenda and outcome records. The LCG body pages and schedule
+PDFs answer 200, but the event-detail host still answers 502.
 
 Connected the resident area selector to a public, realtime jurisdiction-status
 query. It enables a parish only when exactly one live jurisdiction row is
 `supported`; missing, duplicate, candidate, validating, degraded, and paused
 states remain unavailable. The selector therefore follows promotion instead of
-hard-coded fixture claims.
+hard-coded fixture claims. This closes Implementation Slice 8. Routine scheduled
+source checks and automatic document-to-decision fanout are not deployed.
 
-### 2026-09-04 - 76b806d
+### 2026-09-04 - 00a2f9c
 
 Stopped Chrome's unreliable `navigator.onLine` flag from showing an offline
 banner or blocking Ask while the served origin still answers. Connectivity
 events now confirm failure with a fresh same-origin request and recheck when a
 resident returns to the tab. Added regression cases for a reachable origin and
 Ask under a false browser flag (`src/features/discovery/hooks.ts`,
-`src/features/ask/live-adapter.ts`). This fix is not deployed yet.
+`src/features/ask/live-adapter.ts`). PR #90 deployed through production workflow
+`33896198309`.
 
 ### 2026-09-04 - b5583ed
 

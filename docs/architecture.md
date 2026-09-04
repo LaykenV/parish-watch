@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 and 7A through 7D are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is next
 
 ## Architecture Goal
 
@@ -154,6 +154,18 @@ route. PRs #72 through #75 added durable notification matching, deduplicated
 immediate email, weekly roundup windows, provider reconciliation, and live
 notification settings. PRs #78 and #79 added verified grounded inbound replies
 and private source reports. Coverage requests remain in the post-Slice-5 plan.
+
+PRs #85 through #88 deployed the owner-controlled coverage compiler. PR #91
+bound its evaluator to exact checked artifacts and proved the complete retrieval,
+extraction, deterministic validation, independent review, publication, failure,
+agenda-and-minutes replay, and production-link path. Five bodies passed all ten
+gates and were promoted: Alexandria City Council, Pineville City Council,
+Rapides Parish Police Jury, Baton Rouge Metropolitan Council, and Baton Rouge
+Planning and Zoning Commission. PR #92 made the resident area selector read the live
+jurisdiction status. Rapides and East Baton Rouge are available. Lafayette
+remains validating because three planning bodies do not have reachable official
+agenda and outcome artifacts. This closes Implementation Slice 8 without
+weakening its gate.
 
 ## System Boundaries
 
@@ -438,6 +450,12 @@ The autonomous pass is appropriate for initial onboarding, site redesigns, and
 repair. Routine checks use the registry, Firecrawl change tracking, targeted
 scrapes, PDF parsing, and known schedules.
 
+The deployed Slice 8 implementation covers the owner-triggered onboarding and
+repair pass. It does not yet schedule routine registry checks, enumerate every
+decision in a newly posted document, or propose a new issue without an explicit
+operation. Once an owner starts a known target, retrieval through publication is
+automated and an accepted material change refreshes already linked issues.
+
 If a portal fails repeatedly, record the failure and add the smallest
 source-specific adapter that restores the shared output contract. Do not create
 an adapter merely because a portal looks unfamiliar.
@@ -606,15 +624,16 @@ never become source snapshots.
 
 ## Core Data Model
 
-The schema through Slice 7D implements `jurisdictions`, `governmentBodies`,
+The schema through Slice 8 implements `jurisdictions`, `governmentBodies`,
 `sourceRegistries`, `sourceSnapshots`, `pipelineRuns`, `pipelineStages`, private
 extraction evidence, independent reviews, stable decision records, immutable
 publication versions, citations, material changes, issues, anonymous chat
 ownership, Google users, saved setup, verified email subscribers, follows,
 notification preferences, email access tokens, notification matching and
-delivery, weekly roundup windows, grounded reply state, and private source
-reports. Coverage expectations, incidents, and coverage requests remain
-planned.
+delivery, weekly roundup windows, grounded reply state, private source reports,
+coverage compiler runs and stages, source candidates, registry proposals,
+representative samples, source expectations, direct-link checks, and gate
+evaluations. Coverage incidents and coverage requests remain planned.
 
 ### Coverage
 

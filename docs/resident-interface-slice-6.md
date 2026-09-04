@@ -1,7 +1,8 @@
 # Resident interface Slice 6 handoff
 
 Status: deployed through PR #34 as `0aa7474`; follow-up focus and copy fixes
-deployed through PR #42 as `eafab66`
+deployed through PR #42 as `eafab66`; live area availability connected through
+PR #92 as `2fa1cff`
 
 Date: August 31, 2026
 
@@ -12,11 +13,13 @@ works blueprints with their final resident hierarchy. It also finishes the
 private source-problem form and clarifies the difference between accepted
 decision records and complete government-body coverage in the area selector.
 
-This remains an interface slice. Production has no public coverage adapter,
-coverage-request mutation, or private AgentMail delivery path. Coverage and
-request routes without an explicit development fixture show an honest
-unavailable state. The method page contains only repository-backed product and
-architecture rules, so it remains readable without a fixture.
+At this design checkpoint, production had no public coverage adapter,
+coverage-request mutation, or private AgentMail delivery path. The private
+AgentMail report path arrived in Slice 7D. Slice 8 connected the area selector
+to live jurisdiction status. The full public coverage projection and coverage
+request mutation remain Slice 9 work. The method page contains only
+repository-backed product and architecture rules, so it remains readable
+without a fixture.
 
 ## Design direction
 
@@ -47,8 +50,10 @@ Coverage uses five public states:
 - `Not supported` means the body has not passed the gate.
 
 There is no beta label. A single accepted document or published decision does
-not make a place supported. The area selector therefore says `Records
-available` for Lafayette and keeps complete coverage as a separate claim.
+not make a place supported. The original fixture demonstrated record
+availability separately from complete coverage. Production now reads the live
+jurisdiction gate: Rapides and East Baton Rouge say `Records available`, while
+Lafayette says `Validating sources` and cannot be selected.
 
 Supported fixture bodies can open the shared Follow flow. Other states explain
 the limit without showing an unavailable Follow control as if it could work.

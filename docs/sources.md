@@ -1,7 +1,7 @@
 # Official-Source Plan
 
-Status: controlled launch-data batch published atomic records from Lafayette, Rapides, and East Baton Rouge; government-body coverage remains candidate until each body passes every gate
-Last verified: August 31, 2026
+Status: Slice 8 production certification supports Rapides and East Baton Rouge; Lafayette remains validating behind the same ten gates
+Last verified: September 4, 2026
 
 This document supplies starting points, not a claim of complete coverage. Every
 URL must be checked during the Firecrawl source spike, and every public body must
@@ -29,13 +29,23 @@ Exactly one board-vacancy card remains, under
 `CITY-BOARD-APPLICATIONS-2026-09-15`. The duplicate was a legacy projection
 defect, not another launch record.
 
-This proof covers selected official PDF source families. It does not mark any
-government body fully supported. Resident discovery opens the accepted decision
-record, where every published claim can open its exact excerpt and original
-official source. Current full records with the same accepted body and meeting
-time form one bounded meeting view. Lafayette, Rapides, and East Baton Rouge
-bodies must still pass every coverage gate below before Public Parish calls
-them supported.
+The August 31 proof covers selected official PDF source families. It did not by
+itself mark a government body supported. Slice 8 later ran exact checked
+artifacts through retrieval, extraction, deterministic validation, independent
+review, publication, a missing-record probe, paired agenda and minutes replay,
+and production source-link checks. Production promoted Alexandria City Council,
+Pineville City Council, Rapides Parish Police Jury, Baton Rouge Metropolitan
+Council, and Baton Rouge Planning and Zoning Commission after each passed all ten gates.
+That makes Rapides and East Baton Rouge supported in the resident selector.
+
+Lafayette City Council and Youngsville City Council passed gates 1 through 9 in
+development. They were not promoted because Lafayette's public place status
+requires every checked body in the parish, and the three planning bodies remain
+blocked. Their government pages and 2026 schedule PDFs answered 200 on September
+4, but `events.lafayettela.gov` still answered 502 and no stable current and
+historical agenda-and-outcome set exists for those bodies. Lafayette therefore
+remains validating. This is a documented source failure, not a lower coverage
+standard.
 
 ## Source Policy
 
@@ -51,8 +61,8 @@ Public Parish publishes from primary government records:
   corpus.
 
 News, advocacy sites, social posts, and search snippets can help a person notice
-an issue, but they are not publication evidence. Normal automated runs stay
-inside registered official domains and approved government document hosts.
+an issue, but they are not publication evidence. Evidence retrieval stays inside
+registered official domains and approved government document hosts.
 
 ## Initial Registry Seeds
 
@@ -76,11 +86,13 @@ host. Discovery should still find the current pattern. The certification gold
 set pins exact public examples so a classifier cannot substitute an unrelated
 LCG document.
 
-As of September 4, 2026, search indexes still describe 2026 planning agendas
-and action summaries at the former LCG document paths, but those live URLs
-return 404. The current agenda links route through the LCG events service, which
-returns 502. Keep the affected bodies unavailable until live official agenda
-and outcome artifacts can pass the same checks as every other body.
+As of September 4, 2026, the planning body pages, main LCG calendar, and 2026
+schedule PDFs answer 200. Search indexes still describe planning agendas and
+action summaries at former LCG document paths, while current meeting-detail
+links route through the LCG events service, which returns 502. Schedules prove
+cadence, not decisions or outcomes. Keep the affected bodies unavailable until
+stable current and historical agenda and outcome artifacts pass the same checks
+as every other body.
 
 Youngsville's city page embeds its current agendas, packets, and minutes from
 Municode. The checked source boundary therefore includes only the Youngsville

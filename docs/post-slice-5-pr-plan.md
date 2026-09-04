@@ -1,6 +1,6 @@
 # Post-Slice-5 PR plan
 
-Status: implementation Slices 6 and 7A through 7D are deployed and release-tested; Slice 8 is next
+Status: implementation Slices 6 through 8 are deployed and release-tested; Slice 9 is next
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
@@ -37,12 +37,20 @@ Production now has mounted Convex Auth v2, Google account ownership, private
 saved areas and topics, the public privacy notice, and the AgentMail follow
 enrollment and alert-delivery paths. Slice 7C added durable matches,
 deduplicated immediate email, weekly roundups, subscriber-wide management from
-alert links, delivery reconciliation, and live notification settings. It does
-not yet have a coverage compiler. Slice 7D added verified grounded inbound
-replies and private source reports without opening a public correction workflow.
+alert links, delivery reconciliation, and live notification settings. At that
+checkpoint, the app did not yet have a coverage compiler. Slice 7D added
+verified grounded inbound replies and private source reports without opening a
+public correction workflow.
 Controlled corpus QA also found that one answer displayed Markdown emphasis
-markers as literal text. PR #57 corrected that presentation defect. Slice 8 is
-the active capability.
+markers as literal text. PR #57 corrected that presentation defect.
+
+Implementation Slice 8 is closed. PRs #85 through #88 deployed the controlled
+compiler, discovery, validation, promotion gate, and deploy-safe seed. PR #91
+completed exact-artifact development proof and production certification. Five
+bodies passed all ten production gates, which made Rapides and East Baton Rouge
+available. PR #92 connected the selector to that live jurisdiction state.
+Lafayette remains validating because its three planning bodies do not have a
+stable agenda and outcome evidence set. Slice 9 is the active capability.
 
 ## Original starting assumption
 
@@ -62,11 +70,12 @@ hosting, Firecrawl, and durable workflow are the registered Convex components.
 
 ## PR sizing rule
 
-The remaining path is 15 planned PRs:
+The original remaining path counted 15 planned PRs:
 
 - Slice 6 has 3 PRs.
 - Slice 7 has 4 PRs.
-- Slice 8 has 4 PRs.
+- Slice 8 was delivered as 3 planned code PRs plus narrow release and
+  certification fixes.
 - Slice 9 has 4 PRs.
 
 Each PR delivers one complete vertical capability. A packet may cross schema,
@@ -730,6 +739,15 @@ Proof: one failed gate blocks promotion, while a passing recorded sample creates
 a versioned supported registry without weakening evidence rules.
 
 ### Controlled rollout after 8C
+
+Status: closed September 4, 2026. Seven bodies passed development gates 1
+through 9. Production promoted Alexandria City Council, Pineville City Council,
+Rapides Parish Police Jury, Baton Rouge Metropolitan Council, and Baton Rouge
+Planning and Zoning Commission after ten passing gates each. Lafayette's three planning
+bodies retain gate reports and remain blocked on official meeting-specific
+records. Lafayette City Council and Youngsville were not promoted under the
+strict parish-level release rule. Rapides and East Baton Rouge are available in
+the live selector; Lafayette is validating.
 
 Outcome: the owner can inspect live compiler stages, diagnose failures, retry
 the smallest invalid stage, and complete separate evidence-gated onboarding

@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 and 7A through 7D are deployed
+Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is next
 
 ## Product Sentence
 
@@ -76,6 +76,16 @@ controlled production report reached `sent` without starting evidence work.
 Coverage requests remain unavailable until their backend path passes.
 Each integration must replace the matching typed adapter without changing the
 page hierarchy or visual system.
+
+Implementation Slice 8 deployed the owner-controlled coverage compiler and the
+live area-availability adapter. Alexandria City Council, Pineville City Council,
+Rapides Parish Police Jury, Baton Rouge Metropolitan Council, and Baton Rouge
+Planning and Zoning Commission passed all ten production gates. Rapides and East Baton
+Rouge are selectable. Lafayette remains `Validating sources` because three
+planning bodies lack reachable meeting-specific agenda and outcome records.
+Accepted records remain readable across all three regions, but accepted records
+alone do not make a jurisdiction supported. Continuous source monitoring and
+automatic enumeration of every new decision are not deployed behavior.
 
 ### Start With Consequence
 

@@ -229,7 +229,7 @@ later bulk run still needs a cost estimate and separate approval.
 ### Slice 5: Complete Resident Interface
 
 Status: interface design and implementation complete; production data exit gate
-closed; implementation Slices 7A through 7D are closed. Design Slice 1
+closed; implementation Slices 6 through 8 are closed. Design Slice 1
 deployed through PR #14 as `6e46fd7`.
 Design Slice 2 deployed through PR #24 as `4e2ac67` on August 30, 2026. PR #25
 deployed the owner phone-review refinements as `b22e321` later that day. Design
@@ -241,9 +241,9 @@ the independent production smoke passed. PR #34 deployed Design Slice 6 as
 Design Slice 8 as `85d6947`. Production workflow `33454522729` and the
 independent production smoke passed. Accepted decision, meeting, issue, Ask,
 account, follow-enrollment, preference, email-management, sourced-alert,
-roundup, and notification-settings adapters are live. Coverage requests and
-private-report adapters are live. Coverage requests remain fixture-backed until
-their integration gate passes.
+roundup, notification-settings, private-report, and area-availability adapters
+are live. Coverage requests remain fixture-backed until their Slice 9
+integration gate passes.
 
 The deployed Slice 2 release introduced the responsive shell plus Home, For You,
 and Explore with development fixtures. The latest `npm run verify` passed 163
@@ -461,6 +461,10 @@ Dates: September 10 through September 16
 
 ### Dynamic Coverage Compiler
 
+Status: Implementation Slice 8 closed on September 4. PRs #85 through #88
+deployed the compiler and its guarded production seed. PR #91 completed exact
+artifact certification, and PR #92 connected the area selector to live coverage.
+
 - run the compiler only from an owner-controlled operation;
 - map a selected jurisdiction from its official homepage;
 - propose and validate a source registry;
@@ -478,16 +482,24 @@ Dates: September 10 through September 16
 
 ### Geographic Rollout
 
-1. finish all defined Lafayette and Youngsville bodies;
-2. pass Alexandria, Pineville, and Rapides Police Jury through the same gate;
-3. pass Baton Rouge Metro Council and Planning Commission;
-4. make every valid record searchable;
-5. keep any failing body off the supported list while showing an honest
-   candidate or degraded state.
+1. Lafayette City Council and Youngsville passed development gates 1 through 9.
+   Lafayette's three planning bodies remain blocked on meeting-specific official
+   records, so the parish stays validating.
+2. Alexandria, Pineville, and Rapides Police Jury passed all ten production
+   gates. Rapides is supported.
+3. Baton Rouge Metro Council and Planning and Zoning Commission passed all ten production
+   gates. East Baton Rouge is supported.
+4. Accepted records remain searchable across all three regions.
+5. The live selector keeps Lafayette unavailable and labels it as validating.
 
 Planning/zoning in Rapides remains required for the promised region only after
 the official bodies and sources are identified. If they cannot pass in time,
 narrow the named Rapides coverage in public copy instead of lowering the gate.
+
+Slice 8 closes on this honest partial rollout because its release gate permits a
+documented portal failure and requires public claims to narrow. The
+owner-triggered compiler does not yet provide scheduled routine monitoring,
+automatic decision enumeration, or automatic new issue proposals.
 
 ### Real User Sprint
 

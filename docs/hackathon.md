@@ -95,7 +95,8 @@ Phase 0 was completed on August 27:
   remains public and functional;
 - `npx convex ai-files install` completed and the generated guidelines were
   read;
-- Convex Auth v2 is pinned to `2.0.0-alpha.1` but not configured;
+- Convex Auth v2 is pinned to `2.0.0-alpha.1`; Google OAuth is configured and
+  production sign-in and sign-out have passed on both public origins;
 - every direct dependency is pinned to its resolved version, and production
   builds fail if `VITE_CONVEX_URL` is missing;
 - generated agent guidance remains local and can be recreated with
@@ -115,8 +116,8 @@ Phase 0 was completed on August 27:
   and mobile layouts were tested signed out.
 
 The evidence backend through Slice 4, resident-interface Design Slices 1 through
-8, implementation Slice 6, and implementation Slices 7A through 7D are live in
-production.
+8, and implementation Slices 6 through 8 are live in production. Slice 9 is
+next.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -227,9 +228,21 @@ replay. PRs #78 and #79 deployed grounded alert replies and private source
 reports. PRs #81 through #83 hardened weekly reply scope, retained report
 delivery results beyond provider cleanup, and stopped alerts after coverage
 lapses. A controlled production report reached `sent` and started no evidence
-pipeline run. The production alert-and-reply round trip, coverage integration,
-the owner compiler, recruited-resident proof, the demo, and the vibeapps.dev
+pipeline run. The production alert-and-reply round trip, public
+coverage-request loop, recruited-resident proof, the demo, and the vibeapps.dev
 submission remain pending.
+
+PRs #85 through #88 deployed the owner-controlled coverage compiler, bounded
+Firecrawl discovery, strict source classification, exact-sample validation,
+ten-gate evaluator, promotion controls, and private operations view. PR #91
+completed the evidence lifecycle and production certification. Alexandria City
+Council, Pineville City Council, Rapides Parish Police Jury, Baton Rouge
+Metropolitan Council, and Baton Rouge Planning and Zoning Commission passed all ten gates
+and were promoted. PR #92 connected the public selector to the live jurisdiction
+status. Rapides and East Baton Rouge are available. Lafayette remains
+validating because three planning bodies lack reachable meeting-specific agenda
+and outcome evidence. The compiler does not yet schedule routine source checks
+or enumerate every decision in a newly posted document.
 
 PR #70 then corrected Place follow validation so supported parishes and
 municipalities use the same enrollment path while unsupported places still

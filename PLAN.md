@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 and 7A through 7D are deployed
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is next
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -129,6 +129,21 @@ report reached `sent`, retained that terminal status in the application, and
 left the latest evidence-pipeline run unchanged. The full alert-and-reply
 provider round trip still has development proof only. No real production
 subscriber has completed that path yet.
+
+Implementation Slice 8 is closed. PRs #85 through #88 deployed the
+owner-controlled compiler, bounded Firecrawl discovery, strict source
+classification, exact-sample validation, ten deterministic coverage gates,
+promotion controls, and the private operations view. PR #91 replaced the slot
+template with checked artifact fixtures and ran the complete evidence lifecycle.
+Production certification promoted Alexandria City Council, Pineville City
+Council, Rapides Parish Police Jury, Baton Rouge Metropolitan Council, and Baton
+Rouge Planning and Zoning Commission after each passed all ten gates. PR #92 connected the
+area selector to the live jurisdiction projection. Rapides and East Baton Rouge
+are available. Lafayette remains validating because its three planning bodies
+lack reachable meeting-specific agenda and outcome evidence. The compiler is an
+onboarding and repair operation. Routine scheduled source checks, automatic
+document-to-decision fanout, and new issue proposals remain future work and are
+not implied by Slice 8 closure.
 
 ## Executive Decision
 
