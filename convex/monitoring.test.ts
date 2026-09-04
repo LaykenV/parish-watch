@@ -133,3 +133,13 @@ test('formatting can normalize but local agenda numbering cannot merge different
   expect(inventoryIdentity('2026-09-04', a).key).not.toBe(inventoryIdentity('2026-09-04', b).key)
   expect(inventoryIdentity('2026-09-04', inventory.targets[0]).key).toBe(inventoryIdentity('2026-10-04', { ...inventory.targets[0], excerpt: '2026-14 Road repairs approved' }).key)
 })
+
+test('a bounded listing pass preserves its next page and does not finish the baseline', async () => {
+  const { t, runId, policyId } = await monitoringFixture()
+  await t.mutation(internal.monitoring.ledger.saveDiscoveryProgress, { runId, pending: ['https://www.lafayettela.gov/2026-meetings/page-2'], visited: ['https://www.lafayettela.gov/2026-meetings'] })
+  await t.mutation(internal.monitoring.ledger.finish, { runId, state: 'completed', documentsChecked: 0, targetsStarted: 0 })
+  const policy = await t.run(ctx => ctx.db.get(policyId))
+  expect(policy?.discoveryPendingUrls).toEqual(['https://www.lafayettela.gov/2026-meetings/page-2'])
+  expect(policy?.baselineComplete).toBe(false)
+  expect(policy?.failures).toBe(0)
+})

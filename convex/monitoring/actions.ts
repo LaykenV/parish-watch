@@ -21,14 +21,17 @@ export const discover = internalAction({
     await ctx.runMutation(internal.monitoring.ledger.addDocuments, { ...args, urls: registry.seedUrls })
     const manifest = resolveRootManifest(proposal.bodyKey, proposal.rootManifestVersion)
     if (!manifest) throw new Error('monitoring_manifest_missing')
-    const listingUrls = [...new Set([manifest.approvedRootUrl, ...manifest.identityEvidenceUrls, ...registry.seedUrls.filter(url => !isDocumentUrl(url))])].filter(url => classifyHost(manifest, url) !== 'unapproved' && !isBeforeSourceWindow(url, policy.startsAt))
-    if (listingUrls.length > 10) throw new Error('monitoring_seed_limit')
+    const roots = [...new Set([manifest.approvedRootUrl, ...manifest.identityEvidenceUrls, ...registry.seedUrls.filter(url => !isDocumentUrl(url))])].filter(url => classifyHost(manifest, url) !== 'unapproved' && !isBeforeSourceWindow(url, policy.startsAt))
+    if (roots.length > 10) throw new Error('monitoring_seed_limit')
+    const resumed = Boolean(policy.discoveryPendingUrls?.length)
+    const listingUrls = [...(resumed ? policy.discoveryPendingUrls! : roots)]
     let failures = 0
-    const visited = new Set<string>()
-    for (let listing = 0; listing < Math.min(10, listingUrls.length); listing++) {
-      const url = listingUrls[listing]
-      visited.add(url)
+    const failed: string[] = []
+    const visited = new Set<string>(resumed ? policy.discoveryVisitedUrls : [])
+    for (let listing = 0; listing < 10 && listingUrls.length; listing++) {
+      const url = listingUrls[0]
       if (!await ctx.runMutation(internal.monitoring.ledger.reserve, { ...args, units: 1 })) throw new Error('monitoring_daily_limit')
+      listingUrls.shift()
       const started = Date.now()
       let status = 'failed'
       let creditsUsed: number | undefined
@@ -42,18 +45,19 @@ export const discover = internalAction({
         const documents = links.filter(isDocumentUrl)
         for (let start = 0; start < documents.length; start += 100) await ctx.runMutation(internal.monitoring.ledger.addDocuments, { ...args, urls: documents.slice(start, start + 100) })
         for (const link of links.filter(candidate => !isDocumentUrl(candidate) && /(?:20\d{2}.*(?:meeting|agenda|minute)|(?:meeting|agenda|minute).*20\d{2})/i.test(candidate))) if (!visited.has(link) && !listingUrls.includes(link)) listingUrls.push(link)
+        if (visited.size + listingUrls.length > 500) throw new Error('monitoring_listing_capacity')
+        visited.add(url)
         status = 'succeeded'
       } catch {
+        failed.push(url)
         failures++
       } finally {
         await ctx.runMutation(internal.monitoring.ledger.recordCall, { ...args, operation: 'listing', provider: 'firecrawl', status, creditsUsed, latencyMs: Date.now() - started })
+        await ctx.runMutation(internal.monitoring.ledger.saveDiscoveryProgress, { ...args, pending: [...listingUrls, ...failed], visited: [...visited] })
       }
     }
-    if (failures === visited.size) throw new Error('monitoring_listings_unavailable')
-    if (listingUrls.length > 10) {
-      await ctx.runMutation(internal.monitoring.ledger.discoveryAttention, { ...args, code: 'monitoring_listing_capacity' })
-    }
-    return failures === 0 && listingUrls.length <= 10
+    return failures === 0
+
   },
 })
 
