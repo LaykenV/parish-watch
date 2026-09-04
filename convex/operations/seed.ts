@@ -116,14 +116,16 @@ async function seedRegistry(
     registries.find((registry) => registry.status === 'supported') ??
     registries.find((registry) => registry.status === 'degraded') ??
     registries.find((registry) => registry.status === 'paused')
+  const firstRegistry = registries.at(0)
   const existingSeedRegistry =
     registries.length === 1 &&
-    (registries[0].status === 'candidate' ||
-      registries[0].status === 'validating')
-      ? registries[0]
+    firstRegistry !== undefined &&
+    (firstRegistry.status === 'candidate' ||
+      firstRegistry.status === 'validating')
+      ? firstRegistry
       : null
   const retainedRegistry =
-    protectedRegistry ?? existingSeedRegistry ?? registries[0]
+    protectedRegistry ?? existingSeedRegistry ?? firstRegistry
   const registryFields = {
     officialDomains: [...config.registry.officialDomains],
     seedUrls: [...config.registry.seedUrls],

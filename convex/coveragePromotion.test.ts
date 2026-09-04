@@ -336,7 +336,7 @@ test('gate 10 keeps a newer failure inside the bounded link-check window', async
       currentStage: 'evaluate_gates',
       completedAt: undefined,
     })
-    const stageId = await ctx.db.insert('coverageCompilerStages', {
+    const evaluationStageId = await ctx.db.insert('coverageCompilerStages', {
       runId: seeded.runId,
       stage: 'evaluate_gates',
       idempotencyKey: 'latest-link-check',
@@ -364,7 +364,7 @@ test('gate 10 keeps a newer failure inside the bounded link-check window', async
       passed: false,
       checkedAt: 41,
     })
-    return stageId
+    return evaluationStageId
   })
 
   await t.mutation(internal.coverage.evaluator.evaluateProposal, {
