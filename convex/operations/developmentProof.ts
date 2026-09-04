@@ -14,7 +14,7 @@ function originalCitationMatch(text: string): string {
 // publication citations remain immutable when matching rules gain formatting support.
 function historicalCitationMatches(text: string): string[] {
   const joined = text.replace(/([A-Za-z0-9])-[ \t]*\r?\n[ \t]*(?=[A-Za-z0-9])/g, '$1-')
-  return [originalCitationMatch(text), originalCitationMatch(joined), originalCitationMatch(joined.replace(/<u(?:\s+[^<>]*?)?\s*>|<\/u\s*>/gi, '')), normalizeForMatch(text, { preserveBoldEmphasis: true })]
+  return [originalCitationMatch(text), originalCitationMatch(joined), originalCitationMatch(joined.replace(/<u(?:\s+[^<>]*?)?\s*>|<\/u\s*>/gi, '')), normalizeForMatch(text, { preserveBoldEmphasis: true }), normalizeForMatch(text, { preserveBoldEmphasis: true, preservePdfSuperscriptArtifacts: true })]
 }
 const PROOF_INBOX = 'public-parish-slice9-dev-20260904'
 function requireDevelopment() {

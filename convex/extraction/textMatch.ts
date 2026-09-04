@@ -65,16 +65,11 @@ function unwrapPdfSuperscriptArtifacts(text: string): string {
     .replace(/<sup(?:\s+[^<>]*?)?\s*>|<\/sup\s*>/gi, '')
 }
 
-export function normalizeForMatch(text: string, options?: { preserveBoldEmphasis?: boolean }): string {
-  return unwrapPdfSuperscriptArtifacts(
-    unwrapWhitespaceBoundedAsteriskEmphasis(
-      (options?.preserveBoldEmphasis ? (value: string) => value : unwrapWhitespaceBoundedBoldAsteriskEmphasis)(
-        unwrapWhitespaceBoundedUnderscoreEmphasis(
-          unwrapMatchingMailtoLinks(text),
-        ),
-      ),
-    ),
-  )
+export function normalizeForMatch(text: string, options?: { preserveBoldEmphasis?: boolean; preservePdfSuperscriptArtifacts?: boolean }): string {
+  const inline = unwrapWhitespaceBoundedUnderscoreEmphasis(unwrapMatchingMailtoLinks(text))
+  const emphasis = unwrapWhitespaceBoundedAsteriskEmphasis(options?.preserveBoldEmphasis ? inline : unwrapWhitespaceBoundedBoldAsteriskEmphasis(inline))
+  const superscripts = options?.preservePdfSuperscriptArtifacts ? emphasis : unwrapPdfSuperscriptArtifacts(emphasis)
+  return superscripts
     .replace(/\u00a0/g, ' ')
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201c\u201d]/g, '"')
