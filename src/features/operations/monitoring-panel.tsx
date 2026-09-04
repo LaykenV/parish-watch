@@ -6,6 +6,10 @@ import { Button } from '../../components/ui/button'
 export function MonitoringPanel() {
   const overview = useQuery(api.operations.dashboard.monitoring, {})
   const configure = useMutation(api.monitoring.ledger.configure)
+  const retryTarget = useMutation(api.monitoring.ledger.retryTarget)
+  const retryDocument = useMutation(api.monitoring.ledger.retryDocument)
+  const [deliveryState, setDeliveryState] = useState<'failed' | 'bounced' | 'complained' | 'rejected' | 'pending'>('failed')
+  const deliveries = usePaginatedQuery(api.operations.dashboard.deliveryProblems, { state: deliveryState }, { initialNumItems: 10 })
   const checkNow = useMutation(api.monitoring.ledger.checkNow)
   const [notice, setNotice] = useState('')
   const [kind, setKind] = useState<'pipeline' | 'ask' | 'compiler' | 'monitoring'>('monitoring')
@@ -27,6 +31,9 @@ export function MonitoringPanel() {
       <p>{source.policy?.enabled ? 'Monitoring enabled' : 'Monitoring paused'}{source.pendingTarget ? '. Decisions remain pending.' : ''}{source.failedTarget ? '. A decision needs attention.' : ''}</p>
       {source.policy?.lastCompletedAt ? <p>Last complete document check: {new Date(source.policy.lastCompletedAt).toLocaleString()}</p> : null}
       <Button disabled={!overview.enabled && !source.policy?.enabled} onClick={() => void operate(() => configure({ proposalId: source.proposalId, enabled: !source.policy?.enabled, intervalHours: source.policy?.intervalHours ?? 24, documentsPerRun: source.policy?.documentsPerRun ?? 3, targetsPerRun: source.policy?.targetsPerRun ?? 5, dailyCallLimit: source.policy?.dailyCallLimit ?? 50, startsAt: source.policy?.startsAt ?? Date.now() - 30 * 86_400_000 }))}>{source.policy?.enabled ? 'Pause checks' : 'Enable bounded checks'}</Button>
+      {source.failedTargetId ? <Button onClick={() => void operate(() => retryTarget({ targetId: source.failedTargetId! }))}>Retry failed decision</Button> : null}
+      {source.retryDocumentId ? <Button onClick={() => void operate(() => retryDocument({ documentId: source.retryDocumentId! }))}>Retry incomplete document</Button> : null}
+      {source.policy?.lastAttemptAt && source.policy.activeRunId && Date.now() - source.policy.lastAttemptAt > 2 * 3_600_000 ? <p>A source run has been active for more than two hours. Check now replaces its expired lease.</p> : null}
       {source.policy ? <Button disabled={!source.policy.enabled} onClick={() => void operate(() => checkNow({ policyId: source.policy!._id }))}>Check now</Button> : null}
     </article>)}
     <h3>Open source incidents</h3>
@@ -35,6 +42,11 @@ export function MonitoringPanel() {
     <h3>Issue proposals</h3>
     {proposals.results.map(proposal => <p key={proposal._id}>{proposal.state}. Checked {proposal.scanned} candidate records. {proposal.errorClass ?? ''}</p>)}
     {proposals.status === 'CanLoadMore' ? <Button onClick={() => proposals.loadMore(10)}>More proposals</Button> : null}
+    <h3>Notification delivery problems</h3>
+    <label>Delivery state <select value={deliveryState} onChange={event => setDeliveryState(event.target.value as typeof deliveryState)}><option value="failed">Failed</option><option value="bounced">Bounced</option><option value="complained">Complaint</option><option value="rejected">Rejected</option><option value="pending">Pending</option></select></label>
+    {deliveries.results.map(delivery => <p key={delivery.id}>{delivery.kind}: {delivery.state}. Enqueue attempts {delivery.enqueueAttempts}; receipt checks {delivery.reconcileAttempts}. Last change {new Date(delivery.updatedAt).toLocaleString()}.</p>)}
+    {deliveries.results.length === 0 ? <p>No loaded deliveries in this state.</p> : null}
+    {deliveries.status === 'CanLoadMore' ? <Button onClick={() => deliveries.loadMore(10)}>More delivery problems</Button> : null}
     <h3>Civic activity counts</h3>
     <p>Evidence opens, document opens, returns, and outcome reads are browser-reported. Question, answer, follow, and request counts come from successful server operations. Development and production stay separate. These counts do not prove resident benefit.</p>
     <ul>{overview.counters.map(counter => <li key={counter._id}>{counter.environment}: {counter.kind.replaceAll('_', ' ')}: {counter.count}</li>)}</ul>

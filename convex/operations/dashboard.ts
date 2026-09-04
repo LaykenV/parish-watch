@@ -6,7 +6,7 @@ import { listRootManifests } from '../coverage/roots'
 import schema from '../schema'
 
 export const monitoring = query({
-  args: {}, returns: v.object({ enabled: v.boolean(), counters: v.array(schema.doc('civicEventCounters')), sources: v.array(v.object({ bodyName: v.string(), proposalId: v.id('coverageRegistryProposals'), policy: v.union(schema.doc('sourceMonitoringPolicies'), v.null()), pendingTarget: v.boolean(), failedTarget: v.boolean() })) }),
+  args: {}, returns: v.object({ enabled: v.boolean(), counters: v.array(schema.doc('civicEventCounters')), sources: v.array(v.object({ bodyName: v.string(), proposalId: v.id('coverageRegistryProposals'), policy: v.union(schema.doc('sourceMonitoringPolicies'), v.null()), pendingTarget: v.boolean(), failedTarget: v.boolean(), failedTargetId: v.union(v.id('documentInventoryTargets'), v.null()), retryDocumentId: v.union(v.id('monitoredDocuments'), v.null()) })) }),
   handler: async ctx => {
     await requireOwner(ctx)
     const sources = []
@@ -17,9 +17,10 @@ export const monitoring = query({
       const policy = await ctx.db.query('sourceMonitoringPolicies').withIndex('by_registry_id', q => q.eq('registryId', proposal.registryId)).unique()
       const pending = policy ? await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'pending')).first() : null
       const failed = policy ? await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'failed')).first() : null
-      sources.push({ bodyName: manifest.bodyName, proposalId: proposal._id, policy, pendingTarget: pending !== null, failedTarget: failed !== null })
+      const retryDocument = policy ? await ctx.db.query('monitoredDocuments').withIndex('by_policy_id_and_inventory_complete', q => q.eq('policyId', policy._id).eq('inventoryComplete', false)).filter(q => q.neq(q.field('errorClass'), undefined)).first() : null
+      sources.push({ bodyName: manifest.bodyName, proposalId: proposal._id, policy, pendingTarget: pending !== null, failedTarget: failed !== null, failedTargetId: failed?._id ?? null, retryDocumentId: retryDocument?._id ?? null })
     }
-    return { enabled: env.SOURCE_MONITORING_ENABLED === 'true', counters: await ctx.db.query('civicEventCounters').take(20), sources }
+    return { enabled: env.SOURCE_MONITORING_ENABLED === 'true', counters: await ctx.db.query('civicEventCounters').take(100), sources }
   },
 })
 export const incidents = query({
@@ -54,5 +55,16 @@ export const providerUsage = query({
     }
     const page = await ctx.db.query('monitoringProviderCalls').order('desc').paginate(args.paginationOpts)
     return { ...page, page: page.page.map(row => ({ id: row._id, provider: row.provider, operation: row.operation, status: row.status, model: row.modelId, role: row.modelRole, tokens: row.promptTokens !== undefined && row.completionTokens !== undefined ? row.promptTokens + row.completionTokens : undefined, estimatedCostUsd: row.estimatedCostUsd, credits: row.creditsUsed, at: row.createdAt })) }
+  },
+})
+
+export const deliveryProblems = query({
+  args: { state: v.union(v.literal('failed'), v.literal('bounced'), v.literal('complained'), v.literal('rejected'), v.literal('pending')), paginationOpts: paginationOptsValidator },
+  returns: paginationResultValidator(v.object({ id: v.string(), kind: v.string(), state: v.string(), enqueueAttempts: v.number(), reconcileAttempts: v.number(), updatedAt: v.number() })),
+  handler: async (ctx, args) => {
+    await requireOwner(ctx)
+    if (args.paginationOpts.numItems > 50) throw new Error('Use pages of at most 50.')
+    const page = await ctx.db.query('notificationDeliveries').withIndex('by_state_and_updated_at', q => q.eq('state', args.state)).order('desc').paginate(args.paginationOpts)
+    return { ...page, page: page.page.map(row => ({ id: row._id, kind: row.kind, state: row.state, enqueueAttempts: row.enqueueAttempts, reconcileAttempts: row.reconcileAttempts, updatedAt: row.updatedAt })) }
   },
 })
