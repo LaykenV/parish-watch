@@ -1301,3 +1301,24 @@ test('an extension retains the original issue URL and old members beyond the mod
   const members = await t.run(ctx => ctx.db.query('issueDecisionLinks').withIndex('by_issue_version', q => q.eq('issueVersionId', second.issueVersion!._id)).collect())
   expect(members).toHaveLength(11)
 })
+
+test('an automatic extension with too many changed members stays visible for attention', async () => {
+  const t = initTest()
+  const seeded = await seedIssueInput(t)
+  const candidate = issueCandidate(seeded)
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const started = await startAndDrain(t, seeded.recordIds)
+  const { proposalId, matches } = await t.run(async ctx => {
+    const record = (await ctx.db.get(seeded.recordIds[0]))!
+    const { _id, _creationTime, ...fields } = record
+    const matches: Id<'decisionRecords'>[] = [seeded.recordIds[1]]
+    for (let index = 0; index < 9; index++) matches.push(await ctx.db.insert('decisionRecords', { ...fields, recordKey: `unlinked-${index}`, sourceRecordId: `unlinked-${index}` }))
+    const proposalId = await ctx.db.insert('issueLinkProposals', { recordId: record._id, publicationVersionId: record.currentPublishedVersionId!, originRunId: started.runId, state: 'scanning', cursor: null, matchedRecordIds: [], scanned: 0, startedAt: Date.now(), updatedAt: Date.now() })
+    return { proposalId, matches }
+  })
+  expect(await t.mutation(internal.issues.proposals.checkpoint, { proposalId, recordIds: matches, cursor: '', isDone: true, count: matches.length })).toBe(true)
+  const proposal = await t.run(ctx => ctx.db.get(proposalId))
+  expect(proposal?.state).toBe('ambiguous')
+  expect(proposal?.errorClass).toBe('issue_extension_capacity')
+  expect(proposal?.issueBuildId).toBeUndefined()
+})
