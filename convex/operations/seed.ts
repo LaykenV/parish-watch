@@ -116,7 +116,7 @@ async function seedRegistry(
     registries.find((registry) => registry.status === 'supported') ??
     registries.find((registry) => registry.status === 'degraded') ??
     registries.find((registry) => registry.status === 'paused')
-  const firstRegistry = registries.at(0)
+  const firstRegistry = registries.find((_registry, index) => index === 0)
   const existingSeedRegistry =
     registries.length === 1 &&
     firstRegistry !== undefined &&
