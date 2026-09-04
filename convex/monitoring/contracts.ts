@@ -1,8 +1,9 @@
 import { v } from 'convex/values'
 
+import { normalizeForMatch } from '../extraction/textMatch'
 import { sourceKindUnion } from '../pipeline/state'
 
-export const MONITOR_VERSION = 'monitor-v1'
+export const MONITOR_VERSION = 'monitor-v2'
 export const DAY_MS = 86_400_000
 export const INVENTORY_CHARS = 45_000
 export const MAX_DOCUMENT_CHARS = 450_000
@@ -38,12 +39,12 @@ export function inventoryContract(value: InventoryResult, source: string, bodyNa
   if (value.targets.length && (!value.meetingDate || !/^\d{4}-\d{2}-\d{2}$/.test(value.meetingDate) || !Number.isFinite(Date.parse(value.meetingDate)) || new Date(value.meetingDate).toISOString().slice(0, 10) !== value.meetingDate)) {
     return 'Decision inventory needs a source-backed date.'
   }
-  const normalized = source.replace(/\s+/g, ' ')
-  if (value.meetingDate && (!value.dateExcerpt || !normalized.includes(value.dateExcerpt.replace(/\s+/g, ' ')))) return 'Inventory date citation does not resolve.'
+  const normalized = normalizeForMatch(source)
+  if (value.meetingDate && (!value.dateExcerpt || !normalized.includes(normalizeForMatch(value.dateExcerpt)))) return 'Inventory date citation does not resolve.'
   const identities = new Set<string>()
   for (const target of value.targets) {
-    if (!target.title.trim() || target.title.length > 300 || target.excerpt.length > 1_000 || !target.excerpt.trim() || !normalized.includes(target.excerpt.replace(/\s+/g, ' '))) return 'Inventory target citation does not resolve.'
-    if (target.printedId !== null && (!target.printedId.trim() || target.printedId.length > 100 || /[\r\n]/.test(target.printedId) || !target.excerpt.includes(target.printedId))) return `Printed identifier ${JSON.stringify(target.printedId)} is not in its cited item. Use null when the item has no printed identifier.`
+    if (!target.title.trim() || target.title.length > 300 || target.excerpt.length > 1_000 || !target.excerpt.trim() || !normalized.includes(normalizeForMatch(target.excerpt))) return 'Inventory target citation does not resolve.'
+    if (target.printedId !== null && (!target.printedId.trim() || target.printedId.length > 100 || /[\r\n]/.test(target.printedId) || !normalizeForMatch(target.excerpt).includes(normalizeForMatch(target.printedId)))) return `Printed identifier ${JSON.stringify(target.printedId)} is not in its cited item. Use null when the item has no printed identifier.`
     const identity = target.printedId ?? target.title
     if (identities.has(identity)) return 'Inventory contains ambiguous duplicate targets.'
     identities.add(identity)
@@ -63,4 +64,11 @@ export const inventoryJsonSchema = {
         printedId: { type: ['string', 'null'], maxLength: 100 }, title: { type: 'string', maxLength: 300 }, excerpt: { type: 'string', maxLength: 1000 },
       } } },
   },
+}
+
+export function inventoryIdentity(date: string, target: typeof inventoryTarget.type): { key: string; sourcePrinted: boolean } {
+  const sourcePrinted = target.printedId !== null && /(?:19|20)\d{2}/.test(target.printedId)
+  // Local item numbers can move when an agenda is revised. Only a printed
+  // year-bearing identifier can bridge changed text; other locators stay separate.
+  return { key: sourcePrinted ? target.printedId! : `${date}:${normalizeForMatch(target.excerpt)}`, sourcePrinted }
 }

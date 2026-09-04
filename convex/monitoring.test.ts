@@ -6,7 +6,7 @@ import { convexTest } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
 import { api, components, internal } from './_generated/api'
 import { isBeforeSourceWindow, isDocumentUrl } from './monitoring/discovery'
-import { inventoryContract } from './monitoring/contracts'
+import { inventoryContract, inventoryIdentity } from './monitoring/contracts'
 import type { InventoryResult } from './monitoring/contracts'
 import schema from './schema'
 
@@ -124,4 +124,12 @@ test('daily admission exhaustion preserves source health and resumable work', as
   expect(result.policy?.activeRunId).toBeUndefined()
   expect(result.registry?.status).toBe('supported')
   expect(result.incidents).toEqual([])
+})
+
+test('formatting can normalize but local agenda numbering cannot merge different decisions', () => {
+  expect(inventoryContract(inventory, '**Test Council**. September 4, 2026. **2026-14 Road repairs**', 'Test Council')).toBeNull()
+  const a = { printedId: '2', title: 'Road repairs', excerpt: '2. Repair Oak Street' }
+  const b = { printedId: '2', title: 'Road repairs', excerpt: '2. Repair Pine Street' }
+  expect(inventoryIdentity('2026-09-04', a).key).not.toBe(inventoryIdentity('2026-09-04', b).key)
+  expect(inventoryIdentity('2026-09-04', inventory.targets[0]).key).toBe(inventoryIdentity('2026-10-04', { ...inventory.targets[0], excerpt: '2026-14 Road repairs approved' }).key)
 })

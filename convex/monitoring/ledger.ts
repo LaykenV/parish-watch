@@ -15,7 +15,7 @@ import { resolveRootManifest } from '../coverage/roots'
 import { sha256HexOfText } from '../sources/hashing'
 import schema from '../schema'
 import { isBeforeSourceWindow } from './discovery'
-import { DAY_MS, inventoryResult, MONITOR_VERSION, monitorState } from './contracts'
+import { DAY_MS, inventoryIdentity, inventoryResult, MONITOR_VERSION, monitorState } from './contracts'
 
 const limiter = new RateLimiter(components.rateLimiter, {
   globalCalls: { kind: 'fixed window', rate: 1_000, period: DAY },
@@ -240,9 +240,7 @@ export const saveInventory = internalMutation({
     for (const target of args.inventory.targets) {
       const date = args.inventory.meetingDate
       if (!date || Date.parse(date) < policy.startsAt || Date.parse(date) > Date.now() + 366 * DAY_MS) continue
-      const hasYear = target.printedId !== null && /(?:19|20)\d{2}/.test(target.printedId)
-      const identity = target.printedId ?? target.title.replace(/\s+/g, ' ').trim().toLowerCase()
-      const key = hasYear ? identity : `${date}:${identity}`
+      const { key, sourcePrinted: hasYear } = inventoryIdentity(date, target)
       const targetKey = await sha256HexOfText(key)
       const existing = await ctx.db.query('documentInventoryTargets').withIndex('by_snapshot_id_and_target_key', q => q.eq('snapshotId', document.snapshotId!).eq('targetKey', targetKey)).unique()
       if (existing) continue
