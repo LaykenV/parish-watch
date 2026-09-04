@@ -49,3 +49,24 @@ test('coverage verification is purpose-bound and creates no account or follow', 
     expect((await ctx.db.query('coverageNoticeSubscriptions').first())?.state).toBe('waiting')
   })
 })
+
+test('rejected verification rolls back challenge consumption and verification state', async () => {
+  vi.stubEnv('EMAIL_ADDRESS_HMAC_KEY', btoa('test-key-for-coverage-verification'))
+  const t = convexTest(schema, modules)
+  rateLimiterTest.register(t)
+  const requesterToken = 'd'.repeat(64)
+  const request = await t.mutation(api.coverage.requests.record, { requesterToken, placeName: 'New place', placeKind: 'unknown' })
+  const challengeId = 'capacity-challenge'
+  const ids = await t.run(async ctx => {
+    const subscriberId = await ctx.db.insert('emailSubscribers', { addressHash: 'capacity-address', encryptedAddress: 'encrypted', encryptionVersion: 1, state: 'pending', createdAt: 1, updatedAt: 1 })
+    for (let i = 0; i < 100; i++) await ctx.db.insert('coverageNoticeSubscriptions', { subscriberId, placeKey: `unknown:place-${i}`, placeName: `Place ${i}`, state: 'waiting', createdAt: 1, updatedAt: 1 })
+    const challenge = await ctx.db.insert('coverageNoticeChallenges', { requestId: request.requestId, subscriberId, challengeId, codeHash: await hashVerificationCode(`coverage:${challengeId}`, '123456'), expiresAt: Date.now() + 60_000, attempts: 0, createdAt: Date.now() })
+    return { subscriberId, challenge }
+  })
+  for (let i = 0; i < 2; i++) await expect(t.mutation(api.coverage.requests.verifyNotice, { challengeId, code: '123456', requesterToken })).rejects.toThrow('coverage-notice limit')
+  await t.run(async ctx => {
+    expect((await ctx.db.get(ids.challenge))?.consumedAt).toBeUndefined()
+    expect((await ctx.db.get(ids.subscriberId))?.state).toBe('pending')
+    expect(await ctx.db.query('coverageNoticeSubscriptions').collect()).toHaveLength(100)
+  })
+})
