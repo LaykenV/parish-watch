@@ -10,6 +10,12 @@ import { env, internalAction, internalMutation, internalQuery } from '../_genera
 function originalCitationMatch(text: string): string {
   return text.replace(/\u00a0/g, ' ').replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim()
 }
+// Frozen intermediate bases from 2fd6516 and 236f89d. Source snapshots and
+// publication citations remain immutable when matching rules gain formatting support.
+function historicalCitationMatches(text: string): string[] {
+  const joined = text.replace(/([A-Za-z0-9])-[ \t]*\r?\n[ \t]*(?=[A-Za-z0-9])/g, '$1-')
+  return [originalCitationMatch(text), originalCitationMatch(joined), originalCitationMatch(joined.replace(/<u(?:\s+[^<>]*?)?\s*>|<\/u\s*>/gi, '')), normalizeForMatch(text, { preserveBoldEmphasis: true })]
+}
 const PROOF_INBOX = 'public-parish-slice9-dev-20260904'
 function requireDevelopment() {
   if (env.CONVEX_SITE_URL !== 'https://woozy-wren-227.convex.site') throw new Error('Development proof is unavailable on this deployment.')
@@ -91,7 +97,7 @@ export const auditPublishedEvidence = internalAction({
   handler: async (ctx, args): Promise<{ records: number; citations: number; legacyOffsets: number; problems: string[]; isDone: boolean; continueCursor: string }> => {
     requireDevelopment()
     const page = await ctx.runQuery(internal.operations.developmentProof.publishedEvidencePage, args)
-    const texts = new Map<string, { current: string; legacy: string; original: string }>()
+    const texts = new Map<string, { current: string; historical: string[] }>()
     const problems: string[] = []
     let citations = 0
     let legacyOffsets = 0
@@ -102,15 +108,16 @@ export const auditPublishedEvidence = internalAction({
         const blob = await ctx.storage.get(snapshot.normalizedStorageId)
         const text = blob ? await blob.text() : ''
         if (!blob || await sha256HexOfText(text) !== snapshot.normalizedContentHash) problems.push(`${record.recordKey}: snapshot hash`)
-        texts.set(snapshot._id, { current: normalizeForMatch(text), legacy: normalizeForMatch(text, { preserveBoldEmphasis: true }), original: originalCitationMatch(text) })
+        texts.set(snapshot._id, { current: normalizeForMatch(text), historical: historicalCitationMatches(text) })
       }
       for (const citation of record.citations) {
         citations++
         const text = texts.get(citation.snapshotId)
         if (text?.current.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt)) continue
-        // Publication offsets before 78df4a6 retained bold Markdown markers.
-        if (text?.legacy.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt, { preserveBoldEmphasis: true }) || text?.original.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === originalCitationMatch(citation.excerpt)) legacyOffsets++
-        else problems.push(`${record.recordKey} ${citation.fieldPath}: offsets ${citation.normalizedStartOffset}-${citation.normalizedEndOffset}, current ${text?.current.indexOf(normalizeForMatch(citation.excerpt))}, legacy ${text?.legacy.indexOf(normalizeForMatch(citation.excerpt, { preserveBoldEmphasis: true }))}`)
+        const excerpts = historicalCitationMatches(citation.excerpt)
+        if (text?.historical.some((source, index) => source.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === excerpts[index])) legacyOffsets++
+        else problems.push(`${record.recordKey} ${citation.fieldPath}: citation offsets`)
+
       }
     }
     return { records: page.evidence.length, citations, legacyOffsets, problems, isDone: page.isDone, continueCursor: page.continueCursor }
