@@ -105,7 +105,7 @@ export const auditPublishedEvidence = internalAction({
         if (text?.current.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt)) continue
         // Publication offsets before 78df4a6 retained bold Markdown markers.
         if (text?.legacy.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt, { preserveBoldEmphasis: true })) legacyOffsets++
-        else problems.push(`${record.recordKey}: citation offsets`)
+        else problems.push(`${record.recordKey} ${citation.fieldPath}: offsets ${citation.normalizedStartOffset}-${citation.normalizedEndOffset}, current ${text?.current.indexOf(normalizeForMatch(citation.excerpt))}, legacy ${text?.legacy.indexOf(normalizeForMatch(citation.excerpt, { preserveBoldEmphasis: true }))}`)
       }
     }
     return { records: page.evidence.length, citations, legacyOffsets, problems, isDone: page.isDone, continueCursor: page.continueCursor }

@@ -1,6 +1,6 @@
 # Slice 9 final build plan
 
-Status: implementation authorized, Slice 9A in development
+Status: seven open PRs, combined development certification in progress
 Date: September 4, 2026
 Baseline: `8b03ac3`, matching local and remote `main` during this review
 
@@ -417,9 +417,10 @@ Build and record:
   realtime subscriber, one immediate alert, a grounded inbound reply, and an
   eligible weekly roundup. Include suppression after coverage degradation.
 - Prove the new request, notice, share, growing-corpus, pause, and recovery paths.
-- Test desktop keyboard and screen-reader operation, reduced motion, 320- and
-  375-pixel layouts, and actual iPhone Safari. The physical-device pass covers
-  browser controls, rotation, keyboard, safe areas, and 125 percent page zoom.
+- Test desktop keyboard behavior, accessible names and structure, reduced motion,
+  and 320- and 375-pixel mobile layouts. The owner replaced the physical iPhone
+  Safari requirement with desktop and mobile emulation for this development
+  review. Do not describe emulation as a physical-device or screen-reader pass.
 - Check every published citation in the bounded release corpus and sample
   historical versions. Large corpus coverage belongs in paginated CI or remote
   checks, never a single unbounded browser request.
