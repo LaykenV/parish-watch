@@ -61,7 +61,7 @@ export const inventoryJsonSchema = {
     meetingDate: { type: ['string', 'null'] }, dateExcerpt: { type: ['string', 'null'] },
     targets: { type: 'array', items: { type: 'object', additionalProperties: false,
       required: ['printedId', 'title', 'excerpt'], properties: {
-        printedId: { type: ['string', 'null'], maxLength: 100 }, title: { type: 'string', maxLength: 300 }, excerpt: { type: 'string', maxLength: 1000 },
+        printedId: { type: ['string', 'null'], maxLength: 100 }, title: { type: 'string', maxLength: 300 }, excerpt: { type: 'string', maxLength: 240 },
       } } },
   },
 }
