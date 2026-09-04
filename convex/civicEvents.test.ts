@@ -43,3 +43,18 @@ test('daily provider rollups retain unknown usage and never count a ledger row t
     expect(row).toMatchObject({ calls: 101, failures: 1, unknownCostCalls: 101, estimatedCostUsd: 0, totalLatencyMs: 5050 })
   })
 })
+
+test('retrieval rollups keep failed calls with unknown credits beside reported credits', async () => {
+  const t = convexTest(schema, modules)
+  await t.run(async ctx => {
+    // IDs remain typed while this test exercises only the provider ledger.
+    const runId = 'pipelineRuns:controlled' as import('./_generated/dataModel').Id<'pipelineRuns'>
+    await ctx.db.insert('retrievalProviderCalls', { runId, status: 'succeeded', creditsUsed: 31, latencyMs: 100, createdAt: 1788560000000 })
+    await ctx.db.insert('retrievalProviderCalls', { runId, status: 'failed', latencyMs: 50, createdAt: 1788560000000 })
+  })
+  expect(await t.mutation(internal.operations.usage.aggregate, { kind: 'retrieval' })).toBe(2)
+  expect(await t.mutation(internal.operations.usage.aggregate, { kind: 'retrieval' })).toBe(0)
+  await t.run(async ctx => {
+    expect(await ctx.db.query('providerUsageDaily').first()).toMatchObject({ kind: 'retrieval', calls: 2, failures: 1, reportedCredits: 31, unknownCreditCalls: 1, unknownCostCalls: 2 })
+  })
+})

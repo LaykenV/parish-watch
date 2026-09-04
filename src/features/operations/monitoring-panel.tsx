@@ -12,7 +12,7 @@ export function MonitoringPanel() {
   const deliveries = usePaginatedQuery(api.operations.dashboard.deliveryProblems, { state: deliveryState }, { initialNumItems: 10 })
   const checkNow = useMutation(api.monitoring.ledger.checkNow)
   const [notice, setNotice] = useState('')
-  const [kind, setKind] = useState<'pipeline' | 'ask' | 'compiler' | 'monitoring'>('monitoring')
+  const [kind, setKind] = useState<'pipeline' | 'ask' | 'compiler' | 'monitoring' | 'retrieval'>('monitoring')
   const usage = usePaginatedQuery(api.operations.dashboard.providerUsage, { kind }, { initialNumItems: 25 })
   const daily = usePaginatedQuery(api.operations.usage.daily, {}, { initialNumItems: 10 })
   const incidents = usePaginatedQuery(api.operations.dashboard.incidents, {}, { initialNumItems: 10 })
@@ -51,11 +51,11 @@ export function MonitoringPanel() {
     <p>Evidence opens, document opens, returns, and outcome reads are browser-reported. Question, answer, follow, and request counts come from successful server operations. Development and production stay separate. These counts do not prove resident benefit.</p>
     <ul>{overview.counters.map(counter => <li key={counter._id}>{counter.environment}: {counter.kind.replaceAll('_', ' ')}: {counter.count}</li>)}</ul>
     <h3>Daily provider totals</h3>
-    <p>Totals update every five minutes as ledger batches are processed. Unknown usage remains separate from reported amounts.</p>
-    {daily.results.map(row => <p key={row._id}>{row.day}, {row.kind}, {row.provider}: {row.calls} calls, {row.failures} unsuccessful attempts, {row.reportedTokens} reported tokens, ${row.estimatedCostUsd.toFixed(4)} estimated cost, {row.reportedCredits} reported credits. Unknown cost for {row.unknownCostCalls} calls. Mean latency {Math.round(row.totalLatencyMs / row.calls)} ms.</p>)}
+    <p>Totals update every five minutes as ledger batches are processed. Source retrieval totals begin with this release; earlier retrieval stages do not record every provider call. Monitoring retrieval is counted under monitoring. Unknown usage remains separate from reported amounts.</p>
+    {daily.results.map(row => <p key={row._id}>{row.day}, {row.kind}, {row.provider}: {row.calls} calls, {row.failures} unsuccessful attempts, {row.reportedTokens} reported tokens, ${row.estimatedCostUsd.toFixed(4)} estimated cost, {row.reportedCredits} reported credits. Unknown cost for {row.unknownCostCalls} calls, tokens for {row.unknownTokenCalls}, and credits for {row.unknownCreditCalls}. Mean latency {Math.round(row.totalLatencyMs / row.calls)} ms.</p>)}
     {daily.status === 'CanLoadMore' ? <Button onClick={() => daily.loadMore(10)}>More daily totals</Button> : null}
     <h3>Provider usage</h3>
-    <label>Work type <select value={kind} onChange={event => setKind(event.target.value as typeof kind)}><option value="monitoring">Source monitoring</option><option value="pipeline">Evidence pipeline</option><option value="compiler">Coverage compiler</option><option value="ask">Resident Ask</option></select></label>
+    <label>Work type <select value={kind} onChange={event => setKind(event.target.value as typeof kind)}><option value="monitoring">Source monitoring</option><option value="pipeline">Evidence pipeline</option><option value="retrieval">Source retrieval</option><option value="compiler">Coverage compiler</option><option value="ask">Resident Ask</option></select></label>
     <p>Costs are estimates. Missing provider usage means unknown, not zero. This list shows the loaded page, not a complete spending total.</p>
     <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Time</th><th>Operation</th><th>Provider and model</th><th>Status</th><th>Tokens</th><th>Estimated USD</th><th>Credits</th></tr></thead><tbody>{usage.results.map(row => <tr key={row.id}><td>{new Date(row.at).toLocaleString()}</td><td>{row.operation}</td><td>{row.provider} {row.model ?? ''}</td><td>{row.status}</td><td>{row.tokens ?? 'Unknown'}</td><td>{row.estimatedCostUsd ?? 'Unknown'}</td><td>{('credits' in row ? row.credits : undefined) ?? 'Unknown'}</td></tr>)}</tbody></table></div>
     {usage.status === 'CanLoadMore' ? <Button onClick={() => usage.loadMore(25)}>More provider calls</Button> : null}

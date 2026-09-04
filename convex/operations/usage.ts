@@ -5,8 +5,8 @@ import { internalMutation, query } from '../_generated/server'
 import { requireOwner } from '../auth/authorization'
 import schema from '../schema'
 
-const kind = v.union(v.literal('pipeline'), v.literal('ask'), v.literal('compiler'), v.literal('monitoring'))
-type Usage = { at: number; provider: string; status: string; tokens?: number; cost?: number; credits?: number; latency: number; id: Id<'aiCalls' | 'askModelAttempts' | 'coverageCompilerProviderCalls' | 'monitoringProviderCalls'> }
+const kind = v.union(v.literal('pipeline'), v.literal('ask'), v.literal('compiler'), v.literal('monitoring'), v.literal('retrieval'))
+type Usage = { at: number; provider: string; status: string; tokens?: number; cost?: number; credits?: number; latency: number; id: Id<'aiCalls' | 'askModelAttempts' | 'coverageCompilerProviderCalls' | 'monitoringProviderCalls' | 'retrievalProviderCalls'> }
 export const aggregate = internalMutation({
   args: { kind }, returns: v.number(),
   handler: async (ctx, args): Promise<number> => {
@@ -14,6 +14,7 @@ export const aggregate = internalMutation({
     if (args.kind === 'pipeline') rows = (await ctx.db.query('aiCalls').withIndex('by_usage_aggregated', q => q.eq('usageAggregatedAt', undefined)).take(100)).map(row => ({ at: row.createdAt, provider: row.route, status: row.status, tokens: row.totalTokens, cost: row.estimatedCostUsd, latency: row.latencyMs, id: row._id }))
     else if (args.kind === 'ask') rows = (await ctx.db.query('askModelAttempts').withIndex('by_usage_aggregated', q => q.eq('usageAggregatedAt', undefined)).take(100)).map(row => ({ at: row.createdAt, provider: row.route, status: row.status, tokens: row.totalTokens, cost: row.estimatedCostUsd, latency: row.latencyMs, id: row._id }))
     else if (args.kind === 'compiler') rows = (await ctx.db.query('coverageCompilerProviderCalls').withIndex('by_usage_aggregated', q => q.eq('usageAggregatedAt', undefined)).take(100)).map(row => ({ at: row.createdAt, provider: row.provider, status: row.status, tokens: row.promptTokens !== undefined && row.completionTokens !== undefined ? row.promptTokens + row.completionTokens : undefined, cost: row.estimatedCostUsd, credits: row.creditsUsed, latency: row.latencyMs, id: row._id }))
+    else if (args.kind === 'retrieval') rows = (await ctx.db.query('retrievalProviderCalls').withIndex('by_usage_aggregated', q => q.eq('usageAggregatedAt', undefined)).take(100)).map(row => ({ at: row.createdAt, provider: 'firecrawl', status: row.status, credits: row.creditsUsed, latency: row.latencyMs, id: row._id }))
     else rows = (await ctx.db.query('monitoringProviderCalls').withIndex('by_usage_aggregated', q => q.eq('usageAggregatedAt', undefined)).take(100)).map(row => ({ at: row.createdAt, provider: row.provider, status: row.status, tokens: row.promptTokens !== undefined && row.completionTokens !== undefined ? row.promptTokens + row.completionTokens : undefined, cost: row.estimatedCostUsd, credits: row.creditsUsed, latency: row.latencyMs, id: row._id }))
     for (const row of rows) {
       const day = new Date(row.at).toISOString().slice(0, 10)
@@ -31,4 +32,9 @@ export const aggregate = internalMutation({
 export const daily = query({
   args: { paginationOpts: paginationOptsValidator }, returns: paginationResultValidator(schema.doc('providerUsageDaily')),
   handler: async (ctx, args) => { await requireOwner(ctx); if (args.paginationOpts.numItems > 50) throw new Error('Use pages of at most 50.'); return ctx.db.query('providerUsageDaily').withIndex('by_day').order('desc').paginate(args.paginationOpts) },
+})
+
+export const recordRetrieval = internalMutation({
+  args: { runId: v.id('pipelineRuns'), status: v.string(), creditsUsed: v.optional(v.number()), latencyMs: v.number() }, returns: v.null(),
+  handler: async (ctx, args) => { await ctx.db.insert('retrievalProviderCalls', { ...args, createdAt: Date.now() }); return null },
 })

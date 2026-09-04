@@ -37,10 +37,13 @@ export const demand = query({
 })
 const usageRow = v.object({ id: v.string(), provider: v.string(), operation: v.string(), status: v.string(), model: v.optional(v.string()), role: v.optional(v.string()), tokens: v.optional(v.number()), estimatedCostUsd: v.optional(v.number()), credits: v.optional(v.number()), at: v.number() })
 export const providerUsage = query({
-  args: { kind: v.union(v.literal('pipeline'), v.literal('ask'), v.literal('compiler'), v.literal('monitoring')), paginationOpts: paginationOptsValidator }, returns: paginationResultValidator(usageRow),
+  args: { kind: v.union(v.literal('pipeline'), v.literal('ask'), v.literal('compiler'), v.literal('monitoring'), v.literal('retrieval')), paginationOpts: paginationOptsValidator }, returns: paginationResultValidator(usageRow),
   handler: async (ctx, args) => {
     await requireOwner(ctx)
     if (args.paginationOpts.numItems > 50) throw new Error('Use report pages of at most 50.')
+    if (args.kind === 'retrieval') {
+      const page = await ctx.db.query('retrievalProviderCalls').order('desc').paginate(args.paginationOpts)
+      return { ...page, page: page.page.map(row => ({ id: row._id, provider: 'firecrawl', operation: 'retrieval', status: row.status, credits: row.creditsUsed, at: row.createdAt })) }
     if (args.kind === 'pipeline') {
       const page = await ctx.db.query('aiCalls').order('desc').paginate(args.paginationOpts)
       return { ...page, page: page.page.map(row => ({ id: row._id, provider: row.route, operation: 'evidence_pipeline', status: row.status, model: row.modelId, role: row.modelRole, tokens: row.totalTokens, estimatedCostUsd: row.estimatedCostUsd, at: row.createdAt })) }
