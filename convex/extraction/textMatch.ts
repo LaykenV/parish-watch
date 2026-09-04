@@ -65,10 +65,10 @@ function unwrapPdfSuperscriptArtifacts(text: string): string {
     .replace(/<sup(?:\s+[^<>]*?)?\s*>|<\/sup\s*>/gi, '')
 }
 
-export function normalizeForMatch(text: string): string {
+export function normalizeForMatch(text: string, options?: { preserveBoldEmphasis?: boolean }): string {
   return unwrapPdfSuperscriptArtifacts(
     unwrapWhitespaceBoundedAsteriskEmphasis(
-      unwrapWhitespaceBoundedBoldAsteriskEmphasis(
+      (options?.preserveBoldEmphasis ? (value: string) => value : unwrapWhitespaceBoundedBoldAsteriskEmphasis)(
         unwrapWhitespaceBoundedUnderscoreEmphasis(
           unwrapMatchingMailtoLinks(text),
         ),

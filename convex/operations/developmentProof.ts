@@ -65,7 +65,9 @@ export const publishedEvidencePage = internalQuery({
     const evidence = []
     for (const record of page.page) {
       if (!record.currentPublishedVersionId) continue
-      const version = await ctx.db.get(record.currentPublishedVersionId)
+      const current = await ctx.db.get(record.currentPublishedVersionId)
+      const previous = current ? await ctx.db.query('publicationVersions').withIndex('by_record_and_version', q => q.eq('recordId', record._id).lt('version', current.version)).order('desc').take(1) : []
+      for (const version of [current, ...previous]) {
       if (!version?.payload || version.mode === 'withheld') continue
       const citations = await ctx.db.query('citations').withIndex('by_publication_and_field_path', q => q.eq('publicationVersionId', version._id)).take(101)
       const snapshots = []
@@ -73,19 +75,21 @@ export const publishedEvidencePage = internalQuery({
         const snapshot = await ctx.db.get(id)
         if (snapshot) snapshots.push(snapshot)
       }
-      evidence.push({ recordKey: record.recordKey, citations, snapshots })
+      evidence.push({ recordKey: `${record.recordKey}:v${version.version}`, citations, snapshots })
+      }
     }
     return { evidence, isDone: page.isDone, continueCursor: page.continueCursor }
   },
 })
 export const auditPublishedEvidence = internalAction({
   args: { paginationOpts: paginationOptsValidator },
-  handler: async (ctx, args): Promise<{ records: number; citations: number; problems: string[]; isDone: boolean; continueCursor: string }> => {
+  handler: async (ctx, args): Promise<{ records: number; citations: number; legacyOffsets: number; problems: string[]; isDone: boolean; continueCursor: string }> => {
     requireDevelopment()
     const page = await ctx.runQuery(internal.operations.developmentProof.publishedEvidencePage, args)
-    const texts = new Map<string, string>()
+    const texts = new Map<string, { current: string; legacy: string }>()
     const problems: string[] = []
     let citations = 0
+    let legacyOffsets = 0
     for (const record of page.evidence) {
       if (!record.citations.length || record.citations.length > 100) problems.push(`${record.recordKey}: citation capacity`)
       for (const snapshot of record.snapshots) {
@@ -93,14 +97,17 @@ export const auditPublishedEvidence = internalAction({
         const blob = await ctx.storage.get(snapshot.normalizedStorageId)
         const text = blob ? await blob.text() : ''
         if (!blob || await sha256HexOfText(text) !== snapshot.normalizedContentHash) problems.push(`${record.recordKey}: snapshot hash`)
-        texts.set(snapshot._id, normalizeForMatch(text))
+        texts.set(snapshot._id, { current: normalizeForMatch(text), legacy: normalizeForMatch(text, { preserveBoldEmphasis: true }) })
       }
       for (const citation of record.citations) {
         citations++
         const text = texts.get(citation.snapshotId)
-        if (text === undefined || text.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) !== normalizeForMatch(citation.excerpt)) problems.push(`${record.recordKey}: citation offsets`)
+        if (text?.current.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt)) continue
+        // Publication offsets before 78df4a6 retained bold Markdown markers.
+        if (text?.legacy.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) === normalizeForMatch(citation.excerpt, { preserveBoldEmphasis: true })) legacyOffsets++
+        else problems.push(`${record.recordKey}: citation offsets`)
       }
     }
-    return { records: page.evidence.length, citations, problems, isDone: page.isDone, continueCursor: page.continueCursor }
+    return { records: page.evidence.length, citations, legacyOffsets, problems, isDone: page.isDone, continueCursor: page.continueCursor }
   },
 })
