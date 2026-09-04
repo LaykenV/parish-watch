@@ -1,5 +1,8 @@
 import { v } from 'convex/values'
-import { env, internalAction } from '../_generated/server'
+import { paginationOptsValidator } from 'convex/server'
+import { internal } from '../_generated/api'
+import { sha256HexOfText } from '../sources/hashing'
+import { env, internalAction, internalQuery } from '../_generated/server'
 
 const PROOF_INBOX = 'public-parish-slice9-dev-20260904'
 function requireDevelopment() {
@@ -33,7 +36,7 @@ export const mailboxReceipts = internalAction({
     const receipts = []
     for (const thread of result.threads ?? []) {
       const detail = await mailboxApi(`/inboxes/${encodeURIComponent(args.inboxId)}/threads/${encodeURIComponent(thread.thread_id)}`) as { messages?: Array<{ message_id: string; subject?: string; text?: string }> }
-      for (const message of detail.messages ?? []) if (message.subject === 'Verify your Public Parish coverage notice' || message.subject?.startsWith('Public Parish coverage is available for ')) receipts.push({ subject: message.subject ?? '', messageId: message.message_id, verificationCode: message.text?.match(/verification code is (\d{6})/i)?.[1] ?? null, unsubscribeUrl: message.text?.match(/https:\/\/woozy-wren-227\.convex\.site\/coverage\/unsubscribe\/[A-Za-z0-9_-]+/)?.[0] ?? null })
+      for (const message of detail.messages ?? []) if (message.subject === 'Your Public Parish verification code' || message.subject === 'Verify your Public Parish coverage notice' || message.subject?.startsWith('Public Parish coverage is available for ')) receipts.push({ subject: message.subject ?? '', messageId: message.message_id, verificationCode: message.text?.match(/(?:verification code is|verification code:|code is)\s*(\d{6})/i)?.[1] ?? null, unsubscribeUrl: message.text?.match(/https:\/\/woozy-wren-227\.convex\.site\/coverage\/unsubscribe\/[A-Za-z0-9_-]+/)?.[0] ?? null })
     }
     return receipts
   },
@@ -49,5 +52,54 @@ export const providerAccess = internalAction({
       results.push({ operation, status: response.status })
     }
     return results
+  },
+})
+
+export const publishedEvidencePage = internalQuery({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    requireDevelopment()
+    if (args.paginationOpts.numItems > 10) throw new Error('Use at most ten records per audit page.')
+    const page = await ctx.db.query('decisionRecords').paginate(args.paginationOpts)
+    const evidence = []
+    for (const record of page.page) {
+      if (!record.currentPublishedVersionId) continue
+      const version = await ctx.db.get(record.currentPublishedVersionId)
+      if (!version?.payload || version.mode === 'withheld') continue
+      const citations = await ctx.db.query('citations').withIndex('by_publication_and_field_path', q => q.eq('publicationVersionId', version._id)).take(101)
+      const snapshots = []
+      for (const id of new Set(citations.map(citation => citation.snapshotId))) {
+        const snapshot = await ctx.db.get(id)
+        if (snapshot) snapshots.push(snapshot)
+      }
+      evidence.push({ recordKey: record.recordKey, citations, snapshots })
+    }
+    return { evidence, isDone: page.isDone, continueCursor: page.continueCursor }
+  },
+})
+export const auditPublishedEvidence = internalAction({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args): Promise<{ records: number; citations: number; problems: string[]; isDone: boolean; continueCursor: string }> => {
+    requireDevelopment()
+    const page = await ctx.runQuery(internal.operations.developmentProof.publishedEvidencePage, args)
+    const texts = new Map<string, string>()
+    const problems: string[] = []
+    let citations = 0
+    for (const record of page.evidence) {
+      if (!record.citations.length || record.citations.length > 100) problems.push(`${record.recordKey}: citation capacity`)
+      for (const snapshot of record.snapshots) {
+        if (texts.has(snapshot._id)) continue
+        const blob = await ctx.storage.get(snapshot.normalizedStorageId)
+        const text = blob ? await blob.text() : ''
+        if (!blob || await sha256HexOfText(text) !== snapshot.normalizedContentHash) problems.push(`${record.recordKey}: snapshot hash`)
+        texts.set(snapshot._id, text)
+      }
+      for (const citation of record.citations) {
+        citations++
+        const text = texts.get(citation.snapshotId)
+        if (text === undefined || text.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) !== citation.excerpt) problems.push(`${record.recordKey}: citation offsets`)
+      }
+    }
+    return { records: page.evidence.length, citations, problems, isDone: page.isDone, continueCursor: page.continueCursor }
   },
 })

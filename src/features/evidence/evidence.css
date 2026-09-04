@@ -239,6 +239,7 @@
 
 .ev-source {
   display: inline-flex;
+  max-width: 100%;
   gap: 0.5rem;
   align-items: center;
   min-height: var(--pp-control-height);
@@ -268,6 +269,11 @@
 }
 
 .ev-source-locator {
+  min-width: 0;
+  max-width: min(100%, 28ch);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: var(--pp-text-caption);
