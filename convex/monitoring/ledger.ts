@@ -336,8 +336,8 @@ export const reconcileTargets = internalMutation({
         continue
       }
       if (!extraction?.candidateId) continue
-      const versions = await ctx.db.query('publicationVersions').withIndex('by_candidate', q => q.eq('candidateId', extraction.candidateId!)).order('desc').take(1)
-      const version = versions[0]
+      const versions = await ctx.db.query('publicationVersions').withIndex('by_candidate', q => q.eq('candidateId', extraction.candidateId!)).order('desc').first()
+      const version = versions
       if (version) await ctx.db.patch(target._id, { state: version.mode === 'withheld' ? 'withheld' : 'published', updatedAt: Date.now() })
     }
     return null

@@ -23,7 +23,7 @@ export const discover = internalAction({
       let creditsUsed: number | undefined
       try {
         const page = await firecrawl.scrape(ctx, url, { formats: ['links'], onlyMainContent: false, skipTlsVerification: false })
-        const metadata = page.metadata as Record<string, unknown> | undefined
+        const metadata = page.metadata
         creditsUsed = typeof metadata?.creditsUsed === 'number' ? metadata.creditsUsed : undefined
         if (page.warning || (typeof metadata?.statusCode === 'number' && metadata.statusCode >= 400)) throw new Error('monitoring_listing_incomplete')
         const links = [...new Set(page.links ?? [])].filter(link => /(?:\.pdf(?:\?|$)|agenda|minute|ordinance|resolution|meeting|packet|planning)/i.test(link))
