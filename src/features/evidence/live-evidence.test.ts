@@ -86,3 +86,11 @@ describe('published issue timeline', () => {
     ])
   })
 })
+
+it('keeps accepted evidence and citations when current coverage degrades', () => {
+  const fixture = toIssueFixture({ ...publishedIssue, coverageStatus: 'degraded' })
+  expect(fixture?.issue.title).toBe(publishedIssue.title)
+  expect(fixture?.issue.coverageNote).toContain('newer decisions may be missing')
+  expect(fixture?.citations['citation-dated']?.excerpt.quote).toBe(citation.excerpt)
+  expect(fixture?.citations['citation-dated']?.warning).toContain('incomplete')
+})
