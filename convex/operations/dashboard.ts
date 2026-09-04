@@ -44,6 +44,7 @@ export const providerUsage = query({
     if (args.kind === 'retrieval') {
       const page = await ctx.db.query('retrievalProviderCalls').order('desc').paginate(args.paginationOpts)
       return { ...page, page: page.page.map(row => ({ id: row._id, provider: 'firecrawl', operation: 'retrieval', status: row.status, credits: row.creditsUsed, at: row.createdAt })) }
+    }
     if (args.kind === 'pipeline') {
       const page = await ctx.db.query('aiCalls').order('desc').paginate(args.paginationOpts)
       return { ...page, page: page.page.map(row => ({ id: row._id, provider: row.route, operation: 'evidence_pipeline', status: row.status, model: row.modelId, role: row.modelRole, tokens: row.totalTokens, estimatedCostUsd: row.estimatedCostUsd, at: row.createdAt })) }
