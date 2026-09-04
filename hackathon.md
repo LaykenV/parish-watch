@@ -12,9 +12,18 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-04T15:25:28Z
+- **Last updated:** 2026-09-04T16:19:12Z
 
 ## Log
+
+### 2026-09-04 - 76b806d
+
+Stopped Chrome's unreliable `navigator.onLine` flag from showing an offline
+banner or blocking Ask while the served origin still answers. Connectivity
+events now confirm failure with a fresh same-origin request and recheck when a
+resident returns to the tab. Added regression cases for a reachable origin and
+Ask under a false browser flag (`src/features/discovery/hooks.ts`,
+`src/features/ask/live-adapter.ts`). This fix is not deployed yet.
 
 ### 2026-09-04 - b5583ed
 
