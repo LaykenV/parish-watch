@@ -72,3 +72,12 @@ export function inventoryIdentity(date: string, target: typeof inventoryTarget.t
   // year-bearing identifier can bridge changed text; other locators stay separate.
   return { key: sourcePrinted ? target.printedId! : `${date}:${normalizeForMatch(target.excerpt)}`, sourcePrinted }
 }
+
+export function inventorySourceSection(text: string, chunk: number): { source: string; dateAndBodyContext: string | undefined } {
+  const sectionStart = Math.max(0, chunk * INVENTORY_CHARS - 2_000)
+  const paragraphStart = text.lastIndexOf('\n\n', sectionStart)
+  return {
+    source: text.slice(paragraphStart >= sectionStart - 3_000 ? Math.max(0, paragraphStart) : sectionStart, (chunk + 1) * INVENTORY_CHARS + 2_000),
+    dateAndBodyContext: chunk > 0 ? text.slice(0, 1_000) : undefined,
+  }
+}

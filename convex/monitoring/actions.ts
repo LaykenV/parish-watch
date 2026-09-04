@@ -8,7 +8,7 @@ import { resolveRootManifest } from '../coverage/roots'
 import { classifyHost } from '../coverage/rootGate'
 import { isBeforeSourceWindow, isDocumentUrl } from './discovery'
 import { sha256HexOfText } from '../sources/hashing'
-import { INVENTORY_CHARS, MAX_DOCUMENT_CHARS, inventoryContract, inventoryJsonSchema, inventoryResult } from './contracts'
+import { INVENTORY_CHARS, MAX_DOCUMENT_CHARS, inventoryContract, inventorySourceSection, inventoryJsonSchema, inventoryResult } from './contracts'
 import type { InventoryResult } from './contracts'
 
 const firecrawl = new FirecrawlClient(components.firecrawl)
@@ -75,10 +75,7 @@ export const inventoryChunk = internalAction({
     if (text.length > MAX_DOCUMENT_CHARS) throw new Error('monitoring_document_overflow')
     const chunks = Math.max(1, Math.ceil(text.length / INVENTORY_CHARS))
     if (!Number.isInteger(args.chunk) || args.chunk < 0 || args.chunk >= chunks) throw new Error('monitoring_chunk_mismatch')
-    const sectionStart = Math.max(0, args.chunk * INVENTORY_CHARS - 2_000)
-    const paragraphStart = text.lastIndexOf('\n\n', sectionStart)
-    const source = text.slice(paragraphStart >= sectionStart - 3_000 ? Math.max(0, paragraphStart) : sectionStart, (args.chunk + 1) * INVENTORY_CHARS + 2_000)
-    const dateAndBodyContext = args.chunk > 0 ? text.slice(0, 1_000) : undefined
+    const { source, dateAndBodyContext } = inventorySourceSection(text, args.chunk)
     if (!env.MODEL_STRONG_ID || !env.MODEL_FAST_ID || env.MODEL_STRONG_ID === env.MODEL_FAST_ID) throw new Error('monitoring_models_not_independent')
     let inventory: InventoryResult | undefined
     let repair: { reason: string; previous: string | null } | undefined

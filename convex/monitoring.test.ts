@@ -6,7 +6,7 @@ import { convexTest } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
 import { api, components, internal } from './_generated/api'
 import { isBeforeSourceWindow, isDocumentUrl } from './monitoring/discovery'
-import { inventoryContract, inventoryIdentity } from './monitoring/contracts'
+import { inventoryContract, inventoryIdentity, inventorySourceSection } from './monitoring/contracts'
 import type { InventoryResult } from './monitoring/contracts'
 import schema from './schema'
 
@@ -142,4 +142,15 @@ test('a bounded listing pass preserves its next page and does not finish the bas
   expect(policy?.discoveryPendingUrls).toEqual(['https://www.lafayettela.gov/2026-meetings/page-2'])
   expect(policy?.baselineComplete).toBe(false)
   expect(policy?.failures).toBe(0)
+})
+
+test('later inventory sections keep a complete motion separate from date-only header context', () => {
+  const header = 'Council. September 4, 2026. Unrelated property hearing.'
+  const motion = 'On motion to approve drainage repairs ' + 'with official terms '.repeat(40)
+  const source = header + '\n\n' + 'x'.repeat(42700) + '\n\n' + motion + '\n\nNext item'
+  const section = inventorySourceSection(source, 1)
+  expect(section.source.trimStart().startsWith('On motion')).toBe(true)
+  expect(section.source).toContain(motion)
+  expect(section.source).not.toContain('Unrelated property hearing')
+  expect(section.dateAndBodyContext).toContain('September 4, 2026')
 })
