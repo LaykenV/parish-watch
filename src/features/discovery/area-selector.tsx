@@ -4,7 +4,7 @@ import { Link } from '@tanstack/react-router'
 
 import { useRecordAreaSelection } from '../analytics/product-analytics'
 import { setArea, useArea } from './area-store'
-import { AREA_FIXTURES } from './fixtures'
+import { useCoverageAreas } from './live-areas'
 import { Sheet } from './sheet'
 
 type AreaSelectorProps = {
@@ -46,8 +46,9 @@ function AreaSelectorDialog({
   const [query, setQuery] = useState('')
   const area = useArea()
   const recordAreaSelection = useRecordAreaSelection()
+  const coverageAreas = useCoverageAreas()
   const normalized = query.trim().toLowerCase()
-  const places = AREA_FIXTURES.filter((place) =>
+  const places = coverageAreas.filter((place) =>
     place.name.toLowerCase().includes(normalized),
   )
 

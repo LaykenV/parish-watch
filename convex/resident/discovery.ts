@@ -3,6 +3,7 @@ import { v } from 'convex/values'
 import type { Doc } from '../_generated/dataModel'
 import { query } from '../_generated/server'
 import { lifecycleStates } from '../extraction/contractV1'
+import { AREA_SLUGS, areaSlug } from '../follows/contracts'
 import { sourceKindUnion } from '../pipeline/state'
 
 const acceptedMode = v.union(v.literal('full'), v.literal('limited'))
@@ -26,6 +27,36 @@ const residentDecision = v.object({
 })
 
 type ResidentDecision = typeof residentDecision.type
+
+const coverageArea = v.object({
+  slug: areaSlug,
+  status: v.union(v.literal('available'), v.literal('validating')),
+})
+
+type CoverageArea = typeof coverageArea.type
+
+export const listCoverageAreas = query({
+  args: {},
+  returns: v.array(coverageArea),
+  handler: async (ctx): Promise<CoverageArea[]> => {
+    return await Promise.all(
+      AREA_SLUGS.map(async (slug) => {
+        const jurisdictions = await ctx.db
+          .query('jurisdictions')
+          .withIndex('by_slug', (index) => index.eq('slug', slug))
+          .take(2)
+        return {
+          slug,
+          status:
+            jurisdictions.length === 1 &&
+            jurisdictions[0]?.publicStatus === 'supported'
+              ? ('available' as const)
+              : ('validating' as const),
+        }
+      }),
+    )
+  },
+})
 
 export const listPublishedDecisions = query({
   args: {},

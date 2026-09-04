@@ -146,6 +146,8 @@ describe('resident coverage interface', () => {
   })
 
   it('distinguishes available records from complete coverage in area selection', () => {
+    expect(areaSelectorSource).toContain('useCoverageAreas')
+    expect(areaSelectorSource).not.toContain('AREA_FIXTURES')
     expect(areaSelectorSource).toContain('Records available')
     expect(areaSelectorSource).toContain('Validating sources')
     expect(areaSelectorSource).not.toContain('Supported')
