@@ -201,6 +201,7 @@ export const ingestRegistrySource = internalAction({
   args: {
     registryId: v.id('sourceRegistries'),
     urlOverride: v.optional(v.string()),
+    monitorRunId: v.optional(v.id('sourceMonitoringRuns')),
   },
   returns: ingestOutcome,
   handler: async (ctx, args): Promise<IngestOutcome> => {
@@ -226,6 +227,7 @@ export const ingestRegistrySource = internalAction({
         requestedUrl,
       ),
       requestedUrl,
+      args.monitorRunId,
     )
   },
 })
@@ -287,6 +289,7 @@ async function ingestSeedUrl(
   registryId: Id<'sourceRegistries'>,
   officialDomains: string[],
   rawUrl: string,
+  monitorRunId?: Id<'sourceMonitoringRuns'>,
 ): Promise<IngestOutcome> {
   const url = canonicalizeUrl(rawUrl)
   if (!url) {
@@ -330,6 +333,13 @@ async function ingestSeedUrl(
   let rawStorageId: Id<'_storage'> | undefined
 
   try {
+    const reserve = async () => {
+      if (!monitorRunId) return
+      const current = await ctx.runQuery(internal.monitoring.ledger.context, { runId: monitorRunId })
+      if (current.registry._id !== registryId) throw new Error('monitoring_registry_mismatch')
+      if (!await ctx.runMutation(internal.monitoring.ledger.reserve, { runId: monitorRunId, units: 1 })) throw new Error('monitoring_daily_limit')
+    }
+    await reserve()
     let document = await firecrawl.scrape(ctx, url, {
       formats: ['markdown', 'rawHtml'],
       onlyMainContent: false,
@@ -365,6 +375,7 @@ async function ingestSeedUrl(
         )
       }
 
+      await reserve()
       document = await firecrawl.scrape(ctx, scraped.retrievedUrl, {
         formats: ['markdown', 'rawHtml'],
         onlyMainContent: false,
@@ -462,6 +473,7 @@ async function ingestSeedUrl(
       new Blob([rawBytes], { type: rawContentType }),
     )
 
+    if (monitorRunId) await ctx.runQuery(internal.monitoring.ledger.context, { runId: monitorRunId })
     const committed = await ctx.runMutation(
       internal.sources.snapshots.commitRetrieval,
       {

@@ -47,6 +47,7 @@ type Env = {
   readonly MODEL_FAST_ID: string | undefined;
   readonly MODEL_STRONG_ID: string | undefined;
   readonly OPENAI_API_KEY: string | undefined;
+  readonly SOURCE_MONITORING_ENABLED: string | undefined;
 };
 
 /**

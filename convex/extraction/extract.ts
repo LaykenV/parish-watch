@@ -106,7 +106,9 @@ export const runExtraction = internalAction({
       })
     }
 
+    const targetLocator = await ctx.runMutation(internal.monitoring.ledger.reservePipelineCall, { runId: args.runId })
     const prompt = buildExtractionPromptV1({
+      targetLocator: targetLocator ?? undefined,
       snapshotId: context.snapshotId,
       sourceKind: context.sourceKind,
       bodyName: context.bodyName,

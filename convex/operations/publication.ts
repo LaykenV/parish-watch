@@ -135,6 +135,10 @@ export async function startCandidatePublicationTransaction(
     ),
     candidateId: candidate._id,
     upstreamRunId: upstreamRun._id,
+    monitorPolicyId: upstreamRun.monitorPolicyId,
+    monitorGeneration: upstreamRun.monitorGeneration,
+    monitorRegistryGeneration: upstreamRun.monitorRegistryGeneration,
+    suppressNotifications: upstreamRun.suppressNotifications,
     idempotencyKey,
     startedAt,
   })

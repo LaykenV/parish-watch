@@ -13,6 +13,7 @@ import {
 import { extractionRunKey } from '../pipeline/keys'
 import { extractionWorkflowManager } from '../pipeline/workflowManager'
 import { MATERIAL_STRING_LIMITS } from '../extraction/contractV1'
+import { assertMonitoringRun } from '../monitoring/ledger'
 import { startCandidatePublicationTransaction } from './publication'
 
 const startExtractionResultValidator = v.object({
@@ -27,6 +28,7 @@ type StartExtractionResult = typeof startExtractionResultValidator.type
 
 export const startSnapshotExtraction = internalMutation({
   args: {
+    monitorTargetId: v.optional(v.id('documentInventoryTargets')),
     registryId: v.id('sourceRegistries'),
     snapshotId: v.id('sourceSnapshots'),
     sourceKind: sourceKindUnion,
@@ -45,6 +47,10 @@ export const startSnapshotExtraction = internalMutation({
         message: `Target record ID must be one line with 1 to ${MATERIAL_STRING_LIMITS.sourceRecordId} characters`,
       })
     }
+    const target = args.monitorTargetId ? await ctx.db.get(args.monitorTargetId) : null
+    const policy = target ? await ctx.db.get(target.policyId) : null
+    const monitoring = policy?.activeRunId ? await assertMonitoringRun(ctx, policy.activeRunId) : null
+    if (args.monitorTargetId && (!target || !monitoring || target.registryId !== args.registryId || target.snapshotId !== args.snapshotId || target.targetRecordId !== args.targetRecordId || target.sourceKind !== args.sourceKind || target.sourceRecordIdProvenance !== args.sourceRecordIdProvenance)) throw new Error('Monitoring target mismatch.')
     const sourceRecordIdProvenance = resolveSourceRecordIdProvenance(
       args.sourceRecordIdProvenance,
     )
@@ -117,6 +123,7 @@ export const startSnapshotExtraction = internalMutation({
     const runId = await ctx.db.insert('pipelineRuns', {
       registryId: args.registryId,
       trigger: 'manual_extraction',
+      ...(monitoring && target ? { monitorPolicyId: monitoring.policy._id, monitorGeneration: monitoring.policy.generation, monitorRegistryGeneration: monitoring.run.registryGeneration, suppressNotifications: !target.notificationEligible, targetLocator: target.locator } : {}),
       state: 'running',
       processorVersion: EXTRACTION_PROCESSOR_VERSION,
       snapshotId: args.snapshotId,

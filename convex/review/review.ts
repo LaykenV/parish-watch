@@ -66,6 +66,7 @@ export const runIndependentReview = internalAction({
           }
     }
 
+    await ctx.runMutation(internal.monitoring.ledger.reservePipelineCall, { runId: args.runId })
     const configuredModel = env.MODEL_FAST_ID
     if (
       typeof configuredModel !== 'string' ||

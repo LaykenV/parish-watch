@@ -185,7 +185,7 @@ async function startMatchFanout(
   },
 ): Promise<void> {
   const change = await ctx.db.get(args.materialChangeId)
-  if (!change?.material) return
+  if (!change?.material || change.notificationEligible === false) return
   const existing = await ctx.db
     .query('notificationFanouts')
     .withIndex(
@@ -225,7 +225,7 @@ export const runMatchFanout = internalMutation({
     const fanout = await ctx.db.get(args.fanoutId)
     if (!fanout || fanout.state === 'complete') return null
     const change = await ctx.db.get(fanout.materialChangeId)
-    if (!change?.material) {
+    if (!change?.material || change.notificationEligible === false) {
       await ctx.db.patch(fanout._id, {
         state: 'complete',
         updatedAt: Date.now(),
@@ -451,7 +451,7 @@ export async function scheduleNewIssueLinkFanouts(
         index.eq('currentPublicationVersionId', link.publicationVersionId),
       )
       .unique()
-    if (!change?.material) continue
+    if (!change?.material || change.notificationEligible === false) continue
     await ctx.scheduler.runAfter(
       0,
       internal.follows.targets.startIssueMatchFanout,
