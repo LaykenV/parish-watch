@@ -1,3 +1,5 @@
+import { useAction, useMutation, useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import {
   CalendarClockIcon,
   CheckCircle2Icon,
@@ -46,7 +48,10 @@ const STATUS_PRESENTATION: Record<CoverageState, StatusPresentation> = {
 }
 
 export function CoveragePage({ data }: { data: CoveragePageData }) {
+  const liveRegions = useQuery(api.coverage.publicHealth.regions, data.scenario ? 'skip' : {})
+  const regions = data.scenario ? data.regions : liveRegions
   if (!data.available) return <CoverageUnavailable />
+  if (!regions) return <main id="resident-main" className="coverage-page"><p role="status">Loading current source health...</p></main>
 
   const requestSearch = data.scenario ? { fixture: 'new' as const } : {}
 
@@ -94,7 +99,7 @@ export function CoveragePage({ data }: { data: CoveragePageData }) {
       </section>
 
       <div className="coverage-regions">
-        {data.regions.map((region) => (
+        {regions.map((region) => (
           <section
             aria-labelledby={`coverage-region-${slugify(region.name)}`}
             className="coverage-region"
@@ -272,6 +277,20 @@ export function CoverageRequestPage({
 }: {
   data: CoverageRequestPageData
 }) {
+  const recordRequest = useMutation(api.coverage.requests.record)
+  const requestNotice = useAction(api.coverage.requests.requestNotice)
+  const verifyNotice = useMutation(api.coverage.requests.verifyNotice)
+  const requesterRef = useRef('')
+  const requesterToken = () => {
+    if (!requesterRef.current) {
+      const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, '0')).join('')
+      try { requesterRef.current = sessionStorage.getItem('pp-coverage-requester') ?? token; sessionStorage.setItem('pp-coverage-requester', requesterRef.current) } catch { requesterRef.current = token }
+    }
+    return requesterRef.current
+  }
+  const [placeKind, setPlaceKind] = useState<'parish' | 'municipality' | 'unknown'>('parish')
+  const [challengeId, setChallengeId] = useState('')
+  const [noticeVerified, setNoticeVerified] = useState(false)
   const [place, setPlace] = useState('')
   const [homepage, setHomepage] = useState('')
   const [email, setEmail] = useState('')
@@ -294,7 +313,7 @@ export function CoverageRequestPage({
 
   if (!data.available) return <CoverageRequestUnavailable />
 
-  const completeRequest = (event: FormEvent<HTMLFormElement>) => {
+  const completeRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!place.trim()) {
       setError(
@@ -306,6 +325,21 @@ export function CoverageRequestPage({
 
     setSubmitting(true)
     setError('')
+    if (!data.scenario) {
+      try {
+        const saved = await recordRequest({ requesterToken: requesterToken(), placeName: place, placeKind, homepage: homepage.trim() || undefined })
+        setStatus('Requested. We validate every source before coverage goes live.')
+        if (email.trim()) {
+          try {
+            const notice = await requestNotice({ requestId: saved.requestId, requesterToken: requesterToken(), email })
+            setChallengeId(notice.challengeId)
+            setStep('verify')
+          } catch { setStatus('Your request is saved. The optional verification email could not be sent. You can request it again later.'); setStep('complete') }
+        } else setStep('complete')
+      } catch { setError('The request could not be saved. Check the place and homepage, or try again later. Your entries remain here.') }
+      finally { setSubmitting(false) }
+      return
+    }
     window.setTimeout(() => {
       setSubmitting(false)
       if (data.scenario === 'rate-limited') {
@@ -351,6 +385,7 @@ export function CoverageRequestPage({
 
         {step === 'form' ? (
           <form className="coverage-request-form" onSubmit={completeRequest}>
+            <label className="coverage-field"><span>Place type</span><select value={placeKind} onChange={event => setPlaceKind(event.target.value as typeof placeKind)}><option value="parish">Parish</option><option value="municipality">Municipality</option><option value="unknown">Not sure</option></select></label>
             <label className="coverage-field" htmlFor={placeId}>
               <span>Parish or municipality</span>
               <input
@@ -438,7 +473,8 @@ export function CoverageRequestPage({
               </label>
               <div aria-live="polite" className="coverage-request-submit">
                 <Button
-                  onClick={() => {
+                  disabled={submitting}
+                  onClick={async () => {
                     if (code.length !== 6) {
                       setError('Enter the complete six-digit code.')
                       codeRef.current?.focus()
@@ -450,6 +486,15 @@ export function CoverageRequestPage({
                       )
                       return
                     }
+                    if (!data.scenario) {
+                      setSubmitting(true)
+                      try {
+                        const result = await verifyNotice({ challengeId, code, requesterToken: requesterToken() })
+                        if (!result.verified) { setError('This code is incorrect, expired, or has too many attempts. Your coverage request is still saved.'); return }
+                      } catch { setError('Verification is unavailable. Your request is still saved.'); return }
+                      finally { setSubmitting(false) }
+                    }
+                    setNoticeVerified(true)
                     setError('')
                     setStep('complete')
                   }}
@@ -490,7 +535,7 @@ export function CoverageRequestPage({
                   demand counts and other requesters remain private.
                 </p>
               ) : null}
-              {email ? <p>A launch notice is verified for {email}.</p> : null}
+              {noticeVerified && email ? <p>A launch notice is verified for {email}.</p> : null}
               <Button
                 render={
                   <Link

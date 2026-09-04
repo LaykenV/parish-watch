@@ -1,3 +1,4 @@
+import { unsubscribe } from './coverage/unsubscribe'
 import { registerStaticRoutes } from '@convex-dev/static-hosting'
 import { httpRouter } from 'convex/server'
 
@@ -19,6 +20,9 @@ http.route({
   method: 'POST',
   handler: handleAgentMailWebhook,
 })
+
+http.route({ pathPrefix: '/coverage/unsubscribe/', method: 'GET', handler: unsubscribe })
+http.route({ pathPrefix: '/coverage/unsubscribe/', method: 'POST', handler: unsubscribe })
 
 registerStaticRoutes(http, components.staticHosting)
 

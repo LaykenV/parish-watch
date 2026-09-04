@@ -1,3 +1,4 @@
+import { stopSubscriberNotices } from '../coverage/requests'
 import { v } from 'convex/values'
 
 import { internal } from '../_generated/api'
@@ -270,6 +271,7 @@ export const unsubscribeEmailWithToken = internalMutation({
       unsubscribedAt: now,
       updatedAt: now,
     })
+    await stopSubscriberNotices(ctx, subscriber._id)
     await ctx.db.patch('emailAccessTokens', token._id, { consumedAt: now })
     return { unsubscribed: true }
   },

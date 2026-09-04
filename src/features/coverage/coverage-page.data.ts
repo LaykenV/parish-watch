@@ -20,7 +20,7 @@ export async function loadCoveragePageData(
   scenario: CoverageScenario | undefined,
 ): Promise<CoveragePageData> {
   const active = getActiveCoverageFixture(scenario)
-  if (!active) return { available: false, regions: [] }
+  if (!active) return { available: true, regions: [] }
 
   const { COVERAGE_REGION_FIXTURES } = await import('./fixtures')
   const regions = structuredClone(COVERAGE_REGION_FIXTURES)
@@ -44,5 +44,5 @@ export async function loadCoverageRequestPageData(
   scenario: CoverageRequestScenario | undefined,
 ): Promise<CoverageRequestPageData> {
   const active = getActiveCoverageFixture(scenario)
-  return active ? { available: true, scenario: active } : { available: false }
+  return active ? { available: true, scenario: active } : { available: true }
 }
