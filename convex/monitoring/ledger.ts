@@ -86,7 +86,8 @@ export async function configurePolicy(ctx: MutationCtx, args: { proposalId: Id<'
       await limiter.reset(ctx, 'calls', { key: existing._id })
       await limiter.limit(ctx, 'calls', { key: existing._id, count: used, config: { kind: 'fixed window', rate: args.dailyCallLimit, period: DAY, start: current.ts }, throws: true })
     }
-    await ctx.db.patch(existing._id, fields)
+    const sourceWindowChanged = existing.startsAt !== args.startsAt || existing.proposalId !== args.proposalId
+    await ctx.db.patch(existing._id, { ...fields, ...(sourceWindowChanged ? { discoveryPendingUrls: undefined, discoveryVisitedUrls: undefined, baselineComplete: false } : {}) })
     return existing._id
   }
   return await ctx.db.insert('sourceMonitoringPolicies', { ...fields, activatedAt: now, baselineComplete: false, failures: 0, createdAt: now })
