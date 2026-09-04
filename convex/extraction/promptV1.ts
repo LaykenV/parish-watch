@@ -12,6 +12,7 @@ Rules:
 - fact.fieldPath is a JSON Pointer with a leading slash. Use /sourceRecordId, /recordType, /title, /bodyName, /meetingAt, /lifecycleState, and /plainLanguageSummary for scalar fields. Use /affectedPlaces/0, /amounts/0/value, /amounts/0/currency, /amounts/0/context, /publicActions/0/type, /publicActions/0/deadline, and /publicActions/0/instructions for array entries, replacing 0 with the zero-based array index.
 - fact.value is the candidate value converted to plain text. Do not add JSON quotes around strings. For a numeric amount, use the same number without currency symbols or thousands separators. For example, the fact.value for candidate title "Road repair" is Road repair, and the fact.value for candidate amount 13564.8 is 13564.8.
 - Each cited excerpt must be nonblank and copied from one contiguous span of source text. Preserve its words and punctuation. You may replace line breaks and repeated whitespace with one space. Keep an excerpt inside one source line or paragraph. Never join a section heading to a later record line. Do not include Markdown heading markers or list numbers unless you copy them exactly.
+- Each cited excerpt must be 1000 characters or fewer. Quote only the shortest contiguous span that proves the fact.
 - Excerpts must be long enough to show the words that support the field.
 - Set citation.page and citation.section to null for this schema version.
 - Use null for any material field the text does not state, and an empty array for any empty list.
@@ -19,12 +20,15 @@ Rules:
 - Write plainLanguageSummary using only what the text states. Do not speculate about effects, motives, or outcomes.
 - If plainLanguageSummary says a motion passed, an item was approved, or another outcome occurred, its one contiguous citation excerpt must state that outcome. Otherwise describe the subject without claiming the outcome; lifecycleState can cite the separate outcome sentence.
 - recordType describes the procedural record in this source. When minutes record a motion and vote, use vote even when the subject is a contract, agreement, ordinance, or donation.
+- For an agenda source, always use recordType proposal. Never treat outcome notes embedded by an agenda platform as agenda evidence of a vote or final decision.
 - lifecycleState describes the underlying item, not merely whether a procedural motion received a decision. An approved introduction keeps the item proposed. Approved scheduling or advertising makes it scheduled. An approved deferral, postponement, tabling, or continuance makes it postponed. Use decided only when the source states a final adoption, approval, rejection, denial, or other final disposition of the underlying item. recordType can still be vote for any of these motions.
 - affectedPlaces contains only named geographic areas such as a parish, municipality, district, neighborhood, or address. Do not put agencies, departments, funds, or government bodies in affectedPlaces.
 - For an agenda item, use the agenda's stated meeting date and time as meetingAt even when the date appears in the document header instead of the item text.
-- For minutes, set meetingAt only when one contiguous source span states both the meeting date and time. If the date and time appear in separate spans, set meetingAt to null. Never combine separate excerpts to support one timestamp.
+- For any meetingAt value, its citation must copy one contiguous source span that contains both the date and time exactly as written. If the date and time appear in separate spans, set meetingAt to null. Never reconstruct a citation by combining headings, lines, or distant text.
 - Format meetingAt and public-action deadlines as Louisiana civil time with the correct ISO 8601 UTC offset for that date, for example 2026-04-21T17:30:00-05:00. If the text gives no time of day, use 00:00:00.
-- Format amount values as plain numbers in dollars with at most two decimal places.`
+- Set a public-action deadline only when one contiguous cited span states its complete date and time. Otherwise set the deadline to null.
+- Format amount values as plain numbers in dollars with at most two decimal places.
+- Do not expand an abbreviated amount such as $250K into 250000. Omit an amount unless one contiguous cited span states the complete numeric value.`
 
 export type PromptInputV1 = {
   snapshotId: string

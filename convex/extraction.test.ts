@@ -349,12 +349,12 @@ test('citation matching ignores forced-fresh Firecrawl star emphasis', () => {
   expect(locateExcerpt(source, forcedFreshMarkdown)).toBe(0)
 })
 
-test('citation matching preserves non-emphasis asterisks', () => {
+test('citation matching ignores bounded bold emphasis and preserves other asterisks', () => {
   const source =
     '* Board vacancy\n* * *\n***\n**bold stays marked**\nKeep 5 * 4 and case*number.\nKeep *unfinished and finished*.'
 
   expect(normalizeForMatch(source)).toBe(
-    '* Board vacancy * * * *** **bold stays marked** Keep 5 * 4 and case*number. Keep *unfinished and finished*.',
+    '* Board vacancy * * * *** bold stays marked Keep 5 * 4 and case*number. Keep *unfinished and finished*.',
   )
 })
 
@@ -733,7 +733,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     ['validate', 'succeeded'],
   ])
   expect(stages[0].attempt).toBe(1)
-  expect(stages[0].promptVersion).toBe('v1.6')
+  expect(stages[0].promptVersion).toBe('v1.10')
   expect(stages[0].schemaVersion).toBe('v1')
 
   const extraction = await extractionByRun(t, start.runId)
@@ -743,9 +743,9 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
     modelRole: 'MODEL_STRONG',
     modelId: MODEL_ID,
     route: 'ai_gateway',
-    promptVersion: 'v1.6',
+    promptVersion: 'v1.10',
     schemaVersion: 'v1',
-    processorVersion: 'v1.17',
+    processorVersion: 'v1.18',
   })
   expect(extraction?.responseHash).toBe(
     await sha256HexOfText(goldContent(snapshotId)),
@@ -841,7 +841,7 @@ test('gold case: a valid CO-029-2026 extraction validates and records the full e
   expect(messages[0].content).toContain('JSON Pointer with a leading slash')
   expect(messages[0].content).toContain('Do not add JSON quotes')
   expect(messages[0].content).toContain(
-    'one contiguous source span states both the meeting date and time',
+    'one contiguous source span that contains both the date and time',
   )
   expect(messages[0].content).toContain(
     'When minutes record a motion and vote, use vote',
@@ -1117,7 +1117,7 @@ test('an old processor run cannot persist under the new processor label', async 
       targetRecordId: TARGET_RECORD_ID,
       sourceRecordIdProvenance: 'source_printed',
       modelRole: 'MODEL_STRONG',
-      promptVersion: 'v1.6',
+      promptVersion: 'v1.10',
       schemaVersion: 'v1',
       errorClass: 'forced',
       errorDetail: 'must reject mixed processor versions',

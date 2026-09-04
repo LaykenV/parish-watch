@@ -12,9 +12,20 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-04T16:19:12Z
+- **Last updated:** 2026-09-04T17:22:28Z
 
 ## Log
+
+### 2026-09-04 - working tree
+
+Replaced the launch slot template with exact official artifact fixtures and ran
+the complete development lifecycle. Seven bodies now pass gates 1 through 9
+with immutable retrieval, extraction, deterministic validation, independent
+review, publication, a missing-record probe, and paired agenda and minutes
+replay. Gate 10 remains production-only. Lafayette's planning commission,
+zoning board, and hearing examiner stay blocked because their live document
+links return 404 or route through an events host that returns 502. No body was
+promoted and no production data changed.
 
 ### 2026-09-04 - 76b806d
 

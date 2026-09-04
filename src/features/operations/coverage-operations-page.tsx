@@ -100,6 +100,9 @@ function OwnerCoverageOperations() {
   const retryRun = useMutation(api.coverage.operations.retry)
   const prepareProposal = useMutation(api.coverage.proposals.prepareProposal)
   const startValidation = useMutation(api.coverage.validation.startValidation)
+  const startEvidenceExtraction = useMutation(
+    api.coverage.validation.startEvidenceExtraction,
+  )
   const reevaluateProposal = useMutation(api.coverage.validation.reevaluate)
   const confirmPromotion = useMutation(api.coverage.promotion.confirmPromotion)
   const setCoverageStatus = useMutation(
@@ -440,6 +443,19 @@ function OwnerCoverageOperations() {
                 {selectedRun.run.currentStage === 'classify_sources' ||
                 selectedRun.proposals.length > 0 ? (
                   <ProposalPanel
+                    onExtract={(sampleId, mode) =>
+                      operate(`extract:${sampleId}:${mode}`, async () => {
+                        const result = await startEvidenceExtraction({
+                          sampleId,
+                          mode,
+                        })
+                        return result.started
+                          ? mode === 'evidence'
+                            ? 'Evidence extraction started.'
+                            : 'Failure-handling probe started.'
+                          : 'That extraction is already running or is unavailable.'
+                      })
+                    }
                     onPrepare={() =>
                       operate(`prepare:${selectedRun.run.runId}`, async () => {
                         const result = await prepareProposal({
@@ -597,11 +613,15 @@ type Proposal = {
   sampleCount: number
   retrievedSampleCount: number
   samples: Array<{
+    sampleId: Id<'coverageRepresentativeSamples'>
     sourceKind: string
     role: string
     state: string
     canonicalUrl: string | null
     errorClass: string | null
+    pipelineRunId: Id<'pipelineRuns'> | null
+    canExtractEvidence: boolean
+    canRunFailureProbe: boolean
   }>
   gates: Array<{
     gateNumber: number
@@ -612,6 +632,7 @@ type Proposal = {
 }
 
 function ProposalPanel({
+  onExtract,
   onPrepare,
   onPromote,
   onReevaluate,
@@ -621,6 +642,10 @@ function ProposalPanel({
   proposals,
   runId,
 }: {
+  onExtract: (
+    sampleId: Id<'coverageRepresentativeSamples'>,
+    mode: 'evidence' | 'failure_probe',
+  ) => Promise<unknown>
   onPrepare: () => Promise<unknown>
   onPromote: (proposalId: Proposal['proposalId']) => Promise<unknown>
   onReevaluate: (proposalId: Proposal['proposalId']) => Promise<unknown>
@@ -671,9 +696,9 @@ function ProposalPanel({
             sources retrieved · {proposal.goldSetVersion}
           </p>
           <p>
-            Sample validation stores source snapshots. Run extraction, review,
-            and publication through their existing owner operations, then
-            re-evaluate these checks.
+            Sample validation stores source snapshots. Start the checked
+            evidence runs here, then re-evaluate the gates after extraction,
+            review, and publication finish.
           </p>
         </div>
         <div className="coverage-ops-proposal-actions">
@@ -760,8 +785,8 @@ function ProposalPanel({
         aria-label="Representative source health"
         className="coverage-ops-samples"
       >
-        {proposal.samples.map((sample, index) => (
-          <li key={`${sample.sourceKind}:${sample.role}:${index}`}>
+        {proposal.samples.map((sample) => (
+          <li key={sample.sampleId}>
             <div>
               <strong>{sample.sourceKind.replaceAll('_', ' ')}</strong>
               <span>{sample.role.replaceAll('_', ' ')}</span>
@@ -779,6 +804,32 @@ function ProposalPanel({
             ) : (
               <span>No candidate found</span>
             )}
+            {sample.state === 'retrieved' && sample.canExtractEvidence ? (
+              <Button
+                loading={
+                  pendingKey === `extract:${sample.sampleId}:evidence`
+                }
+                onClick={() => void onExtract(sample.sampleId, 'evidence')}
+                size="sm"
+                variant="outline"
+              >
+                {sample.pipelineRunId ? 'Restart evidence' : 'Extract evidence'}
+              </Button>
+            ) : null}
+            {sample.state === 'retrieved' && sample.canRunFailureProbe ? (
+              <Button
+                loading={
+                  pendingKey === `extract:${sample.sampleId}:failure_probe`
+                }
+                onClick={() =>
+                  void onExtract(sample.sampleId, 'failure_probe')
+                }
+                size="sm"
+                variant="outline"
+              >
+                Test missing item
+              </Button>
+            ) : null}
           </li>
         ))}
       </ul>

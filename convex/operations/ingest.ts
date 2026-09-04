@@ -215,11 +215,17 @@ export const ingestRegistrySource = internalAction({
         retryable: false,
       }
     }
+    const requestedUrl =
+      args.urlOverride ?? firstSeedUrl(registry.seedUrls) ?? ''
     return ingestSeedUrl(
       ctx,
       registry._id,
-      registry.officialDomains,
-      args.urlOverride ?? firstSeedUrl(registry.seedUrls) ?? '',
+      retrievalDomains(
+        registry.officialDomains,
+        registry.seedUrls,
+        requestedUrl,
+      ),
+      requestedUrl,
     )
   },
 })
@@ -243,14 +249,38 @@ export const ingestBodySource = internalAction({
         retryable: false,
       }
     }
+    const requestedUrl =
+      args.urlOverride ?? firstSeedUrl(resolved.registry.seedUrls) ?? ''
     return ingestSeedUrl(
       ctx,
       resolved.registry._id,
-      resolved.registry.officialDomains,
-      args.urlOverride ?? firstSeedUrl(resolved.registry.seedUrls) ?? '',
+      retrievalDomains(
+        resolved.registry.officialDomains,
+        resolved.registry.seedUrls,
+        requestedUrl,
+      ),
+      requestedUrl,
     )
   },
 })
+
+function retrievalDomains(
+  officialDomains: string[],
+  seedUrls: string[],
+  requestedUrl: string,
+): string[] {
+  const canonicalRequested = canonicalizeUrl(requestedUrl)
+  if (
+    !canonicalRequested ||
+    !seedUrls.some(
+      (seedUrl) => canonicalizeUrl(seedUrl) === canonicalRequested,
+    )
+  ) {
+    return officialDomains
+  }
+  const hostname = new URL(canonicalRequested).hostname.toLowerCase()
+  return [...new Set([...officialDomains, hostname])]
+}
 
 async function ingestSeedUrl(
   ctx: ActionCtx,

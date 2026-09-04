@@ -237,6 +237,12 @@ export const getLatestForRegistry = internalQuery({
   },
 })
 
+export const get = internalQuery({
+  args: { snapshotId: v.id('sourceSnapshots') },
+  returns: v.union(v.null(), schema.doc('sourceSnapshots')),
+  handler: async (ctx, args) => await ctx.db.get(args.snapshotId),
+})
+
 export const getLatestForSource = internalQuery({
   args: {
     registryId: v.id('sourceRegistries'),

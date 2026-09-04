@@ -48,6 +48,13 @@ function unwrapWhitespaceBoundedAsteriskEmphasis(text: string): string {
   return text.replace(/(?<!\S)\*([^\s*](?:[^\r\n]*?[^\s*])?)\*(?!\S)/g, '$1')
 }
 
+function unwrapWhitespaceBoundedBoldAsteriskEmphasis(text: string): string {
+  return text.replace(
+    /(?<!\S)\*\*(\S(?:[^\r\n]*?\S)?)\*\*(?!\S)/g,
+    '$1',
+  )
+}
+
 function unwrapPdfSuperscriptArtifacts(text: string): string {
   return text
     .replace(
@@ -61,7 +68,11 @@ function unwrapPdfSuperscriptArtifacts(text: string): string {
 export function normalizeForMatch(text: string): string {
   return unwrapPdfSuperscriptArtifacts(
     unwrapWhitespaceBoundedAsteriskEmphasis(
-      unwrapWhitespaceBoundedUnderscoreEmphasis(unwrapMatchingMailtoLinks(text)),
+      unwrapWhitespaceBoundedBoldAsteriskEmphasis(
+        unwrapWhitespaceBoundedUnderscoreEmphasis(
+          unwrapMatchingMailtoLinks(text),
+        ),
+      ),
     ),
   )
     .replace(/\u00a0/g, ' ')

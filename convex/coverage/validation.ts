@@ -9,15 +9,21 @@ import {
   internalQuery,
   mutation,
 } from '../_generated/server'
-import type { ActionCtx, MutationCtx } from '../_generated/server'
+import type { ActionCtx, MutationCtx, QueryCtx } from '../_generated/server'
 import { requireOwner } from '../auth/authorization'
+import {
+  EXTRACTION_PROCESSOR_VERSION,
+  EXTRACTION_PROMPT_VERSION,
+  sourceKindUnion,
+} from '../pipeline/state'
 import { sha256HexOfText } from '../sources/hashing'
 import { classifyHost } from './rootGate'
 import { SAMPLE_VALIDATION_RESERVATION_USD } from './contracts'
+import { coverageGoldSetSample } from './goldSet'
 import { walkRedirects } from './redirectWalk'
 import { resolveRootManifest } from './roots'
 
-const VALIDATION_STAGE_VERSION = 'representative-sample-v1'
+const VALIDATION_STAGE_VERSION = 'representative-sample-v2'
 
 export const startValidation = mutation({
   args: { proposalId: v.id('coverageRegistryProposals') },
@@ -127,6 +133,63 @@ export const reevaluate = mutation({
   },
 })
 
+const extractionMode = v.union(
+  v.literal('evidence'),
+  v.literal('failure_probe'),
+)
+
+export const startEvidenceExtraction = mutation({
+  args: {
+    sampleId: v.id('coverageRepresentativeSamples'),
+    mode: extractionMode,
+  },
+  returns: v.object({ started: v.boolean() }),
+  handler: async (ctx, args) => {
+    await requireOwner(ctx)
+    const source = await sampleSource(ctx, args.sampleId)
+    if (!source || source.sample.state !== 'retrieved') {
+      return { started: false }
+    }
+    const expectation = coverageGoldSetSample(
+      source.proposal.bodyKey,
+      source.candidate.canonicalUrl,
+      source.sample.sourceKind,
+    )
+    const targetRecordId =
+      args.mode === 'evidence'
+        ? expectation?.extraction?.targetRecordId
+        : expectation?.negativeTargetRecordId
+    if (!expectation || !targetRecordId) return { started: false }
+    if (args.mode === 'evidence' && source.sample.pipelineRunId) {
+      const priorRun = await ctx.db.get(source.sample.pipelineRunId)
+      const priorExtractStage = priorRun
+        ? await ctx.db
+            .query('pipelineStages')
+            .withIndex('by_run_and_stage', (index) =>
+              index.eq('runId', priorRun._id).eq('stage', 'extract'),
+            )
+            .order('desc')
+            .first()
+        : null
+      if (
+        priorRun &&
+        priorRun.targetRecordId === targetRecordId &&
+        priorRun.processorVersion === EXTRACTION_PROCESSOR_VERSION &&
+        priorExtractStage?.promptVersion === EXTRACTION_PROMPT_VERSION &&
+        ['queued', 'running', 'succeeded'].includes(priorRun.state)
+      ) {
+        return { started: false }
+      }
+    }
+    await ctx.scheduler.runAfter(
+      0,
+      internal.coverage.validation.extractSampleEvidence,
+      { sampleId: source.sample._id, mode: args.mode },
+    )
+    return { started: true }
+  },
+})
+
 async function openStage(
   ctx: MutationCtx,
   runId: Id<'coverageCompilerRuns'>,
@@ -164,12 +227,14 @@ export const validationContext = internalQuery({
         v.object({
           sampleId: v.id('coverageRepresentativeSamples'),
           canonicalUrl: v.string(),
+          sourceKind: sourceKindUnion,
           state: v.union(
             v.literal('pending'),
             v.literal('retrieved'),
             v.literal('failed_retryable'),
             v.literal('failed_terminal'),
           ),
+          snapshotUsable: v.boolean(),
         }),
       ),
     }),
@@ -197,12 +262,19 @@ export const validationContext = internalQuery({
       )
       .take(12)
     const withCandidates = await Promise.all(
-      samples.map(async (sample) => ({
-        sample,
-        candidate: sample.candidateId
-          ? await ctx.db.get(sample.candidateId)
-          : null,
-      })),
+      samples.map(async (sample) => {
+        const snapshot = sample.snapshotId
+          ? await ctx.db.get(sample.snapshotId)
+          : null
+        return {
+          sample,
+          candidate: sample.candidateId
+            ? await ctx.db.get(sample.candidateId)
+            : null,
+          snapshotUsable:
+            snapshot !== null && !snapshot.truncation.truncated,
+        }
+      }),
     )
     return {
       runId: proposal.runId,
@@ -214,9 +286,110 @@ export const validationContext = internalQuery({
         .map((entry) => ({
           sampleId: entry.sample._id,
           canonicalUrl: entry.candidate!.canonicalUrl,
+          sourceKind: entry.sample.sourceKind,
           state: entry.sample.state,
+          snapshotUsable: entry.snapshotUsable,
         })),
     }
+  },
+})
+
+export const sampleExtractionContext = internalQuery({
+  args: {
+    sampleId: v.id('coverageRepresentativeSamples'),
+    mode: extractionMode,
+  },
+  returns: v.union(
+    v.null(),
+    v.object({
+      registryId: v.id('sourceRegistries'),
+      snapshotId: v.id('sourceSnapshots'),
+      sourceKind: sourceKindUnion,
+      targetRecordId: v.string(),
+      sourceRecordIdProvenance: v.union(
+        v.literal('source_printed'),
+        v.literal('operator_assigned'),
+      ),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const source = await sampleSource(ctx, args.sampleId)
+    if (!source || !source.sample.snapshotId) return null
+    const expectation = coverageGoldSetSample(
+      source.proposal.bodyKey,
+      source.candidate.canonicalUrl,
+      source.sample.sourceKind,
+    )
+    if (!expectation) return null
+    if (args.mode === 'failure_probe') {
+      return expectation.negativeTargetRecordId
+        ? {
+            registryId: source.proposal.registryId,
+            snapshotId: source.sample.snapshotId,
+            sourceKind: source.sample.sourceKind,
+            targetRecordId: expectation.negativeTargetRecordId,
+            sourceRecordIdProvenance: 'operator_assigned' as const,
+          }
+        : null
+    }
+    return expectation.extraction
+      ? {
+          registryId: source.proposal.registryId,
+          snapshotId: source.sample.snapshotId,
+          sourceKind: source.sample.sourceKind,
+          ...expectation.extraction,
+        }
+      : null
+  },
+})
+
+export const extractSampleEvidence = internalAction({
+  args: {
+    sampleId: v.id('coverageRepresentativeSamples'),
+    mode: extractionMode,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const context = await ctx.runQuery(
+      internal.coverage.validation.sampleExtractionContext,
+      args,
+    )
+    if (!context) return null
+    const started = await ctx.runMutation(
+      internal.operations.extract.startSnapshotExtraction,
+      {
+        registryId: context.registryId,
+        snapshotId: context.snapshotId,
+        sourceKind: context.sourceKind,
+        targetRecordId: context.targetRecordId,
+        sourceRecordIdProvenance: context.sourceRecordIdProvenance,
+      },
+    )
+    if (args.mode === 'evidence') {
+      await ctx.runMutation(
+        internal.coverage.validation.recordSampleExtraction,
+        {
+          sampleId: args.sampleId,
+          pipelineRunId: started.runId,
+        },
+      )
+    }
+    return null
+  },
+})
+
+export const recordSampleExtraction = internalMutation({
+  args: {
+    sampleId: v.id('coverageRepresentativeSamples'),
+    pipelineRunId: v.id('pipelineRuns'),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const sample = await ctx.db.get(args.sampleId)
+    if (sample) {
+      await ctx.db.patch(sample._id, { pipelineRunId: args.pipelineRunId })
+    }
+    return null
   },
 })
 
@@ -253,7 +426,7 @@ export const validateSample = internalAction({
         return null
       }
 
-      for (let index = 0; index < context.samples.length; index += 2) {
+      for (let index = 0; index < context.samples.length; index += 1) {
         if (
           index > 0 &&
           (await ctx.runQuery(
@@ -267,53 +440,71 @@ export const validateSample = internalAction({
           )
           return null
         }
-        await Promise.all(
-          context.samples.slice(index, index + 2).map(async (sample) => {
-            if (sample.state === 'retrieved') return
-            if (classifyHost(manifest, sample.canonicalUrl) !== 'approved') {
-              await recordSample(ctx, sample.sampleId, {
-                outcome: 'failed_terminal',
-                errorClass: 'document_host_quarantined',
-              })
-              return
-            }
-            try {
-              const outcome = await ctx.runAction(
-                internal.operations.ingest.ingestRegistrySource,
-                {
-                  registryId: context.registryId,
-                  urlOverride: sample.canonicalUrl,
-                },
-              )
-              await recordSample(
-                ctx,
-                sample.sampleId,
-                outcome.outcome === 'created' || outcome.outcome === 'reused'
-                  ? { outcome: 'retrieved', snapshotId: outcome.snapshotId }
-                  : {
-                      outcome: outcome.retryable
-                        ? 'failed_retryable'
-                        : 'failed_terminal',
-                      errorClass: outcome.errorClass,
-                    },
-              )
-              await checkLink(
-                ctx,
-                args.proposalId,
-                sample.canonicalUrl,
-                manifest,
-              )
-            } catch (error) {
-              await recordSample(ctx, sample.sampleId, {
-                outcome: 'failed_retryable',
-                errorClass:
-                  error instanceof Error && error.name
-                    ? `unexpected:${error.name}`
-                    : 'unexpected:sample_validation',
-              })
-            }
-          }),
+        const sample = context.samples[index]
+        if (sample.state === 'retrieved' && sample.snapshotUsable) continue
+        const checkedSample = coverageGoldSetSample(
+          context.bodyKey,
+          sample.canonicalUrl,
+          sample.sourceKind,
         )
+        if (
+          !checkedSample ||
+          classifyHost(manifest, sample.canonicalUrl) === 'unapproved'
+        ) {
+          await recordSample(ctx, sample.sampleId, {
+            outcome: 'failed_terminal',
+            errorClass: 'sample_not_in_checked_gold_set',
+          })
+          continue
+        }
+        try {
+          const outcome = await ctx.runAction(
+            internal.operations.ingest.ingestRegistrySource,
+            {
+              registryId: context.registryId,
+              urlOverride: sample.canonicalUrl,
+            },
+          )
+          const snapshot =
+            outcome.outcome === 'created' || outcome.outcome === 'reused'
+              ? await ctx.runQuery(internal.sources.snapshots.get, {
+                  snapshotId: outcome.snapshotId,
+                })
+              : null
+          if (outcome.outcome === 'created' || outcome.outcome === 'reused') {
+            await recordSample(
+              ctx,
+              sample.sampleId,
+              snapshot && !snapshot.truncation.truncated
+                ? { outcome: 'retrieved', snapshotId: outcome.snapshotId }
+                : {
+                    outcome: 'failed_retryable',
+                    errorClass: 'snapshot_truncated',
+                  },
+            )
+          } else {
+            await recordSample(ctx, sample.sampleId, {
+              outcome: outcome.retryable
+                ? 'failed_retryable'
+                : 'failed_terminal',
+              errorClass: outcome.errorClass,
+            })
+          }
+          await checkLink(
+            ctx,
+            args.proposalId,
+            sample.canonicalUrl,
+            manifest,
+          )
+        } catch (error) {
+          await recordSample(ctx, sample.sampleId, {
+            outcome: 'failed_retryable',
+            errorClass:
+              error instanceof Error && error.name
+                ? `unexpected:${error.name}`
+                : 'unexpected:sample_validation',
+          })
+        }
       }
       await finishValidation(ctx, args, true)
       return null
@@ -349,7 +540,7 @@ export const recordSampleResult = internalMutation({
     await ctx.db.patch(sample._id, {
       state: args.outcome,
       ...(args.snapshotId ? { snapshotId: args.snapshotId } : {}),
-      ...(args.errorClass ? { errorClass: args.errorClass.slice(0, 120) } : {}),
+      errorClass: args.errorClass?.slice(0, 120),
       completedAt: Date.now(),
     })
     return null
@@ -477,6 +668,20 @@ async function recordSample(
   })
 }
 
+async function sampleSource(
+  ctx: Pick<QueryCtx | MutationCtx, 'db'>,
+  sampleId: Id<'coverageRepresentativeSamples'>,
+) {
+  const sample = await ctx.db.get(sampleId)
+  const proposal = sample ? await ctx.db.get(sample.proposalId) : null
+  const candidate =
+    sample?.candidateId !== undefined
+      ? await ctx.db.get(sample.candidateId)
+      : null
+  if (!sample || !proposal || !candidate) return null
+  return { sample, proposal, candidate }
+}
+
 async function checkLink(
   ctx: ActionCtx,
   proposalId: Id<'coverageRegistryProposals'>,
@@ -485,7 +690,7 @@ async function checkLink(
 ): Promise<void> {
   const walk = await walkRedirects(
     canonicalUrl,
-    (url) => classifyHost(manifest, url) === 'approved',
+    (url) => classifyHost(manifest, url) !== 'unapproved',
     5,
   )
   const final = walk.hops[walk.hops.length - 1]
