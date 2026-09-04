@@ -416,7 +416,7 @@ document hosts. A newly discovered domain is quarantined until validated.
 
 The coverage compiler is an owner-triggered internal pipeline:
 
-1. Accept a jurisdiction name and official homepage candidate.
+1. Accept a checked root manifest by body key and version.
 2. Verify that the root belongs to a government entity.
 3. Use Firecrawl map and search to enumerate likely agenda, minutes, ordinance,
    public-notice, planning, zoning, and calendar sources.
@@ -440,6 +440,28 @@ scrapes, PDF parsing, and known schedules.
 If a portal fails repeatedly, record the failure and add the smallest
 source-specific adapter that restores the shared output contract. Do not create
 an adapter merely because a portal looks unfamiliar.
+
+### Root gate
+
+`convex/coverage/roots.ts` holds the checked manifests. Each one names the body,
+its jurisdiction, the approved root, the evidence URLs behind that approval, the
+exact allowed hosts, any approved subdomain suffixes, approved document hosts
+with tenant path prefixes, an optional expected final URL, and the date the
+owner checked it.
+
+The owner starts a run by body key and manifest version. There is no URL
+argument, so owner access cannot turn an unverified address into an official
+root. `.gov` roots use the same mechanism as every other host.
+
+The gate walks the redirect chain itself with a bounded HTTPS request. Firecrawl
+is the retrieval engine for evidence, and a root that fails verification never
+reaches it, so the probe spends no credits and no model tokens. Each hop is
+checked before it is requested, which means a redirect toward an unapproved host
+is recorded and stopped instead of fetched. The gate requires HTTPS with no
+embedded credentials, at most five redirects, an approved host on every hop, a
+successful status, and an HTML response. An approved document host is
+quarantined and never satisfies a root. A failure stores its redirect chain, a
+bounded finding, and a retryable or terminal state.
 
 ## Ingestion Pipeline
 
@@ -558,6 +580,28 @@ Indexes: jurisdiction plus status; jurisdiction plus slug.
 Fields: body, official domains, seed URLs, source kinds, cadence, discovery mode,
 status, last discovery, last healthy time.
 Indexes: body plus status; next scheduled check.
+
+#### `coverageCompilerRuns`
+
+Fields: body key, jurisdiction slug, root-manifest version, compiler version,
+idempotency key, attempt, run state, current stage, requesting owner, start,
+completion, and cancellation times.
+Indexes: idempotency key; body key plus start time; state plus start time. A
+replay of the same body, manifest version, and compiler version returns the
+active or successful run. A terminal failure earns a new attempt.
+
+#### `coverageCompilerStages`
+
+Fields: run, stage, idempotency key, input hash, attempt, stage state, gate
+version, requested root URL, resolved root URL, redirect chain, error class,
+bounded error detail, and timing.
+Indexes: idempotency key; run plus stage.
+
+#### `coverageCompilerFindings`
+
+Fields: run, optional stage, finding code, severity, public-safe summary,
+optional subject URL, and created time.
+Indexes: run plus created time.
 
 #### `sourceExpectations`
 

@@ -602,6 +602,12 @@ each government body. Public requests never start compiler work. A model may
 classify candidate sources, but deterministic gates and an owner operation
 control promotion.
 
+Delivery shape: Slice 8 ships as three code PRs. The run ledger, root gate, and
+slim owner browser view belong together in 8A. Cost and source-health details
+join that view with the stages that produce them in 8B and 8C. The seven named
+onboarding tracks are controlled operations after 8C and need code PRs only
+when a checked manifest or a narrowly scoped portal adapter changes.
+
 ### PR 8A: establish the controlled compiler and official-root gate
 
 Suggested title: `feat: establish owner-controlled coverage runs`
@@ -620,6 +626,8 @@ Include:
 - deterministic HTTPS, response, domain, and government-identity checks;
 - allowed subdomains and quarantined cross-domain document hosts;
 - stored official-root evidence and failure reasons.
+- an unlisted owner route with realtime run, stage, redirect, and finding
+  state plus start, cancel, and retry controls.
 
 Required tests:
 
@@ -721,9 +729,7 @@ Exclude:
 Proof: one failed gate blocks promotion, while a passing recorded sample creates
 a versioned supported registry without weakening evidence rules.
 
-### PR 8D: operate the compiler and roll out named bodies
-
-Suggested title: `feat: operate coverage expansion by body`
+### Controlled rollout after 8C
 
 Outcome: the owner can inspect live compiler stages, diagnose failures, retry
 the smallest invalid stage, and complete separate evidence-gated onboarding

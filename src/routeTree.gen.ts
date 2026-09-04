@@ -24,6 +24,7 @@ import { Route as FollowingAreasAndTopicsRouteImport } from './routes/following_
 import { Route as FollowingNotificationsRouteImport } from './routes/following_.notifications'
 import { Route as IssuesIssueSlugRouteImport } from './routes/issues.$issueSlug'
 import { Route as MeetingsMeetingIdRouteImport } from './routes/meetings.$meetingId'
+import { Route as OperationsCoverageRouteImport } from './routes/operations_.coverage'
 import { Route as EmailManageTokenRouteImport } from './routes/email.manage.$token'
 
 const IndexRoute = IndexRouteImport.update({
@@ -101,6 +102,11 @@ const MeetingsMeetingIdRoute = MeetingsMeetingIdRouteImport.update({
   path: '/meetings/$meetingId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OperationsCoverageRoute = OperationsCoverageRouteImport.update({
+  id: '/operations_/coverage',
+  path: '/operations/coverage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmailManageTokenRoute = EmailManageTokenRouteImport.update({
   id: '/email/manage/$token',
   path: '/email/manage/$token',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/following/notifications': typeof FollowingNotificationsRoute
   '/issues/$issueSlug': typeof IssuesIssueSlugRoute
   '/meetings/$meetingId': typeof MeetingsMeetingIdRoute
+  '/operations/coverage': typeof OperationsCoverageRoute
   '/email/manage/$token': typeof EmailManageTokenRoute
 }
 export interface FileRoutesByTo {
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/following/notifications': typeof FollowingNotificationsRoute
   '/issues/$issueSlug': typeof IssuesIssueSlugRoute
   '/meetings/$meetingId': typeof MeetingsMeetingIdRoute
+  '/operations/coverage': typeof OperationsCoverageRoute
   '/email/manage/$token': typeof EmailManageTokenRoute
 }
 export interface FileRoutesById {
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/following_/notifications': typeof FollowingNotificationsRoute
   '/issues/$issueSlug': typeof IssuesIssueSlugRoute
   '/meetings/$meetingId': typeof MeetingsMeetingIdRoute
+  '/operations_/coverage': typeof OperationsCoverageRoute
   '/email/manage/$token': typeof EmailManageTokenRoute
 }
 export interface FileRouteTypes {
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/following/notifications'
     | '/issues/$issueSlug'
     | '/meetings/$meetingId'
+    | '/operations/coverage'
     | '/email/manage/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/following/notifications'
     | '/issues/$issueSlug'
     | '/meetings/$meetingId'
+    | '/operations/coverage'
     | '/email/manage/$token'
   id:
     | '__root__'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/following_/notifications'
     | '/issues/$issueSlug'
     | '/meetings/$meetingId'
+    | '/operations_/coverage'
     | '/email/manage/$token'
   fileRoutesById: FileRoutesById
 }
@@ -235,6 +247,7 @@ export interface RootRouteChildren {
   FollowingNotificationsRoute: typeof FollowingNotificationsRoute
   IssuesIssueSlugRoute: typeof IssuesIssueSlugRoute
   MeetingsMeetingIdRoute: typeof MeetingsMeetingIdRoute
+  OperationsCoverageRoute: typeof OperationsCoverageRoute
   EmailManageTokenRoute: typeof EmailManageTokenRoute
 }
 
@@ -345,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeetingsMeetingIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/operations_/coverage': {
+      id: '/operations_/coverage'
+      path: '/operations/coverage'
+      fullPath: '/operations/coverage'
+      preLoaderRoute: typeof OperationsCoverageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/email/manage/$token': {
       id: '/email/manage/$token'
       path: '/email/manage/$token'
@@ -371,6 +391,7 @@ const rootRouteChildren: RootRouteChildren = {
   FollowingNotificationsRoute: FollowingNotificationsRoute,
   IssuesIssueSlugRoute: IssuesIssueSlugRoute,
   MeetingsMeetingIdRoute: MeetingsMeetingIdRoute,
+  OperationsCoverageRoute: OperationsCoverageRoute,
   EmailManageTokenRoute: EmailManageTokenRoute,
 }
 export const routeTree = rootRouteImport
