@@ -670,6 +670,11 @@ function ProposalPanel({
             {proposal.retrievedSampleCount} of {proposal.sampleCount} sample
             sources retrieved · {proposal.goldSetVersion}
           </p>
+          <p>
+            Sample validation stores source snapshots. Run extraction, review,
+            and publication through their existing owner operations, then
+            re-evaluate these checks.
+          </p>
         </div>
         <div className="coverage-ops-proposal-actions">
           {proposal.status === 'draft' || proposal.status === 'blocked' ? (

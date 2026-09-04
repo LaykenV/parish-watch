@@ -304,6 +304,7 @@ function selectSamples(
     if (slot.role === 'revision') {
       candidate = candidates.find(
         (entry) =>
+          entry.state === 'classified' &&
           !used.has(entry._id) &&
           /revis|amend|cancel|postpon|previous/i.test(
             `${entry.canonicalUrl} ${entry.title ?? ''}`,

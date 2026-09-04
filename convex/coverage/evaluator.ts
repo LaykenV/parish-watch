@@ -175,6 +175,7 @@ export const evaluateProposal = internalMutation({
     const ready = results.every((result) => result.passed)
     await ctx.db.patch(stage._id, { state: 'succeeded', completedAt: now })
     await ctx.db.patch(proposal._id, {
+      evaluatorVersion: COVERAGE_EVALUATOR_VERSION,
       status:
         proposal.status === 'promoted'
           ? 'promoted'

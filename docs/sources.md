@@ -153,8 +153,10 @@ control cost and improve determinism.
 
 ## Gold Set
 
-Create a checked-in, metadata-only manifest of public source URLs and expected
-facts. Do not copy private data or huge generated output into Git.
+Create a checked-in, metadata-only manifest of required representative sample
+slots. The compiler fills those slots with public official URLs from its stored
+candidates at run time. Missing slots remain failed requirements. Do not copy
+private data or huge generated output into Git.
 
 For each launch body, collect when available:
 
@@ -168,7 +170,7 @@ For each launch body, collect when available:
 - for planning bodies, two case or zoning records;
 - one negative example that must not become a substantive decision.
 
-Hand-label:
+For final source certification, hand-label:
 
 - artifact type and official body;
 - expected meeting date;
@@ -183,7 +185,8 @@ Hand-label:
 
 A body becomes publicly supported only when:
 
-1. every known artifact in its gold-set date window is found;
+1. every required representative sample slot in the checked manifest is found
+   and retrieved;
 2. the source registry uses only verified official domains;
 3. current and historical records can be separated;
 4. every accepted material fact resolves to a source citation;
@@ -191,8 +194,10 @@ A body becomes publicly supported only when:
 6. source revisions create new immutable snapshots;
 7. an incomplete or failed source becomes limited or withheld;
 8. an expected schedule can detect stale or missing coverage;
-9. the body passes a live or recent meeting-cycle replay;
-10. direct source links work from the deployed public app.
+9. successful agenda and minutes pipeline runs both fall within the last 60
+   days;
+10. every representative official source URL answers when checked from the
+    production backend.
 
 All public regions use this gate. There is no lower “beta” evidence standard.
 

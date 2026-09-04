@@ -422,8 +422,9 @@ The coverage compiler is an owner-triggered internal pipeline:
    public-notice, planning, zoning, and calendar sources.
 4. Use an OpenAI discovery pass to classify candidates into the source contract.
 5. Retrieve a representative set for each body and source kind.
-6. Parse the set through the normal extraction pipeline.
-7. Run deterministic domain, link, date, citation, and coverage checks.
+6. Store the set through the normal immutable snapshot path.
+7. Read extraction, review, publication, citation, and revision evidence that
+   the owner produced through the existing evidence operations.
 8. Record a proposed source registry.
 9. Mark the place supported only after it passes the public coverage gate.
 
@@ -475,6 +476,9 @@ $0.25 before its first paid call. Representative validation reserves the
 remaining $0.75 once, and retries reuse that reservation. The ledger records
 estimated model spend separately. Firecrawl calls stay bounded by candidate and
 sample limits even though the pinned component cannot return their dollar cost.
+This is a start gate and reservation ledger, not a real-time provider spend cap.
+The estimated spend can exceed a reservation because classification reserves no
+additional amount and Firecrawl does not report dollar cost.
 
 The owner freezes classified sources into an immutable registry proposal before
 validation. `docs/coverage-gold-sets/launch-bodies.v1.json` defines the required
@@ -485,16 +489,20 @@ Firecrawl retrieval and immutable snapshot path with at most two samples in
 flight. It also reads any extraction, review, publication, citation, and
 revision evidence already produced by the shared pipeline.
 
-`coverage-gates-v1` implements the ten requirements in `docs/sources.md` in
-their published order. Every evaluation appends ten immutable results. An owner
-confirmation promotes only a `ready` proposal whose latest evaluator version
-still has ten passing results. Development link checks are retained for QA but
-cannot satisfy the production-link gate. Promotion changes the proposed
-registry and body in one transaction, pauses the previous live registry, and
-keeps all old snapshots and publications. Degradation and pause never delete
-evidence. A status change increments the registry generation. Recovery requires
-a new ten-gate evaluation recorded against that generation, so results from
-before the degradation cannot restore coverage.
+`coverage-gates-v2` records the ten requirements in `docs/sources.md` in their
+published order. Gate 1 measures the checked representative slots rather than
+claiming discovery of artifacts that are absent from the manifest. Gate 9
+requires recent successful agenda and minutes runs but does not claim they are
+one paired meeting cycle. Gate 10 checks the representative government URLs
+from the production backend, not a resident route. Every evaluation appends ten
+immutable results. An owner confirmation promotes only a `ready` proposal whose
+latest evaluator version still has ten passing results. Development link checks
+remain available for QA but cannot satisfy gate 10. Promotion changes the
+proposed registry and body in one transaction, pauses the previous live
+registry, and keeps all old snapshots and publications. Degradation and pause
+never delete evidence. A status change increments the registry generation.
+Recovery requires a new ten-gate evaluation recorded against that generation,
+so results from before the degradation cannot restore coverage.
 
 The gate walks the redirect chain itself with a bounded HTTPS request. Firecrawl
 is the retrieval engine for evidence, and a root that fails verification never

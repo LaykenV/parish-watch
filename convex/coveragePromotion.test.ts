@@ -21,6 +21,9 @@ test('ten passing gates promote once and preserve the previous registry', async 
   const t = convexTest(schema, modules)
   const owner = await signInOwner(t)
   const seeded = await seedReadyProposal(t, true)
+  await t.run(async (ctx) => {
+    await ctx.db.patch(seeded.jurisdictionId, { publicStatus: 'paused' })
+  })
 
   const [first, second] = await Promise.all([
     owner.mutation(api.coverage.promotion.confirmPromotion, {
@@ -36,6 +39,9 @@ test('ten passing gates promote once and preserve the previous registry', async 
     expect((await ctx.db.get(seeded.bodyId))?.publicStatus).toBe('supported')
     expect((await ctx.db.get(seeded.registryId))?.status).toBe('supported')
     expect((await ctx.db.get(seeded.previousRegistryId))?.status).toBe('paused')
+    expect((await ctx.db.get(seeded.jurisdictionId))?.publicStatus).toBe(
+      'paused',
+    )
   })
 
   const firstPage = await owner.query(api.coverage.operations.paginatedRuns, {
@@ -113,6 +119,128 @@ test('ten passing gates promote once and preserve the previous registry', async 
   await t.run(async (ctx) => {
     expect(await ctx.db.get(seeded.previousRegistryId)).not.toBeNull()
     expect((await ctx.db.get(seeded.bodyId))?.publicStatus).toBe('supported')
+  })
+})
+
+test('the launch seed never rewrites a live registry', async () => {
+  const t = convexTest(schema, modules)
+  const seeded = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+  const liveRegistryId = await t.run(async (ctx) => {
+    await ctx.db.patch(seeded.registryId, { status: 'paused' })
+    return await ctx.db.insert('sourceRegistries', {
+      governmentBodyId: seeded.bodyId,
+      officialDomains: ['records.example.gov'],
+      seedUrls: ['https://records.example.gov/live'],
+      sourceKinds: ['minutes'],
+      expectedCadence: { kind: 'monthly' },
+      discoveryMode: 'adapter',
+      status: 'supported',
+      statusGeneration: 7,
+      lastHealthyAt: 123,
+    })
+  })
+
+  const replay = await t.mutation(
+    internal.operations.seed.seedLaunchCoverage,
+    {},
+  )
+
+  expect(replay.registryId).toBe(liveRegistryId)
+  await t.run(async (ctx) => {
+    expect(await ctx.db.get(liveRegistryId)).toMatchObject({
+      officialDomains: ['records.example.gov'],
+      seedUrls: ['https://records.example.gov/live'],
+      sourceKinds: ['minutes'],
+      expectedCadence: { kind: 'monthly' },
+      discoveryMode: 'adapter',
+      status: 'supported',
+      statusGeneration: 7,
+      lastHealthyAt: 123,
+    })
+  })
+})
+
+test('a rejected revision candidate cannot fill a required sample slot', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  const ids = await t.run(async (ctx) => {
+    const user = await ctx.db.query('users').first()
+    if (!user) throw new Error('Owner user was not created')
+    const runId = await ctx.db.insert('coverageCompilerRuns', {
+      bodyKey: 'youngsville-city-council',
+      jurisdictionSlug: 'lafayette-parish',
+      rootManifestVersion: 'v1',
+      compilerVersion: 'v1',
+      idempotencyKey: 'rejected-revision-test',
+      attempt: 1,
+      state: 'succeeded',
+      currentStage: 'classify_sources',
+      requestedByUserId: user._id,
+      startedAt: Date.now(),
+      completedAt: Date.now(),
+    })
+    const stageId = await ctx.db.insert('coverageCompilerStages', {
+      runId,
+      stage: 'classify_sources',
+      idempotencyKey: 'rejected-revision-stage',
+      inputHash: 'rejected-revision-stage',
+      attempt: 1,
+      state: 'succeeded',
+      gateVersion: 'v1',
+      startedAt: Date.now(),
+      completedAt: Date.now(),
+    })
+    await ctx.db.insert('coverageSourceCandidates', {
+      runId,
+      stageId,
+      canonicalUrl: 'https://www.youngsville.us/current-agenda',
+      title: 'Current agenda',
+      discoveredFrom: ['map'],
+      matchedTerms: ['agenda'],
+      hostDisposition: 'approved',
+      state: 'classified',
+      sourceKind: 'agenda',
+      cadence: 'meeting_cycle',
+      createdAt: Date.now(),
+    })
+    const rejectedId = await ctx.db.insert('coverageSourceCandidates', {
+      runId,
+      stageId,
+      canonicalUrl: 'https://www.youngsville.us/revised-agenda',
+      title: 'Revised agenda',
+      discoveredFrom: ['map'],
+      matchedTerms: ['agenda'],
+      hostDisposition: 'approved',
+      state: 'rejected',
+      sourceKind: 'agenda',
+      cadence: 'meeting_cycle',
+      createdAt: Date.now(),
+    })
+    return { rejectedId, runId }
+  })
+
+  const proposal = await owner.mutation(
+    api.coverage.proposals.prepareProposal,
+    { runId: ids.runId },
+  )
+
+  await t.run(async (ctx) => {
+    const samples = await ctx.db
+      .query('coverageRepresentativeSamples')
+      .withIndex('by_proposal_and_role', (query) =>
+        query.eq('proposalId', proposal.proposalId).eq('role', 'revision'),
+      )
+      .collect()
+    expect(samples).toHaveLength(1)
+    expect(samples[0]).toMatchObject({
+      state: 'failed_terminal',
+      errorClass: 'missing_required_candidate',
+    })
+    expect(samples[0].candidateId).toBeUndefined()
+    expect(samples[0].candidateId).not.toBe(ids.rejectedId)
   })
 })
 
@@ -251,7 +379,7 @@ test('gate 10 keeps a newer failure inside the bounded link-check window', async
       .first()
     expect(result?.passed).toBe(false)
     expect(result?.detail).toBe(
-      '0 of 1 source links passed from the production deployment.',
+      '0 of 1 representative source URLs answered from the production backend.',
     )
   })
 })
@@ -383,7 +511,14 @@ async function seedReadyProposal(t: TestConvex, allPass: boolean) {
         createdAt: Date.now(),
       })
     }
-    return { bodyId, previousRegistryId, proposalId, registryId, runId }
+    return {
+      jurisdictionId,
+      bodyId,
+      previousRegistryId,
+      proposalId,
+      registryId,
+      runId,
+    }
   })
   return ids
 }

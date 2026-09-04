@@ -1,4 +1,4 @@
-export const COVERAGE_EVALUATOR_VERSION = 'coverage-gates-v1'
+export const COVERAGE_EVALUATOR_VERSION = 'coverage-gates-v2'
 import { coverageGoldSetVersion } from './goldSet'
 
 export const COVERAGE_GOLD_SET_VERSION = coverageGoldSetVersion()
@@ -35,10 +35,10 @@ export function evaluateCoverageGates(
   return [
     gate(
       1,
-      'gold_set_complete',
+      'representative_samples_retrieved',
       input.expectedArtifactCount > 0 &&
         input.retrievedArtifactCount === input.expectedArtifactCount,
-      `${input.retrievedArtifactCount} of ${input.expectedArtifactCount} required artifacts were retrieved.`,
+      `${input.retrievedArtifactCount} of ${input.expectedArtifactCount} required representative samples were retrieved.`,
       ['coverageRepresentativeSamples'],
     ),
     gate(
@@ -99,19 +99,19 @@ export function evaluateCoverageGates(
     ),
     gate(
       9,
-      'recent_cycle_replayed',
+      'recent_agenda_and_minutes_runs',
       input.recentReplayPassed,
       input.recentReplayPassed
-        ? 'A recent meeting-cycle replay completed.'
-        : 'No recent meeting-cycle replay has completed.',
+        ? 'Agenda and minutes pipeline runs both succeeded within 60 days.'
+        : 'No successful agenda and minutes pipeline runs both fall within 60 days.',
       ['pipelineRuns'],
     ),
     gate(
       10,
-      'deployed_source_links_work',
+      'production_source_urls_reachable',
       input.productionLinkCount > 0 &&
         input.productionLinkCount === input.passingProductionLinkCount,
-      `${input.passingProductionLinkCount} of ${input.productionLinkCount} source links passed from the production deployment.`,
+      `${input.passingProductionLinkCount} of ${input.productionLinkCount} representative source URLs answered from the production backend.`,
       ['coverageDirectLinkChecks'],
     ),
   ]

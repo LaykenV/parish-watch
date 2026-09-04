@@ -150,6 +150,12 @@ async function updateJurisdictionStatus(
 ): Promise<void> {
   const jurisdiction = await ctx.db.get(jurisdictionId)
   if (!jurisdiction) return
+  if (
+    jurisdiction.publicStatus === 'paused' ||
+    jurisdiction.publicStatus === 'degraded'
+  ) {
+    return
+  }
   const requiredKeys = listRootManifests()
     .filter((manifest) => manifest.jurisdictionSlug === jurisdiction.slug)
     .map((manifest) => manifest.bodyKey)

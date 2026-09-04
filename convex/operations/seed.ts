@@ -43,13 +43,7 @@ const LAUNCH_REGISTRIES = [
     registry: {
       officialDomains: ['rppj.com'],
       seedUrls: ['https://rppj.com/agendas/'],
-      sourceKinds: [
-        'agenda',
-        'minutes',
-        'packet',
-        'ordinance',
-        'resolution',
-      ],
+      sourceKinds: ['agenda', 'minutes', 'packet', 'ordinance', 'resolution'],
       expectedWeekdays: [1],
       initialStatus: 'candidate',
     },
@@ -114,10 +108,22 @@ async function seedRegistry(
       publicStatus: 'candidate',
     }))
 
-  const existingRegistry = await ctx.db
+  const registries = await ctx.db
     .query('sourceRegistries')
     .withIndex('by_body_and_status', (q) => q.eq('governmentBodyId', bodyId))
-    .first()
+    .take(30)
+  const protectedRegistry =
+    registries.find((registry) => registry.status === 'supported') ??
+    registries.find((registry) => registry.status === 'degraded') ??
+    registries.find((registry) => registry.status === 'paused')
+  const existingSeedRegistry =
+    registries.length === 1 &&
+    (registries[0].status === 'candidate' ||
+      registries[0].status === 'validating')
+      ? registries[0]
+      : null
+  const retainedRegistry =
+    protectedRegistry ?? existingSeedRegistry ?? registries[0]
   const registryFields = {
     officialDomains: [...config.registry.officialDomains],
     seedUrls: [...config.registry.seedUrls],
@@ -128,14 +134,14 @@ async function seedRegistry(
     },
     discoveryMode: 'dynamic' as const,
   }
-  const registryId = existingRegistry
-    ? existingRegistry._id
+  const registryId = retainedRegistry
+    ? retainedRegistry._id
     : await ctx.db.insert('sourceRegistries', {
         governmentBodyId: bodyId,
         ...registryFields,
         status: config.registry.initialStatus,
       })
-  if (existingRegistry) {
+  if (existingSeedRegistry && !protectedRegistry) {
     await ctx.db.patch(registryId, registryFields)
   }
 
