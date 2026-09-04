@@ -113,15 +113,21 @@ export const tick = internalMutation({
   },
 })
 async function startRun(ctx: MutationCtx, policyId: Id<'sourceMonitoringPolicies'>): Promise<Id<'sourceMonitoringRuns'> | null> {
-  const policy = await ctx.db.get(policyId)
+  let policy = await ctx.db.get(policyId)
   if (!policy?.enabled || env.SOURCE_MONITORING_ENABLED !== 'true') return null
+  const now = Date.now()
   if (policy.activeRunId) {
     const active = await ctx.db.get(policy.activeRunId)
-    if (active?.state === 'running') return active._id
+    if (active?.state === 'running' && active.startedAt > now - 2 * 3_600_000) return active._id
+    if (active?.state === 'running') {
+      await ctx.db.patch(active._id, { state: 'failed', errorClass: 'monitoring_lease_expired', completedAt: now })
+      policy = { ...policy, generation: policy.generation + 1 }
+      await ctx.db.patch(policy._id, { generation: policy.generation, activeRunId: undefined, updatedAt: now })
+      await recordIncident(ctx, policy.registryId, 'monitoring_lease_expired')
+    }
   }
   const registry = await ctx.db.get(policy.registryId)
   const proposal = await ctx.db.get(policy.proposalId)
-  const now = Date.now()
   if (!registry || !['supported', 'degraded'].includes(registry.status) || proposal?.status !== 'promoted') {
     await ctx.db.patch(policyId, { enabled: false, generation: policy.generation + 1, updatedAt: now })
     return null
