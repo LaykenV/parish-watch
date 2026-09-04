@@ -20,7 +20,7 @@ export async function extensionInputs(ctx: Pick<QueryCtx | MutationCtx, 'db'>, i
     if (record?.currentPublishedVersionId !== link.publicationVersionId) changed.add(link.recordId)
   }
   if (changed.size > 9) throw new Error('issue_extension_requires_owner')
-  for (const link of links.toReversed()) {
+  for (const link of [...links].reverse()) {
     if (changed.size >= 10) break
     changed.add(link.recordId)
   }
