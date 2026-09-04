@@ -4,6 +4,7 @@ import { expect, test } from 'vitest'
 import { api, internal } from './_generated/api'
 import { recordConfirmedEvent } from './analytics/civic'
 import schema from './schema'
+
 const modules = import.meta.glob('./**/*.ts')
 
 test('successful civic events deduplicate without retaining a resident identifier', async () => {
