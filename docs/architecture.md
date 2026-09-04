@@ -422,8 +422,9 @@ The coverage compiler is an owner-triggered internal pipeline:
    public-notice, planning, zoning, and calendar sources.
 4. Use an OpenAI discovery pass to classify candidates into the source contract.
 5. Retrieve a representative set for each body and source kind.
-6. Parse the set through the normal extraction pipeline.
-7. Run deterministic domain, link, date, citation, and coverage checks.
+6. Store the set through the normal immutable snapshot path.
+7. Read extraction, review, publication, citation, and revision evidence that
+   the owner produced through the existing evidence operations.
 8. Record a proposed source registry.
 9. Mark the place supported only after it passes the public coverage gate.
 
@@ -469,6 +470,41 @@ The compiler records request and response hashes, prompt and schema versions,
 model route, latency, token use, and estimated cost. Firecrawl 0.1.1 does not
 expose map or search credit totals, so each call records that credits were not
 reported instead of inventing a number.
+
+Each run starts with a $1.00 development budget. Source discovery reserves
+$0.25 before its first paid call. Representative validation reserves the
+remaining $0.75 once, and retries reuse that reservation. The ledger records
+estimated model spend separately. Firecrawl calls stay bounded by candidate and
+sample limits even though the pinned component cannot return their dollar cost.
+This is a start gate and reservation ledger, not a real-time provider spend cap.
+The estimated spend can exceed a reservation because classification reserves no
+additional amount and Firecrawl does not report dollar cost.
+
+The owner freezes classified sources into an immutable registry proposal before
+validation. `docs/coverage-gold-sets/launch-bodies.v1.json` defines the required
+sample slots. Missing agendas, minutes, history, revisions, negative controls,
+or planning cases remain failed sample rows, so the evaluator cannot shrink the
+denominator to fit what discovery found. Validation reuses the existing
+Firecrawl retrieval and immutable snapshot path with at most two samples in
+flight. It also reads any extraction, review, publication, citation, and
+revision evidence already produced by the shared pipeline.
+
+`coverage-gates-v2` records the ten requirements in `docs/sources.md` in their
+published order. Gate 1 measures the checked representative slots rather than
+claiming discovery of artifacts that are absent from the manifest. Gate 9
+requires recent successful agenda and minutes runs but does not claim they are
+one paired meeting cycle. Gate 10 checks the representative government URLs
+from the production backend, not a resident route. Every evaluation appends ten
+immutable results. An owner confirmation promotes only a `ready` proposal whose
+latest evaluator version still has ten passing results. Development link checks
+remain available for QA but cannot satisfy gate 10. Promotion changes the
+proposed registry and body in one transaction, pauses the previous live
+registry, and supersedes every other proposal for that body. Status controls
+act only on the newest promoted proposal. The system keeps all old snapshots
+and publications. Degradation and pause never delete evidence. A status change
+increments the registry generation.
+Recovery requires a new ten-gate evaluation recorded against that generation,
+so results from before the degradation cannot restore coverage.
 
 The gate walks the redirect chain itself with a bounded HTTPS request. Firecrawl
 is the retrieval engine for evidence, and a root that fails verification never
@@ -595,7 +631,7 @@ Indexes: jurisdiction plus status; jurisdiction plus slug.
 #### `sourceRegistries`
 
 Fields: body, official domains, seed URLs, source kinds, cadence, discovery mode,
-status, last discovery, last healthy time.
+status, status generation, last discovery, last healthy time.
 Indexes: body plus status; next scheduled check.
 
 #### `coverageCompilerRuns`
@@ -634,6 +670,34 @@ Fields: run, stage, provider, operation, status, request and response hashes,
 prompt and schema versions, model role and ID, latency, reported Firecrawl
 credits, model tokens, estimated model cost, bounded error, and time.
 Indexes: run plus time; stage plus time.
+
+#### `coverageRegistryProposals`
+
+Fields: compiler run, body and validating registry, proposal version and state,
+root, gold-set, and evaluator versions, proposed domains, seeds, source kinds,
+diff hash and summary, evaluation time, and promotion receipt.
+Indexes: run plus version; body plus state.
+
+#### `coverageRepresentativeSamples`
+
+Fields: proposal, optional discovered candidate, required source kind and role,
+retrieval state, immutable snapshot link, bounded failure, and timing. A missing
+candidate is stored as a failed required row.
+Indexes: proposal plus role; proposal plus state.
+
+#### `coverageGateEvaluations`
+
+Fields: proposal, gate number and key, pass result, detail, evidence references,
+evaluator version, registry status generation, and time. Evaluations append.
+Promotion and recovery read the newest result for every gate.
+Indexes: proposal plus gate; proposal plus time.
+
+#### `sourceExpectations` and `coverageDirectLinkChecks`
+
+Source expectations store proposal, registry, kind, cadence, and whether the
+schedule is official or inferred. Link checks store proposal, URL, deployment
+class, response status, result, and time. Gate 10 reads the newest checks by
+check time. Only production checks satisfy it.
 
 #### `sourceExpectations`
 
@@ -745,7 +809,7 @@ published version, current mode, and creation and update times. Issue links
 refer to these records without replacing them.
 Indexes: stable record key; current mode plus update time; government body plus
 current mode plus update time; current meeting key; registry plus source record
-ID.
+ID; registry plus update time.
 
 #### `issueBuilds`, `issueBuildReviews`, and `issueBuildReviewChecks`
 

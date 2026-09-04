@@ -9,9 +9,12 @@ import {
   coverageCandidateStates,
   coverageHostDispositions,
   coverageProviderNames,
+  coverageProposalStates,
   coverageRedirectHop,
   coverageRunStates,
   coverageSourceKinds,
+  coverageSampleRoles,
+  coverageSampleStates,
   coverageStageNames,
   coverageStageStates,
 } from './coverage/contracts'
@@ -535,6 +538,7 @@ export default defineSchema({
     }),
     discoveryMode: v.union(v.literal('dynamic'), v.literal('adapter')),
     status: coverageStatuses,
+    statusGeneration: v.optional(v.number()),
     lastDiscoveryAt: v.optional(v.number()),
     lastHealthyAt: v.optional(v.number()),
     nextScheduledCheckAt: v.optional(v.number()),
@@ -552,6 +556,9 @@ export default defineSchema({
     state: coverageRunStates,
     currentStage: v.optional(coverageStageNames),
     requestedByUserId: v.id('users'),
+    budgetUsd: v.optional(v.number()),
+    reservedCostUsd: v.optional(v.number()),
+    estimatedSpentUsd: v.optional(v.number()),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
     canceledAt: v.optional(v.number()),
@@ -635,6 +642,85 @@ export default defineSchema({
   })
     .index('by_run_and_created_at', ['runId', 'createdAt'])
     .index('by_stage_and_created_at', ['stageId', 'createdAt']),
+
+  coverageRegistryProposals: defineTable({
+    runId: v.id('coverageCompilerRuns'),
+    governmentBodyId: v.id('governmentBodies'),
+    registryId: v.id('sourceRegistries'),
+    bodyKey: v.string(),
+    proposalVersion: v.number(),
+    status: coverageProposalStates,
+    rootManifestVersion: v.string(),
+    goldSetVersion: v.string(),
+    evaluatorVersion: v.string(),
+    proposedDomains: v.array(v.string()),
+    proposedSeedUrls: v.array(v.string()),
+    proposedSourceKinds: v.array(sourceKinds),
+    diffHash: v.string(),
+    diffSummary: v.array(v.string()),
+    createdAt: v.number(),
+    evaluatedAt: v.optional(v.number()),
+    promotedAt: v.optional(v.number()),
+    promotedByUserId: v.optional(v.id('users')),
+  })
+    .index('by_run_and_version', ['runId', 'proposalVersion'])
+    .index('by_body_and_status', ['bodyKey', 'status'])
+    .index('by_body_and_created_at', ['bodyKey', 'createdAt']),
+
+  coverageRepresentativeSamples: defineTable({
+    proposalId: v.id('coverageRegistryProposals'),
+    candidateId: v.optional(v.id('coverageSourceCandidates')),
+    sourceKind: sourceKinds,
+    role: coverageSampleRoles,
+    required: v.boolean(),
+    state: coverageSampleStates,
+    pipelineRunId: v.optional(v.id('pipelineRuns')),
+    snapshotId: v.optional(v.id('sourceSnapshots')),
+    errorClass: v.optional(v.string()),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_proposal_and_role', ['proposalId', 'role'])
+    .index('by_proposal_and_state', ['proposalId', 'state']),
+
+  coverageGateEvaluations: defineTable({
+    proposalId: v.id('coverageRegistryProposals'),
+    gateNumber: v.number(),
+    gateKey: v.string(),
+    passed: v.boolean(),
+    detail: v.string(),
+    evidenceRefs: v.array(v.string()),
+    evaluatorVersion: v.string(),
+    registryStatusGeneration: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index('by_proposal_and_gate', ['proposalId', 'gateNumber'])
+    .index('by_proposal_and_created_at', ['proposalId', 'createdAt']),
+
+  sourceExpectations: defineTable({
+    proposalId: v.id('coverageRegistryProposals'),
+    registryId: v.id('sourceRegistries'),
+    sourceKind: sourceKinds,
+    cadence: cadenceKinds,
+    basis: v.union(v.literal('official'), v.literal('inferred')),
+    expectedWeekdays: v.optional(v.array(v.number())),
+    createdAt: v.number(),
+  }).index('by_registry_and_source_kind', ['registryId', 'sourceKind']),
+
+  coverageDirectLinkChecks: defineTable({
+    proposalId: v.id('coverageRegistryProposals'),
+    canonicalUrl: v.string(),
+    deployment: v.union(v.literal('development'), v.literal('production')),
+    status: v.number(),
+    passed: v.boolean(),
+    checkedAt: v.number(),
+  })
+    .index('by_proposal_and_deployment', ['proposalId', 'deployment'])
+    .index('by_proposal_and_deployment_and_checked_at', [
+      'proposalId',
+      'deployment',
+      'checkedAt',
+    ]),
 
   sourceSnapshots: defineTable({
     registryId: v.id('sourceRegistries'),
@@ -950,7 +1036,8 @@ export default defineSchema({
       'updatedAt',
     ])
     .index('by_current_meeting_key', ['currentMeetingKey'])
-    .index('by_registry_and_source_record', ['registryId', 'sourceRecordId']),
+    .index('by_registry_and_source_record', ['registryId', 'sourceRecordId'])
+    .index('by_registry_and_updated_at', ['registryId', 'updatedAt']),
 
   publicationVersions: defineTable({
     recordId: v.id('decisionRecords'),
@@ -1051,6 +1138,7 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_current_snapshot', ['currentSnapshotId'])
+    .index('by_registry_and_created_at', ['registryId', 'createdAt'])
     .index('by_source_and_created_at', [
       'registryId',
       'canonicalUrl',

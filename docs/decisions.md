@@ -83,6 +83,19 @@ expand the promise.
 - Source classification uses `MODEL_FAST`. The model references stored
   candidate IDs and copies evidence from the candidate metadata. Deterministic
   validation rejects invented IDs, changed bodies, omissions, and guesses.
+- A representative sample uses fixed checked-in slots. Missing source kinds
+  stay in the denominator as failed requirements. The compiler never lowers a
+  gate because a portal exposed less evidence than expected.
+- Representative validation retrieves immutable snapshots. It does not start
+  extraction, review, or publication. The owner runs those existing operations
+  separately before re-evaluating the proposal.
+- Owner confirmation is the last promotion step, not an override. The current
+  evaluator must have ten passing results, including representative source URLs
+  checked by the production backend. Degrade, pause, and recovery change status
+  while retaining prior snapshots, publications, and registries.
+- A body accepts promotion only from its newest active proposal. Promotion
+  supersedes sibling proposals, and status controls reject stale promoted
+  proposals.
 - Test the backend pipeline against representative real sources before building
   a polished UI.
 - Keep current and upcoming decisions primary, with approximately 12 months of

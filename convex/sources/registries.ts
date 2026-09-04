@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 
+import type { Doc } from '../_generated/dataModel'
 import { internalQuery } from '../_generated/server'
 import schema from '../schema'
 
@@ -28,12 +29,22 @@ export const getForBodySlug = internalQuery({
     if (!body) {
       return null
     }
-    const registry = await ctx.db
-      .query('sourceRegistries')
-      .withIndex('by_body_and_status', (q) =>
-        q.eq('governmentBodyId', body._id),
-      )
-      .first()
+    let registry: Doc<'sourceRegistries'> | null = null
+    for (const status of [
+      'supported',
+      'degraded',
+      'validating',
+      'candidate',
+      'paused',
+    ] as const) {
+      registry = await ctx.db
+        .query('sourceRegistries')
+        .withIndex('by_body_and_status', (q) =>
+          q.eq('governmentBodyId', body._id).eq('status', status),
+        )
+        .first()
+      if (registry) break
+    }
     if (!registry) {
       return null
     }
