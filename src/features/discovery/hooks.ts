@@ -83,18 +83,57 @@ export function useKeyboardInset(): number {
   return inset
 }
 
+type ConnectivityRequest = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) => Promise<unknown>
+
+export async function canReachOrigin(
+  request: ConnectivityRequest = fetch,
+): Promise<boolean> {
+  try {
+    await request('/brand-mark.svg', { cache: 'no-store', method: 'HEAD' })
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function useOnline(): boolean {
-  const [online, setOnline] = useState(() =>
-    typeof navigator === 'undefined' ? true : navigator.onLine,
-  )
+  const [online, setOnline] = useState(true)
 
   useEffect(() => {
-    const update = () => setOnline(navigator.onLine)
+    let probe = 0
+    const markOnline = () => {
+      probe += 1
+      setOnline(true)
+    }
+    const update = () => {
+      if (navigator.onLine) {
+        markOnline()
+        return
+      }
+      const currentProbe = ++probe
+      void canReachOrigin().then((reachable) => {
+        if (currentProbe === probe) setOnline(reachable)
+      })
+    }
+    const updateWhenVisible = () => {
+      if (document.visibilityState === 'visible') update()
+    }
     window.addEventListener('online', update)
     window.addEventListener('offline', update)
+    window.addEventListener('focus', update)
+    window.addEventListener('pageshow', update)
+    document.addEventListener('visibilitychange', updateWhenVisible)
+    update()
     return () => {
+      probe += 1
       window.removeEventListener('online', update)
       window.removeEventListener('offline', update)
+      window.removeEventListener('focus', update)
+      window.removeEventListener('pageshow', update)
+      document.removeEventListener('visibilitychange', updateWhenVisible)
     }
   }, [])
 

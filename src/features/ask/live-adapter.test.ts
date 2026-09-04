@@ -161,6 +161,39 @@ test('rejects an online failure before acceptance and removes the optimistic tur
   expect(latestConversation(updates)).toBeNull()
 })
 
+test('tries Ask when the browser flag is offline but requests still work', async () => {
+  vi.stubGlobal('navigator', { onLine: false })
+  const mutation = vi
+    .fn()
+    .mockResolvedValueOnce({ expiresAt: 2_000_000_000_000 })
+    .mockResolvedValueOnce({
+      threadId: 'agent-thread-false-offline',
+      expiresAt: 2_000_000_000_000,
+      scope: { kind: 'corpus', areaKey: 'lafayette-parish' },
+    })
+    .mockResolvedValueOnce({
+      messageId: 'question-false-offline',
+      replayed: false,
+    })
+  const adapter = new LiveAskAdapter(
+    {
+      mutation,
+      action: vi.fn().mockResolvedValue(answerResult()),
+      query: vi.fn(),
+    } as unknown as ConvexReactClient,
+    memoryStorage(),
+  )
+
+  await expect(
+    adapter.submit({
+      scope: corpusScope('lafayette-parish'),
+      question: 'What changed about drainage?',
+      idempotencyKey: 'question-key-false-offline-01',
+    }),
+  ).resolves.toBeUndefined()
+  expect(mutation).toHaveBeenCalledTimes(3)
+})
+
 test('keeps a completed answer when recent-label refresh fails', async () => {
   const mutation = vi
     .fn()

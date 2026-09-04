@@ -43,8 +43,10 @@ The shell (`ResidentShell`) is now the real navigation frame on `/`,
   (`visualViewport` delta over 150px) and while any sheet or dialog is open.
 - The area control is live: it opens the area selector and reflects the stored
   area (`Choose area` or the area name).
-- A real offline notice renders under the header from `navigator.onLine`
-  events: "You are offline. Showing the information already loaded."
+- A real offline notice renders under the header after a browser connectivity
+  event and a fresh same-origin request both fail. `navigator.onLine` alone is
+  not treated as proof: "You are offline. Showing the information already
+  loaded."
 - The route loading region is unchanged: fixed, top-center, stable through
   redirect chains.
 - Blueprint pages keep the ruled-paper backdrop through a

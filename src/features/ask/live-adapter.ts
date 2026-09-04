@@ -130,9 +130,6 @@ export class LiveAskAdapter implements AskAdapter {
   }
 
   async submit(input: AskSubmission): Promise<void> {
-    if (!navigator.onLine) {
-      throw new AskRequestError({ kind: 'offline' })
-    }
     const challenge = await this.challenge.challengeBeforeRequest()
     if (challenge) {
       throw new AskRequestError({
@@ -199,7 +196,6 @@ export class LiveAskAdapter implements AskAdapter {
   }
 
   async retry(input: { conversationId: string; turnId: string }) {
-    if (!navigator.onLine) throw new AskRequestError({ kind: 'offline' })
     if (!this.conversation || this.conversation.id !== input.conversationId)
       return
     this.updateTurn(input.turnId, (turn) => ({
@@ -532,8 +528,10 @@ function errorRetryAt(error: unknown) {
 }
 
 function isOfflineError(error: unknown) {
-  if (!navigator.onLine) return true
-  return error instanceof TypeError && /fetch|network/i.test(error.message)
+  return (
+    error instanceof TypeError &&
+    /failed to fetch|network|load failed/i.test(error.message)
+  )
 }
 
 export function createLiveAskAdapter(
