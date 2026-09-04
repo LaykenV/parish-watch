@@ -9,12 +9,14 @@ export const checkSources = extractionWorkflowManager.define({
 }).handler(async (step, args): Promise<null> => {
   let documentsChecked = 0
   let targetsStarted = 0
+  let incomplete = false
   try {
     const { policy } = await step.runQuery(internal.monitoring.ledger.context, args)
     await step.runMutation(internal.monitoring.ledger.reconcileTargets, { policyId: policy._id })
     await step.runAction(internal.monitoring.actions.discover, args, { retry: false })
     const documents = await step.runQuery(internal.monitoring.ledger.dueDocuments, args)
     for (const document of documents) {
+      try {
       const retrieval = await step.runAction(internal.operations.ingest.ingestRegistrySource, { registryId: document.registryId, urlOverride: document.canonicalUrl, monitorRunId: args.runId }, { retry: false })
       if (retrieval.outcome === 'failed') throw new Error(retrieval.errorClass)
       const reused = await step.runMutation(internal.monitoring.ledger.setSnapshot, { ...args, documentId: document._id, snapshotId: retrieval.snapshotId })
@@ -28,9 +30,14 @@ export const checkSources = extractionWorkflowManager.define({
         }
       }
       documentsChecked++
+      } catch (error) {
+        if (String(error).includes('monitoring_stopped')) throw error
+        incomplete = true
+        await step.runMutation(internal.monitoring.ledger.deferDocument, { ...args, documentId: document._id })
+      }
     }
     targetsStarted = await step.runMutation(internal.monitoring.ledger.dispatchTargets, args)
-    await step.runMutation(internal.monitoring.ledger.finish, { ...args, state: 'completed', documentsChecked, targetsStarted })
+    await step.runMutation(internal.monitoring.ledger.finish, { ...args, state: incomplete ? 'incomplete' : 'completed', documentsChecked, targetsStarted })
   } catch (error) {
     const stopped = String(error).includes('monitoring_stopped')
     await step.runMutation(internal.monitoring.ledger.finish, { ...args, state: stopped ? 'stopped' : 'incomplete', errorClass: stopped ? 'monitoring_stopped' : 'source_check_incomplete', documentsChecked, targetsStarted })

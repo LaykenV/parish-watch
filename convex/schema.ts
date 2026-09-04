@@ -588,7 +588,8 @@ export default defineSchema({
     targetKey: v.string(), targetRecordId: v.string(), locator: v.string(),
     sourceRecordIdProvenance: sourceRecordIdProvenances, sourceKind: sourceKinds,
     meetingDate: v.string(), state: targetState, notificationEligible: v.boolean(),
-    pipelineRunId: v.optional(v.id('pipelineRuns')), createdAt: v.number(), updatedAt: v.number(),
+    pipelineRunId: v.optional(v.id('pipelineRuns')),
+    attempts: v.optional(v.number()), retryAt: v.optional(v.number()), createdAt: v.number(), updatedAt: v.number(),
   }).index('by_snapshot_id_and_target_key', ['snapshotId', 'targetKey'])
     .index('by_policy_id_and_state', ['policyId', 'state'])
     .index('by_document_id_and_snapshot_id', ['documentId', 'snapshotId']),

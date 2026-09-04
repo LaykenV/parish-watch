@@ -70,7 +70,7 @@ export async function configurePolicy(ctx: MutationCtx, args: { proposalId: Id<'
     if (!Number.isInteger(value) || value < min || value > max) throw new Error('Monitoring limits are outside the allowed bounds.')
   }
   const now = Date.now()
-  if (!Number.isFinite(args.startsAt) || args.startsAt < now - 366 * DAY_MS || args.startsAt > now) throw new Error('Choose an explicit source window within the previous year.')
+  if (!Number.isFinite(args.startsAt) || (args.enabled && args.startsAt < now - 366 * DAY_MS) || args.startsAt > now) throw new Error('Choose an explicit source window within the previous year.')
   const existing = await ctx.db.query('sourceMonitoringPolicies').withIndex('by_registry_id', q => q.eq('registryId', registry._id)).unique()
   const fields = { ...args, registryId: registry._id, generation: (existing?.generation ?? 0) + 1, nextCheckAt: now, activeRunId: undefined, updatedAt: now }
   if (existing) {
@@ -215,7 +215,7 @@ export const saveInventory = internalMutation({
     const document = await ctx.db.get(args.documentId)
     if (!document || document.policyId !== policy._id || !document.snapshotId) throw new Error('Monitoring document mismatch.')
     if (!Number.isInteger(args.chunk) || !Number.isInteger(args.chunks) || args.chunks < 1 || args.chunks > 12 || args.chunk < 0 || args.chunk >= args.chunks) throw new Error('Invalid inventory chunk.')
-    if (!args.inventory.complete || !registry.sourceKinds.includes(args.inventory.sourceKind)) throw new Error('Inventory is not complete or its source kind is not registered.')
+    if (!args.inventory.complete || (args.inventory.targets.length > 0 && !registry.sourceKinds.includes(args.inventory.sourceKind))) throw new Error('Inventory is not complete or its source kind is not registered.')
     if ((document.completedChunks ?? 0) > args.chunk) return 0
     if ((document.completedChunks ?? 0) !== args.chunk) throw new Error('Inventory chunk order mismatch.')
     let added = 0
@@ -234,7 +234,7 @@ export const saveInventory = internalMutation({
         targetKey, targetRecordId, locator: target.excerpt,
         sourceRecordIdProvenance: hasYear ? 'source_printed' : 'operator_assigned',
         sourceKind: args.inventory.sourceKind, meetingDate: date, state: 'pending',
-        notificationEligible: document.notificationEligible, createdAt: Date.now(), updatedAt: Date.now(),
+        notificationEligible: document.notificationEligible && Date.parse(date) >= new Date(policy.activatedAt).setUTCHours(0, 0, 0, 0), createdAt: Date.now(), updatedAt: Date.now(),
       })
       added++
     }
@@ -249,6 +249,7 @@ export const dispatchTargets = internalMutation({
     const targets = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'pending')).take(policy.targetsPerRun)
     let started = 0
     for (const target of targets) {
+      if ((target.retryAt ?? 0) > Date.now()) continue
       const document = await ctx.db.get(target.documentId)
       if (!document?.inventoryComplete) continue
       if (document.snapshotId !== target.snapshotId) {
@@ -260,7 +261,7 @@ export const dispatchTargets = internalMutation({
         targetRecordId: target.targetRecordId, sourceRecordIdProvenance: target.sourceRecordIdProvenance,
         monitorTargetId: target._id,
       })
-      await ctx.db.patch(target._id, { pipelineRunId: result.runId, state: 'running', updatedAt: Date.now() })
+      await ctx.db.patch(target._id, { pipelineRunId: result.runId, state: 'running', attempts: (target.attempts ?? 0) + 1, retryAt: undefined, updatedAt: Date.now() })
       started++
     }
     return started
@@ -329,7 +330,7 @@ export const reconcileTargets = internalMutation({
     for (const target of targets) {
       const run = target.pipelineRunId ? await ctx.db.get(target.pipelineRunId) : null
       if (!run || run.state === 'failed_retryable' || run.state === 'failed_terminal' || run.state === 'superseded') {
-        await ctx.db.patch(target._id, { state: 'failed', updatedAt: Date.now() })
+        await ctx.db.patch(target._id, { state: (target.attempts ?? 1) < 3 ? 'pending' : 'failed', retryAt: Date.now() + DAY_MS, updatedAt: Date.now() })
         continue
       }
       if (run.state !== 'succeeded') continue
@@ -344,5 +345,30 @@ export const reconcileTargets = internalMutation({
       if (version) await ctx.db.patch(target._id, { state: version.mode === 'withheld' ? 'withheld' : 'published', updatedAt: Date.now() })
     }
     return null
+  },
+})
+
+export const deferDocument = internalMutation({
+  args: { runId: v.id('sourceMonitoringRuns'), documentId: v.id('monitoredDocuments') }, returns: v.null(),
+  handler: async (ctx, args) => {
+    const { policy } = await assertMonitoringRun(ctx, args.runId)
+    const document = await ctx.db.get(args.documentId)
+    if (!document || document.policyId !== policy._id) throw new Error('Monitoring document mismatch.')
+    await ctx.db.patch(document._id, { nextCheckAt: Date.now() + Math.max(DAY_MS, policy.intervalHours * 3_600_000), errorClass: 'source_check_incomplete' })
+    return null
+  },
+})
+export const retryTarget = mutation({
+  args: { targetId: v.id('documentInventoryTargets') }, returns: v.boolean(),
+  handler: async (ctx, args) => {
+    await requireOwner(ctx)
+    const target = await ctx.db.get(args.targetId)
+    if (!target || target.state !== 'failed') return false
+    const policy = await ctx.db.get(target.policyId)
+    const document = await ctx.db.get(target.documentId)
+    if (!policy?.enabled || document?.snapshotId !== target.snapshotId || !document.inventoryComplete) return false
+    await ctx.db.patch(target._id, { state: 'pending', attempts: 0, retryAt: undefined, updatedAt: Date.now() })
+    await ctx.db.patch(policy._id, { nextCheckAt: Date.now() })
+    return true
   },
 })
