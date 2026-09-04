@@ -12,7 +12,7 @@ const ALLOWED_ORIGINS = new Set([
 ])
 const MAX_BODY_BYTES = 512
 
-type AnalyticsPayload = { kind: BrowserCivicEvent; visitorKeyHash: string; eventKey: string } |
+type AnalyticsPayload = { kind: BrowserCivicEvent; visitorKeyHash: string; eventKey: string }
   | {
       kind: 'app_visit'
       visitorKeyHash: string
