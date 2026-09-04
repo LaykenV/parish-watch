@@ -73,9 +73,11 @@ export const inventoryChunk = internalAction({
     const source = args.chunk === 0 ? text.slice(0, INVENTORY_CHARS + 2_000) : `${text.slice(0, 3_000)}\n\n${text.slice(Math.max(0, args.chunk * INVENTORY_CHARS - 2_000), (args.chunk + 1) * INVENTORY_CHARS + 2_000)}`
     if (!env.MODEL_STRONG_ID || !env.MODEL_FAST_ID || env.MODEL_STRONG_ID === env.MODEL_FAST_ID) throw new Error('monitoring_models_not_independent')
     let inventory: InventoryResult | undefined
-    for (const role of ['MODEL_STRONG', 'MODEL_FAST'] as const) {
-      let repair: { reason: string; previous: string | null } | undefined
-      for (let attempt = 0; attempt < 2; attempt++) {
+    let repair: { reason: string; previous: string | null } | undefined
+    let reviewed = false
+    for (let attempt = 0; attempt < 2 && !reviewed; attempt++) {
+      inventory = undefined
+      for (const role of ['MODEL_STRONG', 'MODEL_FAST'] as const) {
       if (!await ctx.runMutation(internal.monitoring.ledger.reserve, { runId: args.runId, units: 2 })) throw new Error('monitoring_daily_limit')
       const outcome = await completeStructured({
         request: {
@@ -90,17 +92,19 @@ export const inventoryChunk = internalAction({
         onAttempt: async attempt => { await ctx.runMutation(internal.monitoring.ledger.recordCall, { runId: args.runId, operation: role === 'MODEL_STRONG' ? 'inventory' : 'inventory_review', provider: attempt.route, status: attempt.status, modelId: attempt.modelId, modelRole: role, promptTokens: attempt.usage?.promptTokens ?? undefined, completionTokens: attempt.usage?.completionTokens ?? undefined, estimatedCostUsd: attempt.usage ? estimateCostUsd(role, attempt.usage) ?? undefined : undefined, errorClass: attempt.errorClass ?? undefined, errorDetail: attempt.errorDetail?.slice(0, 500), latencyMs: attempt.latencyMs }) },
       })
       if (outcome.outcome !== 'success') {
-        if (attempt === 1) throw new Error('monitoring_inventory_rejected')
         repair = { reason: outcome.failure.detail, previous: outcome.failure.content }
-        continue
+        break
       }
       const result = outcome.result.parsed as InventoryResult
-      if (inventory && JSON.stringify({ ...result, reason: undefined }) !== JSON.stringify({ ...inventory, reason: undefined })) throw new Error('monitoring_inventory_disagreement')
+      if (inventory && JSON.stringify({ ...result, reason: undefined }) !== JSON.stringify({ ...inventory, reason: undefined })) {
+        repair = { reason: 'Independent review did not accept the proposed entries unchanged. Regenerate a complete, accurate inventory for a fresh review.', previous: JSON.stringify(result) }
+        break
+      }
       inventory = result
-      break
+      if (role === 'MODEL_FAST') reviewed = true
       }
     }
-    if (!inventory) throw new Error('monitoring_inventory_missing')
+    if (!inventory || !reviewed) throw new Error('monitoring_inventory_rejected')
     return { inventory, chunks }
   },
 })
