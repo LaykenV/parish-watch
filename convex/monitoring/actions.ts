@@ -76,7 +76,7 @@ export const inventoryChunk = internalAction({
         },
         responseValidator: inventoryResult,
         contractCheck: parsed => inventoryContract(parsed as InventoryResult, source, bodyName),
-        onAttempt: async attempt => { await ctx.runMutation(internal.monitoring.ledger.recordCall, { runId: args.runId, operation: role === 'MODEL_STRONG' ? 'inventory' : 'inventory_review', provider: attempt.route, status: attempt.status, modelId: attempt.modelId, modelRole: role, promptTokens: attempt.usage?.promptTokens ?? undefined, completionTokens: attempt.usage?.completionTokens ?? undefined, estimatedCostUsd: attempt.usage ? estimateCostUsd(role, attempt.usage) ?? undefined : undefined, errorClass: attempt.errorClass, errorDetail: attempt.errorDetail?.slice(0, 500), latencyMs: attempt.latencyMs }) },
+        onAttempt: async attempt => { await ctx.runMutation(internal.monitoring.ledger.recordCall, { runId: args.runId, operation: role === 'MODEL_STRONG' ? 'inventory' : 'inventory_review', provider: attempt.route, status: attempt.status, modelId: attempt.modelId, modelRole: role, promptTokens: attempt.usage?.promptTokens ?? undefined, completionTokens: attempt.usage?.completionTokens ?? undefined, estimatedCostUsd: attempt.usage ? estimateCostUsd(role, attempt.usage) ?? undefined : undefined, errorClass: attempt.errorClass ?? undefined, errorDetail: attempt.errorDetail?.slice(0, 500), latencyMs: attempt.latencyMs }) },
       })
       if (outcome.outcome !== 'success') throw new Error('monitoring_inventory_rejected')
       const result = outcome.result.parsed as InventoryResult
