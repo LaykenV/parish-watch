@@ -341,15 +341,24 @@ async function ingestSeedUrl(
       if (current.registry._id !== registryId) throw new Error('monitoring_registry_mismatch')
       if (!await ctx.runMutation(internal.monitoring.ledger.reserve, { runId: monitorRunId, units: 1 })) throw new Error('monitoring_daily_limit')
     }
-    await reserve()
-    let document = await firecrawl.scrape(ctx, url, {
-      formats: ['markdown', 'rawHtml'],
-      onlyMainContent: false,
-      // Firecrawl v2 defaults this to true. Its PDF engine does not support
-      // that option and returns a warning even for complete documents. Public
-      // Parish separately verifies the official artifact over TLS below.
-      skipTlsVerification: false,
-    })
+    const retrieve = async (sourceUrl: string, fresh: boolean) => {
+      await reserve()
+      const started = Date.now()
+      let status = 'failed'
+      let creditsUsed: number | undefined
+      try {
+        const result = await firecrawl.scrape(ctx, sourceUrl, {
+          formats: ['markdown', 'rawHtml'], onlyMainContent: false,
+          skipTlsVerification: false, ...(fresh ? { maxAge: 0 } : {}),
+        })
+        creditsUsed = typeof result.metadata?.creditsUsed === 'number' ? result.metadata.creditsUsed : undefined
+        status = result.warning || (typeof result.metadata?.statusCode === 'number' && result.metadata.statusCode >= 400) ? 'failed' : 'succeeded'
+        return result
+      } finally {
+        if (monitorRunId) await ctx.runMutation(internal.monitoring.ledger.recordCall, { runId: monitorRunId, operation: 'retrieval', provider: 'firecrawl', status, creditsUsed, latencyMs: Date.now() - started })
+      }
+    }
+    let document = await retrieve(url, false)
     let scraped = validateScrape(document, url, officialDomains)
     if (!scraped.ok) {
       return await failOutcome(
@@ -377,13 +386,7 @@ async function ingestSeedUrl(
         )
       }
 
-      await reserve()
-      document = await firecrawl.scrape(ctx, scraped.retrievedUrl, {
-        formats: ['markdown', 'rawHtml'],
-        onlyMainContent: false,
-        skipTlsVerification: false,
-        maxAge: 0,
-      })
+      document = await retrieve(scraped.retrievedUrl, true)
       const verifiedScrape = validateScrape(
         document,
         scraped.retrievedUrl,
