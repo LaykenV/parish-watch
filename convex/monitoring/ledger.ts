@@ -149,10 +149,11 @@ export const reserve = internalMutation({
   handler: async (ctx, args) => {
     const { policy } = await assertMonitoringRun(ctx, args.runId)
     if (!Number.isInteger(args.units) || args.units < 1 || args.units > 10) throw new Error('Invalid monitoring reservation.')
-    const local = await limiter.limit(ctx, 'calls', { key: policy._id, count: args.units, config: { kind: 'fixed window', rate: policy.dailyCallLimit, period: DAY } })
-    if (!local.ok) return false
-    const global = await limiter.limit(ctx, 'globalCalls', { count: args.units })
-    return global.ok
+    const options = { key: policy._id, count: args.units, config: { kind: 'fixed window' as const, rate: policy.dailyCallLimit, period: DAY } }
+    if (!(await limiter.check(ctx, 'calls', options)).ok || !(await limiter.check(ctx, 'globalCalls', { count: args.units })).ok) return false
+    await limiter.limit(ctx, 'calls', { ...options, throws: true })
+    await limiter.limit(ctx, 'globalCalls', { count: args.units, throws: true })
+    return true
   },
 })
 export const addDocuments = internalMutation({
@@ -200,8 +201,9 @@ export const setSnapshot = internalMutation({
     const document = await ctx.db.get(args.documentId)
     const snapshot = await ctx.db.get(args.snapshotId)
     if (!document || document.policyId !== policy._id || !snapshot || snapshot.registryId !== policy.registryId || snapshot.canonicalUrl !== document.canonicalUrl || snapshot.truncation.truncated || snapshot.contentHashBasis !== 'raw_artifact_v2') throw new Error('Monitoring snapshot mismatch.')
-    const reused = document.normalizedHash === snapshot.normalizedContentHash && document.inventoryVersion === MONITOR_VERSION && document.inventoryComplete
-    await ctx.db.patch(document._id, { snapshotId: reused ? document.snapshotId : snapshot._id, normalizedHash: snapshot.normalizedContentHash, inventoryVersion: MONITOR_VERSION, inventoryComplete: reused, completedChunks: reused ? document.completedChunks : 0, lastCheckedAt: Date.now(), nextCheckAt: Date.now() + policy.intervalHours * 3_600_000, errorClass: undefined })
+    const sameContent = document.normalizedHash === snapshot.normalizedContentHash && document.inventoryVersion === MONITOR_VERSION
+    const reused = sameContent && document.inventoryComplete
+    await ctx.db.patch(document._id, { snapshotId: sameContent ? document.snapshotId : snapshot._id, notificationEligible: sameContent ? document.notificationEligible : policy.baselineComplete, normalizedHash: snapshot.normalizedContentHash, inventoryVersion: MONITOR_VERSION, inventoryComplete: reused, completedChunks: sameContent ? document.completedChunks : 0, lastCheckedAt: Date.now(), nextCheckAt: Date.now() + policy.intervalHours * 3_600_000, errorClass: undefined })
     await ctx.db.patch(policy._id, { lastRetrievalAt: Date.now() })
     return reused
   },
@@ -312,9 +314,10 @@ export const reservePipelineCall = internalMutation({
     if (!run?.monitorPolicyId) return null
     const policy = await ctx.db.get(run.monitorPolicyId)
     if (!policy) throw new Error('monitoring_stopped')
-    const local = await limiter.limit(ctx, 'calls', { key: policy._id, count: 2, config: { kind: 'fixed window', rate: policy.dailyCallLimit, period: DAY } })
-    const global = local.ok && await limiter.limit(ctx, 'globalCalls', { count: 2 })
-    if (!local.ok || !global || !global.ok) throw new Error('monitoring_daily_limit')
+    const options = { key: policy._id, count: 2, config: { kind: 'fixed window' as const, rate: policy.dailyCallLimit, period: DAY } }
+    if (!(await limiter.check(ctx, 'calls', options)).ok || !(await limiter.check(ctx, 'globalCalls', { count: 2 })).ok) throw new Error('monitoring_daily_limit')
+    await limiter.limit(ctx, 'calls', { ...options, throws: true })
+    await limiter.limit(ctx, 'globalCalls', { count: 2, throws: true })
     return run.targetLocator ?? null
   },
 })

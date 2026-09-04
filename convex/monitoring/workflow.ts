@@ -19,8 +19,9 @@ export const checkSources = extractionWorkflowManager.define({
       if (retrieval.outcome === 'failed') throw new Error(retrieval.errorClass)
       const reused = await step.runMutation(internal.monitoring.ledger.setSnapshot, { ...args, documentId: document._id, snapshotId: retrieval.snapshotId })
       if (!reused) {
-        let chunks = 1
-        for (let chunk = 0; chunk < chunks; chunk++) {
+        const current = await step.runQuery(internal.monitoring.ledger.documentContext, { ...args, documentId: document._id })
+        let chunks = current.document.chunkCount ?? 1
+        for (let chunk = current.document.completedChunks ?? 0; chunk < chunks; chunk++) {
           const result = await step.runAction(internal.monitoring.actions.inventoryChunk, { ...args, documentId: document._id, chunk }, { retry: false })
           chunks = result.chunks
           await step.runMutation(internal.monitoring.ledger.saveInventory, { ...args, documentId: document._id, chunk, ...result })
