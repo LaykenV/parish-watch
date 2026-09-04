@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { paginationOptsValidator } from 'convex/server'
 import { internal } from '../_generated/api'
+import { normalizeForMatch } from '../extraction/textMatch'
 import { sha256HexOfText } from '../sources/hashing'
 import { env, internalAction, internalQuery } from '../_generated/server'
 
@@ -36,7 +37,7 @@ export const mailboxReceipts = internalAction({
     const receipts = []
     for (const thread of result.threads ?? []) {
       const detail = await mailboxApi(`/inboxes/${encodeURIComponent(args.inboxId)}/threads/${encodeURIComponent(thread.thread_id)}`) as { messages?: Array<{ message_id: string; subject?: string; text?: string }> }
-      for (const message of detail.messages ?? []) if (message.subject === 'Your Public Parish verification code' || message.subject === 'Verify your Public Parish coverage notice' || message.subject?.startsWith('Public Parish coverage is available for ')) receipts.push({ subject: message.subject ?? '', messageId: message.message_id, verificationCode: message.text?.match(/(?:verification code is|verification code:|code is)\s*(\d{6})/i)?.[1] ?? null, unsubscribeUrl: message.text?.match(/https:\/\/woozy-wren-227\.convex\.site\/coverage\/unsubscribe\/[A-Za-z0-9_-]+/)?.[0] ?? null })
+      for (const message of detail.messages ?? []) if (message.subject === 'Your Public Parish verification code' || message.subject === 'Verify your Public Parish coverage notice' || message.subject?.startsWith('Public Parish coverage is available for ')) receipts.push({ subject: message.subject ?? '', messageId: message.message_id, verificationCode: message.text?.match(/(?:verification code is|verification code:|code is)\s*(\d{6})/i)?.[1] ?? message.text?.match(/\n\s*(\d{6})\s*\n/)?.[1] ?? null, unsubscribeUrl: message.text?.match(/https:\/\/woozy-wren-227\.convex\.site\/coverage\/unsubscribe\/[A-Za-z0-9_-]+/)?.[0] ?? null })
     }
     return receipts
   },
@@ -92,12 +93,12 @@ export const auditPublishedEvidence = internalAction({
         const blob = await ctx.storage.get(snapshot.normalizedStorageId)
         const text = blob ? await blob.text() : ''
         if (!blob || await sha256HexOfText(text) !== snapshot.normalizedContentHash) problems.push(`${record.recordKey}: snapshot hash`)
-        texts.set(snapshot._id, text)
+        texts.set(snapshot._id, normalizeForMatch(text))
       }
       for (const citation of record.citations) {
         citations++
         const text = texts.get(citation.snapshotId)
-        if (text === undefined || text.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) !== citation.excerpt) problems.push(`${record.recordKey}: citation offsets`)
+        if (text === undefined || text.slice(citation.normalizedStartOffset, citation.normalizedEndOffset) !== normalizeForMatch(citation.excerpt)) problems.push(`${record.recordKey}: citation offsets`)
       }
     }
     return { records: page.evidence.length, citations, problems, isDone: page.isDone, continueCursor: page.continueCursor }
