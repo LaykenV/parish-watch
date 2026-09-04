@@ -173,6 +173,7 @@ function IssueDetail({
   search: EvidenceSearch
   updated: boolean
 }) {
+  const { citations, issue } = fixture
   useEffect(() => {
     if (!liveFollow) return
     const key = `pp-issue-visited:${issue.slug}`
@@ -186,7 +187,6 @@ function IssueDetail({
     observer.observe(timeline)
     return () => observer.disconnect()
   }, [issue.slug, issue.latestOutcome, liveFollow])
-  const { citations, issue } = fixture
   const sections = issueSections(fixture)
   const selected = resolveCitationId(citations, search.source)
   const currentIssueHref = evidenceRouteHref(`/issues/${issue.slug}`, search)
