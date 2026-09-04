@@ -424,8 +424,10 @@ Build and record:
 - Check every published citation in the bounded release corpus and sample
   historical versions. Large corpus coverage belongs in paginated CI or remote
   checks, never a single unbounded browser request.
-- Exercise the normal AI Gateway path and a bounded development test of the
-  documented direct-provider fallback. Do not use fallback for the main demo.
+- Exercise the normal AI Gateway path and verify direct-provider fallback stays
+  disabled. The owner accepted AI Gateway as the verified provider on September
+  4 because development has no direct OpenAI key. A live fallback call is not a
+  completion requirement.
 - Reconcile current statuses in `PLAN.md`, `docs/decisions.md`,
   `docs/product-spec.md`, `docs/architecture.md`, `docs/sources.md`,
   `docs/build-plan.md`, `docs/hackathon.md`, root `hackathon.md`, and the code

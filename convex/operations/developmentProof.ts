@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { paginationOptsValidator } from 'convex/server'
 import { internal } from '../_generated/api'
 import { completeStructuredDirectFallback } from '../ai/provider'
+import { decryptAddress } from '../follows/secrets'
 import { normalizeForMatch } from '../extraction/textMatch'
 import { sha256HexOfText } from '../sources/hashing'
 import { env, internalAction, internalMutation, internalQuery } from '../_generated/server'
@@ -153,5 +154,68 @@ export const directFallbackProbe = internalAction({
     })
     if (result.outcome !== 'success') throw new Error('Development fallback probe did not produce valid structured output.')
     return { outcome: result.outcome, route: result.result.route, model: result.result.modelId, tokens: result.result.usage.totalTokens }
+  },
+})
+
+// Controlled replay uses an existing accepted change. It never changes the
+// evidence, publication time, follow time, or recipients outside this inbox.
+export const replayControlledDelivery = internalMutation({
+  args: {}, returns: v.id('roundupWindows'),
+  handler: async ctx => {
+    requireDevelopment()
+    const follow = await ctx.db.get('qd74bbz6hcz0vethe63xmz73p98dsn05' as import('../_generated/dataModel').Id<'follows'>)
+    if (!follow || follow.ownerKind !== 'email') throw new Error('Controlled follow is missing.')
+    const subscriber = await ctx.db.get(follow.emailSubscriberId)
+    if (!subscriber || subscriber.state !== 'verified' || await decryptAddress(subscriber.encryptedAddress) !== env.AGENTMAIL_REPORTS_INBOX_ID) throw new Error('Controlled recipient is not verified.')
+    const changeId = 'n97ecb6wpzb93t6kbtpqk6qnf98dpxv7' as import('../_generated/dataModel').Id<'materialChanges'>
+    const change = await ctx.db.get(changeId)
+    const record = change ? await ctx.db.get(change.recordId) : null
+    if (!change?.material || change.notificationEligible === false || record?.currentPublishedVersionId !== change.currentPublicationVersionId) throw new Error('Accepted replay evidence changed.')
+    const windowKey = 'development-slice9-controlled-replay-20260904'
+    const previous = await ctx.db.query('roundupWindows').withIndex('by_window_key', q => q.eq('windowKey', windowKey)).unique()
+    if (previous) return previous._id
+    const existing = await ctx.db.query('notificationMatches').withIndex('by_follow_id_and_material_change_id', q => q.eq('followId', follow._id).eq('materialChangeId', changeId)).unique()
+    if (existing) throw new Error('Controlled replay already has a match without its window.')
+    const now = Date.now()
+    const otherMatches = await ctx.db.query('notificationMatches').withIndex('by_matched_at', q => q.gte('matchedAt', now).lt('matchedAt', now + 1)).take(1)
+    if (otherMatches.length) throw new Error('Controlled replay time overlaps another match.')
+    await ctx.db.insert('notificationMatches', { followId: follow._id, materialChangeId: changeId, ownerKind: follow.ownerKind, ownerKey: follow.ownerKey, targetKind: follow.targetKind, targetKey: follow.targetKey, cadenceAtMatch: 'both', matchedAt: now })
+    const windowId = await ctx.db.insert('roundupWindows', { windowKey, startsAt: now, endsAt: now + 1, state: 'collecting', entryCount: 0, deliveryCount: 0, createdAt: now, updatedAt: now })
+    await ctx.runMutation(internal.follows.agentmailClient.reserveImmediateDelivery, { materialChangeId: changeId, ownerKey: follow.ownerKey })
+    await ctx.scheduler.runAfter(1, internal.follows.agentmailClient.collectWeeklyRoundupPage, { roundupWindowId: windowId, paginationOpts: { numItems: 50, cursor: null } })
+    return windowId
+  },
+})
+
+export const controlledNotificationReceipts = internalAction({
+  args: {}, returns: v.array(v.object({ messageId: v.string(), threadId: v.string(), subject: v.string(), officialLinks: v.number(), isReply: v.boolean() })),
+  handler: async () => {
+    requireDevelopment()
+    const inbox = env.AGENTMAIL_REPORTS_INBOX_ID
+    if (!inbox || inbox === env.AGENTMAIL_UPDATES_INBOX_ID) throw new Error('Separate controlled inbox required.')
+    const result = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/threads?limit=20`) as { threads?: Array<{ thread_id: string }> }
+    const receipts = []
+    for (const thread of result.threads ?? []) {
+      const detail = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/threads/${encodeURIComponent(thread.thread_id)}`) as { messages?: Array<{ message_id: string; subject?: string; text?: string; in_reply_to?: string; from?: string }> }
+      for (const message of detail.messages ?? []) {
+        if (!message.from?.includes(env.AGENTMAIL_UPDATES_INBOX_ID ?? 'missing') || !message.subject?.includes('Public Parish')) continue
+        if (message.subject.includes('verification') || message.subject.includes('coverage')) continue
+        receipts.push({ messageId: message.message_id, threadId: thread.thread_id, subject: message.subject, officialLinks: (message.text?.match(/https:\/\/(?:rppj\.com|www\.rppj\.com)\//g) ?? []).length, isReply: Boolean(message.in_reply_to) })
+      }
+    }
+    return receipts
+  },
+})
+
+export const replyToControlledNotification = internalAction({
+  args: { messageId: v.string() }, returns: v.object({ messageId: v.string(), threadId: v.string() }),
+  handler: async (_ctx, args) => {
+    requireDevelopment()
+    const inbox = env.AGENTMAIL_REPORTS_INBOX_ID
+    if (!inbox || inbox === env.AGENTMAIL_UPDATES_INBOX_ID) throw new Error('Separate controlled inbox required.')
+    const message = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/messages/${encodeURIComponent(args.messageId)}`) as { from?: string; subject?: string }
+    if (!message.from?.includes(env.AGENTMAIL_UPDATES_INBOX_ID ?? 'missing') || !message.subject?.includes('Public Parish')) throw new Error('Only the controlled Public Parish delivery may receive this reply.')
+    const reply = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/messages/${encodeURIComponent(args.messageId)}/reply`, { text: 'Controlled development check: What change to the Pafford ambulance contract language does this update describe? Please distinguish the proposal from a final vote.' }) as { message_id: string; thread_id: string }
+    return { messageId: reply.message_id, threadId: reply.thread_id }
   },
 })
