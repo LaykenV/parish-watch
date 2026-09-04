@@ -90,6 +90,7 @@ import type * as monitoring_contracts from "../monitoring/contracts.js";
 import type * as monitoring_ledger from "../monitoring/ledger.js";
 import type * as monitoring_workflow from "../monitoring/workflow.js";
 import type * as operations_dashboard from "../operations/dashboard.js";
+import type * as operations_developmentProof from "../operations/developmentProof.js";
 import type * as operations_discover from "../operations/discover.js";
 import type * as operations_extract from "../operations/extract.js";
 import type * as operations_ingest from "../operations/ingest.js";
@@ -219,6 +220,7 @@ declare const fullApi: ApiFromModules<{
   "monitoring/ledger": typeof monitoring_ledger;
   "monitoring/workflow": typeof monitoring_workflow;
   "operations/dashboard": typeof operations_dashboard;
+  "operations/developmentProof": typeof operations_developmentProof;
   "operations/discover": typeof operations_discover;
   "operations/extract": typeof operations_extract;
   "operations/ingest": typeof operations_ingest;
