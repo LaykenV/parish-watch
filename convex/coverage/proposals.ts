@@ -7,7 +7,11 @@ import { requireOwner } from '../auth/authorization'
 import type { SourceKind } from '../pipeline/state'
 import { sha256HexOfText } from '../sources/hashing'
 import { COVERAGE_EVALUATOR_VERSION, COVERAGE_GOLD_SET_VERSION } from './gates'
-import { coverageGoldSetSlots } from './goldSet'
+import {
+  coverageGoldSetExpectations,
+  coverageGoldSetSamples,
+} from './goldSet'
+import { classifyHost } from './rootGate'
 import { resolveRootManifest } from './roots'
 
 const MAX_PROPOSAL_SEEDS = 20
@@ -21,25 +25,12 @@ export const prepareProposal = mutation({
   handler: async (ctx, args) => {
     await requireOwner(ctx)
     const run = await ctx.db.get(args.runId)
-    if (
-      !run ||
-      run.state !== 'succeeded' ||
-      run.currentStage !== 'classify_sources'
-    ) {
+    if (!run || run.state !== 'succeeded') {
       throw proposalError(
         'run_not_classified',
         'A proposal needs a completed source-classification run.',
       )
     }
-    const existing = await ctx.db
-      .query('coverageRegistryProposals')
-      .withIndex('by_run_and_version', (index) => index.eq('runId', run._id))
-      .order('desc')
-      .first()
-    if (existing && existing.status !== 'superseded') {
-      return { proposalId: existing._id, created: false }
-    }
-
     const manifest = resolveRootManifest(run.bodyKey, run.rootManifestVersion)
     if (!manifest) {
       throw proposalError(
@@ -47,34 +38,66 @@ export const prepareProposal = mutation({
         'The checked root manifest for this run no longer exists.',
       )
     }
+    const existing = await ctx.db
+      .query('coverageRegistryProposals')
+      .withIndex('by_run_and_version', (index) => index.eq('runId', run._id))
+      .order('desc')
+      .first()
+    if (
+      existing &&
+      existing.status !== 'superseded' &&
+      (existing.status === 'promoted' ||
+        (existing.goldSetVersion === COVERAGE_GOLD_SET_VERSION &&
+          existing.evaluatorVersion === COVERAGE_EVALUATOR_VERSION))
+    ) {
+      await syncCandidateBody(ctx, existing.governmentBodyId, manifest)
+      return { proposalId: existing._id, created: false }
+    }
+    if (existing && existing.status !== 'superseded') {
+      await ctx.db.patch(existing._id, { status: 'superseded' })
+    }
+
     const candidates = await ctx.db
       .query('coverageSourceCandidates')
       .withIndex('by_run_and_url', (index) => index.eq('runId', run._id))
       .take(100)
-    const classified = candidates.filter(
-      (candidate) =>
-        candidate.state === 'classified' &&
-        candidate.sourceKind !== undefined &&
-        candidate.sourceKind !== 'unknown',
-    )
-    if (classified.length === 0) {
+    const goldSamples = coverageGoldSetSamples(manifest.bodyKey)
+    const expectations = coverageGoldSetExpectations(manifest.bodyKey)
+    const classificationStage = await ctx.db
+      .query('coverageCompilerStages')
+      .withIndex('by_run_and_stage', (index) =>
+        index.eq('runId', run._id).eq('stage', 'classify_sources'),
+      )
+      .order('desc')
+      .first()
+    if (!classificationStage || classificationStage.state !== 'succeeded') {
       throw proposalError(
-        'no_classified_sources',
-        'No classified official sources are available for a proposal.',
+        'classification_stage_missing',
+        'A proposal needs its completed classification stage.',
       )
     }
+    const sampleCandidates = await ensureGoldCandidates(
+      ctx,
+      run._id,
+      classificationStage._id,
+      candidates,
+      manifest,
+      goldSamples,
+      expectations,
+    )
 
     const jurisdictionId = await ensureJurisdiction(ctx, manifest)
     const governmentBodyId = await ensureBody(ctx, jurisdictionId, manifest)
-    const proposedSourceKinds = uniqueSourceKinds(classified)
-    const proposedSeedUrls = classified
-      .filter((candidate) => candidate.hostDisposition === 'approved')
-      .map((candidate) => candidate.canonicalUrl)
-      .slice(0, MAX_PROPOSAL_SEEDS)
+    const proposedSourceKinds = [
+      ...new Set(goldSamples.map((sample) => sample.sourceKind)),
+    ].sort()
+    const proposedSeedUrls = [
+      ...new Set(goldSamples.map((sample) => sample.url)),
+    ].slice(0, MAX_PROPOSAL_SEEDS)
     if (proposedSeedUrls.length === 0) {
       throw proposalError(
         'no_official_seeds',
-        'Every classified source is still on a quarantined document host.',
+        'The checked gold set has no official source seeds.',
       )
     }
 
@@ -119,30 +142,24 @@ export const prepareProposal = mutation({
       createdAt,
     })
 
-    for (const kind of proposedSourceKinds) {
-      const candidate = classified.find(
-        (entry) => normalizeSourceKind(entry.sourceKind) === kind,
-      )
+    for (const expectation of expectations) {
       await ctx.db.insert('sourceExpectations', {
         proposalId,
         registryId,
-        sourceKind: kind,
-        cadence: cadenceFor(candidate?.cadence),
-        basis: 'inferred',
+        sourceKind: expectation.sourceKind,
+        cadence: expectation.cadence,
+        basis: 'official',
         createdAt,
       })
     }
-    for (const sample of selectSamples(candidates, manifest.bodyKey)) {
+    for (const sample of goldSamples) {
       await ctx.db.insert('coverageRepresentativeSamples', {
         proposalId,
-        ...(sample.candidate ? { candidateId: sample.candidate._id } : {}),
+        candidateId: sampleCandidates.get(sample.key)!,
         sourceKind: sample.sourceKind,
         role: sample.role,
         required: true,
-        state: sample.candidate ? 'pending' : 'failed_terminal',
-        ...(sample.candidate
-          ? {}
-          : { errorClass: 'missing_required_candidate' }),
+        state: 'pending',
         createdAt,
       })
     }
@@ -181,7 +198,10 @@ async function ensureBody(
     .query('governmentBodies')
     .withIndex('by_slug', (index) => index.eq('slug', manifest.bodyKey))
     .unique()
-  if (existing) return existing._id
+  if (existing) {
+    await syncCandidateBody(ctx, existing._id, manifest)
+    return existing._id
+  }
   return await ctx.db.insert('governmentBodies', {
     jurisdictionId,
     name: manifest.bodyName,
@@ -190,6 +210,24 @@ async function ensureBody(
     officialUrl: manifest.approvedRootUrl,
     publicStatus: 'candidate',
   })
+}
+
+async function syncCandidateBody(
+  ctx: MutationCtx,
+  bodyId: Id<'governmentBodies'>,
+  manifest: NonNullable<ReturnType<typeof resolveRootManifest>>,
+): Promise<void> {
+  const body = await ctx.db.get(bodyId)
+  if (!body || body.publicStatus !== 'candidate') return
+  if (
+    body.name !== manifest.bodyName ||
+    body.officialUrl !== manifest.approvedRootUrl
+  ) {
+    await ctx.db.patch(body._id, {
+      name: manifest.bodyName,
+      officialUrl: manifest.approvedRootUrl,
+    })
+  }
 }
 
 async function firstPriorRegistry(
@@ -206,36 +244,62 @@ async function firstPriorRegistry(
   return registries.find((registry) => registry._id !== excluding) ?? null
 }
 
-function uniqueSourceKinds(
-  candidates: Array<Doc<'coverageSourceCandidates'>>,
-): SourceKind[] {
-  return [
-    ...new Set(
-      candidates
-        .map((candidate) => normalizeSourceKind(candidate.sourceKind))
-        .filter((kind): kind is SourceKind => kind !== null),
-    ),
-  ].sort()
-}
-
-function normalizeSourceKind(
-  kind: Doc<'coverageSourceCandidates'>['sourceKind'],
-): SourceKind | null {
-  if (!kind || kind === 'unknown') return null
-  if (kind === 'zoning_case') return 'planning_case'
-  return kind
-}
-
-function cadenceFor(
-  cadence: Doc<'coverageSourceCandidates'>['cadence'],
-): 'daily' | 'weekly' | 'monthly' | 'meeting_cycle' | 'unknown' {
-  if (
-    cadence === 'weekly' ||
-    cadence === 'monthly' ||
-    cadence === 'meeting_cycle'
+async function ensureGoldCandidates(
+  ctx: MutationCtx,
+  runId: Id<'coverageCompilerRuns'>,
+  stageId: Id<'coverageCompilerStages'>,
+  existingCandidates: Array<Doc<'coverageSourceCandidates'>>,
+  rootManifest: NonNullable<ReturnType<typeof resolveRootManifest>>,
+  samples: ReturnType<typeof coverageGoldSetSamples>,
+  expectations: ReturnType<typeof coverageGoldSetExpectations>,
+): Promise<Map<string, Id<'coverageSourceCandidates'>>> {
+  const candidatesByUrl = new Map(
+    existingCandidates.map((candidate) => [candidate.canonicalUrl, candidate]),
   )
-    return cadence
-  return 'unknown'
+  const candidateIds = new Map<string, Id<'coverageSourceCandidates'>>()
+  for (const sample of samples) {
+    const hostDisposition = classifyHost(rootManifest, sample.url)
+    if (hostDisposition === 'unapproved') {
+      throw proposalError(
+        'gold_set_host_not_approved',
+        `The checked sample ${sample.key} left the approved source hosts.`,
+      )
+    }
+    const cadence =
+      expectations.find(
+        (expectation) => expectation.sourceKind === sample.sourceKind,
+      )?.cadence ?? 'unknown'
+    const existing = candidatesByUrl.get(sample.url)
+    const fields = {
+      title: sample.title,
+      discoveredFrom: [`coverage-gold-set:${COVERAGE_GOLD_SET_VERSION}`],
+      matchedTerms: [sample.sourceKind],
+      hostDisposition,
+      state: 'classified' as const,
+      sourceKind: sample.sourceKind,
+      cadence,
+      confidence: 1,
+      evidenceText: `Checked sample: ${sample.title}`,
+      noGuessReason: undefined,
+      classifiedAt: Date.now(),
+    }
+    let candidateId: Id<'coverageSourceCandidates'>
+    if (existing) {
+      await ctx.db.patch(existing._id, fields)
+      candidateId = existing._id
+    } else {
+      candidateId = await ctx.db.insert('coverageSourceCandidates', {
+        runId,
+        stageId,
+        canonicalUrl: sample.url,
+        description: `Required by ${COVERAGE_GOLD_SET_VERSION}.`,
+        createdAt: Date.now(),
+        ...fields,
+      })
+    }
+    candidateIds.set(sample.key, candidateId)
+  }
+  return candidateIds
 }
 
 function bodyTypeFor(
@@ -270,80 +334,6 @@ function registryDiff(
     changes.push('Replace the source-kind set.')
   }
   return changes.length > 0 ? changes : ['No registry field changes.']
-}
-
-function selectSamples(
-  candidates: Array<Doc<'coverageSourceCandidates'>>,
-  bodyKey: string,
-) {
-  const selected: Array<{
-    candidate?: Doc<'coverageSourceCandidates'>
-    sourceKind: SourceKind
-    role: 'current' | 'historical' | 'revision' | 'negative'
-  }> = []
-  const used = new Set<Id<'coverageSourceCandidates'>>()
-  const take = (
-    kinds: SourceKind[],
-    role: 'current' | 'historical' | 'revision' | 'negative',
-  ) => {
-    const ordered = [...candidates].sort((left, right) => {
-      const delta = candidateDate(right) - candidateDate(left)
-      return role === 'historical' ? -delta : delta
-    })
-    const candidate = ordered.find(
-      (entry) =>
-        entry.state === 'classified' &&
-        !used.has(entry._id) &&
-        kinds.includes(normalizeSourceKind(entry.sourceKind) ?? 'other'),
-    )
-    if (candidate) used.add(candidate._id)
-    return candidate
-  }
-  for (const slot of coverageGoldSetSlots(bodyKey)) {
-    let candidate: Doc<'coverageSourceCandidates'> | undefined
-    if (slot.role === 'revision') {
-      candidate = candidates.find(
-        (entry) =>
-          entry.state === 'classified' &&
-          !used.has(entry._id) &&
-          /revis|amend|cancel|postpon|previous/i.test(
-            `${entry.canonicalUrl} ${entry.title ?? ''}`,
-          ),
-      )
-    } else if (slot.role === 'negative') {
-      candidate = candidates.find((entry) => entry.state === 'uncertain')
-    } else {
-      candidate = take(slot.sourceKinds, slot.role)
-    }
-    if (candidate) used.add(candidate._id)
-    selected.push({
-      candidate,
-      sourceKind:
-        normalizeSourceKind(candidate?.sourceKind) ?? slot.sourceKinds[0],
-      role: slot.role,
-    })
-  }
-  return selected
-}
-
-function candidateDate(candidate: Doc<'coverageSourceCandidates'>): number {
-  const text = `${candidate.title ?? ''} ${candidate.description ?? ''} ${candidate.canonicalUrl}`
-  const yearFirst = text.match(/\b(20\d{2})[-_/](\d{1,2})[-_/](\d{1,2})\b/)
-  const monthFirst = text.match(/\b(\d{1,2})[-_/](\d{1,2})[-_/](20\d{2})\b/)
-  const parsed = yearFirst
-    ? Date.UTC(
-        Number(yearFirst[1]),
-        Number(yearFirst[2]) - 1,
-        Number(yearFirst[3]),
-      )
-    : monthFirst
-      ? Date.UTC(
-          Number(monthFirst[3]),
-          Number(monthFirst[1]) - 1,
-          Number(monthFirst[2]),
-        )
-      : Number.NaN
-  return Number.isFinite(parsed) ? parsed : candidate.createdAt
 }
 
 function proposalError(code: string, message: string) {

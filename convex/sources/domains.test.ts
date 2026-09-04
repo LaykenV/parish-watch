@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 
-import { canonicalizeUrl, isAllowedOfficialHost } from './domains'
+import {
+  canonicalizeUrl,
+  isAllowedOfficialHost,
+  isRegisteredSourceUrl,
+} from './domains'
 
 const LAFAYETTE_DOMAINS = ['lafayettela.gov', 'apps.lafayettela.gov']
 
@@ -45,4 +49,19 @@ test('canonicalizes seed urls deterministically', () => {
   )
   expect(canonicalizeUrl('ftp://example.com/file')).toBeNull()
   expect(canonicalizeUrl('   ')).toBeNull()
+})
+
+test('allows a vendor document only when its full url is registered', () => {
+  const seedUrl =
+    'https://vendor.example/api/documents/checked-agenda.pdf'
+  expect(
+    isRegisteredSourceUrl(seedUrl, LAFAYETTE_DOMAINS, [seedUrl]),
+  ).toBe(true)
+  expect(
+    isRegisteredSourceUrl(
+      'https://vendor.example/api/documents/other.pdf',
+      LAFAYETTE_DOMAINS,
+      [seedUrl],
+    ),
+  ).toBe(false)
 })

@@ -5,6 +5,8 @@ import { internalMutation } from '../_generated/server'
 import type { MutationCtx } from '../_generated/server'
 import type { SourceKind } from '../pipeline/state'
 import { evaluateCoverageGates, COVERAGE_EVALUATOR_VERSION } from './gates'
+import { coverageGoldSetSample } from './goldSet'
+import { classifyHost } from './rootGate'
 import { resolveRootManifest } from './roots'
 
 const MAX_EVIDENCE_RECORDS = 200
@@ -61,6 +63,7 @@ export const evaluateProposal = internalMutation({
       .order('desc')
       .take(MAX_EVIDENCE_RECORDS)
     const publicationEvidence = await inspectPublications(ctx, records)
+    const immutableRevisionCount = await inspectImmutableRevisions(ctx, records)
     const changes = await ctx.db
       .query('sourceSnapshotChanges')
       .withIndex('by_registry_and_created_at', (index) =>
@@ -108,6 +111,23 @@ export const evaluateProposal = internalMutation({
         .map((run) => run.sourceKind)
         .filter((kind): kind is SourceKind => kind !== undefined),
     )
+    const recentRunsByTarget = new Map<string, Set<SourceKind>>()
+    for (const pipelineRun of pipelineRuns) {
+      if (
+        pipelineRun.state !== 'succeeded' ||
+        (pipelineRun.completedAt ?? 0) <
+          Date.now() - RECENT_REPLAY_WINDOW_MS ||
+        !pipelineRun.targetRecordId ||
+        !pipelineRun.sourceKind
+      ) {
+        continue
+      }
+      const kinds =
+        recentRunsByTarget.get(pipelineRun.targetRecordId) ??
+        new Set<SourceKind>()
+      kinds.add(pipelineRun.sourceKind)
+      recentRunsByTarget.set(pipelineRun.targetRecordId, kinds)
+    }
     const staleExpectationCount = expectations.filter(
       (expectation) => !recentKinds.has(expectation.sourceKind),
     ).length
@@ -116,9 +136,17 @@ export const evaluateProposal = internalMutation({
       registry !== null &&
       manifest !== null &&
       sameStrings(registry.officialDomains, manifest.allowedHosts) &&
-      candidates
-        .filter((candidate) => candidate !== null)
-        .every((candidate) => candidate.hostDisposition === 'approved')
+      candidates.every(
+        (candidate, index) =>
+          candidate !== null &&
+          samples[index] !== undefined &&
+          classifyHost(manifest, candidate.canonicalUrl) !== 'unapproved' &&
+          coverageGoldSetSample(
+            proposal.bodyKey,
+            candidate.canonicalUrl,
+            samples[index].sourceKind,
+          ) !== null,
+      )
     const results = evaluateCoverageGates({
       expectedArtifactCount: requiredSamples.length,
       retrievedArtifactCount: requiredSamples.filter(
@@ -135,14 +163,15 @@ export const evaluateProposal = internalMutation({
       acceptedPublicationCount: publicationEvidence.accepted,
       publicationsWithCompleteCitations: publicationEvidence.cited,
       unsupportedMaterialFactCount: publicationEvidence.unsupportedFacts,
-      immutableRevisionCount: changes.length,
+      immutableRevisionCount: changes.length + immutableRevisionCount,
       failureHandlingObserved:
         publicationEvidence.limitedOrWithheld ||
         extractionEvidence.failureHandled,
       expectationCount: expectations.length,
       staleExpectationCount,
-      recentReplayPassed:
-        recentKinds.has('agenda') && recentKinds.has('minutes'),
+      recentReplayPassed: [...recentRunsByTarget.values()].some(
+        (kinds) => kinds.has('agenda') && kinds.has('minutes'),
+      ),
       productionLinkCount: latestProductionLinks.size,
       passingProductionLinkCount: [...latestProductionLinks.values()].filter(
         (check) => check.passed,
@@ -227,25 +256,47 @@ async function inspectPublications(
         index.eq('reviewId', publication.reviewId),
       )
       .take(100)
-    const citationsByFact = new Set(
-      citations.map((citation) => citation.candidateFactId),
-    )
-    const supportedChecks = checks.filter(
-      (check) => check.assessment === 'supported',
+    const checksByFact = new Map(
+      checks.map((check) => [check.candidateFactId, check]),
     )
     if (
-      supportedChecks.length > 0 &&
-      supportedChecks.every((check) =>
-        citationsByFact.has(check.candidateFactId),
+      citations.length > 0 &&
+      citations.every(
+        (citation) =>
+          checksByFact.get(citation.candidateFactId)?.assessment ===
+          'supported',
       )
     ) {
       cited += 1
     }
-    unsupportedFacts += checks.filter(
-      (check) => check.assessment !== 'supported',
+    unsupportedFacts += citations.filter(
+      (citation) =>
+        checksByFact.get(citation.candidateFactId)?.assessment !== 'supported',
     ).length
   }
   return { accepted, cited, unsupportedFacts, limitedOrWithheld }
+}
+
+async function inspectImmutableRevisions(
+  ctx: Pick<MutationCtx, 'db'>,
+  records: Array<Doc<'decisionRecords'>>,
+): Promise<number> {
+  let revisionCount = 0
+  for (const record of records) {
+    const versions = await ctx.db
+      .query('publicationVersions')
+      .withIndex('by_record_and_version', (index) =>
+        index.eq('recordId', record._id),
+      )
+      .take(20)
+    if (
+      versions.length > 1 &&
+      new Set(versions.map((version) => version.snapshotId)).size > 1
+    ) {
+      revisionCount += 1
+    }
+  }
+  return revisionCount
 }
 
 async function inspectExtractions(

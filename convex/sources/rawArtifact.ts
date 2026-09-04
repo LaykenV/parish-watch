@@ -56,7 +56,10 @@ export async function downloadOfficialPdf(
   }
 
   const contentType = response.headers.get('content-type') ?? ''
-  if (!contentType.toLowerCase().startsWith('application/pdf')) {
+  if (
+    contentType !== '' &&
+    !contentType.toLowerCase().startsWith('application/pdf')
+  ) {
     return {
       ok: false,
       errorClass: 'raw_artifact_content_type',
@@ -146,7 +149,12 @@ export async function downloadOfficialPdf(
       retryable: false,
     }
   }
-  return { ok: true, bytes, contentType, finalUrl }
+  return {
+    ok: true,
+    bytes,
+    contentType: contentType || 'application/pdf',
+    finalUrl,
+  }
 }
 
 function hasPdfSignature(bytes: Uint8Array): boolean {

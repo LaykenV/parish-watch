@@ -874,6 +874,7 @@ export const loadValidationRows = internalQuery({
     facts: v.union(v.null(), v.array(schema.doc('candidateFacts'))),
     snapshot: v.union(v.null(), schema.doc('sourceSnapshots')),
     officialDomains: v.union(v.null(), v.array(v.string())),
+    seedUrls: v.union(v.null(), v.array(v.string())),
     registeredBodyName: v.union(v.null(), v.string()),
   }),
   handler: async (ctx, args) => {
@@ -899,6 +900,7 @@ export const loadValidationRows = internalQuery({
         facts: null,
         snapshot: null,
         officialDomains: null,
+        seedUrls: null,
         registeredBodyName: null,
       }
     }
@@ -935,6 +937,7 @@ export const loadValidationRows = internalQuery({
       facts,
       snapshot,
       officialDomains: registry?.officialDomains ?? null,
+      seedUrls: registry?.seedUrls ?? null,
       registeredBodyName: body?.name ?? null,
     }
   },

@@ -1,23 +1,37 @@
 import { expect, test } from 'vitest'
 
-import { coverageGoldSetSlots, coverageGoldSetVersion } from './goldSet'
+import {
+  coverageGoldSetExpectations,
+  coverageGoldSetSamples,
+  coverageGoldSetVersion,
+} from './goldSet'
 
-test('the checked manifest keeps missing sample kinds in a fixed denominator', () => {
-  expect(coverageGoldSetVersion()).toBe('launch-bodies-v1')
-  expect(coverageGoldSetSlots('youngsville-city-council')).toHaveLength(7)
-  expect(coverageGoldSetSlots('lafayette-hearing-examiner')).toHaveLength(9)
+test('the checked manifest names exact official artifacts and extraction targets', () => {
+  expect(coverageGoldSetVersion()).toBe('launch-bodies-v2')
+  expect(coverageGoldSetSamples('youngsville-city-council')).toHaveLength(4)
   expect(
-    coverageGoldSetSlots('lafayette-hearing-examiner').filter(
-      (slot) => slot.sourceKinds[0] === 'planning_case',
+    coverageGoldSetSamples('lafayette-city-council').map(
+      (sample) => sample.url,
     ),
-  ).toEqual([
-    { sourceKinds: ['planning_case'], role: 'current' },
-    { sourceKinds: ['planning_case'], role: 'historical' },
+  ).toContain(
+    'https://apps.lafayettela.gov/obcouncil/api/Document/2581071/',
+  )
+  expect(
+    coverageGoldSetSamples('ebr-metropolitan-council').find(
+      (sample) => sample.key === '2026-08-12-agenda',
+    )?.extraction,
+  ).toEqual({
+    targetRecordId: 'EBR-2026-08-12-CORTANA-CITY-SALES-TAX-REBATE',
+    sourceRecordIdProvenance: 'operator_assigned',
+  })
+  expect(coverageGoldSetExpectations('pineville-city-council')).toEqual([
+    { sourceKind: 'agenda', cadence: 'meeting_cycle' },
+    { sourceKind: 'minutes', cadence: 'meeting_cycle' },
   ])
 })
 
 test('an unlisted body cannot borrow another body gold set', () => {
-  expect(() => coverageGoldSetSlots('invented-board')).toThrow(
+  expect(() => coverageGoldSetSamples('invented-board')).toThrow(
     'has no body invented-board',
   )
 })

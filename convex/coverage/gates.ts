@@ -1,4 +1,4 @@
-export const COVERAGE_EVALUATOR_VERSION = 'coverage-gates-v2'
+export const COVERAGE_EVALUATOR_VERSION = 'coverage-gates-v3'
 import { coverageGoldSetVersion } from './goldSet'
 
 export const COVERAGE_GOLD_SET_VERSION = coverageGoldSetVersion()
@@ -46,8 +46,8 @@ export function evaluateCoverageGates(
       'official_domains_only',
       input.officialDomainsOnly,
       input.officialDomainsOnly
-        ? 'Every proposed source stays on a checked official host.'
-        : 'One or more proposed sources left the checked official hosts.',
+        ? 'Every proposed source matches a checked official host or document path.'
+        : 'One or more proposed sources left the checked official hosts and document paths.',
       ['coverageSourceCandidates', 'coverageRootManifests'],
     ),
     gate(
@@ -79,7 +79,7 @@ export function evaluateCoverageGates(
       'revisions_immutable',
       input.immutableRevisionCount > 0,
       `${input.immutableRevisionCount} immutable source revision checks passed.`,
-      ['sourceSnapshotChanges'],
+      ['sourceSnapshotChanges', 'publicationVersions'],
     ),
     gate(
       7,
@@ -102,8 +102,8 @@ export function evaluateCoverageGates(
       'recent_agenda_and_minutes_runs',
       input.recentReplayPassed,
       input.recentReplayPassed
-        ? 'Agenda and minutes pipeline runs both succeeded within 60 days.'
-        : 'No successful agenda and minutes pipeline runs both fall within 60 days.',
+        ? 'Agenda and minutes runs for the same record both succeeded within 60 days.'
+        : 'No record has successful agenda and minutes runs within 60 days.',
       ['pipelineRuns'],
     ),
     gate(

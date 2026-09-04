@@ -37,3 +37,16 @@ export function isAllowedOfficialHost(
     return hostname === normalized || hostname.endsWith(`.${normalized}`)
   })
 }
+
+export function isRegisteredSourceUrl(
+  url: string,
+  officialDomains: string[],
+  seedUrls: string[],
+): boolean {
+  if (isAllowedOfficialHost(url, officialDomains)) return true
+  const canonicalUrl = canonicalizeUrl(url)
+  return (
+    canonicalUrl !== null &&
+    seedUrls.some((seedUrl) => canonicalizeUrl(seedUrl) === canonicalUrl)
+  )
+}

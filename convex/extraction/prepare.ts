@@ -5,7 +5,7 @@ import {
   sourceKindUnion,
   sourceRecordIdProvenances,
 } from '../pipeline/state'
-import { isAllowedOfficialHost } from '../sources/domains'
+import { isRegisteredSourceUrl } from '../sources/domains'
 
 export const MAX_EXTRACTION_SOURCE_BYTES = 524_288
 
@@ -107,8 +107,16 @@ export const prepareExtractionContext = internalQuery({
       }
     }
     if (
-      !isAllowedOfficialHost(snapshot.canonicalUrl, registry.officialDomains) ||
-      !isAllowedOfficialHost(snapshot.retrievedUrl, registry.officialDomains)
+      !isRegisteredSourceUrl(
+        snapshot.canonicalUrl,
+        registry.officialDomains,
+        registry.seedUrls,
+      ) ||
+      !isRegisteredSourceUrl(
+        snapshot.retrievedUrl,
+        registry.officialDomains,
+        registry.seedUrls,
+      )
     ) {
       return {
         ok: false,

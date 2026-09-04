@@ -18,7 +18,7 @@ import {
   sourceRecordIdProvenances,
 } from '../pipeline/state'
 import schema from '../schema'
-import { isAllowedOfficialHost } from '../sources/domains'
+import { isRegisteredSourceUrl } from '../sources/domains'
 import { sha256HexOfText } from '../sources/hashing'
 
 const reviewFactValidator = v.object({
@@ -245,8 +245,16 @@ export const prepareCandidateReview = internalAction({
       !snapshot.normalizedContentHash ||
       snapshot.truncation.truncated ||
       !registry.sourceKinds.includes(candidate.sourceKind) ||
-      !isAllowedOfficialHost(snapshot.canonicalUrl, registry.officialDomains) ||
-      !isAllowedOfficialHost(snapshot.retrievedUrl, registry.officialDomains)
+      !isRegisteredSourceUrl(
+        snapshot.canonicalUrl,
+        registry.officialDomains,
+        registry.seedUrls,
+      ) ||
+      !isRegisteredSourceUrl(
+        snapshot.retrievedUrl,
+        registry.officialDomains,
+        registry.seedUrls,
+      )
     ) {
       return fail(
         'source_precheck_failed',

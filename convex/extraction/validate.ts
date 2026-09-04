@@ -3,7 +3,7 @@ import { v } from 'convex/values'
 import { internal } from '../_generated/api'
 import { internalAction } from '../_generated/server'
 import { resolveSourceRecordIdProvenance } from '../pipeline/state'
-import { isAllowedOfficialHost } from '../sources/domains'
+import { isRegisteredSourceUrl } from '../sources/domains'
 import { sha256HexOfText } from '../sources/hashing'
 import {
   AGENDA_FORBIDDEN_OUTCOME_STATES,
@@ -173,14 +173,17 @@ export const runValidation = internalAction({
     }
 
     const officialDomains = rows.officialDomains
-    if (officialDomains) {
-      const canonicalAllowed = isAllowedOfficialHost(
+    const seedUrls = rows.seedUrls
+    if (officialDomains && seedUrls) {
+      const canonicalAllowed = isRegisteredSourceUrl(
         snapshot.canonicalUrl,
         officialDomains,
+        seedUrls,
       )
-      const retrievedAllowed = isAllowedOfficialHost(
+      const retrievedAllowed = isRegisteredSourceUrl(
         snapshot.retrievedUrl,
         officialDomains,
+        seedUrls,
       )
       if (!canonicalAllowed || !retrievedAllowed) {
         addFinding({

@@ -25,6 +25,7 @@ import {
 } from './contracts'
 import { cancelCoverageRun, retryCoverageRun, startCoverageRun } from './ledger'
 import { beginDiscovery } from './discoveryLedger'
+import { coverageGoldSetSample } from './goldSet'
 import { listRootManifests, resolveRootManifest } from './roots'
 
 const MAX_LISTED_RUNS = 20
@@ -124,11 +125,15 @@ const proposalView = v.object({
   retrievedSampleCount: v.number(),
   samples: v.array(
     v.object({
+      sampleId: v.id('coverageRepresentativeSamples'),
       sourceKind: coverageSourceKinds,
       role: coverageSampleRoles,
       state: coverageSampleStates,
       canonicalUrl: v.union(v.string(), v.null()),
       errorClass: v.union(v.string(), v.null()),
+      pipelineRunId: v.union(v.id('pipelineRuns'), v.null()),
+      canExtractEvidence: v.boolean(),
+      canRunFailureProbe: v.boolean(),
     }),
   ),
   gates: v.array(gateView),
@@ -276,6 +281,32 @@ export const run = query({
             latestByGate.set(evaluation.gateNumber, evaluation)
           }
         }
+        const sampleViews = await Promise.all(
+          samples.map(async (sample) => {
+            const candidate = sample.candidateId
+              ? await ctx.db.get(sample.candidateId)
+              : null
+            const expectation = candidate
+              ? coverageGoldSetSample(
+                  proposal.bodyKey,
+                  candidate.canonicalUrl,
+                  sample.sourceKind,
+                )
+              : null
+            return {
+              sampleId: sample._id,
+              sourceKind: sample.sourceKind,
+              role: sample.role,
+              state: sample.state,
+              canonicalUrl: candidate?.canonicalUrl ?? null,
+              errorClass: sample.errorClass ?? null,
+              pipelineRunId: sample.pipelineRunId ?? null,
+              canExtractEvidence: expectation?.extraction !== undefined,
+              canRunFailureProbe:
+                expectation?.negativeTargetRecordId !== undefined,
+            }
+          }),
+        )
         return {
           proposalId: proposal._id,
           proposalVersion: proposal.proposalVersion,
@@ -287,16 +318,7 @@ export const run = query({
           retrievedSampleCount: samples.filter(
             (sample) => sample.state === 'retrieved',
           ).length,
-          samples: samples.map((sample) => ({
-            sourceKind: sample.sourceKind,
-            role: sample.role,
-            state: sample.state,
-            canonicalUrl:
-              candidates.find(
-                (candidate) => candidate._id === sample.candidateId,
-              )?.canonicalUrl ?? null,
-            errorClass: sample.errorClass ?? null,
-          })),
+          samples: sampleViews,
           gates: [...latestByGate.values()]
             .sort((left, right) => left.gateNumber - right.gateNumber)
             .map((evaluation) => ({

@@ -132,10 +132,21 @@ const ROOT_MANIFESTS: CoverageRootManifest[] = [
       'https://www.youngsville.us/city-services/mayor-city-council/',
     identityEvidenceUrls: [
       'https://www.youngsville.us/city-services/mayor-city-council/',
+      'https://www.youngsville.us/council-documents/',
+      'https://meetings.municode.com/PublishPage/index?cid=YOUNGSVILA&ppid=5d44059a-1e19-4452-a226-babc4b369c18&p=1',
     ],
     allowedHosts: ['www.youngsville.us'],
     allowedSubdomainSuffixes: [],
-    documentHosts: [],
+    documentHosts: [
+      {
+        host: 'meetings.municode.com',
+        pathPrefixes: ['/PublishPage/', '/adaHtmlDocument/', '/d/f'],
+      },
+      {
+        host: 'mccmeetings.blob.core.usgovcloudapi.net',
+        pathPrefixes: ['/youngsvila-pubu/'],
+      },
+    ],
     checkedAt: '2026-09-03',
   },
   {
@@ -167,7 +178,16 @@ const ROOT_MANIFESTS: CoverageRootManifest[] = [
     ],
     allowedHosts: ['www.pineville.net'],
     allowedSubdomainSuffixes: [],
-    documentHosts: [],
+    documentHosts: [
+      {
+        host: 'library.municode.com',
+        pathPrefixes: ['/la/pineville/munidocs/'],
+      },
+      {
+        host: 'mcclibraryfunctions.azurewebsites.us',
+        pathPrefixes: ['/api/munidocDownload/31105/'],
+      },
+    ],
     checkedAt: '2026-09-03',
   },
   {
@@ -191,7 +211,7 @@ const ROOT_MANIFESTS: CoverageRootManifest[] = [
     version: 'v1',
     jurisdictionSlug: 'east-baton-rouge-parish',
     jurisdictionName: 'East Baton Rouge Parish',
-    bodyName: 'Baton Rouge Metropolitan Council',
+    bodyName: 'Metropolitan Council',
     approvedRootUrl: 'https://www.brla.gov/AgendaCenter/Metropolitan-Council-3',
     identityEvidenceUrls: [
       'https://www.brla.gov/AgendaCenter/Metropolitan-Council-3',
@@ -206,7 +226,7 @@ const ROOT_MANIFESTS: CoverageRootManifest[] = [
     version: 'v1',
     jurisdictionSlug: 'east-baton-rouge-parish',
     jurisdictionName: 'East Baton Rouge Parish',
-    bodyName: 'Baton Rouge Planning Commission',
+    bodyName: 'Planning and Zoning Commission',
     approvedRootUrl:
       'https://www.brla.gov/agendacenter/planning-commission-12/',
     identityEvidenceUrls: [

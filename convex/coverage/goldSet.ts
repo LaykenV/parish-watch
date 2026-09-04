@@ -1,76 +1,167 @@
-import manifest from '../../docs/coverage-gold-sets/launch-bodies.v1.json'
+import manifest from '../../docs/coverage-gold-sets/launch-bodies.v2.json'
 
 import type { SourceKind } from '../pipeline/state'
 
-export type CoverageSampleSlot = {
-  sourceKinds: SourceKind[]
-  role: 'current' | 'historical' | 'revision' | 'negative'
+type RawGoldSample = {
+  key: string
+  title: string
+  url: string
+  sourceKind: string
+  role: string
+  meetingDate?: string
+  extraction?: {
+    targetRecordId: string
+    sourceRecordIdProvenance: string
+  }
+  negativeTargetRecordId?: string
 }
 
-export function coverageGoldSetSlots(bodyKey: string): CoverageSampleSlot[] {
-  const body = manifest.bodies.find((entry) => entry.bodyKey === bodyKey)
-  if (!body) throw new Error(`The coverage gold set has no body ${bodyKey}.`)
-  const definitions = [
-    ...manifest.commonSlots,
-    ...(body.planning ? manifest.planningSlots : []),
-  ]
-  const slots: CoverageSampleSlot[] = []
-  for (const definition of definitions) {
-    const sourceKinds = sourceKindsFor(definition.sourceKind)
-    for (let index = 0; index < definition.count; index += 1) {
-      slots.push({
-        sourceKinds,
-        role: roleFor(definition.role, index),
-      })
+type RawGoldBody = {
+  bodyKey: string
+  expectations: Array<{ sourceKind: string; cadence: string }>
+  samples: RawGoldSample[]
+}
+
+const checkedManifest = manifest as {
+  version: string
+  bodies: RawGoldBody[]
+}
+
+export type CoverageSampleRole =
+  | 'current'
+  | 'historical'
+  | 'revision'
+  | 'negative'
+
+export type CoverageExtractionExpectation = {
+  targetRecordId: string
+  sourceRecordIdProvenance: 'source_printed' | 'operator_assigned'
+}
+
+export type CoverageGoldSample = {
+  key: string
+  title: string
+  url: string
+  sourceKind: SourceKind
+  role: CoverageSampleRole
+  meetingDate?: string
+  extraction?: CoverageExtractionExpectation
+  negativeTargetRecordId?: string
+}
+
+export type CoverageSourceExpectation = {
+  sourceKind: SourceKind
+  cadence: 'weekly' | 'monthly' | 'meeting_cycle' | 'unknown'
+}
+
+export function coverageGoldSetSamples(bodyKey: string): CoverageGoldSample[] {
+  const body = bodyFor(bodyKey)
+  const seenKeys = new Set<string>()
+  return body.samples.map((sample): CoverageGoldSample => {
+    if (seenKeys.has(sample.key)) {
+      throw new Error(`The coverage gold set repeats sample key ${sample.key}.`)
     }
-  }
-  if (body.planning) {
-    const planningSlots = slots.filter((slot) =>
-      slot.sourceKinds.includes('planning_case'),
-    )
-    if (planningSlots.length < 2) {
-      throw new Error('Planning bodies need current and historical case slots.')
+    seenKeys.add(sample.key)
+    return {
+      key: sample.key,
+      title: sample.title,
+      url: sample.url,
+      sourceKind: sourceKindFor(sample.sourceKind),
+      role: roleFor(sample.role),
+      ...(sample.meetingDate ? { meetingDate: sample.meetingDate } : {}),
+      ...(sample.extraction
+        ? {
+            extraction: {
+              targetRecordId: sample.extraction.targetRecordId,
+              sourceRecordIdProvenance: provenanceFor(
+                sample.extraction.sourceRecordIdProvenance,
+              ),
+            },
+          }
+        : {}),
+      ...(sample.negativeTargetRecordId
+        ? { negativeTargetRecordId: sample.negativeTargetRecordId }
+        : {}),
     }
-  }
-  return slots
+  })
+}
+
+export function coverageGoldSetExpectations(
+  bodyKey: string,
+): CoverageSourceExpectation[] {
+  return bodyFor(bodyKey).expectations.map((expectation) => ({
+    sourceKind: sourceKindFor(expectation.sourceKind),
+    cadence: cadenceFor(expectation.cadence),
+  }))
+}
+
+export function coverageGoldSetSample(
+  bodyKey: string,
+  canonicalUrl: string,
+  sourceKind: SourceKind,
+): CoverageGoldSample | null {
+  return (
+    coverageGoldSetSamples(bodyKey).find(
+      (sample) =>
+        sample.url === canonicalUrl && sample.sourceKind === sourceKind,
+    ) ?? null
+  )
 }
 
 export function coverageGoldSetVersion(): string {
-  return manifest.version
+  return checkedManifest.version
 }
 
-function sourceKindsFor(value: string): SourceKind[] {
+function bodyFor(bodyKey: string): RawGoldBody {
+  const body = checkedManifest.bodies.find((entry) => entry.bodyKey === bodyKey)
+  if (!body) throw new Error(`The coverage gold set has no body ${bodyKey}.`)
+  return body
+}
+
+function sourceKindFor(value: string): SourceKind {
   switch (value) {
     case 'agenda':
-      return ['agenda', 'packet']
+    case 'packet':
     case 'minutes':
-      return ['minutes']
-    case 'ordinance_or_resolution':
-      return ['ordinance', 'resolution']
+    case 'ordinance':
+    case 'resolution':
     case 'planning_case':
-      return ['planning_case']
-    case 'revision':
+    case 'notice':
+    case 'calendar':
     case 'other':
-      return ['other']
+      return value
     default:
       throw new Error(`Unknown coverage sample kind ${value}.`)
   }
 }
 
-function roleFor(value: string, index: number): CoverageSampleSlot['role'] {
+function roleFor(value: string): CoverageSampleRole {
   switch (value) {
     case 'current':
-    case 'decision':
-      return 'current'
-    case 'case_or_zoning_record':
-      return index === 0 ? 'current' : 'historical'
-    case 'current_or_historical':
-      return index === 0 ? 'current' : 'historical'
-    case 'revision_or_cancellation':
-      return 'revision'
+    case 'historical':
+    case 'revision':
     case 'negative':
-      return 'negative'
+      return value
     default:
       throw new Error(`Unknown coverage sample role ${value}.`)
   }
+}
+
+function cadenceFor(value: string): CoverageSourceExpectation['cadence'] {
+  switch (value) {
+    case 'weekly':
+    case 'monthly':
+    case 'meeting_cycle':
+    case 'unknown':
+      return value
+    default:
+      throw new Error(`Unknown coverage cadence ${value}.`)
+  }
+}
+
+function provenanceFor(
+  value: string,
+): CoverageExtractionExpectation['sourceRecordIdProvenance'] {
+  if (value === 'source_printed' || value === 'operator_assigned') return value
+  throw new Error(`Unknown source record ID provenance ${value}.`)
 }

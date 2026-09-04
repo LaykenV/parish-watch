@@ -72,7 +72,20 @@ regular-meeting agendas are published shortly before meetings. Treat September
 and posted agenda confirm them.
 
 Planning and zoning documents may appear as calendar PDFs under the LCG document
-host. Discover those patterns dynamically instead of encoding one filename.
+host. Discovery should still find the current pattern. The certification gold
+set pins exact public examples so a classifier cannot substitute an unrelated
+LCG document.
+
+As of September 4, 2026, search indexes still describe 2026 planning agendas
+and action summaries at the former LCG document paths, but those live URLs
+return 404. The current agenda links route through the LCG events service, which
+returns 502. Keep the affected bodies unavailable until live official agenda
+and outcome artifacts can pass the same checks as every other body.
+
+Youngsville's city page embeds its current agendas, packets, and minutes from
+Municode. The checked source boundary therefore includes only the Youngsville
+publish page and its `youngsvila-pubu` document path. A broad Municode host is
+not an official source for this body.
 
 ### Rapides Parish
 
@@ -86,8 +99,12 @@ host. Discover those patterns dynamically instead of encoding one filename.
 | Alexandria, Pineville, and Rapides planning/zoning | official sources to be discovered from the sites above                                 | agendas, hearings, cases, results                   | do not claim coverage until bodies and current records are identified |
 
 The Rapides source spike must explicitly catch stale index pages. A page titled
-“Agendas” is not proof that the listing is current. Expected-meeting schedules,
+"Agendas" is not proof that the listing is current. Expected-meeting schedules,
 document dates, and linked file versions must agree.
+
+Pineville's old `/egov/documents/` PDF addresses now return 404. Its city
+document center redirects council records to Pineville's MuniDocs collection.
+Certification uses the collection's exact Pineville product and document IDs.
 
 ### East Baton Rouge Parish
 
@@ -153,10 +170,12 @@ control cost and improve determinism.
 
 ## Gold Set
 
-Create a checked-in, metadata-only manifest of required representative sample
-slots. The compiler fills those slots with public official URLs from its stored
-candidates at run time. Missing slots remain failed requirements. Do not copy
-private data or huge generated output into Git.
+Create a checked-in, metadata-only manifest of exact public representative
+artifacts. Store each URL, body, artifact type, date role, expected cadence, and
+the record ID used for extraction. The compiler may add discovery candidates
+around that set, but it may not substitute a model-selected URL for a required
+sample. Missing artifacts remain failed requirements. Do not copy private data
+or huge generated output into Git.
 
 For each launch body, collect when available:
 
@@ -185,21 +204,21 @@ For final source certification, hand-label:
 
 A body becomes publicly supported only when:
 
-1. every required representative sample slot in the checked manifest is found
-   and retrieved;
-2. the source registry uses only verified official domains;
+1. every exact representative artifact in the checked manifest is retrieved;
+2. the source registry uses only checked official hosts and document paths;
 3. current and historical records can be separated;
 4. every accepted material fact resolves to a source citation;
 5. no unsupported name, date, amount, vote, deadline, or status is published;
-6. source revisions create new immutable snapshots;
+6. source changes or a record's agenda-to-outcome update create immutable
+   snapshots and publication versions;
 7. an incomplete or failed source becomes limited or withheld;
 8. an expected schedule can detect stale or missing coverage;
-9. successful agenda and minutes pipeline runs both fall within the last 60
-   days;
+9. successful agenda and minutes runs for the same record both fall within the
+   last 60 days;
 10. every representative official source URL answers when checked from the
     production backend.
 
-All public regions use this gate. There is no lower “beta” evidence standard.
+All public regions use this gate. There is no lower "beta" evidence standard.
 
 ## Promotion Gate
 
@@ -236,7 +255,7 @@ from inferred ones.
 6. Pineville document center
 7. Rapides Police Jury, including stale-page detection
 8. Baton Rouge Metro Council version history
-9. Baton Rouge Planning Commission
+9. Planning and Zoning Commission in Baton Rouge
 
 This order establishes the local demo first, then tests different portal shapes
 before Public Parish claims geographic breadth.
