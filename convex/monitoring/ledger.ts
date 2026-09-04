@@ -285,8 +285,8 @@ export const finish = internalMutation({
       const remaining = await ctx.db.query('monitoredDocuments').withIndex('by_policy_id_and_next_check_at', q => q.eq('policyId', policy._id).lte('nextCheckAt', run.startedAt)).first()
       const pending = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'pending')).first()
       const unfinished = await ctx.db.query('monitoredDocuments').withIndex('by_policy_id_and_inventory_complete', q => q.eq('policyId', policy._id).eq('inventoryComplete', false)).first()
-      const healthy = args.state === 'completed' && !unfinished
-      await ctx.db.patch(policy._id, { activeRunId: undefined, baselineComplete: policy.baselineComplete || (healthy && !remaining), nextCheckAt: now + (remaining || pending || !healthy ? 900_000 : policy.intervalHours * 3_600_000), failures: healthy ? 0 : policy.failures + 1, ...(healthy ? { lastCompletedAt: now } : {}), updatedAt: now })
+      const healthy = args.state === 'completed'
+      await ctx.db.patch(policy._id, { activeRunId: undefined, baselineComplete: policy.baselineComplete || (healthy && !remaining && !unfinished), nextCheckAt: now + (remaining || pending || !healthy ? 900_000 : policy.intervalHours * 3_600_000), failures: healthy ? 0 : policy.failures + 1, ...(healthy && !remaining && !unfinished ? { lastCompletedAt: now } : {}), updatedAt: now })
       if (!healthy && args.state !== 'stopped') await recordIncident(ctx, policy.registryId, args.errorClass ?? 'monitoring_failed')
     }
     return null
