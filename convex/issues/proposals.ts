@@ -103,7 +103,14 @@ export const checkpoint = internalMutation({
       return true
     }
     const targetIssueId = [...issueIds][0]
-    const recordIds = targetIssueId ? await extensionInputs(ctx, targetIssueId, proposal.recordId, matches) : [proposal.recordId, ...matches]
+    let recordIds: Id<'decisionRecords'>[]
+    try {
+      recordIds = targetIssueId ? await extensionInputs(ctx, targetIssueId, proposal.recordId, matches) : [proposal.recordId, ...matches]
+    } catch (error) {
+      if (!String(error).includes('requires_owner')) throw error
+      await ctx.db.patch(proposal._id, { state: 'ambiguous', errorClass: 'issue_extension_capacity', updatedAt: Date.now() })
+      return true
+    }
     const build = await startIssueBuildTransaction(ctx, { recordIds, targetIssueId, originRunId: proposal.originRunId, trigger: 'decision_published' })
     await ctx.db.patch(proposal._id, { state: 'proposed', issueBuildId: build.issueBuildId, updatedAt: Date.now() })
     return true
