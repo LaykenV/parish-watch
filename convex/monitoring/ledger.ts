@@ -395,3 +395,15 @@ export const discoveryAttention = internalMutation({
     return null
   },
 })
+
+export const retryDocument = mutation({
+  args: { documentId: v.id('monitoredDocuments') }, returns: v.boolean(),
+  handler: async (ctx, args) => {
+    await requireOwner(ctx)
+    const document = await ctx.db.get(args.documentId)
+    const policy = document ? await ctx.db.get(document.policyId) : null
+    if (!document || !policy?.enabled) return false
+    await ctx.db.patch(document._id, { nextCheckAt: 0, errorClass: undefined })
+    return true
+  },
+})
