@@ -3,7 +3,8 @@ import { v } from 'convex/values'
 import type { Id } from '../_generated/dataModel'
 import type { MutationCtx } from '../_generated/server'
 import { internalMutation, query } from '../_generated/server'
-import { publicSearchEntry, searchEntry } from './searchContracts'
+import { publicSearchEntry } from './searchContracts'
+import type { searchEntry } from './searchContracts'
 
 export async function advanceCorpusRevision(ctx: MutationCtx) {
   const state = await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique()
@@ -103,7 +104,7 @@ export const search = query({
       if (args.date === 'past-30' && !(row.dateAt >= now - 30 * day && row.dateAt <= now)) return false
       if (args.date === 'past-year' && !(row.dateAt >= now - 365 * day && row.dateAt <= now)) return false
       return true
-    }).map(({ _id, _creationTime, searchText, ...entry }) => entry) }
+    }).map(({ _id, _creationTime, searchText: _searchText, ...entry }) => entry) }
   },
 })
 export const backfill = internalMutation({
