@@ -141,9 +141,10 @@ export async function stopSubscriberNotices(ctx: MutationCtx, subscriberId: Id<'
   }
 }
 export const sweep = internalMutation({
-  args: { paginationOpts: paginationOptsValidator }, returns: v.null(),
+  args: { paginationOpts: paginationOptsValidator, state: v.optional(v.union(v.literal('waiting'), v.literal('queued'))) }, returns: v.null(),
   handler: async (ctx, args) => {
-    const page = await ctx.db.query('coverageNoticeSubscriptions').paginate(args.paginationOpts)
+    const state = args.state ?? 'waiting'
+    const page = await ctx.db.query('coverageNoticeSubscriptions').withIndex('by_state', q => q.eq('state', state)).paginate(args.paginationOpts)
     for (const subscription of page.page) {
       if (subscription.state === 'waiting') await ctx.scheduler.runAfter(0, internal.coverage.requests.deliver, { subscriptionId: subscription._id })
       if (subscription.state === 'queued' && subscription.outboundId) {
@@ -151,7 +152,8 @@ export const sweep = internalMutation({
         if (status && status.status !== 'pending') await ctx.db.patch(subscription._id, { state: ['sent', 'delivered'].includes(status.status) ? 'sent' : 'stopped', providerStatus: status.status, updatedAt: Date.now() })
       }
     }
-    if (!page.isDone) await ctx.scheduler.runAfter(0, internal.coverage.requests.sweep, { paginationOpts: { numItems: 25, cursor: page.continueCursor } })
+    if (!page.isDone) await ctx.scheduler.runAfter(0, internal.coverage.requests.sweep, { state, paginationOpts: { numItems: 25, cursor: page.continueCursor } })
+    else if (state === 'waiting') await ctx.scheduler.runAfter(0, internal.coverage.requests.sweep, { state: 'queued', paginationOpts: { numItems: 25, cursor: null } })
     return null
   },
 })
