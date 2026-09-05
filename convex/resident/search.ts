@@ -75,6 +75,8 @@ export const search = query({
     const records = await rows.paginate({ ...args.paginationOpts, maximumRowsRead: 1_000 })
     const currentRows = []
     for (const row of records.page) {
+      // A meeting or body does not inherit one member decision's lifecycle or mode.
+      if ((row.kind === 'meeting' || row.kind === 'body') && (args.lifecycle || args.source)) continue
       if (row.kind === 'issue') {
         const issue = await ctx.db.query('issues').withIndex('by_slug', q => q.eq('slug', row.key.slice('issue:'.length))).unique()
         if (!issue?.currentVersionId || issue.currentVersionId !== row.revision) continue

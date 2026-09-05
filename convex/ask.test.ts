@@ -1275,6 +1275,10 @@ test('a thousand-record corpus searches old history and selects evidence across 
   const found = await t.query(api.resident.search.search, { q: 'Audubon', kind: 'decision', paginationOpts: { numItems: 25, cursor: null } })
   expect(found.page.some(entry => entry.key === seeded.recordKey)).toBe(true)
   expect(JSON.stringify(found.page)).not.toContain('superseded drainage wording')
+  for (const kind of ['body', 'meeting'] as const) {
+    const filtered = await t.query(api.resident.search.search, { kind, source: 'Evidence available', paginationOpts: { numItems: 25, cursor: null } })
+    expect(filtered.page).toHaveLength(0)
+  }
   const token = 'large-corpus-token-00000000000000000000000000000000'
   await t.mutation(api.ask.threads.createSession, { token })
   const thread = await t.mutation(api.ask.threads.createThread, { token, scope: { kind: 'corpus' } })
