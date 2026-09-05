@@ -19,15 +19,16 @@ test('accepted evidence opens by keyboard and returns focus under reduced motion
 })
 
 test('follow dialog keeps keyboard focus inside and closes without signing in', async ({ page }) => {
-  await page.goto(issuePath)
+  await page.goto('/issues/roundabout-funding-at-bluebonnet-and-harveston-way-824dde42')
   const trigger = page.getByRole('button', { name: 'Follow this issue', exact: true })
   await trigger.press('Enter')
   const dialog = page.getByRole('dialog', { name: 'Get updates about this issue' })
   await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Close', exact: true })).toBeFocused()
   await page.keyboard.press('Shift+Tab')
-  expect(await dialog.evaluate(element => element.contains(document.activeElement))).toBe(true)
+  await expect.poll(() => dialog.evaluate(element => element.contains(document.activeElement))).toBe(true)
   await page.keyboard.press('Tab')
-  expect(await dialog.evaluate(element => element.contains(document.activeElement))).toBe(true)
+  await expect.poll(() => dialog.evaluate(element => element.contains(document.activeElement))).toBe(true)
   await page.keyboard.press('Escape')
   await expect(dialog).not.toBeVisible()
   await expect(trigger).toBeFocused()
@@ -36,7 +37,7 @@ test('follow dialog keeps keyboard focus inside and closes without signing in', 
 for (const width of [320, 375]) test(`public coverage fits ${width} pixels and exposes body limitations`, async ({ page }) => {
   await page.setViewportSize({ width, height: 812 })
   await page.goto('/coverage')
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Coverage')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Source health, body by body')
   await expect(page.getByText('Lafayette Hearing Examiner', { exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await expect(page.getByText(/This body has not completed|Coverage includes|Previously accepted evidence/).first()).toBeVisible()
