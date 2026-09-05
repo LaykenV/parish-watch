@@ -291,6 +291,7 @@ export function CoverageRequestPage({
   const [placeKind, setPlaceKind] = useState<'parish' | 'municipality' | 'unknown'>('parish')
   const [challengeId, setChallengeId] = useState('')
   const [noticeVerified, setNoticeVerified] = useState(false)
+  const [noticeState, setNoticeState] = useState<'sent' | 'stopped'>()
   const [place, setPlace] = useState('')
   const [homepage, setHomepage] = useState('')
   const [email, setEmail] = useState('')
@@ -491,6 +492,7 @@ export function CoverageRequestPage({
                       try {
                         const result = await verifyNotice({ challengeId, code, requesterToken: requesterToken() })
                         if (!result.verified) { setError('This code is incorrect, expired, or has too many attempts. Your coverage request is still saved.'); return }
+                        setNoticeState(result.noticeState)
                       } catch { setError('Verification is unavailable. Your request is still saved.'); return }
                       finally { setSubmitting(false) }
                     }
@@ -535,7 +537,7 @@ export function CoverageRequestPage({
                   demand counts and other requesters remain private.
                 </p>
               ) : null}
-              {noticeVerified && email ? <p>A launch notice is verified for {email}.</p> : null}
+              {noticeVerified && email ? <p>{noticeState === 'sent' ? 'Your email is verified. The one launch notice for this place was already sent and will not be sent again.' : noticeState === 'stopped' ? 'Your email is verified, but the prior launch notice was stopped. No new notice will be sent. You can check current support on Coverage.' : `A launch notice is verified for ${email}.`}</p> : null}
               <Button
                 render={
                   <Link

@@ -70,3 +70,26 @@ test('rejected verification rolls back challenge consumption and verification st
     expect(await ctx.db.query('coverageNoticeSubscriptions').collect()).toHaveLength(100)
   })
 })
+
+
+test('reverification reports a stopped or sent launch without promising another notice', async () => {
+  vi.stubEnv('EMAIL_ADDRESS_HMAC_KEY', btoa('test-key-for-coverage-verification'))
+  const t = convexTest(schema, modules)
+  rateLimiterTest.register(t)
+  const requesterToken = 'e'.repeat(64)
+  const request = await t.mutation(api.coverage.requests.record, { requesterToken, placeName: 'Unknown place', placeKind: 'unknown' })
+  const ids = await t.run(async ctx => {
+    const subscriberId = await ctx.db.insert('emailSubscribers', { addressHash: 'stopped-address', encryptedAddress: 'encrypted', encryptionVersion: 1, state: 'unsubscribed', unsubscribedAt: 1, createdAt: 1, updatedAt: 1 })
+    const subscriptionId = await ctx.db.insert('coverageNoticeSubscriptions', { subscriberId, placeKey: 'unknown:unknown place', placeName: 'Unknown place', state: 'stopped', outboundId: 'original-outbound', launchedSlug: 'known-place', createdAt: 1, updatedAt: 1 })
+    await ctx.db.insert('coverageNoticeChallenges', { requestId: request.requestId, subscriberId, challengeId: 'stopped-challenge', codeHash: await hashVerificationCode('coverage:stopped-challenge', '123456'), expiresAt: Date.now() + 60_000, attempts: 0, createdAt: Date.now() })
+    return { subscriptionId }
+  })
+  const args = { challengeId: 'stopped-challenge', code: '123456', requesterToken }
+  for (let i = 0; i < 2; i++) expect(await t.mutation(api.coverage.requests.verifyNotice, args)).toEqual({ verified: true, noticeState: 'stopped' })
+  await t.run(async ctx => {
+    expect((await ctx.db.get(ids.subscriptionId))?.outboundId).toBe('original-outbound')
+    expect(await ctx.db.query('coverageNoticeSubscriptions').collect()).toHaveLength(1)
+    await ctx.db.patch(ids.subscriptionId, { state: 'sent' })
+  })
+  expect(await t.mutation(api.coverage.requests.verifyNotice, args)).toEqual({ verified: true, noticeState: 'sent' })
+})

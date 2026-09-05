@@ -82,7 +82,7 @@ export const prepareNotice = internalMutation({
   },
 })
 export const verifyNotice = mutation({
-  args: { challengeId: v.string(), code: v.string(), requesterToken: v.string() }, returns: v.object({ verified: v.boolean() }),
+  args: { challengeId: v.string(), code: v.string(), requesterToken: v.string() }, returns: v.object({ verified: v.boolean(), noticeState: v.optional(v.union(v.literal('sent'), v.literal('stopped'))) }),
   handler: async (ctx, args) => {
     if (!/^\d{6}$/.test(args.code) || args.challengeId.length > 100) return { verified: false }
     const challenge = await ctx.db.query('coverageNoticeChallenges').withIndex('by_challenge_id', q => q.eq('challengeId', args.challengeId)).unique()
@@ -90,12 +90,15 @@ export const verifyNotice = mutation({
     const request = await ctx.db.get(challenge.requestId)
     const subscriber = await ctx.db.get(challenge.subscriberId)
     if (!request || !subscriber || request.requesterHash !== await sha256HexOfText(args.requesterToken) || (subscriber.unsubscribedAt ?? 0) >= challenge.createdAt) return { verified: false }
-    if (challenge.consumedAt) return { verified: true }
+    const existing = await ctx.db.query('coverageNoticeSubscriptions').withIndex('by_subscriber_and_place', q => q.eq('subscriberId', subscriber._id).eq('placeKey', request.placeKey)).unique()
+    const terminal = existing?.state === 'sent' || (existing?.state === 'stopped' && Boolean(existing.outboundId || existing.launchedSlug))
+      ? { noticeState: existing.state as 'sent' | 'stopped' } : {}
+    if (challenge.consumedAt) return { verified: true, ...terminal }
     await ctx.db.patch(challenge._id, { attempts: challenge.attempts + 1 })
     if (challenge.codeHash !== await hashVerificationCode(`coverage:${args.challengeId}`, args.code)) return { verified: false }
     await ctx.db.patch(challenge._id, { consumedAt: Date.now() })
     await ctx.db.patch(subscriber._id, { state: 'verified', verifiedAt: subscriber.verifiedAt ?? Date.now(), unsubscribedAt: undefined, updatedAt: Date.now() })
-    const existing = await ctx.db.query('coverageNoticeSubscriptions').withIndex('by_subscriber_and_place', q => q.eq('subscriberId', subscriber._id).eq('placeKey', request.placeKey)).unique()
+    if (terminal.noticeState) return { verified: true, ...terminal }
     if (!existing) {
       const subscriptions = await ctx.db.query('coverageNoticeSubscriptions').withIndex('by_subscriber', q => q.eq('subscriberId', subscriber._id)).take(100)
       if (subscriptions.length >= 100) throw new Error('This address has reached its coverage-notice limit.')
