@@ -14,7 +14,14 @@ export const checkSources = extractionWorkflowManager.define({
   try {
     const { policy } = await step.runQuery(internal.monitoring.ledger.context, args)
     await step.runMutation(internal.monitoring.ledger.reconcileTargets, { policyId: policy._id })
-    if (!await step.runAction(internal.monitoring.actions.discover, args, { retry: false })) incomplete = true
+    const queued = await step.runMutation(internal.monitoring.ledger.dispatchTargets, args)
+    targetsStarted = queued.started
+    // Keep this policy's remaining admissions available to the active batch.
+    // Its extraction and publication workflows continue after this run finishes.
+    if (queued.processing) {
+      await step.runMutation(internal.monitoring.ledger.finish, { ...args, state: 'completed', documentsChecked, targetsStarted })
+      return null
+    }
     const documents = await step.runQuery(internal.monitoring.ledger.dueDocuments, args)
     for (const document of documents) {
       try {
@@ -42,7 +49,9 @@ export const checkSources = extractionWorkflowManager.define({
         await step.runMutation(internal.monitoring.ledger.deferDocument, { ...args, documentId: document._id })
       }
     }
-    targetsStarted = await step.runMutation(internal.monitoring.ledger.dispatchTargets, args)
+    const inventoried = await step.runMutation(internal.monitoring.ledger.dispatchTargets, args)
+    targetsStarted = inventoried.started
+    if (!inventoried.processing && !await step.runAction(internal.monitoring.actions.discover, args, { retry: false })) incomplete = true
     await step.runMutation(internal.monitoring.ledger.finish, { ...args, state: incomplete ? 'incomplete' : 'completed', documentsChecked, targetsStarted })
   } catch (error) {
     const stopped = String(error).includes('monitoring_stopped')

@@ -1513,3 +1513,11 @@ identities. Production smoke then caught its outdated ten-body expectation.
 The follow-up checks the exact twelve current bodies within their parishes,
 including each Lafayette commission. Release certification remains pending
 the corrected production smoke. No planning body has been promoted.
+
+### 2026-09-05 - working tree
+
+Repaired automatic catch-up after production showed 61 pending Rapides targets
+and repeated daily-budget pauses. Ready decisions now precede source discovery;
+incomplete documents cannot block the queue, and budget pauses preserve retries.
+Added scheduler and limiter regressions for PR checks. Daily limits and evidence
+gates remain unchanged. Development and production proof follow review.
