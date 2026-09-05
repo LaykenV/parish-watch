@@ -164,3 +164,12 @@ test('completed discovery waits for its cadence while backlog processing continu
   expect(await t.action(internal.monitoring.actions.discover, { runId })).toBe(true)
   expect(await t.run(ctx => ctx.db.query('monitoringProviderCalls').take(10))).toHaveLength(0)
 })
+
+
+test('continuation rejects different locator fragments of an already inventoried decision', () => {
+  const prior = '2026-14 Road repairs include culvert work'
+  const source = `Test Council. September 4, 2026. ${prior}. 2026-15 Library repairs`
+  expect(inventoryContract(inventory, source, 'Test Council', [prior])).toMatch(/already accepted target/)
+  expect(inventoryContract({ ...inventory, targets: [{ ...inventory.targets[0], excerpt: prior }] }, source, 'Test Council', ['2026-14 Road repairs'])).toMatch(/already accepted target/)
+  expect(inventoryContract({ ...inventory, targets: [{ printedId: '2026-15', title: 'Library repairs', excerpt: '2026-15 Library repairs' }] }, source, 'Test Council', [prior])).toBeNull()
+})

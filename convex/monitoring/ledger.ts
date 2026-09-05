@@ -222,6 +222,19 @@ export const documentContext = internalQuery({
     return { document, snapshot: document.snapshotId ? await ctx.db.get(document.snapshotId) : null, bodyName: body.name }
   },
 })
+export const priorInventoryTargets = internalQuery({
+  args: { runId: v.id('sourceMonitoringRuns'), documentId: v.id('monitoredDocuments') },
+  returns: v.array(v.string()),
+  handler: async (ctx, args) => {
+    const { policy } = await assertMonitoringRun(ctx, args.runId)
+    const document = await ctx.db.get(args.documentId)
+    if (!document || document.policyId !== policy._id || !document.snapshotId) throw new Error('Monitoring document mismatch.')
+    const targets = await ctx.db.query('documentInventoryTargets').withIndex('by_document_id_and_snapshot_id', q => q.eq('documentId', document._id).eq('snapshotId', document.snapshotId!)).take(1001)
+    const locators = targets.map(target => target.locator)
+    if (targets.length > 1000 || JSON.stringify(locators).length > 250_000) throw new Error('monitoring_inventory_history_capacity')
+    return locators
+  },
+})
 export const setSnapshot = internalMutation({
   args: { runId: v.id('sourceMonitoringRuns'), documentId: v.id('monitoredDocuments'), snapshotId: v.id('sourceSnapshots') },
   returns: v.boolean(),

@@ -32,7 +32,7 @@ export const inventoryResult = v.object({
 })
 export type InventoryResult = typeof inventoryResult.type
 
-export function inventoryContract(value: InventoryResult, source: string, bodyName: string): string | null {
+export function inventoryContract(value: InventoryResult, source: string, bodyName: string, priorLocators: string[] = []): string | null {
   if (!value.complete) return `Document inventory is incomplete. ${value.reason ?? ''}`
   if (value.bodyName !== bodyName) return 'Inventory changed the government body.'
   if (value.targets.length > MAX_TARGETS_PER_CHUNK) return 'Inventory target overflow.'
@@ -45,6 +45,8 @@ export function inventoryContract(value: InventoryResult, source: string, bodyNa
   for (const target of value.targets) {
     if (!target.title.trim() || target.title.length > 300 || target.excerpt.length > 1_000 || !target.excerpt.trim() || !normalized.includes(normalizeForMatch(target.excerpt))) return `Inventory target citation does not resolve for ${JSON.stringify(target.title.slice(0, 120))}. Copy a contiguous source excerpt under 1000 characters, without omissions or ellipses. Rejected excerpt: ${JSON.stringify(target.excerpt.slice(0, 240))}`
     if (target.printedId !== null && (!target.printedId.trim() || target.printedId.length > 100 || /[\r\n]/.test(target.printedId) || !normalizeForMatch(target.excerpt).includes(normalizeForMatch(target.printedId)))) return `Printed identifier ${JSON.stringify(target.printedId)} is not in its cited item. Use null when the item has no printed identifier.`
+    const locator = normalizeForMatch(target.excerpt)
+    if (priorLocators.some(prior => { const accepted = normalizeForMatch(prior); return accepted.includes(locator) || locator.includes(accepted) })) return 'Inventory repeats an already accepted target from a previous section. Return only new decisions; previous targets count toward completeness.'
     const identity = target.printedId ?? target.title
     if (identities.has(identity)) return 'Inventory contains ambiguous duplicate targets.'
     identities.add(identity)
