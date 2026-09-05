@@ -242,7 +242,7 @@ Design Slice 8 as `85d6947`. Production workflow `33454522729` and the
 independent production smoke passed. Accepted decision, meeting, issue, Ask,
 account, follow-enrollment, preference, email-management, sourced-alert,
 roundup, notification-settings, private-report, and area-availability adapters
-are live. Coverage requests remain fixture-backed until their Slice 9
+are live. At that release, coverage requests remained fixture-backed until their Slice 9
 integration gate passes.
 
 The deployed Slice 2 release introduced the responsive shell plus Home, For You,
@@ -498,7 +498,7 @@ narrow the named Rapides coverage in public copy instead of lowering the gate.
 
 Slice 8 closes on this honest partial rollout because its release gate permits a
 documented portal failure and requires public claims to narrow. The
-owner-triggered compiler does not yet provide scheduled routine monitoring,
+owner-triggered compiler did not yet provide scheduled routine monitoring at Slice 8,
 automatic decision enumeration, or automatic new issue proposals.
 
 ### Real User Sprint
@@ -674,3 +674,20 @@ Never cut:
   fix product language before adding scope.
 - If sales work is being skipped, reduce hackathon scope that day rather than
   redefining the business plan.
+
+
+## Slice 9 production rollout
+
+The owner authorized production release of PRs #93 through #99 on September 5.
+The stack completed development certification on `woozy-wren-227`. Ordered
+production deployment and independent live checks are in progress. Source
+monitoring remains paused until the bounded Rapides canary starts.
+[The development certification record](slice-9-development-certification.md)
+and [operations runbook](slice-9-operations-runbook.md) keep development
+proof separate from production proof.
+
+Approved-source monitoring remains bounded by an owner policy and a deployment
+switch. Accepted history uses paginated search and corpus Ask scans evidence in
+batches. Coverage requests save demand without starting source work. Verified
+launch notices, current issue share HTML, and private operating reports complete
+the remaining public integrations.

@@ -21,7 +21,7 @@ const PREPARATION_LEASE_MS = 2 * 60 * 1_000
 const RETRY_DELAY_MS = 60_000
 
 export const onMessageReceived = internalMutation({
-  args: { message: v.any(), thread: v.any(), eventId: v.string() },
+  args: { message: v.any(), thread: v.optional(v.any()), eventId: v.string() },
   returns: v.null(),
   handler: async (ctx, args) => {
     const duplicate = await ctx.db

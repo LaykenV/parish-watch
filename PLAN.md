@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is next
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is in development certification
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -107,7 +107,7 @@ and from the qualifying `convex.site` origin through the canonical callback.
 Implementation Slice 7B is deployed through PRs #66 and #67. Google residents
 and AgentMail-verified email-only residents can now follow an issue, topic,
 government body, or place, and each can manage only their own follow. Coverage
-requests remain planned for Slice 9.
+requests are implemented in the open Slice 9 development candidate.
 Implementation Slice 7C is deployed through PRs #72 through #75. Accepted new
 decisions and later material changes now create durable follow matches,
 deduplicated immediate delivery, evidence-only weekly roundups, and live
@@ -483,3 +483,20 @@ is true:
 
 Otherwise, preserve Public Parish as a useful open-source civic service and a
 strong technical case study, then return product time to the core business.
+
+
+## Slice 9 production rollout
+
+The owner authorized production release of PRs #93 through #99 on September 5.
+The stack completed development certification on `woozy-wren-227`. Ordered
+production deployment and independent live checks are in progress. Source
+monitoring remains paused until the bounded Rapides canary starts.
+[The development certification record](docs/slice-9-development-certification.md)
+and [operations runbook](docs/slice-9-operations-runbook.md) keep development
+proof separate from production proof.
+
+Approved-source monitoring remains bounded by an owner policy and a deployment
+switch. Accepted history uses paginated search and corpus Ask scans evidence in
+batches. Coverage requests save demand without starting source work. Verified
+launch notices, current issue share HTML, and private operating reports complete
+the remaining public integrations.

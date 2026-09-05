@@ -423,7 +423,7 @@ function VoterStrip() {
       </p>
       <p className="pp-voter-note">
         Public Parish does not run elections and does not cover candidates.
-        Election date checked against the Secretary of State calendar on Aug 29,
+        Election date checked against the Secretary of State calendar on Sep 4,
         2026.
       </p>
     </aside>

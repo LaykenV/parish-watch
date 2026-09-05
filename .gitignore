@@ -22,3 +22,6 @@ skills-lock.json
 
 # Convex local state and generated deployment artifacts
 .convex/
+
+/test-results/
+/playwright-report/

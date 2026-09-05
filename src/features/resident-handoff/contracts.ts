@@ -19,7 +19,7 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/',
     contract: 'issue-led home with accepted issue and decision projections',
     fixtureOwner: 'features/discovery/fixtures.ts',
-    gate: 'partial',
+    gate: 'live',
     owner: 'public issue and decision queries plus saved areas',
   },
   {
@@ -32,7 +32,7 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/explore',
     contract: 'mixed published search projection and URL filters',
     fixtureOwner: 'features/discovery/fixtures.ts',
-    gate: 'partial',
+    gate: 'live',
     owner: 'public search',
   },
   {
@@ -81,7 +81,7 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/following/notifications',
     contract: 'notification preferences projection',
     fixtureOwner: 'features/following/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'follows and AgentMail',
   },
   {
@@ -95,14 +95,14 @@ export const RESIDENT_ROUTE_HANDOFFS = [
     route: '/coverage',
     contract: 'CoveragePageData',
     fixtureOwner: 'features/coverage/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'public coverage projection',
   },
   {
     route: '/coverage/request',
     contract: 'CoverageRequestPageData',
     fixtureOwner: 'features/coverage/fixtures.ts',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'coverage requests and optional AgentMail notice',
   },
   {
@@ -142,22 +142,22 @@ export const RESIDENT_INTERACTION_HANDOFFS = [
   },
   {
     interaction: 'Save default notification settings',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'follows and AgentMail delivery',
   },
   {
     interaction: 'Request coverage',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'coverage requests',
   },
   {
     interaction: 'Report a source problem',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'private AgentMail intake',
   },
   {
     interaction: 'Follow government body from Coverage',
-    gate: 'unavailable',
+    gate: 'live',
     owner: 'Convex Auth or verified email follows',
   },
   {

@@ -303,8 +303,13 @@ test('email responses preserve grounded citations and the not-found contact path
       'https://public-parish-test.convex.site',
     ),
   ).toContain(
-    '- Council minutes: https://public-parish-test.convex.site/decisions/drainage?evidence=evidence-1',
+    '[1] Council minutes: https://public-parish-test.convex.site/decisions/drainage?evidence=evidence-1',
   )
+  const marked = formatEmailReply({ ...grounded, answer: 'The amount is authorized [evidence-1]. Work is not confirmed (evidence-1). Ordinance [CO-029-2026] remains named.' })
+  expect(marked).toContain('authorized [1]')
+  expect(marked).toContain('not confirmed [1]')
+  expect(marked).toContain('Ordinance [CO-029-2026]')
+  expect(marked).toContain(`Official document: ${grounded.citations[0].officialUrl}`)
   const missing = answerResult('not_found')
   const reply = formatEmailReply(missing, 'https://lafayettela.gov/council')
   expect(reply).toContain(
@@ -375,7 +380,6 @@ async function receive(
 ) {
   return await t.mutation(internal.emailReplies.intake.onMessageReceived, {
     eventId,
-    thread: {},
     message: {
       inbox_id: inboxId,
       thread_id: threadId,

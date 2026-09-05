@@ -2,6 +2,7 @@ name: Verify
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 concurrency:
   group: verify-${{ github.event.pull_request.number }}
@@ -32,3 +33,27 @@ jobs:
 
       - name: Verify the application
         run: npm run verify
+
+      - name: Install browser engines
+        if: contains(github.event.pull_request.labels.*.name, 'development-certification')
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Check desktop and mobile development journeys
+        if: contains(github.event.pull_request.labels.*.name, 'development-certification')
+        run: npx playwright test
+
+      - name: Preserve browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-${{ github.event.pull_request.head.sha }}
+          path: test-results
+          if-no-files-found: ignore
+
+      - name: Preserve the verified development frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: development-frontend-${{ github.event.pull_request.head.sha }}
+          path: dist/client
+          if-no-files-found: error
+          retention-days: 14

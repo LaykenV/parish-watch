@@ -1,10 +1,10 @@
 import { v } from 'convex/values'
 
 import type { Doc } from '../_generated/dataModel'
-import { internalMutation } from '../_generated/server'
+import { env, internalMutation } from '../_generated/server'
 import type { MutationCtx } from '../_generated/server'
 import type { SourceKind } from '../pipeline/state'
-import { evaluateCoverageGates, COVERAGE_EVALUATOR_VERSION } from './gates'
+import { coverageLinkDeployment, evaluateCoverageGates, COVERAGE_EVALUATOR_VERSION } from './gates'
 import { coverageGoldSetSample } from './goldSet'
 import { classifyHost } from './rootGate'
 import { resolveRootManifest } from './roots'
@@ -84,10 +84,11 @@ export const evaluateProposal = internalMutation({
       .order('desc')
       .take(MAX_EVIDENCE_RECORDS)
     const extractionEvidence = await inspectExtractions(ctx, pipelineRuns)
+    const linkDeployment = coverageLinkDeployment(env.CONVEX_SITE_URL)
     const productionLinks = await ctx.db
       .query('coverageDirectLinkChecks')
       .withIndex('by_proposal_and_deployment_and_checked_at', (index) =>
-        index.eq('proposalId', proposal._id).eq('deployment', 'production'),
+        index.eq('proposalId', proposal._id).eq('deployment', linkDeployment),
       )
       .order('desc')
       .take(40)
@@ -172,6 +173,7 @@ export const evaluateProposal = internalMutation({
       recentReplayPassed: [...recentRunsByTarget.values()].some(
         (kinds) => kinds.has('agenda') && kinds.has('minutes'),
       ),
+      linkDeployment,
       productionLinkCount: latestProductionLinks.size,
       passingProductionLinkCount: [...latestProductionLinks.values()].filter(
         (check) => check.passed,

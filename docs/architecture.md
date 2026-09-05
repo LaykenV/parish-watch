@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is next
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is in development certification
 
 ## Architecture Goal
 
@@ -1655,3 +1655,76 @@ proof. The packet split does not change the architecture or product scope below.
    hardening complete the submission.
 
 Do not reverse this order to polish a dashboard before the evidence path works.
+
+
+## Slice 9 production rollout
+
+The owner authorized production release of PRs #93 through #99 on September 5.
+The stack completed development certification on `woozy-wren-227`. Ordered
+production deployment and independent live checks are in progress. Source
+monitoring remains paused until the bounded Rapides canary starts.
+[The development certification record](slice-9-development-certification.md)
+and [operations runbook](slice-9-operations-runbook.md) keep development
+proof separate from production proof.
+
+Approved-source monitoring remains bounded by an owner policy and a deployment
+switch. Accepted history uses paginated search and corpus Ask scans evidence in
+batches. Coverage requests save demand without starting source work. Verified
+launch notices, current issue share HTML, and private operating reports complete
+the remaining public integrations.
+
+
+### Final-slice runtime contracts
+
+The following contracts describe the combined development candidate. Earlier
+release notes above describe their recorded production versions.
+
+The monitoring workflow admits only an owner-enabled, promoted source registry.
+The deployment switch, policy generation, registry generation, and active lease
+fence each paid step. Firecrawl follows approved roots and document hosts. A
+bounded listing queue persists across runs. Immutable documents split into
+45,000-character sections with overlap. The strong model inventories exact
+locators, and the independent fast model returns an acceptance verdict or repair
+reasons. Two extraction-and-review rounds are allowed per section. Deterministic
+checks validate source text, body, date, duplicates, and locator identity. No
+section releases targets until the complete document inventory is accepted.
+
+Accepted sections survive retry. Unchanged snapshots reuse their inventory.
+Baseline catch-up suppresses notifications. A run cannot mark the baseline
+complete while documents, listing pages, or targets remain pending. Per-source
+and deployment-wide rate limits reserve provider admissions. Provider ledgers
+record actual attempts and retain unknown usage fields. Admissions do not equal
+dollars or Firecrawl credits.
+
+Publication schedules same-body issue proposals from accepted records. A unique
+existing match can extend the issue under its stable ID and slug. A new proposal
+still passes strong-model linking, independent review, and deterministic
+publication checks. Competing matches stay ambiguous. Issue versions retain
+exact atomic publication references; they do not replace decision records.
+
+Explore reads a published search projection with cursors instead of a latest-50
+array. Publication updates its projection and corpus revision atomically. Result
+hydration rejects stale publication references. Existing accepted records need
+the bounded search backfill after deployment.
+
+Corpus Ask scans records in pages of 25 and selects relevant accepted evidence
+from up to four pages concurrently. It saves selection progress after each group
+and checks the corpus revision before continuing or answering. A changed corpus
+requires a retry. The former total-corpus limit of 75 records no longer applies
+to this path. Selected evidence still has explicit count and byte bounds, and a
+question exceeding them asks for a narrower scope. It never silently answers
+from only the first pages.
+
+Coverage projections name each body and its current state. Degraded, paused, or
+validating coverage adds a warning to dated evidence. Recovery requires fresh
+passing gates for the current registry generation and resolves its open
+incidents in the same transaction. Coverage requests record demand without
+starting compilation. Verified launch notices use the requested place's support
+status and an idempotent delivery record.
+
+Share HTML loads the current accepted issue version for each request and uses
+revalidating cache headers. Owner reports expose bounded operational pages and
+daily provider totals. Each aggregated ledger row records completion in the
+same transaction as its total, so delayed calls and replays cannot lose or
+double-count usage. Civic analytics accept fixed event names and bounded public
+context, not resident questions, addresses, or private message content.

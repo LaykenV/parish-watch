@@ -1,6 +1,6 @@
 # Slice 9 final build plan
 
-Status: implementation authorized, Slice 9A in development
+Status: development certification complete, authorized production rollout in progress
 Date: September 4, 2026
 Baseline: `8b03ac3`, matching local and remote `main` during this review
 
@@ -24,8 +24,9 @@ count, not a reason to combine unrelated repairs.
   source repair, release fixes, recording, and submission continue afterward.
 
 The owner subsequently authorized implementation, real open PRs, CI review, and
-development certification for the complete stack. Production merges, production
-operations, and submission remain outside this authorization.
+development certification for the complete stack. On September 5, the owner
+authorized production merges, deployment, and bounded live tests. Submission
+remains separate.
 
 ## What the repository currently proves
 
@@ -417,14 +418,17 @@ Build and record:
   realtime subscriber, one immediate alert, a grounded inbound reply, and an
   eligible weekly roundup. Include suppression after coverage degradation.
 - Prove the new request, notice, share, growing-corpus, pause, and recovery paths.
-- Test desktop keyboard and screen-reader operation, reduced motion, 320- and
-  375-pixel layouts, and actual iPhone Safari. The physical-device pass covers
-  browser controls, rotation, keyboard, safe areas, and 125 percent page zoom.
+- Test desktop keyboard behavior, accessible names and structure, reduced motion,
+  and 320- and 375-pixel mobile layouts. The owner replaced the physical iPhone
+  Safari requirement with desktop and mobile emulation for this development
+  review. Do not describe emulation as a physical-device or screen-reader pass.
 - Check every published citation in the bounded release corpus and sample
   historical versions. Large corpus coverage belongs in paginated CI or remote
   checks, never a single unbounded browser request.
-- Exercise the normal AI Gateway path and a bounded development test of the
-  documented direct-provider fallback. Do not use fallback for the main demo.
+- Exercise the normal AI Gateway path and verify direct-provider fallback stays
+  disabled. The owner accepted AI Gateway as the verified provider on September
+  4 because development has no direct OpenAI key. A live fallback call is not a
+  completion requirement.
 - Reconcile current statuses in `PLAN.md`, `docs/decisions.md`,
   `docs/product-spec.md`, `docs/architecture.md`, `docs/sources.md`,
   `docs/build-plan.md`, `docs/hackathon.md`, root `hackathon.md`, and the code

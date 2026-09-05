@@ -429,3 +429,20 @@ These do not reopen the product plan:
   August 27, 2026;
 - benchmark the strong and fast stage assignment against a labeled source set;
 - verify official September meeting schedules before relying on a live cycle.
+
+
+## Slice 9 production rollout
+
+The owner authorized production release of PRs #93 through #99 on September 5.
+The stack completed development certification on `woozy-wren-227`. Ordered
+production deployment and independent live checks are in progress. Source
+monitoring remains paused until the bounded Rapides canary starts.
+[The development certification record](slice-9-development-certification.md)
+and [operations runbook](slice-9-operations-runbook.md) keep development
+proof separate from production proof.
+
+Approved-source monitoring remains bounded by an owner policy and a deployment
+switch. Accepted history uses paginated search and corpus Ask scans evidence in
+batches. Coverage requests save demand without starting source work. Verified
+launch notices, current issue share HTML, and private operating reports complete
+the remaining public integrations.

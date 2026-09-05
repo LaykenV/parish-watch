@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import rateLimiterTest from '@convex-dev/rate-limiter/test'
 import { DAY, RateLimiter, calculateRateLimit } from '@convex-dev/rate-limiter'
+import { creditDevelopmentAdmissions } from './operations/developmentProof'
 import { configurePolicy } from './monitoring/ledger'
 import { convexTest } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -195,4 +196,31 @@ test.each([false, true])('cadence incidents require a completed initial inventor
     expect(policy?.failures).toBe(baselineComplete ? 1 : 0)
     expect(incidents.map(incident => incident.code)).toEqual(baselineComplete ? ['expected_artifact_missing'] : [])
   })
+})
+
+test('the approved development credit is once only and expires without changing the daily rate', async () => {
+  const { t, policyId } = await monitoringFixture()
+  rateLimiterTest.register(t)
+  const windowStart = Date.now()
+  const rate = new RateLimiter(components.rateLimiter, {})
+  const config = { kind: 'fixed window' as const, rate: 500, period: DAY, start: windowStart }
+  await t.run(async ctx => {
+    await ctx.db.patch(policyId, { dailyCallLimit: 500 })
+    await rate.limit(ctx, 'calls', { key: policyId, count: 500, config, throws: true })
+  })
+  vi.stubEnv('CONVEX_SITE_URL', 'https://befitting-flamingo-587.convex.site')
+  await expect(t.run(ctx => creditDevelopmentAdmissions(ctx, policyId, windowStart))).rejects.toThrow('unavailable')
+  vi.stubEnv('CONVEX_SITE_URL', 'https://woozy-wren-227.convex.site')
+  expect(await t.run(ctx => creditDevelopmentAdmissions(ctx, policyId, windowStart))).toMatchObject({ granted: true, remaining: 100 })
+  expect(await t.run(ctx => creditDevelopmentAdmissions(ctx, policyId, windowStart))).toMatchObject({ granted: false, remaining: 100 })
+  await t.run(async ctx => {
+    expect((await rate.limit(ctx, 'calls', { key: policyId, count: 100, config })).ok).toBe(true)
+    expect((await rate.limit(ctx, 'calls', { key: policyId, count: 1, config })).ok).toBe(false)
+    const value = await rate.getValue(ctx, 'calls', { key: policyId, config })
+    expect(calculateRateLimit(value, value.config, windowStart + DAY + 1).value).toBe(500)
+    const policy = await ctx.db.get(policyId)
+    expect(policy?.dailyCallLimit).toBe(500)
+    expect(policy?.developmentAdmissionGrant).toMatchObject({ admissions: 100, consumedBefore: 500, windowStart })
+  })
+  await expect(t.run(ctx => creditDevelopmentAdmissions(ctx, policyId, windowStart - DAY))).rejects.toThrow('expired')
 })

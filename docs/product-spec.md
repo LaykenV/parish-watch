@@ -1,6 +1,6 @@
 # Resident Product Specification
 
-Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is next
+Status: approved product plan; evidence Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is in development certification
 
 ## Product Sentence
 
@@ -736,3 +736,20 @@ The resident product is submission-ready when a signed-out mobile visitor can:
 8. receive and reply to a material-change email;
 9. return to a live updated issue;
 10. inspect coverage and revision history.
+
+
+## Slice 9 production rollout
+
+The owner authorized production release of PRs #93 through #99 on September 5.
+The stack completed development certification on `woozy-wren-227`. Ordered
+production deployment and independent live checks are in progress. Source
+monitoring remains paused until the bounded Rapides canary starts.
+[The development certification record](slice-9-development-certification.md)
+and [operations runbook](slice-9-operations-runbook.md) keep development
+proof separate from production proof.
+
+Approved-source monitoring remains bounded by an owner policy and a deployment
+switch. Accepted history uses paginated search and corpus Ask scans evidence in
+batches. Coverage requests save demand without starting source work. Verified
+launch notices, current issue share HTML, and private operating reports complete
+the remaining public integrations.

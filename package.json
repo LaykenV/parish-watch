@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "@edge-runtime/vm": "5.0.0",
+    "@playwright/test": "1.63.0",
     "@tanstack/devtools-vite": "0.8.5",
     "@tanstack/eslint-config": "0.4.0",
     "@tanstack/router-cli": "1.167.33",

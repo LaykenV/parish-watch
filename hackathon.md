@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-04T19:11:18Z
+- **Last updated:** 2026-09-05T06:57:00Z
 
 ## Log
 
@@ -1398,3 +1398,74 @@ and model-generated election content remain out of scope (`PLAN.md`,
 
 Published the initial Phase 0 source commit to the public `main` branch. The app
 itself remains undeployed.
+
+### 2026-09-05 - dbb7984
+
+Opened PRs #93 through #99 for final Build Slice 9. Development now runs approved
+source monitoring, continuing issue proposals, paginated accepted-history search,
+batched corpus Ask, live coverage requests and verified launch notices, issue
+share HTML, and private operations reports. The Cotile Lake issue passed automatic
+linking and independent review. Pafford retained its existing URL after an added
+decision. The bounded citation audit passed 497 citations across 94 publication
+versions without changing stored evidence. Browser and controlled provider
+certification continue. The PRs remain open and production is unchanged. See
+`docs/slice-9-development-certification.md` for proof and remaining checks.
+
+
+### 2026-09-05 - working tree
+
+The combined development build passed 455 application tests and eight desktop
+and mobile browser checks.
+Controlled immediate and weekly emails arrived with official links, and a signed
+webhook replay produced one grounded reply. Removal and address-wide unsubscribe
+passed. The citation audit now covers 558 citations across 105 publication
+versions. Corrected callback typing, readable email references, search result payloads,
+concurrent extension retries, and outcome visibility counting. PDF continuation is paused at the
+500-admission limit; final-head CI and reviews continue. AI Gateway is verified
+and direct fallback stays disabled. No production merge or source activation.
+
+
+### 2026-09-05 - 186d936 and final certification
+
+Completed the 31-page Rapides minutes inventory from its saved first section.
+The strong extractor and independent reviewer accepted the remaining section
+on the same immutable snapshot. A recorded review truncation led to an 8,000-token
+review limit. The owner approved one development-only 100-admission credit;
+the canary used 69, retained its normal 500 daily rate, and stopped with 31 unused.
+All ten fresh Rapides gates passed and the public development page showed seven
+supported bodies, with three Lafayette planning bodies still validating.
+Monitoring is paused with 54 pending and 29 published targets. The final audit
+passed 575 citations across 108 publication versions. All provider rows reconciled
+with their daily aggregates. CI on 186d936 passed 456 application tests and eight
+browser checks. Review then found a misleading launch-notice reverification
+message; the final change reports sent or stopped notices without promising
+another send. Production approval and live release checks remain separate.
+
+The final application code at 7d2ed31 passed 457 application tests and eight
+browser checks in Verify 33949802588. Its CI artifact is served on development
+as hosting deployment 48bd933b-b4dd-40fe-8e1d-349f6785a597. No local automated
+validation ran.
+
+
+### 2026-09-05 - 3882fa5
+
+Final source review found four duplicate pending targets at the PDF section
+boundary. None had reached publication. Continuation now provides previously
+accepted locators to extraction and review, rejects nested locator repeats,
+and resumes the immutable snapshot before another retrieval. The bounded
+repair recomputed only the unpublished last section. Run
+tn7cz50rsvjx8k52687tmz0sa58dt4a1 completed with 38 targets and no nested duplicates.
+The canary used 99 of the approved 100 extra admissions. Monitoring is paused
+with one admission unused, 49 pending targets, and 30 published targets. All ten
+fresh Rapides gates pass. The final audit passed 581 citations across 109
+publication versions with no problems. Provider ledgers and daily aggregates
+agree. No production merge or source activation occurred.
+
+Verify 33950769153 passed all 458 application tests and eight browser checks on
+3882fa5. The deployed frontend remains the unchanged 7d2ed31 artifact; development
+runs the final backend. Subsequent changes only record this evidence.
+
+The final source review corrected the date-window boundary: a policy activated
+midday includes meetings dated that day. The regression covers the previous,
+current, and next calendar day. Development runs the combined code at 0da2d88
+with monitoring paused. The latest PR checks record this final regression.
