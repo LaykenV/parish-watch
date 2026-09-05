@@ -7,7 +7,7 @@ import {
   isApprovedRootUrl,
 } from './rootGate'
 import type { RedirectWalk } from './redirectWalk'
-import { listRootManifests, resolveRootManifest } from './roots'
+import { resolveRootManifest } from './roots'
 import type { CoverageRootManifest } from './roots'
 
 const MANIFEST: CoverageRootManifest = {
@@ -198,7 +198,7 @@ test('an expected final URL must match after redirects', () => {
 test('Lafayette event documents require a new manifest and keep their path boundary', () => {
   const event = 'https://events.lafayettela.gov/default/Detail/2026-09-11-0830-Hearing-Examiner-Public-Meeting/0fc6a5a3-b293-4e7c-a2a8-b4b800f18b9c'
   for (const bodyKey of ['lafayette-planning-commission', 'lafayette-board-of-zoning-adjustment', 'lafayette-hearing-examiner']) {
-    const current = listRootManifests().find(manifest => manifest.bodyKey === bodyKey)!
+    const current = resolveRootManifest(bodyKey, 'v2')!
     const previous = resolveRootManifest(bodyKey, 'v1')!
     expect(current.version).toBe('v2')
     expect(resolveRootManifest(bodyKey, 'v2')).toEqual(current)

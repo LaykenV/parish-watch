@@ -499,7 +499,7 @@ The estimated spend can exceed a reservation because classification reserves no
 additional amount and Firecrawl does not report dollar cost.
 
 The owner freezes checked sources into an immutable registry proposal before
-validation. `docs/coverage-gold-sets/launch-bodies.v2.json` names the exact
+validation. `docs/coverage-gold-sets/launch-bodies.v3.json` names the exact
 public artifacts, cadence, date role, and extraction targets. Discovery can add
 candidates, but a model-selected URL cannot replace a required sample.
 Validation reuses the existing Firecrawl retrieval and immutable snapshot path
@@ -1730,3 +1730,15 @@ daily provider totals. Each aggregated ledger row records completion in the
 same transaction as its total, so delayed calls and replays cannot lose or
 double-count usage. Civic analytics accept fixed event names and bounded public
 context, not resident questions, addresses, or private message content.
+
+
+### Lafayette commission identities
+
+The September 5 source repair replaced the generic Planning Commission entry
+in current coverage with separate City Planning, Parish Planning, and City
+Zoning commissions. Old manifest versions still resolve for historical runs.
+There were no production decision records under the generic entry when this
+change was prepared. Existing publication identities are not reassigned.
+The current parish gate requires each named commission; a passing legacy
+placeholder cannot stand in for any of them. Their schedule-only gold samples
+cannot satisfy the agenda, outcome, publication, or historical-artifact gates.

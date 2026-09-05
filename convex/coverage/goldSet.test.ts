@@ -7,7 +7,7 @@ import {
 } from './goldSet'
 
 test('the checked manifest names exact official artifacts and extraction targets', () => {
-  expect(coverageGoldSetVersion()).toBe('launch-bodies-v2')
+  expect(coverageGoldSetVersion()).toBe('launch-bodies-v3')
   expect(coverageGoldSetSamples('youngsville-city-council')).toHaveLength(4)
   expect(
     coverageGoldSetSamples('lafayette-city-council').map(
@@ -34,4 +34,17 @@ test('an unlisted body cannot borrow another body gold set', () => {
   expect(() => coverageGoldSetSamples('invented-board')).toThrow(
     'has no body invented-board',
   )
+})
+
+test('Lafayette commissions keep their own schedule without borrowing decision samples', () => {
+  const city = coverageGoldSetSamples('lafayette-city-planning-commission')
+  const parish = coverageGoldSetSamples('lafayette-parish-planning-commission')
+  const zoning = coverageGoldSetSamples('lafayette-city-zoning-commission')
+  expect(city.map(sample => sample.key)).toEqual(['2026-city-schedule'])
+  expect(parish.map(sample => sample.key)).toEqual(['2026-parish-schedule'])
+  expect(zoning.map(sample => sample.key)).toEqual(['2026-city-zoning-schedule'])
+  for (const samples of [city, parish, zoning]) {
+    expect(samples.every(sample => sample.sourceKind === 'calendar')).toBe(true)
+    expect(samples.some(sample => sample.extraction !== undefined)).toBe(false)
+  }
 })

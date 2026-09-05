@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-05T16:13:47Z
+- **Last updated:** 2026-09-05T16:25:00Z
 
 ## Log
 
@@ -1494,3 +1494,14 @@ The planning bodies remain unvalidated. Exact City and Parish commission
 identities and working agenda/outcome pairs are still required. Added a path
 restriction regression for CI; development deployment and production release of
 this repair follow PR checks.
+
+
+### 2026-09-05 - working tree
+
+Separated Lafayette City Planning, Parish Planning, and City Zoning commission
+identities so one body cannot satisfy another body's coverage gate. Kept the
+legacy manifests and gold set for historical runs. Production had no decisions
+under the old generic entry. Added a regression proving that promoting the old
+placeholder cannot mark the parish supported while a real commission is missing.
+PR #102's event-path repair deployed and passed independent production smoke;
+the source outage still prevents full planning-body certification.

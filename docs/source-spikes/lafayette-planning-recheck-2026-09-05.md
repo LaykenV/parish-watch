@@ -49,10 +49,11 @@ The provider check did not produce a source snapshot or publish a record.
 1. Recover current and historical agenda and outcome documents with stable
    official links. Pin exact files as representative samples only after reading
    them and checking their body, meeting date, and printed case identity.
-2. Resolve the existing generic Planning Commission placeholder. The official
-   root describes separate City and Parish Planning Commissions. Their records
-   must not be combined under one body or certified using City Zoning material.
-   The earlier August 29 source spike documents the same identity distinction.
+2. Certify the separate City Planning, Parish Planning, and City Zoning entries.
+   The generic placeholder is retained only for historical run lookup. Current
+   coverage requires each real commission, BOZA, and Hearing Examiner. The
+   official planning and rezoning pages and the August 29 source spike establish
+   those distinctions.
 3. Run retrieval, extraction, independent review, immutable revision, missing-item,
    and paired agenda/outcome checks. Then evaluate all ten coverage gates in
    development and production for each exact body.
@@ -62,3 +63,21 @@ The provider check did not produce a source snapshot or publish a record.
 The versioned permission repair enables future retrieval of the recovered path.
 It does not change public support, publish decisions, enable monitoring, or
 replace the calendar-only gold samples with unverified documents.
+
+
+## Commission identity correction
+
+The [official planning page](https://www.lafayettela.gov/business-development/planning-and-development/planning-commission/)
+describes separate City and Parish Planning Commissions. The
+[rezoning page](https://www.lafayettela.gov/business-development/planning-and-development/zoning-in-lafayette/rezoning/)
+describes City Zoning Commission recommendations followed by City Council final
+decisions. Current manifests and gold set v3 give each commission its own identity
+and schedule sample. The generic manifest and gold set v2 remain available for
+historical records. A production lookup found no decision records under the old
+placeholder, and the repair does not migrate or rewrite any published record.
+The City Zoning schedule PDF returned a valid PDF and named the 2026 Zoning
+Commission meeting calendar. No schedule is treated as an agenda or outcome.
+
+PR #102 released the event-path permission as `fc5ed66`. Deployment
+[33977412980](https://github.com/LaykenV/public-parish/actions/runs/33977412980)
+and the independent production smoke passed. That release did not promote a body.

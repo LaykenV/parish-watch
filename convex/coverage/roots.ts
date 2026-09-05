@@ -248,7 +248,7 @@ const LAFAYETTE_EVENT_BODIES = new Set([
 ])
 
 // Keep v1 resolvable for earlier runs. Only new runs use the checked event path.
-const CURRENT_ROOT_MANIFESTS: CoverageRootManifest[] = ROOT_MANIFESTS.map(
+const VERSIONED_ROOT_MANIFESTS: CoverageRootManifest[] = ROOT_MANIFESTS.map(
   (manifest) => LAFAYETTE_EVENT_BODIES.has(manifest.bodyKey)
     ? {
         ...manifest,
@@ -262,6 +262,28 @@ const CURRENT_ROOT_MANIFESTS: CoverageRootManifest[] = ROOT_MANIFESTS.map(
     : manifest,
 )
 
+// The former placeholder had no published production records. Keep its versions
+// for historical runs, but require separate evidence for each commission now.
+const CURRENT_ROOT_MANIFESTS: CoverageRootManifest[] = VERSIONED_ROOT_MANIFESTS.flatMap(
+  (manifest): CoverageRootManifest[] => manifest.bodyKey === 'lafayette-planning-commission'
+    ? [
+        { ...manifest, bodyKey: 'lafayette-city-planning-commission', bodyName: 'Lafayette City Planning Commission', version: 'v1' },
+        { ...manifest, bodyKey: 'lafayette-parish-planning-commission', bodyName: 'Lafayette Parish Planning Commission', version: 'v1' },
+        {
+          ...manifest,
+          bodyKey: 'lafayette-city-zoning-commission',
+          bodyName: 'Lafayette City Zoning Commission',
+          version: 'v1',
+          approvedRootUrl: 'https://www.lafayettela.gov/business-development/planning-and-development/zoning-in-lafayette/rezoning/',
+          identityEvidenceUrls: [
+            'https://www.lafayettela.gov/business-development/planning-and-development/',
+            'https://www.lafayettela.gov/business-development/planning-and-development/zoning-in-lafayette/rezoning/',
+          ],
+        },
+      ]
+    : [manifest],
+)
+
 export function listRootManifests(): CoverageRootManifest[] {
   return CURRENT_ROOT_MANIFESTS
 }
@@ -271,7 +293,7 @@ export function resolveRootManifest(
   version: string,
 ): CoverageRootManifest | null {
   return (
-    [...CURRENT_ROOT_MANIFESTS, ...ROOT_MANIFESTS].find(
+    [...CURRENT_ROOT_MANIFESTS, ...VERSIONED_ROOT_MANIFESTS, ...ROOT_MANIFESTS].find(
       (manifest) =>
         manifest.bodyKey === bodyKey && manifest.version === version,
     ) ?? null

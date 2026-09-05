@@ -17,8 +17,11 @@ The official events service briefly exposed meeting attachments, then returned
 its checked event-document path; the old manifests remain unchanged for prior
 runs. No coverage gate or public support state changes with that permission.
 
-The generic Planning Commission entry still needs separate City and Parish body
-identities before certification. The
+Current coverage now lists Lafayette City Planning Commission, Lafayette Parish
+Planning Commission, and Lafayette City Zoning Commission separately. Each has
+its own checked schedule and must pass its own agenda and outcome checks.
+Together with BOZA and Hearing Examiner, five planning bodies remain validating.
+The
 [September 5 source recheck](source-spikes/lafayette-planning-recheck-2026-09-05.md)
 records the recovered path, current failures, and remaining evidence work.
 The checkpoints below retain their dated historical findings.
