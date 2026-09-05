@@ -12,7 +12,9 @@ merge or source activation occurred in this work. Controlled development mail
 used the configured shared updates inbox; provider ingress is qualified below.
 
 The personal development deployment is `woozy-wren-227`, served at
-https://woozy-wren-227.convex.site. One combined branch owns this deployment.
+https://woozy-wren-227.convex.site. One combined branch owns this deployment. The served frontend comes from
+`661318a`, hosting deployment `32b45d23-f40d-4457-a730-4c0c8f9126c4`.
+Subsequent changes through `f276462` affect backend behavior and tests only.
 GitHub Actions runs type checks, tests, builds, lint, and browser checks. Its
 frontend artifact is uploaded without rebuilding locally. Development delivery
 and CI success do not establish production delivery or resident benefit.
@@ -27,7 +29,7 @@ exact-head CI and reviews finish.
 | Approved-source discovery | The Rapides August 10 agenda produced 41 targets without owner-supplied decision IDs. Its listed appointments published with limited claims and no invented approval. |
 | Baseline suppression | Catch-up runs keep `notificationEligible=false`. Publishing historical agenda items does not email the backlog. |
 | Bounded work | Runs stopped at both 200 and 400 daily admissions, preserved pending work, and did not turn budget exhaustion into a source-health failure. The temporary development calibration reached the existing 500-admission maximum. |
-| Inventory continuation | The 31-page August 10 minutes retain an accepted first section while the remaining section awaits a successful extraction and independent review. The 500-admission window is exhausted. Monitoring stays paused; no consumed admissions were reset. |
+| Inventory continuation | The 31-page August 10 minutes retain an accepted first section while the remaining section awaits a successful extraction and independent review. The 500-admission window is exhausted until September 5 at 13:25:59 UTC. Monitoring stays paused; no consumed admissions were reset. An extra 100 development admissions were proposed to the owner but have not been authorized or applied. |
 | Automatic issue proposal | Build `ms79mrk0v5h8z9zs0nzkxhn1ds8drzdy` published the limited Cotile Lake fees issue from two accepted decisions after independent review. No owner supplied the relationship. |
 | Stable issue identity | Build `ms7btptfdk2fpyn547reat32kn8drbhg` extended the existing Pafford issue from two to three members. Issue ID and slug stayed fixed. The accepted version advanced to `n17bmzn138r0en2kzqpebq5k7h8ds372`. |
 | Ambiguous links | Proposal `ts7cp7syynga4wjvc1wxas5bch8drqa2` found competing Pafford issues and stopped as ambiguous. It did not silently merge their histories. |
@@ -36,13 +38,13 @@ exact-head CI and reviews finish.
 | Immutable citations | The bounded audit passed 558 citations across 105 current and immediately preceding publication versions. It rehashed stored source text and checked exact excerpt offsets. Of those citations, 222 use their historical normalization coordinate system. The audit changed no source, citation, or publication. The September 5 audit found no problems. Repeat it if the remaining canary publishes more evidence. |
 | Coverage demand | A signed-out St. Landry Parish request saved one demand record. The newest compiler run still dated to September 3. The request started no source work. |
 | Verified launch notice | A verified Rapides request waited while coverage was degraded, then received one launch notice after gated recovery. Repeated notice sweeps did not enqueue another notice. Wrong-requester verification failed; valid verification and replay behaved as intended. |
-| Controlled notifications and reply | Immediate and weekly emails each arrived with an official source link. The repeat delivery request reused its existing roundup window. A controlled reply received one grounded response after signed development webhook replay. Invalid signature returned 401; valid and duplicate events returned 204 with one application reply event. |
+| Controlled notifications and reply | Immediate and weekly emails each arrived with an official source link. The repeat delivery request reused its existing roundup window. A controlled reply received one grounded response after signed development webhook replay. Invalid signature returned 401; valid and duplicate events returned 204 with one application reply event per provider message. A fresh verification and reply then proved readable numbered references and the official PDF link, without raw citation markers. The controlled address was unsubscribed again. |
 | Private report | A controlled report submitted from the mobile issue page showed the private confirmation and reached provider state `sent`. It started no evidence pipeline. |
 | Google account | Real Google OAuth returned to development. Creating, muting, and removing a test issue follow passed. The pre-existing Google follow remained unchanged. |
 | Email-only management | Actual provider verification succeeded for the controlled inbox. Valid management worked, an invalid token failed closed, mute and resume passed. Removing the controlled Pafford follow passed. Unsubscribe GET left the Roundabout follow active; POST stopped the address and invalidated management access. Repeated POST returned success. |
 | Sharing | Full and limited share HTML returned factual metadata and canonical development links. Missing and hostile slugs returned 404 with no-store. A gzip ETag replay returned 304 after the cache fix. Mobile copy confirmation passed. External social-platform cache previews are not claimed. |
 | Global pause | With the deployment switch off, an explicit scheduler tick created no run or provider call and preserved all 33 pending targets. |
-| Usage reconciliation | All 354 pipeline calls, 31 Ask calls, 77 compiler calls, and 224 monitoring calls matched their daily aggregates. No row remained unaggregated. Counts include earlier development work; they are not all Slice 9 cost. |
+| Usage reconciliation | All 354 pipeline calls, 41 Ask calls, 77 compiler calls, and 224 monitoring calls matched their daily aggregates. A separate Lafayette source retrieval reused its snapshot and recorded two successful retrieval calls, each reporting two credits. Both entered the separate aggregate. No row remained unaggregated. Counts include earlier development work; they are not all Slice 9 cost. |
 | Owner reports | The signed-in mobile owner view loaded source policies, incidents, issue proposals, delivery problems, civic counters, provider pages, and daily aggregates. Unauthorized-access and retry-dedup cases pass CI. |
 | Provider | AI Gateway handled extraction, independent review, issue linking, and Ask. `DIRECT_OPENAI_FALLBACK_ENABLED` is unset, so fallback is disabled. The owner explicitly accepted no direct-provider live test. |
 
@@ -58,7 +60,12 @@ Escape closed it and restored focus to its trigger.
 The certification PR adds Chromium desktop and WebKit mobile browser checks in
 GitHub Actions on PRs labeled `development-certification`. These integration
 checks use the maintained Pafford source and Roundabout follow cases. All eight
-passed on `31e0ec2` in [Verify 33932896826](https://github.com/LaykenV/public-parish/actions/runs/33932896826). Final-head checks are still running. Ordinary PR checks do not depend on mutable development data.
+and all 455 application tests passed on `f276462` in
+[Verify 33935044657](https://github.com/LaykenV/public-parish/actions/runs/33935044657).
+The served frontend passed manual 320/375-pixel Coverage and privacy checks. A
+350-character search URL rendered safely with a 300-character input limit, and
+the Marshals search still found the older Lafayette decision. Final documentation
+checks are still running. Ordinary PR checks do not depend on mutable development data.
 They exercise source opening and focus return, follow-dialog
 focus containment, reduced-motion media settings, and 320/375-pixel Coverage.
 These checks use the CI-built frontend with the development backend. This is
@@ -77,11 +84,14 @@ Production alert-and-reply verification remains a separate release check.
 
 ## Coverage boundary
 
-Development gate evaluations support seven bodies: Lafayette City Council,
+Seven development bodies have passed gate evaluations: Lafayette City Council,
 Youngsville City Council, Alexandria City Council, Pineville City Council,
 Rapides Parish Police Jury, Baton Rouge Metropolitan Council, and Baton Rouge
 Planning and Zoning Commission. Rapides monitoring failures have also exercised
-degradation and recovery; the final public status is checked after the canary.
+degradation and recovery. At the final browser pass, Rapides Police Jury is
+degraded, the other six bodies are supported, and the three planning bodies
+below remain validating. Successful PDF continuation and fresh gated recovery
+remain required before calling this development certification complete.
 
 Lafayette Planning Commission, Lafayette Board of Zoning Adjustment, and
 Lafayette Hearing Examiner remain validating. Their meeting-specific planning

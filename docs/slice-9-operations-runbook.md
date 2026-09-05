@@ -10,7 +10,10 @@ remain open until the owner authorizes that consequence.
 Keep `SOURCE_MONITORING_ENABLED=false` through the code rollout. All added
 schema fields are optional or belong to new tables. Existing source snapshots,
 publication versions, issue IDs, issue slugs, follows, and citations remain.
-New indexes deploy with the backend. Watch that exact workflow to completion,
+New indexes deploy with the backend. The production Gate 10 classification
+uses the current `befitting-flamingo-587.convex.site` endpoint. Changing the
+`CONVEX_SITE_URL` override or moving production requires an explicit update to
+that classification and new Gate 10 evidence. Watch that exact workflow to completion,
 then run the independent `npm run smoke:production`.
 
 Backfill the accepted search projection after PR #95 deploys. Run the internal
@@ -92,7 +95,9 @@ not authorize dropped members or guessed relationships.
 Inspect Notification delivery problems for pending, failed, rejected, bounced,
 and complained states. Provider acceptance, receipt in the controlled inbox,
 and a real resident receiving useful information are different evidence.
-Coverage launch notices require verification and support for the requested
+Notice sweeps read waiting and queued subscriptions through the state index;
+sent and stopped history adds no polling work. Coverage launch notices require
+verification and support for the requested
 place. A body promotion alone cannot trigger a parish notice. Historical
 monitoring backfill suppresses notifications.
 

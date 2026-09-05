@@ -1414,11 +1414,12 @@ certification continue. The PRs remain open and production is unchanged. See
 
 ### 2026-09-05 - working tree
 
-The combined development build passed eight desktop and mobile browser checks.
+The combined development build passed 455 application tests and eight desktop
+and mobile browser checks.
 Controlled immediate and weekly emails arrived with official links, and a signed
 webhook replay produced one grounded reply. Removal and address-wide unsubscribe
 passed. The citation audit now covers 558 citations across 105 publication
-versions. Corrected callback typing, search result payloads, concurrent extension
-retries, and outcome visibility counting. PDF continuation is paused at the
+versions. Corrected callback typing, readable email references, search result payloads,
+concurrent extension retries, and outcome visibility counting. PDF continuation is paused at the
 500-admission limit; final-head CI and reviews continue. AI Gateway is verified
 and direct fallback stays disabled. No production merge or source activation.
