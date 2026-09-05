@@ -7,6 +7,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import { api, internal } from './_generated/api'
 import type { DataModel } from './_generated/dataModel'
 import { COVERAGE_EVALUATOR_VERSION } from './coverage/gates'
+import { listRootManifests } from './coverage/roots'
 import schema from './schema'
 
 const modules = import.meta.glob('./**/*.ts')
@@ -124,6 +125,29 @@ test('ten passing gates promote once and preserve the previous registry', async 
     expect(await ctx.db.get(seeded.previousRegistryId)).not.toBeNull()
     expect((await ctx.db.query('coverageIncidents').withIndex('by_registry_id_and_state', q => q.eq('registryId', seeded.registryId).eq('state', 'resolved')).take(30))).toHaveLength(1)
     expect((await ctx.db.get(seeded.bodyId))?.publicStatus).toBe('supported')
+  })
+})
+
+test('a promoted legacy planning placeholder cannot cover a missing Parish Planning Commission', async () => {
+  const t = convexTest(schema, modules)
+  const owner = await signInOwner(t)
+  const seeded = await seedReadyProposal(t, true)
+  await t.run(async ctx => {
+    for (const root of listRootManifests().filter(root => root.jurisdictionSlug === 'lafayette-parish')) {
+      if (root.bodyKey === 'lafayette-parish-planning-commission') continue
+      await ctx.db.insert('governmentBodies', {
+        jurisdictionId: seeded.jurisdictionId,
+        name: root.bodyName,
+        slug: root.bodyKey,
+        bodyType: 'other',
+        publicStatus: 'supported',
+      })
+    }
+  })
+  await owner.mutation(api.coverage.promotion.confirmPromotion, { proposalId: seeded.proposalId })
+  await t.run(async ctx => {
+    expect((await ctx.db.get(seeded.bodyId))?.publicStatus).toBe('supported')
+    expect((await ctx.db.get(seeded.jurisdictionId))?.publicStatus).toBe('candidate')
   })
 })
 
