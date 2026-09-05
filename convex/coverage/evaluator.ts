@@ -84,10 +84,11 @@ export const evaluateProposal = internalMutation({
       .order('desc')
       .take(MAX_EVIDENCE_RECORDS)
     const extractionEvidence = await inspectExtractions(ctx, pipelineRuns)
+    const linkDeployment = env.CONVEX_SITE_URL === 'https://befitting-flamingo-587.convex.site' ? 'production' : 'development'
     const productionLinks = await ctx.db
       .query('coverageDirectLinkChecks')
       .withIndex('by_proposal_and_deployment_and_checked_at', (index) =>
-        index.eq('proposalId', proposal._id).eq('deployment', env.CONVEX_SITE_URL === 'https://woozy-wren-227.convex.site' ? 'development' : 'production'),
+        index.eq('proposalId', proposal._id).eq('deployment', linkDeployment),
       )
       .order('desc')
       .take(40)
@@ -172,7 +173,7 @@ export const evaluateProposal = internalMutation({
       recentReplayPassed: [...recentRunsByTarget.values()].some(
         (kinds) => kinds.has('agenda') && kinds.has('minutes'),
       ),
-      linkDeployment: env.CONVEX_SITE_URL === 'https://woozy-wren-227.convex.site' ? 'development' : 'production',
+      linkDeployment,
       productionLinkCount: latestProductionLinks.size,
       passingProductionLinkCount: [...latestProductionLinks.values()].filter(
         (check) => check.passed,
