@@ -278,7 +278,7 @@ export const saveInventory = internalMutation({
       })
       added++
     }
-    await ctx.db.patch(document._id, { completedChunks: args.chunk + 1, chunkCount: args.chunks, inventoryComplete: args.chunk + 1 === args.chunks })
+    await ctx.db.patch(document._id, { completedChunks: args.chunk + 1, chunkCount: args.chunks, inventoryComplete: args.chunk + 1 === args.chunks, ...(args.chunk + 1 === args.chunks ? { nextCheckAt: Date.now() + policy.intervalHours * 3_600_000 } : {}) })
     return added
   },
 })
