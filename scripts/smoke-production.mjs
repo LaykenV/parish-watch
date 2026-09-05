@@ -4,6 +4,19 @@ import { makeFunctionReference } from 'convex/server'
 const DIRECT_ORIGIN = 'https://befitting-flamingo-587.convex.site'
 const CANONICAL_ORIGIN = 'https://www.publicparish.com'
 const APEX_ORIGIN = 'https://publicparish.com'
+const EXPECTED_COVERAGE = {
+  'Lafayette Parish': [
+    'lafayette-city-council',
+    'lafayette-city-planning-commission',
+    'lafayette-parish-planning-commission',
+    'lafayette-city-zoning-commission',
+    'lafayette-board-of-zoning-adjustment',
+    'lafayette-hearing-examiner',
+    'youngsville-city-council',
+  ],
+  'Rapides Parish': ['alexandria-city-council', 'pineville-city-council', 'rapides-parish-police-jury'],
+  'East Baton Rouge Parish': ['ebr-metropolitan-council', 'baton-rouge-planning-commission'],
+}
 
 async function get(url) {
   const response = await fetch(url, {
@@ -50,7 +63,14 @@ for (const path of ['/explore', '/ask', '/coverage', '/coverage/request', '/foll
 }
 const client = new ConvexHttpClient('https://befitting-flamingo-587.convex.cloud')
 const health = await client.query(makeFunctionReference('coverage/publicHealth:regions'), {})
-if (health.length !== 3 || health.flatMap(region => region.bodies).length !== 10) throw new Error('Coverage did not return the ten named launch bodies')
+if (health.length !== Object.keys(EXPECTED_COVERAGE).length) throw new Error('Coverage did not return the three launch parishes')
+for (const [name, expected] of Object.entries(EXPECTED_COVERAGE)) {
+  const regions = health.filter(region => region.name === name)
+  const actual = regions[0]?.bodies.map(body => body.id).sort()
+  if (regions.length !== 1 || JSON.stringify(actual) !== JSON.stringify([...expected].sort())) {
+    throw new Error(`Coverage did not return the named launch bodies for ${name}`)
+  }
+}
 const search = await client.query(makeFunctionReference('resident/search:search'), { paginationOpts: { numItems: 5, cursor: null } })
 if (!Array.isArray(search.page)) throw new Error('Published search did not return a page')
 const issues = await client.query(makeFunctionReference('resident/evidence:listPublishedIssues'), {})
