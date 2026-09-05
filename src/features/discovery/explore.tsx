@@ -197,6 +197,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
           <SearchIcon aria-hidden="true" />
           <input
             aria-label="Search issues and records"
+            maxLength={300}
             autoComplete="off"
             onChange={(event) => setQueryDebounced(event.target.value)}
             placeholder="Search issues, decision records, meetings"

@@ -3,15 +3,14 @@ import { v } from 'convex/values'
 import type { Id } from '../_generated/dataModel'
 import type { MutationCtx } from '../_generated/server'
 import { internalMutation, query } from '../_generated/server'
-import { searchEntry } from './searchContracts'
-import type { SearchEntry } from './searchContracts'
+import { publicSearchEntry, searchEntry } from './searchContracts'
 
 export async function advanceCorpusRevision(ctx: MutationCtx) {
   const state = await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique()
   if (state) await ctx.db.patch(state._id, { revision: state.revision + 1 })
   else await ctx.db.insert('publicCorpusState', { key: 'published', revision: 1 })
 }
-async function upsert(ctx: MutationCtx, entry: SearchEntry) {
+async function upsert(ctx: MutationCtx, entry: typeof searchEntry.type) {
   const prior = await ctx.db.query('publishedSearchEntries').withIndex('by_key', q => q.eq('key', entry.key)).unique()
   if (prior) await ctx.db.replace(prior._id, entry)
   else await ctx.db.insert('publishedSearchEntries', entry)
@@ -47,7 +46,7 @@ export async function indexIssue(ctx: MutationCtx, issueId: Id<'issues'>) {
 }
 export const search = query({
   args: { paginationOpts: paginationOptsValidator, q: v.optional(v.string()), kind: v.optional(v.union(v.literal('decision'), v.literal('issue'), v.literal('meeting'), v.literal('body'))), place: v.optional(v.string()), body: v.optional(v.string()), lifecycle: v.optional(v.string()), source: v.optional(v.string()), topic: v.optional(v.string()), date: v.optional(v.string()), sort: v.optional(v.union(v.literal('newest'), v.literal('oldest'))) },
-  returns: paginationResultValidator(searchEntry),
+  returns: paginationResultValidator(publicSearchEntry),
   handler: async (ctx, args) => {
     if ((args.q?.length ?? 0) > 300 || args.paginationOpts.numItems > 50) throw new Error('Search request exceeds its bounds.')
     const needle = args.q?.trim()
@@ -83,7 +82,7 @@ export const search = query({
         const links = await ctx.db.query('issueDecisionLinks').withIndex('by_issue_version', q => q.eq('issueVersionId', issue.currentVersionId!)).take(201)
         if (links.length > 200) continue
         let current = true
-        for (const link of links) if ((await ctx.db.get(link.recordId))?.currentPublishedVersionId !== link.publicationVersionId) current = false
+        for (const link of links) if ((await ctx.db.get(link.recordId))?.currentPublishedVersionId !== link.publicationVersionId) { current = false; break }
         if (!current) continue
       } else {
         const versionId = ctx.db.normalizeId('publicationVersions', row.revision)
@@ -104,7 +103,7 @@ export const search = query({
       if (args.date === 'past-30' && !(row.dateAt >= now - 30 * day && row.dateAt <= now)) return false
       if (args.date === 'past-year' && !(row.dateAt >= now - 365 * day && row.dateAt <= now)) return false
       return true
-    }).map(({ _id, _creationTime, ...entry }) => entry) }
+    }).map(({ _id, _creationTime, searchText, ...entry }) => entry) }
   },
 })
 export const backfill = internalMutation({

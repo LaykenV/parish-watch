@@ -1274,6 +1274,7 @@ test('a thousand-record corpus searches old history and selects evidence across 
   }
   const found = await t.query(api.resident.search.search, { q: 'Audubon', kind: 'decision', paginationOpts: { numItems: 25, cursor: null } })
   expect(found.page.some(entry => entry.key === seeded.recordKey)).toBe(true)
+  expect(found.page[0]).not.toHaveProperty('searchText')
   expect(JSON.stringify(found.page)).not.toContain('superseded drainage wording')
   for (const kind of ['body', 'meeting'] as const) {
     const filtered = await t.query(api.resident.search.search, { kind, source: 'Evidence available', paginationOpts: { numItems: 25, cursor: null } })

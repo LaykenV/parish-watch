@@ -7,4 +7,5 @@ export const searchEntry = v.object({
   lifecycle: v.string(), topics: v.array(v.string()), date: v.union(v.string(), v.null()), dateAt: v.number(),
   checkedAt: v.number(), searchText: v.string(),
 })
-export type SearchEntry = typeof searchEntry.type
+export const publicSearchEntry = searchEntry.omit('searchText')
+export type SearchEntry = typeof publicSearchEntry.type
