@@ -14,7 +14,7 @@ used the configured shared updates inbox; provider ingress is qualified below.
 The personal development deployment is `woozy-wren-227`, served at
 https://woozy-wren-227.convex.site. One combined branch owns this deployment. The served frontend comes from
 `7d2ed31`, hosting deployment `48bd933b-b4dd-40fe-8e1d-349f6785a597`.
-The backend includes the continuation and overlap fixes through `3882fa5`. The frontend has not changed since the uploaded artifact.
+The backend includes the continuation and overlap fixes through `0da2d88`. The frontend has not changed since the uploaded artifact.
 GitHub Actions runs type checks, tests, builds, lint, and browser checks. Its
 frontend artifact is uploaded without rebuilding locally. Development delivery
 and CI success do not establish production delivery or resident benefit.
@@ -60,7 +60,7 @@ The certification PR adds Chromium desktop and WebKit mobile browser checks in
 GitHub Actions on PRs labeled `development-certification`. These integration
 checks use the maintained Pafford source and Roundabout follow cases. All eight
 and all 458 application tests passed on `3882fa5` in
-[Verify 33950769153](https://github.com/LaykenV/public-parish/actions/runs/33950769153). This includes stopped and sent notice reverification without another send, and overlap locator rejection.
+[Verify 33950769153](https://github.com/LaykenV/public-parish/actions/runs/33950769153). This includes stopped and sent notice reverification without another send, and overlap locator rejection. The final source review added a calendar-day cutoff regression so midday activation includes that day. Current-head checks remain on the PR.
 The served frontend passed manual 320/375-pixel Coverage and privacy checks. A
 350-character search URL rendered safely with a 300-character input limit, and
 the Marshals search still found the older Lafayette decision. The uploaded frontend passed a fresh 375-pixel coverage and request-form review. Ordinary PR checks do not depend on mutable development data.

@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-05T06:52:00Z
+- **Last updated:** 2026-09-05T06:57:00Z
 
 ## Log
 
@@ -1464,3 +1464,8 @@ agree. No production merge or source activation occurred.
 Verify 33950769153 passed all 458 application tests and eight browser checks on
 3882fa5. The deployed frontend remains the unchanged 7d2ed31 artifact; development
 runs the final backend. Subsequent changes only record this evidence.
+
+The final source review corrected the date-window boundary: a policy activated
+midday includes meetings dated that day. The regression covers the previous,
+current, and next calendar day. Development runs the combined code at 0da2d88
+with monitoring paused. The latest PR checks record this final regression.
