@@ -570,6 +570,7 @@ export default defineSchema({
   }).index('by_subscriber_and_place', ['subscriberId', 'placeKey']).index('by_subscriber_and_launched_slug', ['subscriberId', 'launchedSlug']).index('by_subscriber', ['subscriberId']).index('by_state', ['state']),
 
   sourceMonitoringPolicies: defineTable({
+    developmentAdmissionGrant: v.optional(v.object({ windowStart: v.number(), admissions: v.number(), consumedBefore: v.number(), grantedAt: v.number() })),
     nextDiscoveryAt: v.optional(v.number()),
     discoveryPendingUrls: v.optional(v.array(v.string())), discoveryVisitedUrls: v.optional(v.array(v.string())),
     registryId: v.id('sourceRegistries'),

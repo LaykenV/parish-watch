@@ -1,6 +1,8 @@
+import { DAY, RateLimiter, calculateRateLimit } from '@convex-dev/rate-limiter'
 import { v } from 'convex/values'
 import { paginationOptsValidator } from 'convex/server'
-import { internal } from '../_generated/api'
+import { components, internal } from '../_generated/api'
+import type { MutationCtx } from '../_generated/server'
 import type { Id } from '../_generated/dataModel'
 import { completeStructuredDirectFallback } from '../ai/provider'
 import { decryptAddress } from '../follows/secrets'
@@ -219,4 +221,31 @@ export const replyToControlledNotification = internalAction({
     const reply = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/messages/${encodeURIComponent(args.messageId)}/reply`, { text: 'Controlled development check: What amount does this roundabout update authorize, and what does the accepted source say it pays for? Please distinguish an authorization from proof of completed construction.' }) as { message_id: string; thread_id: string }
     return { messageId: reply.message_id, threadId: reply.thread_id }
   },
+})
+
+// One user-approved credit for the exhausted September 4 development window.
+// The normal daily rate and the global limiter never change. Provider call rows
+// retain actual usage; this marker records the credit separately from that usage.
+export async function creditDevelopmentAdmissions(ctx: MutationCtx, policyId: Id<'sourceMonitoringPolicies'>, windowStart: number) {
+  requireDevelopment()
+  const now = Date.now()
+  if (now < windowStart || now >= windowStart + DAY) throw new Error('The approved development window has expired.')
+  const policy = await ctx.db.get(policyId)
+  if (!policy || policy.dailyCallLimit !== 500) throw new Error('The approved canary must retain its 500 daily limit.')
+  const limiter = new RateLimiter(components.rateLimiter, {})
+  const config = { kind: 'fixed window' as const, rate: 500, period: DAY }
+  const prior = await limiter.getValue(ctx, 'calls', { key: policyId, config })
+  const current = calculateRateLimit(prior, prior.config, now)
+  if (current.ts !== windowStart) throw new Error('The canary budget window has changed.')
+  if (policy.developmentAdmissionGrant) return { granted: false, remaining: current.value, windowStart, dailyCallLimit: 500 }
+  const consumedBefore = 500 - current.value
+  if (consumedBefore !== 500) throw new Error('This allowance only applies to the exhausted canary.')
+  await limiter.reset(ctx, 'calls', { key: policyId })
+  await limiter.limit(ctx, 'calls', { key: policyId, count: consumedBefore - 100, config: { ...config, start: windowStart }, throws: true })
+  await ctx.db.patch(policyId, { developmentAdmissionGrant: { windowStart, admissions: 100, consumedBefore, grantedAt: now }, updatedAt: now })
+  return { granted: true, remaining: 100, windowStart, dailyCallLimit: 500 }
+}
+export const grantCanaryAdmissions = internalMutation({
+  args: {}, returns: v.object({ granted: v.boolean(), remaining: v.number(), windowStart: v.number(), dailyCallLimit: v.number() }),
+  handler: async ctx => creditDevelopmentAdmissions(ctx, 'th783q5tdyrv1sp8zvqfj5qab18dr84v' as Id<'sourceMonitoringPolicies'>, 1788528359751),
 })
