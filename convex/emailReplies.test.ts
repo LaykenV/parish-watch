@@ -375,7 +375,6 @@ async function receive(
 ) {
   return await t.mutation(internal.emailReplies.intake.onMessageReceived, {
     eventId,
-    thread: {},
     message: {
       inbox_id: inboxId,
       thread_id: threadId,

@@ -164,11 +164,11 @@ export const replayControlledDelivery = internalMutation({
   args: {}, returns: v.id('roundupWindows'),
   handler: async ctx => {
     requireDevelopment()
-    const follow = await ctx.db.get('qd74bbz6hcz0vethe63xmz73p98dsn05' as Id<'follows'>)
+    const follow = await ctx.db.query('follows').withIndex('by_owner_key_and_target_kind_and_target_key', q => q.eq('ownerKey', 'email:q57ek0j24jh68jvj7yzbcvftx18dsjad').eq('targetKind', 'issue').eq('targetKey', 'roundabout-funding-at-bluebonnet-and-harveston-way-824dde42')).unique()
     if (!follow || follow.ownerKind !== 'email') throw new Error('Controlled follow is missing.')
     const subscriber = await ctx.db.get(follow.emailSubscriberId)
     if (!subscriber || subscriber.state !== 'verified' || await decryptAddress(subscriber.encryptedAddress) !== env.AGENTMAIL_REPORTS_INBOX_ID) throw new Error('Controlled recipient is not verified.')
-    const changeId = 'n97ecb6wpzb93t6kbtpqk6qnf98dpxv7' as Id<'materialChanges'>
+    const changeId = 'n978nde34swh68bshac2hkwh318dpcvq' as Id<'materialChanges'>
     const change = await ctx.db.get(changeId)
     const record = change ? await ctx.db.get(change.recordId) : null
     if (!change?.material || change.notificationEligible === false || record?.currentPublishedVersionId !== change.currentPublicationVersionId) throw new Error('Accepted replay evidence changed.')
@@ -199,9 +199,9 @@ export const controlledNotificationReceipts = internalAction({
     for (const thread of result.threads ?? []) {
       const detail = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/threads/${encodeURIComponent(thread.thread_id)}`) as { messages?: Array<{ message_id: string; subject?: string; text?: string; in_reply_to?: string; from?: string }> }
       for (const message of detail.messages ?? []) {
-        if (!message.from?.includes(env.AGENTMAIL_UPDATES_INBOX_ID ?? 'missing') || !message.subject?.includes('Public Parish')) continue
+        if (!message.from?.includes(env.AGENTMAIL_UPDATES_INBOX_ID ?? 'missing') || !message.subject || !/(?:Public Parish|^(?:New decision|Decision update):)/.test(message.subject)) continue
         if (message.subject.includes('verification') || message.subject.includes('coverage')) continue
-        receipts.push({ messageId: message.message_id, threadId: thread.thread_id, subject: message.subject, officialLinks: (message.text?.match(/https:\/\/(?:rppj\.com|www\.rppj\.com)\//g) ?? []).length, isReply: Boolean(message.in_reply_to) })
+        receipts.push({ messageId: message.message_id, threadId: thread.thread_id, subject: message.subject, officialLinks: (message.text?.match(/https:\/\/(?:rppj\.com|www\.rppj\.com|hdlegisuite\.brla\.gov)\//g) ?? []).length, isReply: Boolean(message.in_reply_to) })
       }
     }
     return receipts
@@ -215,8 +215,8 @@ export const replyToControlledNotification = internalAction({
     const inbox = env.AGENTMAIL_REPORTS_INBOX_ID
     if (!inbox || inbox === env.AGENTMAIL_UPDATES_INBOX_ID) throw new Error('Separate controlled inbox required.')
     const message = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/messages/${encodeURIComponent(args.messageId)}`) as { from?: string; subject?: string }
-    if (!message.from?.includes(env.AGENTMAIL_UPDATES_INBOX_ID ?? 'missing') || !message.subject?.includes('Public Parish')) throw new Error('Only the controlled Public Parish delivery may receive this reply.')
-    const reply = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/messages/${encodeURIComponent(args.messageId)}/reply`, { text: 'Controlled development check: What change to the Pafford ambulance contract language does this update describe? Please distinguish the proposal from a final vote.' }) as { message_id: string; thread_id: string }
+    if (!message.from?.includes(env.AGENTMAIL_UPDATES_INBOX_ID ?? 'missing') || !message.subject || !/(?:Public Parish|^(?:New decision|Decision update):)/.test(message.subject)) throw new Error('Only the controlled Public Parish delivery may receive this reply.')
+    const reply = await mailboxApi(`/inboxes/${encodeURIComponent(inbox)}/messages/${encodeURIComponent(args.messageId)}/reply`, { text: 'Controlled development check: What amount does this roundabout update authorize, and what does the accepted source say it pays for? Please distinguish an authorization from proof of completed construction.' }) as { message_id: string; thread_id: string }
     return { messageId: reply.message_id, threadId: reply.thread_id }
   },
 })
