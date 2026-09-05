@@ -2,6 +2,7 @@ name: Verify
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 concurrency:
   group: verify-${{ github.event.pull_request.number }}
@@ -34,9 +35,11 @@ jobs:
         run: npm run verify
 
       - name: Install browser engines
+        if: contains(github.event.pull_request.labels.*.name, 'development-certification')
         run: npx playwright install --with-deps chromium webkit
 
       - name: Check desktop and mobile development journeys
+        if: contains(github.event.pull_request.labels.*.name, 'development-certification')
         run: npx playwright test
 
       - name: Preserve browser failure evidence

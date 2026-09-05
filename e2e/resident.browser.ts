@@ -39,5 +39,5 @@ for (const width of [320, 375]) test(`public coverage fits ${width} pixels and e
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Coverage')
   await expect(page.getByText('Lafayette Hearing Examiner', { exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-  await expect(page.getByText(/validating/i).first()).toBeVisible()
+  await expect(page.getByText(/This body has not completed|Coverage includes|Previously accepted evidence/).first()).toBeVisible()
 })

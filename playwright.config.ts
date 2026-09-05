@@ -14,7 +14,7 @@ export default defineConfig({
     { name: 'mobile-webkit', use: { browserName: 'webkit', viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true } },
   ],
   webServer: {
-    command: 'npm run preview -- --host 127.0.0.1 --port 4173 --outDir dist/client',
+    command: 'npx vite preview --config e2e/preview.config.ts --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: false,
     timeout: 60_000,

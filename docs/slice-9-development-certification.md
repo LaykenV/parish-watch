@@ -52,7 +52,10 @@ horizontal document overflow. Keyboard activation opened follow management;
 Escape closed it and restored focus to its trigger.
 
 The certification PR adds Chromium desktop and WebKit mobile browser checks in
-GitHub Actions. They exercise source opening and focus return, follow-dialog
+GitHub Actions on PRs labeled `development-certification`. These integration
+checks use the maintained Pafford evidence case and run after the development
+canary settles. Ordinary PR checks do not depend on mutable development data.
+They exercise source opening and focus return, follow-dialog
 focus containment, reduced-motion media settings, and 320/375-pixel Coverage.
 These checks use the CI-built frontend with the development backend. This is
 emulation. It is not a physical iPhone Safari or screen-reader test.

@@ -107,7 +107,7 @@ and from the qualifying `convex.site` origin through the canonical callback.
 Implementation Slice 7B is deployed through PRs #66 and #67. Google residents
 and AgentMail-verified email-only residents can now follow an issue, topic,
 government body, or place, and each can manage only their own follow. Coverage
-requests remain planned for Slice 9.
+requests are implemented in the open Slice 9 development candidate.
 Implementation Slice 7C is deployed through PRs #72 through #75. Accepted new
 decisions and later material changes now create durable follow matches,
 deduplicated immediate delivery, evidence-only weekly roundups, and live
