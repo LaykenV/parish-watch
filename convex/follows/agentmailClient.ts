@@ -1,6 +1,6 @@
 import { recordConfirmedEvent } from '../analytics/civic'
 import { AgentMail } from '@agentmail/convex'
-import type { OutboundId, OutboundStatus } from '@agentmail/convex'
+import type { AgentMailOptions, OutboundId, OutboundStatus } from '@agentmail/convex'
 import { paginationOptsValidator } from 'convex/server'
 import { v } from 'convex/values'
 
@@ -20,7 +20,9 @@ export const agentmail: AgentMail = new AgentMail(components.agentmail, {
   webhookSecret: env.AGENTMAIL_WEBHOOK_SECRET ?? '',
   retryAttempts: 6,
   initialBackoffMs: 30_000,
-  onMessageReceived: internal.emailReplies.intake.onMessageReceived,
+  // The component types require thread, but its webhook schema permits it to be
+  // absent. The intake validator accepts both shapes; thread is unused there.
+  onMessageReceived: internal.emailReplies.intake.onMessageReceived as NonNullable<AgentMailOptions['onMessageReceived']>,
 })
 
 export function updatesInboxId(): string {
