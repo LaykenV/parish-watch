@@ -33,7 +33,7 @@ test('completed production replay cannot enqueue another delivery', async () => 
   const t = setup()
   const windowId = await t.run(async ctx => {
     const subscriberId = await ctx.db.insert('emailSubscribers', { addressHash: await hashAddress(recipient), encryptedAddress: await encryptAddress(recipient), encryptionVersion: 1, state: 'verified', createdAt: 1, updatedAt: 1 })
-    const followId = await ctx.db.insert('follows', { ownerKind: 'email', ownerKey: `email:${subscriberId}`, emailSubscriberId: subscriberId, targetKind: 'issue', targetKey: 'roundabout-funding-at-bluebonnet-and-harveston-way-824dde42', targetTitle: 'Roundabout', targetDetail: 'Accepted evidence', createdAt: 1, updatedAt: 1 })
+    const followId = await ctx.db.insert('follows', { ownerKind: 'email', ownerKey: `email:${subscriberId}`, emailSubscriberId: subscriberId, targetKind: 'issue', targetKey: 'traffic-impact-fees-for-the-bluebonnet-and-harveston-way-round-about-55702561', targetTitle: 'Roundabout', targetDetail: 'Accepted evidence', createdAt: 1, updatedAt: 1 })
     await ctx.db.insert('notificationPreferences', { followId, cadence: 'both', createdAt: 1, updatedAt: 1 })
     return ctx.db.insert('roundupWindows', { windowKey: 'production-slice9-controlled-replay-20260905', startsAt: 1, endsAt: 2, state: 'complete', entryCount: 1, deliveryCount: 1, createdAt: 1, updatedAt: 1 })
   })

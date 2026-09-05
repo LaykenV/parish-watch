@@ -283,7 +283,7 @@ export const replayProductionControlledDelivery = internalMutation({
     const addressHash = await hashAddress(recipient)
     const subscriber = await ctx.db.query('emailSubscribers').withIndex('by_address_hash', q => q.eq('addressHash', addressHash)).unique()
     if (!subscriber || subscriber.state !== 'verified' || await decryptAddress(subscriber.encryptedAddress) !== recipient) throw new Error('Controlled recipient is not verified.')
-    const slug = 'roundabout-funding-at-bluebonnet-and-harveston-way-824dde42'
+    const slug = 'traffic-impact-fees-for-the-bluebonnet-and-harveston-way-round-about-55702561'
     const follow = await ctx.db.query('follows').withIndex('by_owner_key_and_target_kind_and_target_key', q => q.eq('ownerKey', `email:${subscriber._id}`).eq('targetKind', 'issue').eq('targetKey', slug)).unique()
     const preference = follow ? await ctx.db.query('notificationPreferences').withIndex('by_follow_id', q => q.eq('followId', follow._id)).unique() : null
     if (!follow || follow.ownerKind !== 'email' || preference?.cadence !== 'both') throw new Error('Controlled follow must enable both delivery cadences.')
