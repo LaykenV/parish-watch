@@ -676,12 +676,15 @@ Never cut:
   redefining the business plan.
 
 
-## Slice 9 development release candidate
+## Slice 9 production rollout
 
-PRs #93 through #99 implement the final build slice. They remain open for production approval after
-combined development runtime certification on `woozy-wren-227`. No production
-merge or source activation occurred. [The certification record](slice-9-development-certification.md) separates CI, development provider
-proof, and the production steps that follow an authorized merge.
+The owner authorized production release of PRs #93 through #99 on September 5.
+The stack completed development certification on `woozy-wren-227`. Ordered
+production deployment and independent live checks are in progress. Source
+monitoring remains paused until the bounded Rapides canary starts.
+[The development certification record](slice-9-development-certification.md)
+and [operations runbook](slice-9-operations-runbook.md) keep development
+proof separate from production proof.
 
 Approved-source monitoring remains bounded by an owner policy and a deployment
 switch. Accepted history uses paginated search and corpus Ask scans evidence in

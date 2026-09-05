@@ -575,6 +575,36 @@ export const abandonValidation = internalMutation({
   },
 })
 
+// Refresh reachability from this backend without retrieving or republishing evidence.
+export const sourceLinkContext = internalQuery({
+  args: { proposalId: v.id('coverageRegistryProposals') },
+  returns: v.object({ bodyKey: v.string(), rootManifestVersion: v.string(), urls: v.array(v.string()) }),
+  handler: async (ctx, args) => {
+    const proposal = await ctx.db.get(args.proposalId)
+    if (!proposal || proposal.status !== 'promoted') throw new Error('Only promoted source links can be refreshed.')
+    const samples = await ctx.db.query('coverageRepresentativeSamples').withIndex('by_proposal_and_role', q => q.eq('proposalId', proposal._id)).take(21)
+    if (!samples.length || samples.length > 20) throw new Error('Representative links are outside the refresh bound.')
+    const urls: string[] = []
+    for (const sample of samples) {
+      const candidate = sample.candidateId ? await ctx.db.get(sample.candidateId) : null
+      if (!candidate || candidate.runId !== proposal.runId) throw new Error('Representative source link is unavailable.')
+      urls.push(candidate.canonicalUrl)
+    }
+    return { bodyKey: proposal.bodyKey, rootManifestVersion: proposal.rootManifestVersion, urls: [...new Set(urls)] }
+  },
+})
+
+export const refreshSourceLinks = internalAction({
+  args: { proposalId: v.id('coverageRegistryProposals') }, returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    const context = await ctx.runQuery(internal.coverage.validation.sourceLinkContext, args)
+    const manifest = resolveRootManifest(context.bodyKey, context.rootManifestVersion)
+    if (!manifest) throw new Error('Approved root manifest is missing.')
+    for (const url of context.urls) await checkLink(ctx, args.proposalId, url, manifest)
+    return context.urls.length
+  },
+})
+
 export const recordLinkCheck = internalMutation({
   args: {
     proposalId: v.id('coverageRegistryProposals'),

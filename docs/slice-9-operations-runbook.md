@@ -3,7 +3,7 @@
 The release candidate consists of PRs #93 through #99, in that order. The
 combined development evidence is in [the certification record](slice-9-development-certification.md).
 Merging to `main` deploys both the production backend and frontend. These PRs
-remain open until the owner authorizes that consequence.
+received that authorization on September 5. The ordered rollout is in progress.
 
 ## Deployment and initial activation
 
@@ -15,7 +15,12 @@ recognizes the current `www.publicparish.com` override and the built-in
 `befitting-flamingo-587.convex.site` endpoint. Link checks and evaluation use
 the same classification. Changing the
 `CONVEX_SITE_URL` override or moving production requires an explicit update to
-that classification and new Gate 10 evidence. Watch that exact workflow to completion,
+that classification and new Gate 10 evidence. For an already promoted proposal,
+run the internal `coverage/validation:refreshSourceLinks` action with its
+`proposalId`, then the owner `coverage/validation:reevaluate` mutation. The
+refresh checks at most 20 representative links from the named backend, guards
+every redirect against the approved manifest, and never retrieves evidence
+through Firecrawl or republishes records. Watch that exact workflow to completion,
 then run the independent `npm run smoke:production`.
 
 Backfill the accepted search projection after PR #95 deploys. Run the internal

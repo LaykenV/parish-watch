@@ -15,6 +15,7 @@ type TestConvex = TestConvexForDataModelAndIdentity<DataModel>
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
 })
 
 test('ten passing gates promote once and preserve the previous registry', async () => {
@@ -651,3 +652,34 @@ async function signInOwner(
   })
   return t.withIdentity({ subject: userId })
 }
+
+
+test('source-link refresh records production checks and refuses redirects outside the approved host', async () => {
+  const t = convexTest(schema, modules)
+  await signInOwner(t)
+  const seeded = await seedReadyProposal(t, true)
+  await expect(t.action(internal.coverage.validation.refreshSourceLinks, { proposalId: seeded.proposalId })).rejects.toThrow('Only promoted')
+  await t.run(async ctx => {
+    await ctx.db.patch(seeded.proposalId, { status: 'promoted' })
+    const stageId = await ctx.db.insert('coverageCompilerStages', { runId: seeded.runId, stage: 'validate_sample', idempotencyKey: 'link-refresh', inputHash: 'link-refresh', attempt: 1, state: 'succeeded', gateVersion: 'v1', startedAt: 1 })
+    const candidateId = await ctx.db.insert('coverageSourceCandidates', { runId: seeded.runId, stageId, canonicalUrl: 'https://www.lafayettela.gov/current', discoveredFrom: [], matchedTerms: [], hostDisposition: 'approved', state: 'pending', createdAt: 1 })
+    const sample = await ctx.db.query('coverageRepresentativeSamples').first()
+    await ctx.db.patch(sample!._id, { candidateId })
+  })
+  vi.stubEnv('CONVEX_SITE_URL', 'https://www.publicparish.com')
+  const fetcher = vi.fn().mockResolvedValue(new Response(null, { status: 302, headers: { location: 'https://unapproved.example/private' } }))
+  vi.stubGlobal('fetch', fetcher)
+  expect(await t.action(internal.coverage.validation.refreshSourceLinks, { proposalId: seeded.proposalId })).toBe(1)
+  expect(fetcher).toHaveBeenCalledTimes(1)
+  await t.run(async ctx => {
+    const checks = await ctx.db.query('coverageDirectLinkChecks').collect()
+    expect(checks).toHaveLength(1)
+    expect(checks[0]).toMatchObject({ deployment: 'production', passed: false, status: 302 })
+  })
+  fetcher.mockResolvedValue(new Response(null, { status: 200 }))
+  expect(await t.action(internal.coverage.validation.refreshSourceLinks, { proposalId: seeded.proposalId })).toBe(1)
+  await t.run(async ctx => {
+    const latest = await ctx.db.query('coverageDirectLinkChecks').order('desc').first()
+    expect(latest).toMatchObject({ deployment: 'production', passed: true, status: 200 })
+  })
+})

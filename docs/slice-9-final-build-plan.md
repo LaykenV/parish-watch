@@ -1,6 +1,6 @@
 # Slice 9 final build plan
 
-Status: seven open PRs, development runtime certification complete, production approval pending
+Status: development certification complete, authorized production rollout in progress
 Date: September 4, 2026
 Baseline: `8b03ac3`, matching local and remote `main` during this review
 
@@ -24,8 +24,9 @@ count, not a reason to combine unrelated repairs.
   source repair, release fixes, recording, and submission continue afterward.
 
 The owner subsequently authorized implementation, real open PRs, CI review, and
-development certification for the complete stack. Production merges, production
-operations, and submission remain outside this authorization.
+development certification for the complete stack. On September 5, the owner
+authorized production merges, deployment, and bounded live tests. Submission
+remains separate.
 
 ## What the repository currently proves
 
