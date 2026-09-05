@@ -336,7 +336,8 @@ export const finish = internalMutation({
       const listingPending = Boolean(policy.discoveryPendingUrls?.length)
       const running = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'running')).first()
       const expectations = await ctx.db.query('sourceExpectations').withIndex('by_registry_and_source_kind', q => q.eq('registryId', policy.registryId)).take(30)
-      const overdue = expectations.some(item => item.expectedBy !== undefined && item.expectedBy < now)
+      // An unfinished initial inventory may have seen only older archive pages.
+      const overdue = policy.baselineComplete && expectations.some(item => item.expectedBy !== undefined && item.expectedBy < now)
       const healthy = args.state === 'completed' && !overdue
       const budgetPaused = args.errorClass === 'monitoring_daily_limit'
       await ctx.db.patch(policy._id, { activeRunId: undefined, baselineComplete: policy.baselineComplete || (healthy && !remaining && !unfinished && !pending && !running && !listingPending), nextCheckAt: now + (remaining || pending || running || listingPending || !healthy ? 900_000 : policy.intervalHours * 3_600_000), failures: healthy ? 0 : budgetPaused || args.state === 'stopped' ? policy.failures : policy.failures + 1, ...(healthy && !remaining && !unfinished && !pending && !running && !listingPending ? { lastCompletedAt: now } : {}), updatedAt: now })
