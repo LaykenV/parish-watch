@@ -3,7 +3,7 @@ import { v } from 'convex/values'
 import { paginationOptsValidator, paginationResultValidator } from 'convex/server'
 
 import { components, internal } from '../_generated/api'
-import type { Id } from '../_generated/dataModel'
+import type { Doc, Id } from '../_generated/dataModel'
 import type { MutationCtx, QueryCtx } from '../_generated/server'
 import { env, internalMutation, internalQuery, mutation, query } from '../_generated/server'
 import { requireOwner } from '../auth/authorization'
@@ -20,6 +20,13 @@ import { DAY_MS, inventoryIdentity, inventoryResult, isBeforeMeetingWindow, MONI
 const limiter = new RateLimiter(components.rateLimiter, {
   globalCalls: { kind: 'fixed window', rate: 1_000, period: DAY },
 })
+
+async function processingBudget(ctx: MutationCtx, policy: Doc<'sourceMonitoringPolicies'>, count = 4) {
+  if (count > policy.dailyCallLimit) return { ok: false, retryAt: Date.now() + DAY_MS }
+  const local = await limiter.check(ctx, 'calls', { key: policy._id, count, config: { kind: 'fixed window', rate: policy.dailyCallLimit, period: DAY } })
+  const global = await limiter.check(ctx, 'globalCalls', { count })
+  return { ok: local.ok && global.ok, retryAt: Date.now() + Math.max(local.retryAfter ?? 0, global.retryAfter ?? 0, 900_000) }
+}
 
 export async function assertMonitoringRun(ctx: Pick<QueryCtx, 'db'>, runId: Id<'sourceMonitoringRuns'>) {
   const run = await ctx.db.get(runId)
@@ -209,7 +216,19 @@ export const dueDocuments = internalQuery({
   args: { runId: v.id('sourceMonitoringRuns') }, returns: v.array(schema.doc('monitoredDocuments')),
   handler: async (ctx, args) => {
     const { policy, run } = await assertMonitoringRun(ctx, args.runId)
-    return ctx.db.query('monitoredDocuments').withIndex('by_policy_id_and_next_check_at', q => q.eq('policyId', policy._id).lte('nextCheckAt', run.startedAt)).take(policy.documentsPerRun)
+    // Finish documents that already have waiting decisions before fetching more.
+    const pending = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'pending')).take(100)
+    const selected: Doc<'monitoredDocuments'>[] = []
+    const seen = new Set<Id<'monitoredDocuments'>>()
+    for (const target of pending) {
+      if (seen.has(target.documentId)) continue
+      seen.add(target.documentId)
+      const document = await ctx.db.get(target.documentId)
+      if (document?.policyId === policy._id && document.snapshotId === target.snapshotId && !document.inventoryComplete && document.nextCheckAt <= run.startedAt) selected.push(document)
+      if (selected.length === policy.documentsPerRun) return selected
+    }
+    const due = await ctx.db.query('monitoredDocuments').withIndex('by_policy_id_and_next_check_at', q => q.eq('policyId', policy._id).lte('nextCheckAt', run.startedAt)).take(policy.documentsPerRun)
+    return [...selected, ...due.filter(document => !selected.some(item => item._id === document._id))].slice(0, policy.documentsPerRun)
   },
 })
 export const documentContext = internalQuery({
@@ -291,18 +310,30 @@ export const saveInventory = internalMutation({
   },
 })
 export const dispatchTargets = internalMutation({
-  args: { runId: v.id('sourceMonitoringRuns') }, returns: v.number(),
+  args: { runId: v.id('sourceMonitoringRuns') }, returns: v.object({ started: v.number(), processing: v.boolean() }),
   handler: async (ctx, args) => {
     const { policy } = await assertMonitoringRun(ctx, args.runId)
-    const targets = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_state_and_retry', q => q.eq('policyId', policy._id).eq('state', 'pending').lte('retryAt', Date.now())).take(policy.targetsPerRun)
+    const running = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_id_and_state', q => q.eq('policyId', policy._id).eq('state', 'running')).first()
+    if (running) return { started: 0, processing: true }
+    const targets = await ctx.db.query('documentInventoryTargets').withIndex('by_policy_state_and_retry', q => q.eq('policyId', policy._id).eq('state', 'pending').lte('retryAt', Date.now())).take(100)
     let started = 0
     for (const target of targets) {
+      if (started === policy.targetsPerRun) break
       if ((target.retryAt ?? 0) > Date.now()) continue
       const document = await ctx.db.get(target.documentId)
-      if (!document?.inventoryComplete) continue
-      if (document.snapshotId !== target.snapshotId) {
+      if (!document || document.snapshotId !== target.snapshotId) {
         await ctx.db.patch(target._id, { state: 'failed', updatedAt: Date.now() })
         continue
+      }
+      if (!document.inventoryComplete) {
+        await ctx.db.patch(target._id, { retryAt: Date.now() + 900_000, updatedAt: Date.now() })
+        continue
+      }
+      // Leave room for extraction and review. Provider calls still consume the
+      // shared limiter individually; source discovery cannot race this batch.
+      if (!(await processingBudget(ctx, policy, 4 * (started + 1))).ok) {
+        if (started) break
+        throw new Error('monitoring_daily_limit')
       }
       try {
       const result = await ctx.runMutation(internal.operations.extract.startSnapshotExtraction, {
@@ -318,7 +349,7 @@ export const dispatchTargets = internalMutation({
         await ctx.db.patch(target._id, { state: attempts < 3 ? 'pending' : 'failed', attempts, retryAt: Date.now() + DAY_MS, updatedAt: Date.now() })
       }
     }
-    return started
+    return { started, processing: started > 0 }
   },
 })
 export const finish = internalMutation({
@@ -340,7 +371,8 @@ export const finish = internalMutation({
       const overdue = policy.baselineComplete && expectations.some(item => item.expectedBy !== undefined && item.expectedBy < now)
       const healthy = args.state === 'completed' && !overdue
       const budgetPaused = args.errorClass === 'monitoring_daily_limit'
-      await ctx.db.patch(policy._id, { activeRunId: undefined, baselineComplete: policy.baselineComplete || (healthy && !remaining && !unfinished && !pending && !running && !listingPending), nextCheckAt: now + (remaining || pending || running || listingPending || !healthy ? 900_000 : policy.intervalHours * 3_600_000), failures: healthy ? 0 : budgetPaused || args.state === 'stopped' ? policy.failures : policy.failures + 1, ...(healthy && !remaining && !unfinished && !pending && !running && !listingPending ? { lastCompletedAt: now } : {}), updatedAt: now })
+      const nextCheckAt = budgetPaused ? (await processingBudget(ctx, policy)).retryAt : now + (remaining || pending || running || listingPending || !healthy ? 900_000 : policy.intervalHours * 3_600_000)
+      await ctx.db.patch(policy._id, { activeRunId: undefined, baselineComplete: policy.baselineComplete || (healthy && !remaining && !unfinished && !pending && !running && !listingPending), nextCheckAt, failures: healthy ? 0 : budgetPaused || args.state === 'stopped' ? policy.failures : policy.failures + 1, ...(healthy && !remaining && !unfinished && !pending && !running && !listingPending ? { lastCompletedAt: now } : {}), updatedAt: now })
       if (!healthy && !budgetPaused && args.state !== 'stopped') await recordIncident(ctx, policy.registryId, overdue ? 'expected_artifact_missing' : args.errorClass ?? 'monitoring_failed')
     }
     return null
@@ -383,6 +415,18 @@ export const reservePipelineCall = internalMutation({
   },
 })
 
+async function retryFailedTarget(ctx: MutationCtx, target: Doc<'documentInventoryTargets'>, runId?: Id<'pipelineRuns'>) {
+  const stages = runId ? await ctx.db.query('pipelineStages').withIndex('by_run_and_stage', q => q.eq('runId', runId)).take(8) : []
+  const budgetPaused = stages.some(stage => stage.errorClass === 'monitoring_daily_limit' || stage.errorDetail?.includes('monitoring_daily_limit'))
+  const policy = budgetPaused ? await ctx.db.get(target.policyId) : null
+  const attempts = budgetPaused ? Math.max(0, (target.attempts ?? 1) - 1) : target.attempts ?? 1
+  await ctx.db.patch(target._id, {
+    state: budgetPaused || attempts < 3 ? 'pending' : 'failed', attempts,
+    retryAt: policy ? (await processingBudget(ctx, policy)).retryAt : Date.now() + DAY_MS,
+    updatedAt: Date.now(),
+  })
+}
+
 export const reconcileTargets = internalMutation({
   args: { policyId: v.id('sourceMonitoringPolicies') }, returns: v.null(),
   handler: async (ctx, args) => {
@@ -390,7 +434,7 @@ export const reconcileTargets = internalMutation({
     for (const target of targets) {
       const run = target.pipelineRunId ? await ctx.db.get(target.pipelineRunId) : null
       if (!run || run.state === 'failed_retryable' || run.state === 'failed_terminal' || run.state === 'superseded') {
-        await ctx.db.patch(target._id, { state: (target.attempts ?? 1) < 3 ? 'pending' : 'failed', retryAt: Date.now() + DAY_MS, updatedAt: Date.now() })
+        await retryFailedTarget(ctx, target, run?._id)
         continue
       }
       if (run.state !== 'succeeded') continue
@@ -404,7 +448,7 @@ export const reconcileTargets = internalMutation({
       const version = versions
       if (!version) {
         const publication = await ctx.db.query('pipelineRuns').withIndex('by_upstream_run', q => q.eq('upstreamRunId', run._id)).order('desc').first()
-        if (publication?.state === 'failed_terminal' || publication?.state === 'failed_retryable' || publication?.state === 'superseded' || (!publication && (run.completedAt ?? 0) < Date.now() - DAY_MS)) await ctx.db.patch(target._id, { state: (target.attempts ?? 1) < 3 ? 'pending' : 'failed', retryAt: Date.now() + DAY_MS, updatedAt: Date.now() })
+        if (publication?.state === 'failed_terminal' || publication?.state === 'failed_retryable' || publication?.state === 'superseded' || (!publication && (run.completedAt ?? 0) < Date.now() - DAY_MS)) await retryFailedTarget(ctx, target, publication?._id)
       }
       if (version) await ctx.db.patch(target._id, { state: version.mode === 'withheld' ? 'withheld' : 'published', updatedAt: Date.now() })
     }

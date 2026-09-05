@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import rateLimiterTest from '@convex-dev/rate-limiter/test'
+import workflowTest from '@convex-dev/workflow/test'
 import { DAY, RateLimiter, calculateRateLimit } from '@convex-dev/rate-limiter'
 import { creditDevelopmentAdmissions } from './operations/developmentProof'
 import { configurePolicy } from './monitoring/ledger'
@@ -10,9 +11,12 @@ import { isBeforeSourceWindow, isDocumentUrl } from './monitoring/discovery'
 import { inventoryContract, inventoryIdentity, inventorySourceSection, isBeforeMeetingWindow } from './monitoring/contracts'
 import type { InventoryResult } from './monitoring/contracts'
 import schema from './schema'
+import { extractionRunKey } from './pipeline/keys'
+import { EXTRACTION_PROCESSOR_VERSION, EXTRACTION_PROMPT_VERSION, EXTRACTION_SCHEMA_VERSION } from './pipeline/state'
+import { extractionWorkflowManager } from './pipeline/workflowManager'
 
 const modules = import.meta.glob('./**/*.ts')
-afterEach(() => vi.unstubAllEnvs())
+afterEach(() => { vi.unstubAllEnvs(); vi.useRealTimers() })
 const inventory: InventoryResult = { complete: true, bodyName: 'Test Council', sourceKind: 'agenda', meetingDate: '2026-09-04', dateExcerpt: 'September 4, 2026', targets: [{ printedId: '2026-14', title: 'Road repairs', excerpt: '2026-14 Road repairs' }] }
 const text = 'Test Council. September 4, 2026. 2026-14 Road repairs'
 
@@ -125,11 +129,15 @@ test('a daily limit cannot erase admissions by dropping below usage', async () =
 
 test('daily admission exhaustion preserves source health and resumable work', async () => {
   const { t, runId, policyId, registryId } = await monitoringFixture()
+  rateLimiterTest.register(t)
+  const rate = new RateLimiter(components.rateLimiter, {})
+  await t.run(ctx => rate.limit(ctx, 'calls', { key: policyId, count: 10, config: { kind: 'fixed window', rate: 10, period: DAY, start: Date.now() }, throws: true }))
   await t.mutation(internal.monitoring.ledger.finish, { runId, state: 'incomplete', documentsChecked: 0, targetsStarted: 0, errorClass: 'monitoring_daily_limit' })
   const result = await t.run(async ctx => ({ policy: await ctx.db.get(policyId), registry: await ctx.db.get(registryId), incidents: await ctx.db.query('coverageIncidents').collect() }))
   expect(result.policy?.failures).toBe(0)
   expect(result.policy?.baselineComplete).toBe(false)
   expect(result.policy?.activeRunId).toBeUndefined()
+  expect(result.policy!.nextCheckAt).toBeGreaterThan(Date.now() + 23 * 3_600_000)
   expect(result.registry?.status).toBe('supported')
   expect(result.incidents).toEqual([])
 })
@@ -223,4 +231,84 @@ test('the approved development credit is once only and expires without changing 
     expect(policy?.developmentAdmissionGrant).toMatchObject({ admissions: 100, consumedBefore: 500, windowStart })
   })
   await expect(t.run(ctx => creditDevelopmentAdmissions(ctx, policyId, windowStart - DAY))).rejects.toThrow('expired')
+})
+
+async function queuedTarget(fixture: Awaited<ReturnType<typeof monitoringFixture>>, key: string, complete = true) {
+  const { t, registryId, policyId } = fixture
+  return t.run(async ctx => {
+    const storageId = await ctx.storage.store(new Blob([text]))
+    const url = `https://www.lafayettela.gov/${key}-agenda.pdf`
+    const snapshotId = await ctx.db.insert('sourceSnapshots', { registryId, canonicalUrl: url, retrievedUrl: url, contentHash: key, contentType: 'application/pdf', retrievalTime: 1, version: 1, normalizedStorageId: storageId, normalizedContentType: 'text/plain', normalizedByteLength: text.length, rawStorageId: storageId, rawContentType: 'application/pdf', rawByteLength: text.length, truncation: { truncated: false }, firecrawlMetadata: {} })
+    const documentId = await ctx.db.insert('monitoredDocuments', { registryId, policyId, canonicalUrl: url, snapshotId, nextCheckAt: 0, firstSeenAt: 1, notificationEligible: false, inventoryComplete: complete, completedChunks: 1, chunkCount: complete ? 1 : 2 })
+    const targetRecordId = `AUTO-${key}`
+    const idempotencyKey = await extractionRunKey({ registryId, snapshotId, sourceKind: 'agenda', targetRecordId, sourceRecordIdProvenance: 'operator_assigned', promptVersion: EXTRACTION_PROMPT_VERSION, schemaVersion: EXTRACTION_SCHEMA_VERSION, processorVersion: EXTRACTION_PROCESSOR_VERSION })
+    // An existing queued extraction proves dispatch can reuse work without
+    // starting provider calls in these scheduler regressions.
+    const pipelineRunId = await ctx.db.insert('pipelineRuns', { registryId, snapshotId, targetRecordId, sourceKind: 'agenda', sourceRecordIdProvenance: 'operator_assigned', trigger: 'manual_extraction', state: 'queued', processorVersion: EXTRACTION_PROCESSOR_VERSION, idempotencyKey, startedAt: 1, monitorPolicyId: policyId, monitorGeneration: 1, monitorRegistryGeneration: 1 })
+    for (const stage of ['extract', 'validate'] as const) await ctx.db.insert('pipelineStages', { runId: pipelineRunId, stage, idempotencyKey: `${idempotencyKey}:${stage}`, state: 'queued', attempt: 0 })
+    const targetId = await ctx.db.insert('documentInventoryTargets', { documentId, snapshotId, policyId, registryId, targetKey: key, targetRecordId, locator: '2026-14 Road repairs', sourceRecordIdProvenance: 'operator_assigned', sourceKind: 'agenda', meetingDate: '2026-09-04', state: 'pending', notificationEligible: false, createdAt: 1, updatedAt: 1 })
+    return { targetId, documentId, pipelineRunId }
+  })
+}
+
+test('an incomplete first document cannot block a ready decision behind it', async () => {
+  const f = await monitoringFixture()
+  rateLimiterTest.register(f.t)
+  const blocked = await queuedTarget(f, 'blocked', false)
+  const ready = await queuedTarget(f, 'ready')
+  expect(await f.t.mutation(internal.monitoring.ledger.dispatchTargets, { runId: f.runId })).toEqual({ started: 1, processing: true })
+  await f.t.run(async ctx => {
+    expect(await ctx.db.get(blocked.targetId)).toMatchObject({ state: 'pending' })
+    expect(await ctx.db.get(ready.targetId)).toMatchObject({ state: 'running', attempts: 1 })
+  })
+  // A subsequent run cannot start another batch over the in-flight decision.
+  await queuedTarget(f, 'later')
+  expect(await f.t.mutation(internal.monitoring.ledger.dispatchTargets, { runId: f.runId })).toEqual({ started: 0, processing: true })
+})
+
+test('an exhausted budget leaves an eligible target unattempted until reset', async () => {
+  const f = await monitoringFixture()
+  rateLimiterTest.register(f.t)
+  const ready = await queuedTarget(f, 'ready')
+  expect(await f.t.mutation(internal.monitoring.ledger.reserve, { runId: f.runId, units: 8 })).toBe(true)
+  await expect(f.t.mutation(internal.monitoring.ledger.dispatchTargets, { runId: f.runId })).rejects.toThrow('monitoring_daily_limit')
+  const target = await f.t.run(ctx => ctx.db.get(ready.targetId))
+  expect(target?.state).toBe('pending')
+  expect(target?.attempts).toBeUndefined()
+})
+
+test.each(['pending', 'running'] as const)('queued work gets provider priority over discovery: %s', async state => {
+  vi.useFakeTimers()
+  const f = await monitoringFixture()
+  rateLimiterTest.register(f.t)
+  workflowTest.register(f.t)
+  const target = await queuedTarget(f, 'priority')
+  if (state === 'running') await f.t.run(ctx => ctx.db.patch(target.targetId, { state, pipelineRunId: target.pipelineRunId, attempts: 1 }))
+  await f.t.run(ctx => extractionWorkflowManager.start(ctx, internal.monitoring.workflow.checkSources, { runId: f.runId }))
+  await f.t.finishAllScheduledFunctions(vi.runAllTimers)
+  const run = await f.t.run(ctx => ctx.db.get(f.runId))
+  // Firecrawl is deliberately absent. Calling discovery would fail this run.
+  expect(run).toMatchObject({ state: 'completed', documentsChecked: 0, targetsStarted: state === 'pending' ? 1 : 0 })
+  expect(await f.t.run(ctx => ctx.db.query('monitoringProviderCalls').take(10))).toHaveLength(0)
+})
+
+test('a document with waiting items resumes before untouched archive documents', async () => {
+  const f = await monitoringFixture()
+  await f.t.mutation(internal.monitoring.ledger.addDocuments, { runId: f.runId, urls: ['https://www.lafayettela.gov/old-agenda.pdf'] })
+  const partial = await queuedTarget(f, 'partial', false)
+  expect((await f.t.query(internal.monitoring.ledger.dueDocuments, { runId: f.runId })).map(document => document._id)).toEqual([partial.documentId])
+})
+
+test.each([true, false])('budget exhaustion does not consume a terminal retry: %s', async budgetPaused => {
+  const f = await monitoringFixture()
+  rateLimiterTest.register(f.t)
+  const target = await queuedTarget(f, 'retry')
+  await f.t.run(async ctx => {
+    await ctx.db.patch(target.targetId, { state: 'running', pipelineRunId: target.pipelineRunId, attempts: 3 })
+    await ctx.db.patch(target.pipelineRunId, { state: 'failed_retryable' })
+    const stage = await ctx.db.query('pipelineStages').withIndex('by_run_and_stage', q => q.eq('runId', target.pipelineRunId).eq('stage', 'extract')).unique()
+    await ctx.db.patch(stage!._id, { state: 'failed_retryable', errorClass: 'extraction_step_failed', errorDetail: budgetPaused ? 'Error: monitoring_daily_limit' : 'source_hash_mismatch' })
+  })
+  await f.t.mutation(internal.monitoring.ledger.reconcileTargets, { policyId: f.policyId })
+  expect(await f.t.run(ctx => ctx.db.get(target.targetId))).toMatchObject({ state: budgetPaused ? 'pending' : 'failed', attempts: budgetPaused ? 2 : 3 })
 })

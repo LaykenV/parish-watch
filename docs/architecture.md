@@ -1698,6 +1698,20 @@ and deployment-wide rate limits reserve provider admissions. Provider ledgers
 record actual attempts and retain unknown usage fields. Admissions do not equal
 dollars or Firecrawl credits.
 
+Catch-up gives ready targets priority over source discovery. A monitoring run
+first reconciles the previous batch, then starts up to the policy's target limit.
+While a batch is running, this policy does no new retrieval or discovery. The
+shared provider limiter still admits every extraction, review, and issue call.
+Dispatch requires room for at least extraction and review before attempting a
+target. Budget exhaustion waits for the limiter's reset and does not consume a
+target's failure allowance.
+
+Queue selection examines at most 100 due targets and defers incomplete-document
+items so they cannot permanently block later items. Documents with waiting
+targets receive continuation priority within the same bounded scan. After a
+document inventory completes, its targets can start before more discovery.
+These priorities change processing order, not daily limits or evidence gates.
+
 Publication schedules same-body issue proposals from accepted records. A unique
 existing match can extend the issue under its stable ID and slug. A new proposal
 still passes strong-model linking, independent review, and deterministic
