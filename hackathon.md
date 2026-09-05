@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-05T00:56:42Z
+- **Last updated:** 2026-09-05T06:31:00Z
 
 ## Log
 
@@ -1423,3 +1423,25 @@ versions. Corrected callback typing, readable email references, search result pa
 concurrent extension retries, and outcome visibility counting. PDF continuation is paused at the
 500-admission limit; final-head CI and reviews continue. AI Gateway is verified
 and direct fallback stays disabled. No production merge or source activation.
+
+
+### 2026-09-05 - 186d936 and final certification
+
+Completed the 31-page Rapides minutes inventory from its saved first section.
+The strong extractor and independent reviewer accepted the remaining section
+on the same immutable snapshot. A recorded review truncation led to an 8,000-token
+review limit. The owner approved one development-only 100-admission credit;
+the canary used 69, retained its normal 500 daily rate, and stopped with 31 unused.
+All ten fresh Rapides gates passed and the public development page showed seven
+supported bodies, with three Lafayette planning bodies still validating.
+Monitoring is paused with 54 pending and 29 published targets. The final audit
+passed 575 citations across 108 publication versions. All provider rows reconciled
+with their daily aggregates. CI on 186d936 passed 456 application tests and eight
+browser checks. Review then found a misleading launch-notice reverification
+message; the final change reports sent or stopped notices without promising
+another send. Production approval and live release checks remain separate.
+
+The final application code at 7d2ed31 passed 457 application tests and eight
+browser checks in Verify 33949802588. Its CI artifact is served on development
+as hosting deployment 48bd933b-b4dd-40fe-8e1d-349f6785a597. No local automated
+validation ran.

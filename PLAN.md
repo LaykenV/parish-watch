@@ -487,9 +487,9 @@ strong technical case study, then return product time to the core business.
 
 ## Slice 9 development release candidate
 
-PRs #93 through #99 implement the final build slice. They remain open while
-combined development certification runs on `woozy-wren-227`. Production has
-not changed. [The certification record](docs/slice-9-development-certification.md) separates CI, development provider
+PRs #93 through #99 implement the final build slice. They remain open for production approval after
+combined development runtime certification on `woozy-wren-227`. No production
+merge or source activation occurred. [The certification record](docs/slice-9-development-certification.md) separates CI, development provider
 proof, and the production steps that follow an authorized merge.
 
 Approved-source monitoring remains bounded by an owner policy and a deployment
