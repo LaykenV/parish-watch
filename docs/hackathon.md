@@ -116,8 +116,8 @@ Phase 0 was completed on August 27:
   and mobile layouts were tested signed out.
 
 The evidence backend through Slice 4, resident-interface Design Slices 1 through
-8, and implementation Slices 6 through 8 are live in production. Slice 9 is
-next.
+8, and implementation Slices 6 through 9 are live in production. The final
+build slice has production proof linked below.
 Slice 1 was proven on the personal development deployment with the official
 Lafayette council hub, an agenda PDF, and its minutes PDF. Slice 2 made real
 `MODEL_STRONG` extraction calls through Convex AI Gateway and produced a private,
@@ -591,13 +591,15 @@ being more than large: it must be coherent, live, trusted, useful this week, and
 easy to prove in under three minutes.
 
 
-## Slice 9 production rollout
+## Slice 9 production release
 
-The owner authorized production release of PRs #93 through #99 on September 5.
-The stack completed development certification on `woozy-wren-227`. Ordered
-production deployment and independent live checks are in progress. Source
-monitoring remains paused until the bounded Rapides canary starts.
-[The development certification record](slice-9-development-certification.md)
+PRs #93 through #99 and the narrow controlled-replay repair #100 are deployed
+on production `befitting-flamingo-587`. Every merge passed its exact deployment
+workflow and an independent live smoke. The bounded Rapides Parish Police Jury
+canary is enabled, with one document and one target per run and 50 provider
+admissions per day. The other six supported bodies remain owner-started.
+[The production certification record](slice-9-production-certification.md),
+[development certification](slice-9-development-certification.md)
 and [operations runbook](slice-9-operations-runbook.md) keep development
 proof separate from production proof.
 

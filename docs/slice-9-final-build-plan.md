@@ -1,12 +1,15 @@
 # Slice 9 final build plan
 
-Status: development certification complete, authorized production rollout in progress
+Status: final build slice deployed and production-tested on September 5, 2026
 Date: September 4, 2026
 Baseline: `8b03ac3`, matching local and remote `main` during this review
 
 This is the detailed execution plan for the final build slice. It replaces the
-original four-packet Slice 9 grouping in `post-slice-5-pr-plan.md`. It proposes
-seven substantial PRs. Each delivers one outcome and includes the backend,
+original four-packet Slice 9 grouping in `post-slice-5-pr-plan.md`. It proposed
+seven substantial PRs. They shipped as #93 through #99, followed by the narrow
+production replay repair #100. [Production proof](slice-9-production-certification.md)
+records the release, active canary, and remaining operating work. Each delivers
+one outcome and includes the backend,
 matching resident adapter, tests, and documentation needed for that outcome.
 Unexpected independent defects still need narrow fixes. Seven is the planned
 count, not a reason to combine unrelated repairs.
@@ -28,7 +31,7 @@ development certification for the complete stack. On September 5, the owner
 authorized production merges, deployment, and bounded live tests. Submission
 remains separate.
 
-## What the repository currently proves
+## Planning baseline on September 4
 
 The local checkout was clean. Remote `main` matched `8b03ac3`, its production
 workflow `33909886553` succeeded, and GitHub listed no open PRs or issues.
@@ -534,6 +537,7 @@ political personalization, or a broader admin system.
 - Prepare social posts and submission materials. Sending messages, publishing
   posts, uploading a public demo, and submitting the entry are separate actions.
 
-No further product-scope answer is required to begin implementation planning.
-Production activation still needs its concrete operating limits and authorized
-recipient or canary scope after development measurements exist.
+The owner authorized implementation and production release. The approved canary
+and controlled recipient completed the bounded release checks. Initial source
+catch-up, additional body activation, resident observations, and submission work
+remain operational tasks described in the production certification record.

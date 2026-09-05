@@ -1,6 +1,6 @@
 # Public Parish Plan
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is in development certification
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is deployed and production-tested
 Event: Convex All Gas Hackathon
 Submission deadline: September 22, 2026 at 12:00 PM Pacific
 
@@ -107,7 +107,7 @@ and from the qualifying `convex.site` origin through the canonical callback.
 Implementation Slice 7B is deployed through PRs #66 and #67. Google residents
 and AgentMail-verified email-only residents can now follow an issue, topic,
 government body, or place, and each can manage only their own follow. Coverage
-requests are implemented in the open Slice 9 development candidate.
+requests are live in production after Slice 9.
 Implementation Slice 7C is deployed through PRs #72 through #75. Accepted new
 decisions and later material changes now create durable follow matches,
 deduplicated immediate delivery, evidence-only weekly roundups, and live
@@ -485,13 +485,15 @@ Otherwise, preserve Public Parish as a useful open-source civic service and a
 strong technical case study, then return product time to the core business.
 
 
-## Slice 9 production rollout
+## Slice 9 production release
 
-The owner authorized production release of PRs #93 through #99 on September 5.
-The stack completed development certification on `woozy-wren-227`. Ordered
-production deployment and independent live checks are in progress. Source
-monitoring remains paused until the bounded Rapides canary starts.
-[The development certification record](docs/slice-9-development-certification.md)
+PRs #93 through #99 and the narrow controlled-replay repair #100 are deployed
+on production `befitting-flamingo-587`. Every merge passed its exact deployment
+workflow and an independent live smoke. The bounded Rapides Parish Police Jury
+canary is enabled, with one document and one target per run and 50 provider
+admissions per day. The other six supported bodies remain owner-started.
+[The production certification record](docs/slice-9-production-certification.md),
+[development certification](docs/slice-9-development-certification.md)
 and [operations runbook](docs/slice-9-operations-runbook.md) keep development
 proof separate from production proof.
 
