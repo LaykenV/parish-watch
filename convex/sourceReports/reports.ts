@@ -1,3 +1,4 @@
+import { recordConfirmedEvent } from '../analytics/civic'
 import type { OutboundId, OutboundStatus } from '@agentmail/convex'
 import { ConvexError, v } from 'convex/values'
 
@@ -116,6 +117,7 @@ export const submit = mutation({
       internal.sourceReports.reports.reconcileDelivery,
       { reportId, attempt: 1 },
     )
+    await recordConfirmedEvent(ctx, 'report_submitted', reportId)
     return { status: 'sending', replayed: false } as const
   },
 })

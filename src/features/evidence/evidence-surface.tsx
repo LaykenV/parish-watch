@@ -1,3 +1,4 @@
+import { recordCivicEvent } from '../analytics/product-analytics'
 import {
   ExternalLinkIcon,
   FileTextIcon,
@@ -80,6 +81,7 @@ export function EvidenceProvider({
         openerCitationRef.current = id
         setTriggerId(opener.id)
       }
+      if (id) recordCivicEvent('evidence_opened')
       onSelect(id)
     },
     [onSelect],
@@ -352,6 +354,7 @@ function EvidenceBody({ citation }: { citation: CitationData }) {
       <a
         className="ev-viewer-open"
         href={citation.officialUrl}
+        onClick={() => recordCivicEvent('official_source_opened')}
         rel="noreferrer"
         target="_blank"
       >

@@ -1,3 +1,4 @@
+import { civicEvent } from './analytics/civicContracts'
 import { searchEntry } from './resident/searchContracts'
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
@@ -446,6 +447,13 @@ export default defineSchema({
       'createdAt',
     ]),
 
+  retrievalProviderCalls: defineTable({ runId: v.id('pipelineRuns'), status: v.string(), creditsUsed: v.optional(v.number()), latencyMs: v.number(), createdAt: v.number(), usageAggregatedAt: v.optional(v.number()) }).index('by_usage_aggregated', ['usageAggregatedAt']),
+
+  providerUsageDaily: defineTable({ key: v.string(), day: v.string(), kind: v.string(), provider: v.string(), calls: v.number(), failures: v.number(), reportedTokens: v.number(), estimatedCostUsd: v.number(), reportedCredits: v.number(), unknownTokenCalls: v.number(), unknownCostCalls: v.number(), unknownCreditCalls: v.number(), totalLatencyMs: v.number(), maxLatencyMs: v.number(), updatedAt: v.number() }).index('by_key', ['key']).index('by_day', ['day']),
+
+  civicEventReceipts: defineTable({ eventKey: v.string(), kind: civicEvent, expiresAt: v.number() }).index('by_event_key', ['eventKey']).index('by_expires_at', ['expiresAt']),
+  civicEventCounters: defineTable({ kind: civicEvent, environment: v.union(v.literal('production'), v.literal('development')), count: v.number(), updatedAt: v.number() }).index('by_kind_and_environment', ['kind', 'environment']),
+
   analyticsSubjects: defineTable({
     visitorKeyHash: v.string(),
     firstSeenAt: v.number(),
@@ -612,12 +620,13 @@ export default defineSchema({
     .index('by_document_id_and_snapshot_id', ['documentId', 'snapshotId']),
 
   monitoringProviderCalls: defineTable({
+    usageAggregatedAt: v.optional(v.number()),
     runId: v.optional(v.id('sourceMonitoringRuns')), pipelineRunId: v.optional(v.id('pipelineRuns')), operation: v.string(), provider: v.string(),
     status: v.string(), modelId: v.optional(v.string()), modelRole: v.optional(modelRoles),
     promptTokens: v.optional(v.number()), completionTokens: v.optional(v.number()),
     estimatedCostUsd: v.optional(v.number()), creditsUsed: v.optional(v.number()),
     errorClass: v.optional(v.string()), errorDetail: v.optional(v.string()), latencyMs: v.number(), createdAt: v.number(),
-  }).index('by_run_id_and_created_at', ['runId', 'createdAt'])
+  }).index('by_usage_aggregated', ['usageAggregatedAt']).index('by_run_id_and_created_at', ['runId', 'createdAt'])
     .index('by_created_at', ['createdAt']),
 
   coverageIncidents: defineTable({
@@ -698,6 +707,7 @@ export default defineSchema({
     .index('by_run_and_state', ['runId', 'state']),
 
   coverageCompilerProviderCalls: defineTable({
+    usageAggregatedAt: v.optional(v.number()),
     runId: v.id('coverageCompilerRuns'),
     stageId: v.id('coverageCompilerStages'),
     provider: coverageProviderNames,
@@ -719,7 +729,7 @@ export default defineSchema({
     errorClass: v.optional(v.string()),
     errorDetail: v.optional(v.string()),
     createdAt: v.number(),
-  })
+  }).index('by_usage_aggregated', ['usageAggregatedAt'])
     .index('by_run_and_created_at', ['runId', 'createdAt'])
     .index('by_stage_and_created_at', ['stageId', 'createdAt']),
 
@@ -918,6 +928,7 @@ export default defineSchema({
     .index('by_run_and_stage', ['runId', 'stage']),
 
   aiCalls: defineTable({
+    usageAggregatedAt: v.optional(v.number()),
     runId: v.id('pipelineRuns'),
     stageId: v.optional(v.id('pipelineStages')),
     extractionId: v.optional(v.id('extractions')),
@@ -944,7 +955,7 @@ export default defineSchema({
     errorClass: v.optional(v.string()),
     errorDetail: v.optional(v.string()),
     createdAt: v.number(),
-  })
+  }).index('by_usage_aggregated', ['usageAggregatedAt'])
     .index('by_run_and_created_at', ['runId', 'createdAt'])
     .index('by_extraction', ['extractionId'])
     .index('by_review', ['reviewId'])
@@ -1533,6 +1544,7 @@ export default defineSchema({
   }).index('by_session_kind_and_window', ['sessionId', 'kind', 'windowStart']),
 
   askModelAttempts: defineTable({
+    usageAggregatedAt: v.optional(v.number()),
     answerReceiptId: v.id('askAnswerReceipts'),
     sessionId: v.id('anonymousSessions'),
     threadId: v.string(),
@@ -1555,7 +1567,7 @@ export default defineSchema({
     errorClass: v.optional(v.string()),
     errorDetail: v.optional(v.string()),
     createdAt: v.number(),
-  })
+  }).index('by_usage_aggregated', ['usageAggregatedAt'])
     .index('by_answer_receipt_and_attempt', ['answerReceiptId', 'attempt'])
     .index('by_session_and_created_at', ['sessionId', 'createdAt']),
 })

@@ -1,3 +1,4 @@
+import { recordConfirmedEvent } from '../analytics/civic'
 import { DAY, HOUR, MINUTE, RateLimiter } from '@convex-dev/rate-limiter'
 import { paginationOptsValidator } from 'convex/server'
 import type { OutboundId } from '@agentmail/convex'
@@ -42,6 +43,7 @@ export const record = mutation({
     const count = await ctx.db.query('coverageDemandCounts').withIndex('by_place_key', q => q.eq('placeKey', place.key)).unique()
     if (count) await ctx.db.patch(count._id, { count: count.count + 1, updatedAt: Date.now() })
     else await ctx.db.insert('coverageDemandCounts', { placeKey: place.key, placeName: place.name, count: 1, updatedAt: Date.now() })
+    await recordConfirmedEvent(ctx, 'coverage_requested', requestId)
     return { saved: true as const, requestId }
   },
 })

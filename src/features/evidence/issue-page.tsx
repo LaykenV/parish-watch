@@ -1,3 +1,4 @@
+import { recordCivicEvent } from '../analytics/product-analytics'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
@@ -173,6 +174,26 @@ function IssueDetail({
   updated: boolean
 }) {
   const { citations, issue } = fixture
+  const countedVisit = useRef<string | null>(null)
+  const countedOutcome = useRef<string | null>(null)
+  useEffect(() => {
+    if (!liveFollow) return
+    const key = `pp-issue-visited:${issue.slug}`
+    if (countedVisit.current !== issue.slug) {
+      countedVisit.current = issue.slug
+      try { if (sessionStorage.getItem(key)) recordCivicEvent('issue_returned'); sessionStorage.setItem(key, '1') } catch { /* Reading remains available without storage. */ }
+    }
+    if (!issue.latestOutcome || typeof IntersectionObserver === 'undefined') return
+    const outcomeKey = `${issue.slug}:${JSON.stringify(issue.latestOutcome)}`
+    if (countedOutcome.current === outcomeKey) return
+    const outcome = document.getElementById('latest-outcome')
+    if (!outcome) return
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { countedOutcome.current = outcomeKey; recordCivicEvent('outcome_read'); observer.disconnect() }
+    }, { threshold: 0.5 })
+    observer.observe(outcome)
+    return () => observer.disconnect()
+  }, [issue.slug, issue.latestOutcome, liveFollow])
   const sections = issueSections(fixture)
   const selected = resolveCitationId(citations, search.source)
   const currentIssueHref = evidenceRouteHref(`/issues/${issue.slug}`, search)
@@ -413,7 +434,7 @@ function MarkedDateRow({
   tone: 'deadline' | 'next' | 'outcome'
 }) {
   return (
-    <div className="ev-status-date" data-tone={tone}>
+    <div className="ev-status-date" data-tone={tone} id={tone === 'outcome' ? 'latest-outcome' : undefined}>
       <p className="ev-status-label">{marked.label}</p>
       <p className="ev-status-value">
         <time dateTime={marked.date}>{formatDate(marked.date)}</time>

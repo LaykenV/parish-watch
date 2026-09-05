@@ -1,3 +1,4 @@
+import type { BrowserCivicEvent } from '../../../convex/analytics/civicContracts'
 import { useCallback, useEffect } from 'react'
 
 import type { AreaSlug } from '../discovery/contracts'
@@ -41,7 +42,7 @@ export function useRecordAreaSelection() {
 }
 
 async function sendAnalytics(
-  event: { kind: 'app_visit' } | { kind: 'area_selected'; areaSlug: AreaSlug },
+  event: { kind: 'app_visit' } | { kind: 'area_selected'; areaSlug: AreaSlug } | { kind: BrowserCivicEvent },
 ) {
   try {
     if (!canUseAnalytics()) return
@@ -111,3 +112,5 @@ export function getPersistentVisitorId(
     return null
   }
 }
+
+export function recordCivicEvent(kind: BrowserCivicEvent) { void sendAnalytics({ kind }) }

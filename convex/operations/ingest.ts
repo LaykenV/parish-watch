@@ -356,6 +356,7 @@ async function ingestSeedUrl(
         return result
       } finally {
         if (monitorRunId) await ctx.runMutation(internal.monitoring.ledger.recordCall, { runId: monitorRunId, operation: 'retrieval', provider: 'firecrawl', status, creditsUsed, latencyMs: Date.now() - started })
+        else await ctx.runMutation(internal.operations.usage.recordRetrieval, { runId, status, creditsUsed, latencyMs: Date.now() - started })
       }
     }
     let document = await retrieve(url, false)

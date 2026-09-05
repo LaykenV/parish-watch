@@ -1,3 +1,4 @@
+import { recordConfirmedEvent } from '../analytics/civic'
 import { AgentMail } from '@agentmail/convex'
 import type { OutboundId, OutboundStatus } from '@agentmail/convex'
 import { paginationOptsValidator } from 'convex/server'
@@ -196,6 +197,8 @@ export const reconcileImmediateDelivery = internalMutation({
       ctx,
       delivery.outboundId as OutboundId,
     )
+    if (outbound?.status === 'sent' || outbound?.status === 'delivered') await recordConfirmedEvent(ctx, 'notification_sent', delivery._id)
+    if (outbound?.status === 'failed' || outbound?.status === 'bounced' || outbound?.status === 'rejected') await recordConfirmedEvent(ctx, 'notification_failed', delivery._id)
     const attempts = delivery.reconcileAttempts + 1
     if (!outbound) {
       await ctx.db.patch(delivery._id, {

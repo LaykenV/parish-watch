@@ -79,8 +79,7 @@ export function PrivacyPage() {
               Anonymous product counts
             </dt>
             <dd>
-              In production, Public Parish counts visits and selected launch
-              areas. A random browser ID is hashed before upload. These events
+              In production, Public Parish counts visits, selected launch areas, evidence and official-document opens, issue returns, and outcome reads. Server counts record successful questions, answers, follows, coverage requests, private report submissions, and notification delivery outcomes. A random browser ID is hashed before upload. These events
               do not include your name, email, question text, or exact location.
             </dd>
             <dd className="privacy-retention">
@@ -92,6 +91,7 @@ export function PrivacyPage() {
             <dd>Optional email subscriptions store an encrypted delivery address and a keyed address hash. Coverage requests store the place name, an optional untrusted homepage hint, and a hash of a random device token. Verification enables one coverage launch notice and creates no account or issue follow.</dd>
             <dd className="privacy-retention">Coverage verification codes expire after 15 minutes. Daily cleanup removes expired challenges. Requester hashes and homepage hints expire after 90 days. Anonymous place demand totals and minimal launch delivery records remain to prevent duplicate notices. AgentMail delivery payloads follow the existing finalized-message cleanup.</dd>
           </div>
+          <div><dt>Replies and private source reports</dt><dd>AgentMail receives the message content. Public Parish stores private reply context and delivery metadata to answer within the original issue or roundup scope. Reports go privately to the project owner and do not start source processing.</dd><dd className="privacy-retention">Daily cleanup removes finalized report metadata after 30 days, finalized reply events after 30 days, and inactive reply-thread mappings after 31 days. Expiring a browser or reply token does not delete provider-held messages. Contact the project to request deletion.</dd></div>
         </dl>
       </section>
 

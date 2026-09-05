@@ -1,3 +1,4 @@
+import { MonitoringPanel } from './monitoring-panel'
 import {
   BanIcon,
   CheckCircle2Icon,
@@ -156,6 +157,7 @@ function OwnerCoverageOperations() {
         </div>
       </header>
 
+      <MonitoringPanel />
       <p aria-live="polite" className="coverage-ops-announcement" role="status">
         {message}
       </p>
