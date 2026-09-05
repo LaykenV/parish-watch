@@ -439,8 +439,8 @@ function projectAnswer(
 function residentAnswerText(answer: string, citationIds: readonly string[]) {
   const allowed = new Set(citationIds)
   const text = answer
-    .replace(/[ \t]*\[([^\]\r\n]+)\]/g, (reference, contents: string) => {
-      const ids = contents
+    .replace(/[ \t]*(?:\[([^\]\r\n]+)\]|\(([^)\r\n]+)\))/g, (reference, bracketed: string | undefined, parenthesized: string | undefined) => {
+      const ids = (bracketed ?? parenthesized ?? '')
         .split(/[\s,]+/)
         .map((id) => id.trim())
         .filter(Boolean)
