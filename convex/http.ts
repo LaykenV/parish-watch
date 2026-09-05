@@ -1,3 +1,4 @@
+import { shareIssue } from './sharing/issues'
 import { unsubscribe } from './coverage/unsubscribe'
 import { registerStaticRoutes } from '@convex-dev/static-hosting'
 import { httpRouter } from 'convex/server'
@@ -23,6 +24,8 @@ http.route({
 
 http.route({ pathPrefix: '/coverage/unsubscribe/', method: 'GET', handler: unsubscribe })
 http.route({ pathPrefix: '/coverage/unsubscribe/', method: 'POST', handler: unsubscribe })
+
+http.route({ pathPrefix: '/share/issues/', method: 'GET', handler: shareIssue })
 
 registerStaticRoutes(http, components.staticHosting)
 
