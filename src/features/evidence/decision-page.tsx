@@ -156,6 +156,7 @@ function DecisionView({
             <span className="ev-record-key">{decision.recordKey}</span>
           </p>
         </header>
+        {decision.coverageNote ? <p className="ev-limited-note">{decision.coverageNote}</p> : null}
 
         {decision.limitedNote ? (
           <Notice title="Limited information" tone="warning">

@@ -124,6 +124,7 @@ function MeetingView({
           </p>
           <h1 className="ev-title">{meeting.title}</h1>
         </header>
+        {meeting.coverageNote ? <p className="ev-limited-note">{meeting.coverageNote}</p> : null}
 
         <div className="ev-layout">
           <aside aria-label="Meeting status" className="ev-rail">

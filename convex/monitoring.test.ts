@@ -180,3 +180,19 @@ test('continuation rejects different locator fragments of an already inventoried
   expect(inventoryContract({ ...inventory, targets: [{ ...inventory.targets[0], excerpt: prior }] }, source, 'Test Council', ['2026-14 Road repairs'])).toMatch(/already accepted target/)
   expect(inventoryContract({ ...inventory, targets: [{ printedId: '2026-15', title: 'Library repairs', excerpt: '2026-15 Library repairs' }] }, source, 'Test Council', [prior])).toBeNull()
 })
+
+test.each([false, true])('cadence incidents require a completed initial inventory: %s', async baselineComplete => {
+  const { t, runId, policyId, registryId, proposalId } = await monitoringFixture()
+  await t.run(async ctx => {
+    await ctx.db.patch(policyId, { baselineComplete })
+    await ctx.db.insert('sourceExpectations', { registryId, proposalId, sourceKind: 'agenda', cadence: 'monthly', basis: 'inferred', expectedFrom: 1, expectedBy: 2, createdAt: 1 })
+  })
+  await t.mutation(internal.monitoring.ledger.finish, { runId, state: 'completed', documentsChecked: 1, targetsStarted: 0 })
+  await t.run(async ctx => {
+    const policy = await ctx.db.get(policyId)
+    const incidents = await ctx.db.query('coverageIncidents').collect()
+    expect(policy?.baselineComplete).toBe(true)
+    expect(policy?.failures).toBe(baselineComplete ? 1 : 0)
+    expect(incidents.map(incident => incident.code)).toEqual(baselineComplete ? ['expected_artifact_missing'] : [])
+  })
+})

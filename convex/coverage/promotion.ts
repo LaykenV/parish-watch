@@ -140,6 +140,11 @@ export const setCoverageStatus = mutation({
       statusGeneration: (registry.statusGeneration ?? 0) + 1,
       ...(args.status === 'supported' ? { lastHealthyAt: Date.now() } : {}),
     })
+    if (recovered) {
+      const incidents = await ctx.db.query('coverageIncidents').withIndex('by_registry_id_and_state', q => q.eq('registryId', registry._id).eq('state', 'open')).take(31)
+      if (incidents.length > 30) throw promotionError('incident_capacity', 'Resolve the source incident backlog before recovery.')
+      for (const incident of incidents) await ctx.db.patch(incident._id, { state: 'resolved' })
+    }
     await updateJurisdictionStatus(ctx, body.jurisdictionId)
     return { changed: true, recovered }
   },

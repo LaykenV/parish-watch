@@ -54,6 +54,7 @@ const publicAction = v.object({
   deadlineCitationIds: v.array(v.string()),
 })
 const decision = v.object({
+  coverageStatus: v.optional(v.string()),
   recordKey: v.string(),
   sourceRecordId: v.string(),
   placeName: v.string(),
@@ -76,6 +77,7 @@ const decision = v.object({
 })
 
 const issueResult = v.object({
+  coverageStatus: v.optional(v.string()),
   revision: v.string(),
   slug: v.string(),
   placeName: v.string(),
@@ -144,6 +146,7 @@ const issueSummaryResult = v.object({
 })
 
 const meetingResult = v.object({
+  coverageStatus: v.optional(v.string()),
   id: v.string(),
   placeName: v.string(),
   placeSlug: v.string(),
@@ -259,6 +262,7 @@ async function projectDecision(
     placeName: place.name,
     placeSlug: place.slug,
     bodyName: body.name,
+    coverageStatus: body.publicStatus,
     mode: publication.mode,
     title: payload.title,
     recordType: full?.recordType ?? null,
@@ -415,6 +419,7 @@ export const getPublishedMeeting = query({
       placeName: first.placeName,
       placeSlug: first.placeSlug,
       bodyName: first.bodyName,
+      coverageStatus: first.coverageStatus,
       meetingAt: first.meetingAt,
       decisions,
       citations: dedupeCitations(decisions.flatMap((item) => item.citations)),
@@ -599,6 +604,7 @@ async function projectPublishedIssue(
     placeName: place.name,
     placeSlug: place.slug,
     bodyName: body.name,
+    coverageStatus: body.publicStatus,
     mode: current.mode,
     title: current.payload.title,
     summary: current.payload.summary,

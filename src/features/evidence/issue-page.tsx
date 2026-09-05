@@ -194,6 +194,7 @@ function IssueDetail({
           </p>
           <h1 className="ev-title">{issue.title}</h1>
         </header>
+        {issue.coverageNote ? <p className="ev-limited-note">{issue.coverageNote}</p> : null}
 
         {issue.historical ? (
           <Notice

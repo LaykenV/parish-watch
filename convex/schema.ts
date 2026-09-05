@@ -549,6 +549,18 @@ export default defineSchema({
     .index('by_body_and_status', ['governmentBodyId', 'status'])
     .index('by_next_scheduled_check', ['nextScheduledCheckAt']),
 
+  coverageRequests: defineTable({
+    requestKey: v.string(), requesterHash: v.string(), placeKey: v.string(), placeName: v.string(), placeKind: v.union(v.literal('parish'), v.literal('municipality'), v.literal('unknown')), homepage: v.optional(v.string()), createdAt: v.number(),
+  }).index('by_request_key', ['requestKey']).index('by_created_at', ['createdAt']),
+  coverageDemandCounts: defineTable({ placeKey: v.string(), placeName: v.string(), count: v.number(), updatedAt: v.number() }).index('by_place_key', ['placeKey']),
+  coveragePlaceAliases: defineTable({ placeKey: v.string(), jurisdictionSlug: v.string(), confirmedBy: v.id('users'), createdAt: v.number() }).index('by_place_key', ['placeKey']),
+  coverageNoticeChallenges: defineTable({
+    requestId: v.id('coverageRequests'), subscriberId: v.id('emailSubscribers'), challengeId: v.string(), codeHash: v.string(), expiresAt: v.number(), attempts: v.number(), consumedAt: v.optional(v.number()), outboundId: v.optional(v.string()), createdAt: v.number(),
+  }).index('by_challenge_id', ['challengeId']).index('by_expires_at', ['expiresAt']),
+  coverageNoticeSubscriptions: defineTable({
+    subscriberId: v.id('emailSubscribers'), placeKey: v.string(), placeName: v.string(), launchedSlug: v.optional(v.string()), state: v.union(v.literal('waiting'), v.literal('queued'), v.literal('sent'), v.literal('stopped')), outboundId: v.optional(v.string()), providerStatus: v.optional(v.string()), createdAt: v.number(), updatedAt: v.number(),
+  }).index('by_subscriber_and_place', ['subscriberId', 'placeKey']).index('by_subscriber_and_launched_slug', ['subscriberId', 'launchedSlug']).index('by_subscriber', ['subscriberId']).index('by_state', ['state']),
+
   sourceMonitoringPolicies: defineTable({
     nextDiscoveryAt: v.optional(v.number()),
     discoveryPendingUrls: v.optional(v.array(v.string())), discoveryVisitedUrls: v.optional(v.array(v.string())),
@@ -766,6 +778,9 @@ export default defineSchema({
     .index('by_proposal_and_created_at', ['proposalId', 'createdAt']),
 
   sourceExpectations: defineTable({
+    expectedFrom: v.optional(v.number()),
+    expectedBy: v.optional(v.number()),
+    matchedSnapshotId: v.optional(v.id('sourceSnapshots')),
     proposalId: v.id('coverageRegistryProposals'),
     registryId: v.id('sourceRegistries'),
     sourceKind: sourceKinds,

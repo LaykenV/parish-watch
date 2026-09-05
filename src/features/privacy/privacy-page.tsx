@@ -24,7 +24,7 @@ export function PrivacyPage() {
             You can read records and ask source-grounded questions without an
             account or a street address.
           </p>
-          <time dateTime="2026-09-02">Effective September 2, 2026</time>
+          <time dateTime="2026-09-04">Effective September 4, 2026</time>
         </div>
       </header>
 
@@ -87,6 +87,11 @@ export function PrivacyPage() {
               Individual event records expire after 90 days
             </dd>
           </div>
+          <div>
+            <dt><MailIcon aria-hidden="true" />Email alerts and coverage requests</dt>
+            <dd>Optional email subscriptions store an encrypted delivery address and a keyed address hash. Coverage requests store the place name, an optional untrusted homepage hint, and a hash of a random device token. Verification enables one coverage launch notice and creates no account or issue follow.</dd>
+            <dd className="privacy-retention">Coverage verification codes expire after 15 minutes. Daily cleanup removes expired challenges. Requester hashes and homepage hints expire after 90 days. Anonymous place demand totals and minimal launch delivery records remain to prevent duplicate notices. AgentMail delivery payloads follow the existing finalized-message cleanup.</dd>
+          </div>
         </dl>
       </section>
 
@@ -115,8 +120,7 @@ export function PrivacyPage() {
               threads. Google provides sign-in. OpenAI processes Ask questions
               and the selected official evidence through Convex AI Gateway to
               produce an answer. Public Parish does not send your Google email
-              to OpenAI as part of Ask. AgentMail receives messages you choose
-              to send to the project inbox.
+              to OpenAI as part of Ask. AgentMail delivers verification codes, sourced alerts, weekly roundups, and requested coverage launch notices. It receives replies and messages you send to the project inbox.
             </p>
           </div>
         </div>
@@ -130,6 +134,7 @@ export function PrivacyPage() {
           <h2 id="privacy-controls-title">Your controls</h2>
           <ul>
             <li>Use reading and Ask without a Google account.</li>
+            <li>Use the unsubscribe link in email to stop issue alerts and coverage launch notices for that address.</li>
             <li>Remove saved areas and topics from your account page.</li>
             <li>
               Clear this site's browser storage to remove the local area,
