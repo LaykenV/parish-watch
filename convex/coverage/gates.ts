@@ -3,6 +3,13 @@ import { coverageGoldSetVersion } from './goldSet'
 
 export const COVERAGE_GOLD_SET_VERSION = coverageGoldSetVersion()
 
+export function coverageLinkDeployment(siteUrl: string | undefined): 'production' | 'development' {
+  return siteUrl === 'https://www.publicparish.com' ||
+    siteUrl === 'https://befitting-flamingo-587.convex.site'
+    ? 'production'
+    : 'development'
+}
+
 export type CoverageGateInputs = {
   expectedArtifactCount: number
   retrievedArtifactCount: number

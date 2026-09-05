@@ -20,6 +20,7 @@ import { sha256HexOfText } from '../sources/hashing'
 import { classifyHost } from './rootGate'
 import { SAMPLE_VALIDATION_RESERVATION_USD } from './contracts'
 import { coverageGoldSetSample } from './goldSet'
+import { coverageLinkDeployment } from './gates'
 import { walkRedirects } from './redirectWalk'
 import { resolveRootManifest } from './roots'
 
@@ -702,10 +703,7 @@ async function checkLink(
   await ctx.runMutation(internal.coverage.validation.recordLinkCheck, {
     proposalId,
     canonicalUrl,
-    deployment:
-      env.CONVEX_SITE_URL === 'https://www.publicparish.com'
-        ? 'production'
-        : 'development',
+    deployment: coverageLinkDeployment(env.CONVEX_SITE_URL),
     status: final?.status ?? 0,
     passed,
   })

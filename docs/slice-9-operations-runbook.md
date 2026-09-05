@@ -11,7 +11,9 @@ Keep `SOURCE_MONITORING_ENABLED=false` through the code rollout. All added
 schema fields are optional or belong to new tables. Existing source snapshots,
 publication versions, issue IDs, issue slugs, follows, and citations remain.
 New indexes deploy with the backend. The production Gate 10 classification
-uses the current `befitting-flamingo-587.convex.site` endpoint. Changing the
+recognizes the current `www.publicparish.com` override and the built-in
+`befitting-flamingo-587.convex.site` endpoint. Link checks and evaluation use
+the same classification. Changing the
 `CONVEX_SITE_URL` override or moving production requires an explicit update to
 that classification and new Gate 10 evidence. Watch that exact workflow to completion,
 then run the independent `npm run smoke:production`.

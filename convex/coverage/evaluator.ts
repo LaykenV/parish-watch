@@ -4,7 +4,7 @@ import type { Doc } from '../_generated/dataModel'
 import { env, internalMutation } from '../_generated/server'
 import type { MutationCtx } from '../_generated/server'
 import type { SourceKind } from '../pipeline/state'
-import { evaluateCoverageGates, COVERAGE_EVALUATOR_VERSION } from './gates'
+import { coverageLinkDeployment, evaluateCoverageGates, COVERAGE_EVALUATOR_VERSION } from './gates'
 import { coverageGoldSetSample } from './goldSet'
 import { classifyHost } from './rootGate'
 import { resolveRootManifest } from './roots'
@@ -84,7 +84,7 @@ export const evaluateProposal = internalMutation({
       .order('desc')
       .take(MAX_EVIDENCE_RECORDS)
     const extractionEvidence = await inspectExtractions(ctx, pipelineRuns)
-    const linkDeployment = env.CONVEX_SITE_URL === 'https://befitting-flamingo-587.convex.site' ? 'production' : 'development'
+    const linkDeployment = coverageLinkDeployment(env.CONVEX_SITE_URL)
     const productionLinks = await ctx.db
       .query('coverageDirectLinkChecks')
       .withIndex('by_proposal_and_deployment_and_checked_at', (index) =>

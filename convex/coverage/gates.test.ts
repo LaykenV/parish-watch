@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 
-import { evaluateCoverageGates } from './gates'
+import { coverageLinkDeployment, evaluateCoverageGates } from './gates'
 import type { CoverageGateInputs } from './gates'
 
 const PASSING: CoverageGateInputs = {
@@ -61,4 +61,14 @@ test('development link proof is named separately from the production gate', () =
   const prod = evaluateCoverageGates(PASSING)[9]
   expect(prod.gateKey).toBe('production_source_urls_reachable')
   expect(prod.detail).toContain('production backend')
+})
+
+test.each([
+  ['https://www.publicparish.com', 'production'],
+  ['https://befitting-flamingo-587.convex.site', 'production'],
+  ['https://woozy-wren-227.convex.site', 'development'],
+  ['https://www.publicparish.com.example.com', 'development'],
+  [undefined, 'development'],
+] as const)('source link checks and gates classify %s as %s', (url, expected) => {
+  expect(coverageLinkDeployment(url)).toBe(expected)
 })
