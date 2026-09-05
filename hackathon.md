@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-04T19:11:18Z
+- **Last updated:** 2026-09-05T00:00:04Z
 
 ## Log
 
@@ -1398,3 +1398,15 @@ and model-generated election content remain out of scope (`PLAN.md`,
 
 Published the initial Phase 0 source commit to the public `main` branch. The app
 itself remains undeployed.
+
+### 2026-09-05 - dbb7984
+
+Opened PRs #93 through #99 for final Build Slice 9. Development now runs approved
+source monitoring, continuing issue proposals, paginated accepted-history search,
+batched corpus Ask, live coverage requests and verified launch notices, issue
+share HTML, and private operations reports. The Cotile Lake issue passed automatic
+linking and independent review. Pafford retained its existing URL after an added
+decision. The bounded citation audit passed 497 citations across 94 publication
+versions without changing stored evidence. Browser and controlled provider
+certification continue. The PRs remain open and production is unchanged. See
+`docs/slice-9-development-certification.md` for proof and remaining checks.
