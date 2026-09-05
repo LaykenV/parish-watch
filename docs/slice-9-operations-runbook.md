@@ -35,8 +35,9 @@ existing official revisions. Do not copy that window into production.
 
 An admission is a safety reservation, not a bill. Model steps reserve capacity
 for the configured provider path. A 31-page PDF required two Firecrawl calls
-and reported 62 credits during development. Unchanged snapshots avoid repeating
-accepted inventory, but checking the PDF can still cost retrieval credits.
+and reported 62 credits during development. An incomplete inventory resumes its accepted immutable snapshot before another
+retrieval. Completed inventories return to the source-check cadence. Checking a
+completed PDF can still cost retrieval credits.
 The development run hit both 200- and 400-admission limits and stopped without
 losing pending work. Calibration reached the existing 500-admission maximum;
 that is not a proposed production setting or a spending guarantee.
@@ -75,7 +76,10 @@ retry a source without inspecting the specific failure and remaining quota.
 
 Read the private monitoring run, provider ledger, document inventory, and issue
 proposal records. Inventory completeness covers the complete immutable document,
-including all checkpointed sections. An accepted section alone does not permit
+including all checkpointed sections. Continuation sends accepted locators to
+both models, rejects repeated excerpts deterministically, and requires independent
+review to reject the same decision with different excerpts. Prior context stops
+at 1,000 targets or 250,000 serialized characters. An accepted section alone does not permit
 its targets to run while the document remains incomplete.
 
 Repeated retrieval or processing failures open a public-safe incident and can

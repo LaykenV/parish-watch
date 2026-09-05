@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-05T06:31:00Z
+- **Last updated:** 2026-09-05T06:52:00Z
 
 ## Log
 
@@ -1445,3 +1445,22 @@ The final application code at 7d2ed31 passed 457 application tests and eight
 browser checks in Verify 33949802588. Its CI artifact is served on development
 as hosting deployment 48bd933b-b4dd-40fe-8e1d-349f6785a597. No local automated
 validation ran.
+
+
+### 2026-09-05 - 3882fa5
+
+Final source review found four duplicate pending targets at the PDF section
+boundary. None had reached publication. Continuation now provides previously
+accepted locators to extraction and review, rejects nested locator repeats,
+and resumes the immutable snapshot before another retrieval. The bounded
+repair recomputed only the unpublished last section. Run
+tn7cz50rsvjx8k52687tmz0sa58dt4a1 completed with 38 targets and no nested duplicates.
+The canary used 99 of the approved 100 extra admissions. Monitoring is paused
+with one admission unused, 49 pending targets, and 30 published targets. All ten
+fresh Rapides gates pass. The final audit passed 581 citations across 109
+publication versions with no problems. Provider ledgers and daily aggregates
+agree. No production merge or source activation occurred.
+
+Verify 33950769153 passed all 458 application tests and eight browser checks on
+3882fa5. The deployed frontend remains the unchanged 7d2ed31 artifact; development
+runs the final backend. Subsequent changes only record this evidence.
