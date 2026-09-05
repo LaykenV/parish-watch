@@ -186,12 +186,12 @@ function IssueDetail({
     if (!issue.latestOutcome || typeof IntersectionObserver === 'undefined') return
     const outcomeKey = `${issue.slug}:${JSON.stringify(issue.latestOutcome)}`
     if (countedOutcome.current === outcomeKey) return
-    const timeline = document.getElementById('timeline')
-    if (!timeline) return
+    const outcome = document.getElementById('latest-outcome')
+    if (!outcome) return
     const observer = new IntersectionObserver(entries => {
       if (entries.some(entry => entry.isIntersecting)) { countedOutcome.current = outcomeKey; recordCivicEvent('outcome_read'); observer.disconnect() }
     }, { threshold: 0.5 })
-    observer.observe(timeline)
+    observer.observe(outcome)
     return () => observer.disconnect()
   }, [issue.slug, issue.latestOutcome, liveFollow])
   const sections = issueSections(fixture)
@@ -434,7 +434,7 @@ function MarkedDateRow({
   tone: 'deadline' | 'next' | 'outcome'
 }) {
   return (
-    <div className="ev-status-date" data-tone={tone}>
+    <div className="ev-status-date" data-tone={tone} id={tone === 'outcome' ? 'latest-outcome' : undefined}>
       <p className="ev-status-label">{marked.label}</p>
       <p className="ev-status-value">
         <time dateTime={marked.date}>{formatDate(marked.date)}</time>
