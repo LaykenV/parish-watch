@@ -9,7 +9,7 @@ import { assertPipelineMonitoring } from '../monitoring/ledger'
 import { startIssueBuildTransaction } from '../operations/issues'
 import { issueWorkflowManager } from '../pipeline/workflowManager'
 import schema from '../schema'
-import { extensionInputs } from './membership'
+import { extensionInputs, loadTimelineMembers } from './membership'
 
 export const start = internalMutation({
   args: { recordId: v.id('decisionRecords'), originRunId: v.id('pipelineRuns') }, returns: v.union(v.id('issueLinkProposals'), v.null()),
@@ -92,7 +92,10 @@ export const checkpoint = internalMutation({
     const issueIds = new Set<Id<'issues'>>()
     for (const recordId of [proposal.recordId, ...matches]) {
       const links = await ctx.db.query('issueDecisionLinks').withIndex('by_record_and_created_at', q => q.eq('recordId', recordId)).order('desc').take(201)
-      if (links.length > 200) throw new Error('issue_proposal_membership_overflow')
+      if (links.length > 200) {
+        await ctx.db.patch(proposal._id, { state: 'ambiguous', errorClass: 'issue_proposal_membership_capacity', updatedAt: Date.now() })
+        return true
+      }
       for (const link of links) {
         const issue = await ctx.db.get(link.issueId)
         if (issue?.currentVersionId === link.issueVersionId) issueIds.add(issue._id)
@@ -103,6 +106,20 @@ export const checkpoint = internalMutation({
       return true
     }
     const targetIssueId = [...issueIds][0]
+    if (targetIssueId) {
+      const issue = await ctx.db.get(targetIssueId)
+      const currentLinks = await loadTimelineMembers(ctx, issue!.currentVersionId!)
+      let alreadyCurrent = true
+      for (const recordId of [proposal.recordId, ...matches]) {
+        const member = await ctx.db.get(recordId)
+        if (!currentLinks.some(link => link.recordId === recordId && link.publicationVersionId === member?.currentPublishedVersionId)) alreadyCurrent = false
+      }
+      if (alreadyCurrent) {
+        const version = await ctx.db.get(issue!.currentVersionId!)
+        await ctx.db.patch(proposal._id, { state: 'proposed', issueBuildId: version!.buildId, updatedAt: Date.now() })
+        return true
+      }
+    }
     let recordIds: Id<'decisionRecords'>[]
     try {
       recordIds = targetIssueId ? await extensionInputs(ctx, targetIssueId, proposal.recordId, matches) : [proposal.recordId, ...matches]

@@ -1322,3 +1322,20 @@ test('an automatic extension with too many changed members stays visible for att
   expect(proposal?.errorClass).toBe('issue_extension_capacity')
   expect(proposal?.issueBuildId).toBeUndefined()
 })
+
+
+test('a proposal reuses an issue refresh that already accepted the same publications', async () => {
+  const t = initTest()
+  const seeded = await seedIssueInput(t)
+  const candidate = issueCandidate(seeded)
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const started = await startAndDrain(t, seeded.recordIds)
+  const proposalId = await t.run(async ctx => {
+    const record = (await ctx.db.get(seeded.recordIds[0]))!
+    return ctx.db.insert('issueLinkProposals', { recordId: record._id, publicationVersionId: record.currentPublishedVersionId!, originRunId: started.runId, state: 'scanning', cursor: null, matchedRecordIds: [], scanned: 0, startedAt: Date.now(), updatedAt: Date.now() })
+  })
+  await t.mutation(internal.issues.proposals.checkpoint, { proposalId, recordIds: [seeded.recordIds[1]], cursor: '', isDone: true, count: 1 })
+  const proposal = await t.run(ctx => ctx.db.get(proposalId))
+  expect(proposal?.issueBuildId).toBe(started.issueBuildId)
+  expect(await t.run(ctx => ctx.db.query('issueBuilds').take(10))).toHaveLength(1)
+})
