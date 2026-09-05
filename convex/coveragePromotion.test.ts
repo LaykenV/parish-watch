@@ -365,7 +365,8 @@ test('gate evaluation cannot interrupt sample validation', async () => {
   })
 })
 
-test('gate 10 keeps a newer failure inside the bounded link-check window', async () => {
+test.each(['production', 'development'] as const)('gate 10 keeps a newer failure inside the bounded link-check window on %s', async deployment => {
+  vi.stubEnv('CONVEX_SITE_URL', deployment === 'production' ? 'https://befitting-flamingo-587.convex.site' : 'https://another-development.convex.site')
   const t = convexTest(schema, modules)
   await signInOwner(t)
   const seeded = await seedReadyProposal(t, false)
@@ -389,7 +390,7 @@ test('gate 10 keeps a newer failure inside the bounded link-check window', async
       await ctx.db.insert('coverageDirectLinkChecks', {
         proposalId: seeded.proposalId,
         canonicalUrl: 'https://www.lafayettela.gov/current',
-        deployment: 'production',
+        deployment,
         status: 200,
         passed: true,
         checkedAt,
@@ -398,7 +399,7 @@ test('gate 10 keeps a newer failure inside the bounded link-check window', async
     await ctx.db.insert('coverageDirectLinkChecks', {
       proposalId: seeded.proposalId,
       canonicalUrl: 'https://www.lafayettela.gov/current',
-      deployment: 'production',
+      deployment,
       status: 503,
       passed: false,
       checkedAt: 41,
@@ -421,7 +422,7 @@ test('gate 10 keeps a newer failure inside the bounded link-check window', async
       .first()
     expect(result?.passed).toBe(false)
     expect(result?.detail).toBe(
-      '0 of 1 representative source URLs answered from the production backend.',
+      `0 of 1 representative source URLs answered from the ${deployment} backend.`,
     )
   })
 })

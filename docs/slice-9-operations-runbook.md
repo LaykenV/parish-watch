@@ -54,6 +54,8 @@ Pending documents, inventory sections, target decisions, and listing cursors
 remain stored. Resume the same approved policy to continue that work. Changing
 the approved proposal or source window restarts listing discovery. Changing a
 quota does not erase admissions already consumed in the current window.
+A completed listing waits until the next scheduled discovery time. An incomplete
+listing resumes its cursor without repeating completed discovery.
 
 Use Check now for a due source. It replaces an expired two-hour lease, not an
 active lease. Retry incomplete document requeues one document. Retry failed
@@ -76,6 +78,14 @@ owner recovery action against the current registry generation.
 Issue proposals use accepted same-body records. Competing issue matches remain
 atomic and searchable. The owner may inspect the reason; do not merge issues
 by changing IDs, rewriting source citations, or bypassing independent review.
+A proposal marked proposed names a build, not an accepted publication. Failed or
+withheld builds update their proposals. Concurrent extensions retry at most twice
+against the current timeline and keep their original accepted matches. Pause,
+quota, and stale-publication checks still apply. Exhausted retries need owner
+inspection. Automatic scans stop after 1,000 same-body records, more than 30
+matches, or more than 200 historical links for a record. Current timelines retain
+at most 200 members. These bounds produce visible failures or ambiguity; they do
+not authorize dropped members or guessed relationships.
 
 ## Delivery and cost review
 
