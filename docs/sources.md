@@ -1,12 +1,27 @@
 # Official-Source Plan
 
-Status: Slice 8 production certification supports Rapides and East Baton Rouge; Lafayette remains validating behind the same ten gates
-Last verified: September 4, 2026
+Status: seven bodies supported after Slice 9; Lafayette planning sources still need complete certification
+Last verified: September 5, 2026
 
 This document supplies starting points, not a claim of complete coverage. Every
 URL must be checked during the Firecrawl source spike, and every public body must
 pass the same gold-set and freshness gate before Public Parish marks it
 supported.
+
+## Current Lafayette source repair
+
+Lafayette City Council and Youngsville City Council passed production coverage
+checks during Slice 9. The remaining planning sources are still validating.
+The official events service briefly exposed meeting attachments, then returned
+502 again during the September 5 recheck. New version 2 manifests admit only
+its checked event-document path; the old manifests remain unchanged for prior
+runs. No coverage gate or public support state changes with that permission.
+
+The generic Planning Commission entry still needs separate City and Parish body
+identities before certification. The
+[September 5 source recheck](source-spikes/lafayette-planning-recheck-2026-09-05.md)
+records the recovered path, current failures, and remaining evidence work.
+The checkpoints below retain their dated historical findings.
 
 ## Implemented checkpoint
 
