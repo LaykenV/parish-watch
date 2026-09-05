@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-05T00:00:04Z
+- **Last updated:** 2026-09-05T00:56:42Z
 
 ## Log
 
@@ -1410,3 +1410,15 @@ decision. The bounded citation audit passed 497 citations across 94 publication
 versions without changing stored evidence. Browser and controlled provider
 certification continue. The PRs remain open and production is unchanged. See
 `docs/slice-9-development-certification.md` for proof and remaining checks.
+
+
+### 2026-09-05 - working tree
+
+The combined development build passed eight desktop and mobile browser checks.
+Controlled immediate and weekly emails arrived with official links, and a signed
+webhook replay produced one grounded reply. Removal and address-wide unsubscribe
+passed. The citation audit now covers 558 citations across 105 publication
+versions. Corrected callback typing, search result payloads, concurrent extension
+retries, and outcome visibility counting. PDF continuation is paused at the
+500-admission limit; final-head CI and reviews continue. AI Gateway is verified
+and direct fallback stays disabled. No production merge or source activation.
