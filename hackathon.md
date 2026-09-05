@@ -1505,3 +1505,11 @@ under the old generic entry. Added a regression proving that promoting the old
 placeholder cannot mark the parish supported while a real commission is missing.
 PR #102's event-path repair deployed and passed independent production smoke;
 the source outage still prevents full planning-body certification.
+
+### 2026-09-05 - 0d13b0b
+
+PR #103 passed 476 CI tests and deployed the separate Lafayette commission
+identities. Production smoke then caught its outdated ten-body expectation.
+The follow-up checks the exact twelve current bodies within their parishes,
+including each Lafayette commission. Release certification remains pending
+the corrected production smoke. No planning body has been promoted.
