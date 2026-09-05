@@ -549,6 +549,7 @@ export default defineSchema({
     .index('by_next_scheduled_check', ['nextScheduledCheckAt']),
 
   sourceMonitoringPolicies: defineTable({
+    nextDiscoveryAt: v.optional(v.number()),
     discoveryPendingUrls: v.optional(v.array(v.string())), discoveryVisitedUrls: v.optional(v.array(v.string())),
     registryId: v.id('sourceRegistries'),
     proposalId: v.id('coverageRegistryProposals'),

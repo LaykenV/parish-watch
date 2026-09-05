@@ -87,7 +87,7 @@ export async function configurePolicy(ctx: MutationCtx, args: { proposalId: Id<'
       await limiter.limit(ctx, 'calls', { key: existing._id, count: used, config: { kind: 'fixed window', rate: args.dailyCallLimit, period: DAY, start: current.ts }, throws: true })
     }
     const sourceWindowChanged = existing.startsAt !== args.startsAt || existing.proposalId !== args.proposalId
-    await ctx.db.patch(existing._id, { ...fields, ...(sourceWindowChanged ? { discoveryPendingUrls: undefined, discoveryVisitedUrls: undefined, baselineComplete: false } : {}) })
+    await ctx.db.patch(existing._id, { ...fields, ...(sourceWindowChanged ? { discoveryPendingUrls: undefined, discoveryVisitedUrls: undefined, nextDiscoveryAt: undefined, baselineComplete: false } : {}) })
     return existing._id
   }
   return await ctx.db.insert('sourceMonitoringPolicies', { ...fields, activatedAt: now, baselineComplete: false, failures: 0, createdAt: now })
@@ -201,7 +201,7 @@ export const saveDiscoveryProgress = internalMutation({
     const { policy, proposal } = await assertMonitoringRun(ctx, args.runId)
     const manifest = resolveRootManifest(proposal.bodyKey, proposal.rootManifestVersion)
     if (!manifest || args.pending.length + args.visited.length > 500 || [...args.pending, ...args.visited].some(url => url.length > 1500 || classifyHost(manifest, url) === 'unapproved' || isBeforeSourceWindow(url, policy.startsAt))) throw new Error('monitoring_listing_capacity')
-    await ctx.db.patch(policy._id, { discoveryPendingUrls: args.pending.length ? args.pending : undefined, discoveryVisitedUrls: args.pending.length ? args.visited : undefined })
+    await ctx.db.patch(policy._id, { discoveryPendingUrls: args.pending.length ? args.pending : undefined, discoveryVisitedUrls: args.pending.length ? args.visited : undefined, nextDiscoveryAt: args.pending.length ? undefined : Date.now() + policy.intervalHours * 3_600_000 })
     return null
   },
 })

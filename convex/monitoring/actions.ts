@@ -6,6 +6,7 @@ import { completeStructured } from '../ai/provider'
 import { estimateCostUsd } from '../ai/types'
 import { resolveRootManifest } from '../coverage/roots'
 import { classifyHost } from '../coverage/rootGate'
+import { canonicalizeCandidateUrl } from '../coverage/candidates'
 import { isBeforeSourceWindow, isDocumentUrl } from './discovery'
 import { sha256HexOfText } from '../sources/hashing'
 import { INVENTORY_CHARS, MAX_DOCUMENT_CHARS, inventoryContract, inventorySourceSection, inventoryJsonSchema, inventoryResult } from './contracts'
@@ -20,6 +21,7 @@ export const discover = internalAction({
   args: { runId: v.id('sourceMonitoringRuns') }, returns: v.boolean(),
   handler: async (ctx, args): Promise<boolean> => {
     const { registry, proposal, policy } = await ctx.runQuery(internal.monitoring.ledger.context, args)
+    if (!policy.discoveryPendingUrls?.length && (policy.nextDiscoveryAt ?? 0) > Date.now()) return true
     if (registry.seedUrls.length > 10) throw new Error('monitoring_seed_limit')
     await ctx.runMutation(internal.monitoring.ledger.addDocuments, { ...args, urls: registry.seedUrls })
     const manifest = resolveRootManifest(proposal.bodyKey, proposal.rootManifestVersion)
@@ -43,7 +45,7 @@ export const discover = internalAction({
         const metadata = page.metadata
         creditsUsed = typeof metadata?.creditsUsed === 'number' ? metadata.creditsUsed : undefined
         if (page.warning || (typeof metadata?.statusCode === 'number' && metadata.statusCode >= 400)) throw new Error('monitoring_listing_incomplete')
-        const links = [...new Set(page.links ?? [])].filter(link => (isDocumentUrl(link) || /(?:agenda|minute|ordinance|resolution|meeting|packet|planning)/i.test(link)) && classifyHost(manifest, link) !== 'unapproved' && !isBeforeSourceWindow(link, policy.startsAt))
+        const links = [...new Set((page.links ?? []).map(canonicalizeCandidateUrl).filter((url): url is string => Boolean(url)))].filter(link => (isDocumentUrl(link) || /(?:agenda|minute|ordinance|resolution|meeting|packet|planning)/i.test(link)) && classifyHost(manifest, link) !== 'unapproved' && !isBeforeSourceWindow(link, policy.startsAt))
         if (links.length > 500) throw new Error('monitoring_listing_overflow')
         const documents = links.filter(isDocumentUrl)
         for (let start = 0; start < documents.length; start += 100) await ctx.runMutation(internal.monitoring.ledger.addDocuments, { ...args, urls: documents.slice(start, start + 100) })

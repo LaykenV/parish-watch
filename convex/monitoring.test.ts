@@ -154,3 +154,13 @@ test('later inventory sections keep a complete motion separate from date-only he
   expect(section.source).not.toContain('Unrelated property hearing')
   expect(section.dateAndBodyContext).toContain('September 4, 2026')
 })
+
+test('completed discovery waits for its cadence while backlog processing continues', async () => {
+  const { t, runId, policyId } = await monitoringFixture()
+  await t.mutation(internal.monitoring.ledger.saveDiscoveryProgress, { runId, pending: [], visited: ['https://www.lafayettela.gov/2026-meetings'] })
+  const policy = await t.run(ctx => ctx.db.get(policyId))
+  expect(policy?.nextDiscoveryAt).toBeGreaterThan(Date.now())
+  // No provider component is installed in this fixture. A scrape would fail.
+  expect(await t.action(internal.monitoring.actions.discover, { runId })).toBe(true)
+  expect(await t.run(ctx => ctx.db.query('monitoringProviderCalls').take(10))).toHaveLength(0)
+})
