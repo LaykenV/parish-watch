@@ -3,7 +3,8 @@ import { v } from 'convex/values'
 import { paginationOptsValidator } from 'convex/server'
 import { components, internal } from '../_generated/api'
 import type { MutationCtx } from '../_generated/server'
-import type { Id } from '../_generated/dataModel'
+import type { Doc, Id } from '../_generated/dataModel'
+import { recordMaterialChange } from '../changes/material'
 import { completeStructuredDirectFallback } from '../ai/provider'
 import { decryptAddress, hashAddress } from '../follows/secrets'
 import { loadTimelineMembers } from '../issues/membership'
@@ -273,6 +274,17 @@ export const reopenCanaryContinuation = internalMutation({
   },
 })
 
+// Older first publications can predate the change ledger. Derive their original
+// event without changing publication history or starting any subscriber fanout.
+export async function acceptedReplayChange(ctx: MutationCtx, version: Doc<'publicationVersions'>) {
+  let change = await ctx.db.query('materialChanges').withIndex('by_current_publication', q => q.eq('currentPublicationVersionId', version._id)).unique()
+  if (!change && version.version === 1 && version.mode !== 'withheld' && version.payload) {
+    const id = await recordMaterialChange(ctx, { recordId: version.recordId, currentPublicationVersionId: version._id, currentPayload: version.payload, createdAt: version.createdAt })
+    change = await ctx.db.get(id)
+  }
+  return change
+}
+
 // One owner-authorized production replay. It creates delivery records only;
 // accepted publications, source snapshots, and follow timestamps stay intact.
 export const replayProductionControlledDelivery = internalMutation({
@@ -298,7 +310,7 @@ export const replayProductionControlledDelivery = internalMutation({
       const record = await ctx.db.get(link.recordId)
       const version = await ctx.db.get(link.publicationVersionId)
       if (record?.currentPublishedVersionId !== link.publicationVersionId || !version?.payload || version.mode === 'withheld') continue
-      const change = await ctx.db.query('materialChanges').withIndex('by_current_publication', q => q.eq('currentPublicationVersionId', link.publicationVersionId)).unique()
+      const change = await acceptedReplayChange(ctx, version)
       if (change?.material && change.notificationEligible !== false) { selected = { changeId: change._id }; break }
     }
     if (!selected) throw new Error('Current accepted replay evidence is unavailable.')
