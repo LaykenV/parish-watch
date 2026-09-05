@@ -2,6 +2,8 @@
 import { convexTest } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
 import { internal } from './_generated/api'
+import type { Doc } from './_generated/dataModel'
+import { acceptedReplayChange } from './operations/developmentProof'
 import { encryptAddress, hashAddress } from './follows/secrets'
 import schema from './schema'
 
@@ -43,5 +45,37 @@ test('completed production replay cannot enqueue another delivery', async () => 
     expect(await ctx.db.query('notificationDeliveries').collect()).toHaveLength(0)
     expect(await ctx.db.query('notificationMatches').collect()).toHaveLength(0)
     expect(await ctx.db.system.query('_scheduled_functions').collect()).toHaveLength(0)
+  })
+})
+
+
+function legacyPublication(): Doc<'publicationVersions'> {
+  return {
+    _id: '10000publicationVersions', _creationTime: 1, recordId: '10001decisionRecords',
+    runId: '10002pipelineRuns', candidateId: '10003decisionCandidates', reviewId: '10004reviews', snapshotId: '10005sourceSnapshots',
+    version: 1, mode: 'limited', reasonCode: 'limited', policyVersion: 'v1', payloadVersion: 'v1', payloadHash: 'immutable', createdAt: 123,
+    payload: { kind: 'limited', sourceRecordId: '58956', title: 'Roundabout authorization', bodyName: 'Metropolitan Council', source: { snapshotId: '10005sourceSnapshots', sourceKind: 'minutes', officialUrl: 'https://www.brla.gov/AgendaCenter/ViewFile/Minutes/_10082025-2224', retrievedAt: 100 } },
+  } as Doc<'publicationVersions'>
+}
+test('legacy first-publication replay derives one original-dated change without publishing or fanning out', async () => {
+  const t = setup()
+  const version = legacyPublication()
+  await t.run(async ctx => {
+    const first = await acceptedReplayChange(ctx, version)
+    const replay = await acceptedReplayChange(ctx, version)
+    expect(first?._id).toBe(replay?._id)
+    expect(first).toMatchObject({ classification: 'new_decision', material: true, createdAt: 123, currentPublicationVersionId: version._id })
+    expect(await ctx.db.query('materialChanges').collect()).toHaveLength(1)
+    expect(await ctx.db.query('publicationVersions').collect()).toHaveLength(0)
+    expect(await ctx.db.query('notificationFanouts').collect()).toHaveLength(0)
+    expect(await ctx.db.system.query('_scheduled_functions').collect()).toHaveLength(0)
+  })
+})
+test('legacy replay never invents a revision change or revives a withheld publication', async () => {
+  const t = setup()
+  await t.run(async ctx => {
+    expect(await acceptedReplayChange(ctx, { ...legacyPublication(), version: 2 })).toBeNull()
+    expect(await acceptedReplayChange(ctx, { ...legacyPublication(), mode: 'withheld', payload: null })).toBeNull()
+    expect(await ctx.db.query('materialChanges').collect()).toHaveLength(0)
   })
 })
