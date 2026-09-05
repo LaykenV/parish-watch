@@ -37,7 +37,6 @@ test('ten passing gates promote once and preserve the previous registry', async 
 
   await t.run(async (ctx) => {
     expect((await ctx.db.get(seeded.bodyId))?.publicStatus).toBe('supported')
-    expect((await ctx.db.query('coverageIncidents').withIndex('by_registry_id_and_state', q => q.eq('registryId', seeded.registryId).eq('state', 'resolved')).take(30))).toHaveLength(1)
     expect((await ctx.db.get(seeded.registryId))?.status).toBe('supported')
     expect((await ctx.db.get(seeded.previousRegistryId))?.status).toBe('paused')
     expect((await ctx.db.get(seeded.jurisdictionId))?.publicStatus).toBe(
@@ -122,6 +121,7 @@ test('ten passing gates promote once and preserve the previous registry', async 
 
   await t.run(async (ctx) => {
     expect(await ctx.db.get(seeded.previousRegistryId)).not.toBeNull()
+    expect((await ctx.db.query('coverageIncidents').withIndex('by_registry_id_and_state', q => q.eq('registryId', seeded.registryId).eq('state', 'resolved')).take(30))).toHaveLength(1)
     expect((await ctx.db.get(seeded.bodyId))?.publicStatus).toBe('supported')
   })
 })
