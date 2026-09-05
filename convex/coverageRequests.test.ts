@@ -93,3 +93,17 @@ test('reverification reports a stopped or sent launch without promising another 
   })
   expect(await t.mutation(api.coverage.requests.verifyNotice, args)).toEqual({ verified: true, noticeState: 'sent' })
 })
+
+test('waiting coverage demand schedules no delivery work for unsupported places', async () => {
+  const t = convexTest(schema, modules)
+  await t.run(async ctx => {
+    const subscriberId = await ctx.db.insert('emailSubscribers', { addressHash: 'waiting-address', encryptedAddress: 'encrypted', encryptionVersion: 1, state: 'verified', createdAt: 1, updatedAt: 1 })
+    for (let i = 0; i < 25; i++) await ctx.db.insert('coverageNoticeSubscriptions', { subscriberId, placeKey: 'unknown:not-supported', placeName: 'Not supported', state: 'waiting', createdAt: i, updatedAt: i })
+  })
+  await t.mutation(internal.coverage.requests.sweep, { paginationOpts: { numItems: 25, cursor: null } })
+  await t.run(async ctx => {
+    const scheduled = await ctx.db.system.query('_scheduled_functions').collect()
+    expect(scheduled.filter(job => job.name.includes('deliver'))).toHaveLength(0)
+    expect(await ctx.db.query('coverageNoticeSubscriptions').collect()).toHaveLength(25)
+  })
+})

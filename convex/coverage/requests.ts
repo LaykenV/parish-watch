@@ -148,8 +148,15 @@ export const sweep = internalMutation({
   handler: async (ctx, args) => {
     const state = args.state ?? 'waiting'
     const page = await ctx.db.query('coverageNoticeSubscriptions').withIndex('by_state', q => q.eq('state', state)).paginate(args.paginationOpts)
+    const supportedPlaces = new Map<string, boolean>()
     for (const subscription of page.page) {
-      if (subscription.state === 'waiting') await ctx.scheduler.runAfter(0, internal.coverage.requests.deliver, { subscriptionId: subscription._id })
+      if (subscription.state === 'waiting') {
+        if (!supportedPlaces.has(subscription.placeKey)) {
+          const slug = await resolvePlace(ctx, subscription.placeKey)
+          supportedPlaces.set(subscription.placeKey, slug !== null && await placeIsSupported(ctx, slug))
+        }
+        if (supportedPlaces.get(subscription.placeKey)) await ctx.scheduler.runAfter(0, internal.coverage.requests.deliver, { subscriptionId: subscription._id })
+      }
       if (subscription.state === 'queued' && subscription.outboundId) {
         const status = await agentmail.status(ctx, subscription.outboundId as OutboundId)
         if (status && status.status !== 'pending') await ctx.db.patch(subscription._id, { state: ['sent', 'delivered'].includes(status.status) ? 'sent' : 'stopped', providerStatus: status.status, updatedAt: Date.now() })
