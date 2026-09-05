@@ -447,7 +447,6 @@ export default defineSchema({
       'createdAt',
     ]),
 
-  providerUsageCheckpoints: defineTable({ kind: v.string(), position: v.number(), updatedAt: v.number() }).index('by_kind', ['kind']),
   retrievalProviderCalls: defineTable({ runId: v.id('pipelineRuns'), status: v.string(), creditsUsed: v.optional(v.number()), latencyMs: v.number(), createdAt: v.number(), usageAggregatedAt: v.optional(v.number()) }).index('by_usage_aggregated', ['usageAggregatedAt']),
 
   providerUsageDaily: defineTable({ key: v.string(), day: v.string(), kind: v.string(), provider: v.string(), calls: v.number(), failures: v.number(), reportedTokens: v.number(), estimatedCostUsd: v.number(), reportedCredits: v.number(), unknownTokenCalls: v.number(), unknownCostCalls: v.number(), unknownCreditCalls: v.number(), totalLatencyMs: v.number(), maxLatencyMs: v.number(), updatedAt: v.number() }).index('by_key', ['key']).index('by_day', ['day']),
