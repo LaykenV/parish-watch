@@ -619,3 +619,79 @@ function meetingCatalog(decisions: ScopedDecision[]): AskMeetingCatalogItem[] {
     left.meetingAt.localeCompare(right.meetingAt),
   )
 }
+
+export const retrieveCatalogPage = internalQuery({
+  args: { token: v.string(), threadId: v.string(), cursor: v.union(v.string(), v.null()), revision: v.optional(v.number()) },
+  returns: v.object({ catalog: askEvidenceResult, cursor: v.string(), isDone: v.boolean(), revision: v.number() }),
+  handler: async (ctx, args) => {
+    const access = await authorizeThreadRead(ctx, args.token, args.threadId)
+    const scope = storedScope(access.mapping.scopeKind, access.mapping.scopeKey)
+    const revision = (await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique())?.revision ?? 0
+    if (args.revision !== undefined && args.revision !== revision) throw new ConvexError({ code: 'ask_evidence_changed', message: 'Published evidence changed. Retry the question.' })
+    const page = await ctx.db.query('decisionRecords').order('asc').paginate({ numItems: 25, cursor: args.cursor })
+    const issueKeys = await issueRecordKeys(ctx, scope)
+    const keys: string[] = []
+    for (const record of page.page) {
+      if (!record.currentPublishedVersionId || !record.currentMode) continue
+      if (scope.kind === 'issue' && !issueKeys?.has(record.recordKey)) continue
+      if (scope.kind === 'meeting' && record.currentMeetingKey !== scope.meetingId) continue
+      if (scope.kind === 'corpus' && scope.areaKey) {
+        const body = await ctx.db.get(record.governmentBodyId)
+        const place = body ? await ctx.db.get(body.jurisdictionId) : null
+        if (place?.slug !== scope.areaKey) continue
+      }
+      keys.push(record.recordKey)
+    }
+    const decisions = await loadDecisions(ctx, keys)
+    const evidence = decisions.flatMap(decision => decision.citations.map(citation => projectEvidence(decision, citation)))
+    if (evidence.length > MAX_SCOPE_EVIDENCE_ITEMS) throw new ConvexError({ code: 'ask_scope_too_large', message: 'One evidence batch is too large. Choose a decision or meeting.' })
+    return { cursor: page.continueCursor, isDone: page.isDone, revision, catalog: { kind: evidence.length ? 'evidence' as const : 'no_evidence' as const, scope, issues: await issueCatalog(ctx, decisions), meetings: meetingCatalog(decisions), records: decisions.map(recordContext), evidence } }
+  },
+})
+
+export const retrieveSelectedCatalog = internalQuery({
+  args: { token: v.string(), threadId: v.string(), evidenceIds: v.array(v.string()), revision: v.number() }, returns: askEvidenceResult,
+  handler: async (ctx, args): Promise<AskEvidenceResult> => {
+    if (args.evidenceIds.length > MAX_SCOPE_EVIDENCE_ITEMS) throw new ConvexError({ code: 'ask_scope_too_large', message: 'Choose a place, issue, meeting or date to narrow this question.' })
+    const revision = (await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique())?.revision ?? 0
+    if (revision !== args.revision) throw new ConvexError({ code: 'ask_evidence_changed', message: 'Published evidence changed. Retry the question.' })
+    const access = await authorizeThreadRead(ctx, args.token, args.threadId)
+    const scope = storedScope(access.mapping.scopeKind, access.mapping.scopeKey)
+    const issueKeys = await issueRecordKeys(ctx, scope)
+    const evidence: AskEvidence[] = []
+    for (const evidenceId of args.evidenceIds) {
+      const item = await loadAcceptedEvidenceById(ctx, scope, issueKeys, evidenceId)
+      if (!item) throw new ConvexError({ code: 'ask_evidence_changed', message: 'Selected evidence changed. Retry the question.' })
+      evidence.push(item)
+    }
+    const decisions = await loadDecisions(ctx, [...new Set(evidence.map(item => item.recordKey))])
+    return { kind: evidence.length ? 'evidence' : 'no_evidence', scope, issues: await issueCatalog(ctx, decisions), meetings: meetingCatalog(decisions), records: decisions.map(recordContext), evidence }
+  },
+})
+
+export const expandCatalogSelection = internalQuery({
+  args: { token: v.string(), threadId: v.string(), revision: v.number(), targets: v.array(v.object({ kind: v.union(v.literal('issue'), v.literal('meeting')), id: v.string() })) }, returns: v.array(v.string()),
+  handler: async (ctx, args): Promise<string[]> => {
+    if (args.targets.length > 20) throw new ConvexError({ code: 'ask_scope_too_large', message: 'Choose one issue or meeting.' })
+    const revision = (await ctx.db.query('publicCorpusState').withIndex('by_key', q => q.eq('key', 'published')).unique())?.revision ?? 0
+    if (revision !== args.revision) throw new ConvexError({ code: 'ask_evidence_changed', message: 'Published evidence changed. Retry the question.' })
+    const access = await authorizeThreadRead(ctx, args.token, args.threadId)
+    const scope = storedScope(access.mapping.scopeKind, access.mapping.scopeKey)
+    const issueKeys = await issueRecordKeys(ctx, scope)
+    const keys = new Set<string>()
+    for (const target of args.targets) {
+      if (target.kind === 'issue') {
+        const issue = await ctx.runQuery(api.resident.evidence.getPublishedIssue, { slug: target.id })
+        for (const link of issue?.links ?? []) keys.add(link.recordKey)
+      } else {
+        const meeting = await ctx.runQuery(api.resident.evidence.getPublishedMeeting, { meetingKey: target.id })
+        for (const decision of meeting?.decisions ?? []) keys.add(decision.recordKey)
+      }
+    }
+    if (keys.size > 200) throw new ConvexError({ code: 'ask_scope_too_large', message: 'Choose one issue or meeting.' })
+    const decisions = await loadDecisions(ctx, [...keys])
+    const ids = decisions.filter(decision => scope.kind === 'corpus' ? !scope.areaKey || decision.placeSlug === scope.areaKey : scope.kind === 'issue' ? issueKeys?.has(decision.recordKey) : decision.meetingKey === scope.meetingId).flatMap(decision => decision.citations.map(citation => citation.id))
+    if (ids.length > MAX_SCOPE_EVIDENCE_ITEMS) throw new ConvexError({ code: 'ask_scope_too_large', message: 'Choose a narrower question.' })
+    return [...new Set(ids)]
+  },
+})

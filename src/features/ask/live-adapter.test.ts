@@ -88,7 +88,7 @@ test('shows the first question immediately and completes two cited turns', async
   )
 })
 
-test('hides validated evidence IDs repeated in answer prose', async () => {
+test.each(['[citation-1] [citation-2]', '(citation-1, citation-2)'])('hides validated evidence markers %s in answer prose', async markers => {
   const mutation = vi
     .fn()
     .mockResolvedValueOnce({ expiresAt: 2_000_000_000_000 })
@@ -107,7 +107,7 @@ test('hides validated evidence IDs repeated in answer prose', async () => {
       action: vi.fn().mockResolvedValue(
         answerResult({
           answer:
-            'Decision [CO-066-2026] approved the drainage agreement. [citation-1] [citation-2]',
+            `Decision [CO-066-2026] approved the drainage agreement. ${markers}`,
           citations: [citation(), citation('citation-2')],
         }),
       ),

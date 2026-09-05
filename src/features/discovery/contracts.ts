@@ -240,7 +240,7 @@ export function parseExploreSearch(
         Boolean,
       ) as unknown as readonly string[],
     ),
-    q: pickText(search.q),
+    q: pickText(search.q)?.slice(0, 300),
     sort: pick(search.sort, ['newest', 'oldest'] as const),
     source: pick(search.source, SOURCE_OPTIONS),
     topic: pick(search.topic, TOPIC_OPTIONS),

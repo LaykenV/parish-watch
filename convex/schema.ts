@@ -1,3 +1,4 @@
+import { searchEntry } from './resident/searchContracts'
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
@@ -1090,6 +1091,12 @@ export default defineSchema({
     detail: v.string(),
   }).index('by_review', ['reviewId']),
 
+  publicCorpusState: defineTable({ key: v.literal('published'), revision: v.number() }).index('by_key', ['key']),
+  publishedSearchEntries: defineTable(searchEntry)
+    .index('by_key', ['key'])
+    .index('by_date', ['dateAt'])
+    .searchIndex('search_text', { searchField: 'searchText', filterFields: ['kind', 'placeName', 'bodyName', 'mode', 'lifecycle'] }),
+
   decisionRecords: defineTable({
     recordKey: v.string(),
     registryId: v.id('sourceRegistries'),
@@ -1462,6 +1469,14 @@ export default defineSchema({
     .index('by_thread_id_and_created_at', ['threadId', 'createdAt']),
 
   askAnswerReceipts: defineTable({
+    corpusRevision: v.optional(v.number()),
+    selectorCursor: v.optional(v.union(v.string(), v.null())),
+    selectorEvidenceIds: v.optional(v.array(v.string())),
+    selectorComplete: v.optional(v.boolean()),
+    selectorBatches: v.optional(v.number()),
+    accountedTokens: v.optional(v.number()),
+    accountedAttempts: v.optional(v.number()),
+    unknownUsage: v.optional(v.boolean()),
     sessionId: v.id('anonymousSessions'),
     threadId: v.string(),
     questionMessageId: v.string(),

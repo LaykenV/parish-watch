@@ -1,6 +1,6 @@
 import { SearchIcon, SlidersHorizontalIcon, XIcon } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 
 import { Button } from '../../components/ui/button'
 import { AreaSelector } from './area-selector'
@@ -28,12 +28,7 @@ import { IssueCard } from './issue-card'
 import { SectionFailure, UpdateRow } from './notice'
 import { ResultRow } from './result-row'
 import { useMediaQuery, useRepeatedAnnouncement } from './hooks'
-import {
-  toDecisionRow,
-  toIssueCard,
-  usePublishedDecisions,
-  usePublishedIssues,
-} from './live-publications'
+import { toSearchEntry, usePublishedSearch } from './live-search'
 import { Sheet } from './sheet'
 
 export function ExplorePage({ search }: { search: ExploreSearch }) {
@@ -41,19 +36,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   const desktop = useMediaQuery('(min-width: 64.0625rem)')
   const activeFixture = getActiveDiscoveryFixture(search.fixture)
   const fixturesEnabled = activeFixture !== undefined
-  const publishedIssues = usePublishedIssues(!fixturesEnabled)
-  const publishedDecisions = usePublishedDecisions(!fixturesEnabled)
-  const publishedIssueCards = useMemo(
-    () =>
-      (publishedIssues ?? [])
-        .map(toIssueCard)
-        .filter((issue): issue is IssueCardData => issue !== null),
-    [publishedIssues],
-  )
-  const publishedRows = useMemo(
-    () => (publishedDecisions ?? []).map(toDecisionRow),
-    [publishedDecisions],
-  )
+  const liveSearch = usePublishedSearch(!fixturesEnabled, search)
   const effectiveSearch = useMemo(
     () =>
       activeFixture === search.fixture
@@ -108,14 +91,10 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   const showUpdateRow = activeFixture === 'update' && !refreshed
 
   const entries = useMemo(
-    () =>
-      getExploreEntries(
-        effectiveSearch,
-        fixturesEnabled ? ISSUE_FIXTURES : publishedIssueCards,
-        fixturesEnabled ? EXPLORE_ROW_FIXTURES : publishedRows,
-        { includeUnfiltered: !fixturesEnabled },
-      ),
-    [effectiveSearch, fixturesEnabled, publishedIssueCards, publishedRows],
+    () => fixturesEnabled
+      ? getExploreEntries(effectiveSearch, ISSUE_FIXTURES, EXPLORE_ROW_FIXTURES)
+      : liveSearch.results.map(toSearchEntry),
+    [effectiveSearch, fixturesEnabled, liveSearch.results],
   )
 
   const browse = useMemo(() => {
@@ -218,6 +197,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
           <SearchIcon aria-hidden="true" />
           <input
             aria-label="Search issues and records"
+            maxLength={300}
             autoComplete="off"
             onChange={(event) => setQueryDebounced(event.target.value)}
             placeholder="Search issues, decision records, meetings"
@@ -348,7 +328,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
   function resultsBody() {
     if (
       !fixturesEnabled &&
-      (publishedIssues === undefined || publishedDecisions === undefined)
+      liveSearch.status === 'LoadingFirstPage'
     ) {
       return (
         <div className="pp-empty" role="status">
@@ -360,29 +340,8 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
     }
 
     if (viewMode === 'empty') {
-      if (
-        !fixturesEnabled &&
-        publishedIssueCards.length === 0 &&
-        publishedRows.length === 0
-      ) {
-        return (
-          <div className="pp-empty">
-            <p className="pp-empty-title">
-              No published issues or decision records are available yet.
-            </p>
-            <p className="pp-empty-text">
-              Explore lists issues and records after their official evidence
-              passes the publication checks.
-            </p>
-            <Button
-              render={<Link to="/coverage" />}
-              size="touch"
-              variant="outline"
-            >
-              View coverage
-            </Button>
-          </div>
-        )
+      if (!fixturesEnabled && liveSearch.status !== 'Exhausted') {
+        return <div className="pp-empty"><p>No matches in this part of the published history.</p><Button disabled={liveSearch.status === 'LoadingMore'} onClick={() => liveSearch.loadMore(25)}>Continue searching history</Button></div>
       }
 
       return (
@@ -422,7 +381,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
     return (
       <>
         <p className="pp-result-count" role="status">
-          {entries.length} {entries.length === 1 ? 'result' : 'results'}
+          {entries.length} {entries.length === 1 ? 'result' : 'results'}{!fixturesEnabled && liveSearch.status !== 'Exhausted' ? ' loaded' : ''}
         </p>
         <div className="pp-result-sequence">
           {entries.map((entry, index) =>
@@ -433,6 +392,7 @@ export function ExplorePage({ search }: { search: ExploreSearch }) {
             ),
           )}
         </div>
+        {!fixturesEnabled && liveSearch.status !== 'Exhausted' ? <Button disabled={liveSearch.status === 'LoadingMore'} onClick={() => liveSearch.loadMore(25)}>{liveSearch.status === 'LoadingMore' ? 'Loading history...' : 'Load more results'}</Button> : null}
       </>
     )
   }

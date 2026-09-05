@@ -298,6 +298,10 @@ export class LiveAskAdapter implements AskAdapter {
       this.push({ kind: 'expired' })
       return
     }
+    if (code === 'ask_scope_too_large') {
+      this.updateTurn(turnId, turn => ({ ...turn, state: 'scope_too_large' }))
+      return
+    }
     const retryAt = errorRetryAt(error)
     if (
       code === 'ask_request_limited' ||
@@ -318,6 +322,8 @@ export class LiveAskAdapter implements AskAdapter {
       return
     }
     const retryable =
+      code === 'ask_evidence_changed' ||
+      code === 'answer_context_failed' ||
       code === 'answer_provider_failed' ||
       code === 'answer_storage_failed' ||
       code === 'answer_abandoned' ||
@@ -433,8 +439,8 @@ function projectAnswer(
 function residentAnswerText(answer: string, citationIds: readonly string[]) {
   const allowed = new Set(citationIds)
   const text = answer
-    .replace(/[ \t]*\[([^\]\r\n]+)\]/g, (reference, contents: string) => {
-      const ids = contents
+    .replace(/[ \t]*(?:\[([^\]\r\n]+)\]|\(([^)\r\n]+)\))/g, (reference, bracketed: string | undefined, parenthesized: string | undefined) => {
+      const ids = (bracketed ?? parenthesized ?? '')
         .split(/[\s,]+/)
         .map((id) => id.trim())
         .filter(Boolean)

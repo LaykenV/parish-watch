@@ -131,3 +131,8 @@ describe('resident interface Slice 2 discovery contracts', () => {
     expect(entries[0]?.kind).toBe('issue')
   })
 })
+
+
+it('Explore bounds pasted and URL search text before querying', () => {
+  expect(parseExploreSearch({ q: 'x'.repeat(301) }).q).toHaveLength(300)
+})

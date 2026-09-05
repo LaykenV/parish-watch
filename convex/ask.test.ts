@@ -4,7 +4,7 @@ import agentTest from '@convex-dev/agent/test'
 import rateLimiterTest from '@convex-dev/rate-limiter/test'
 import { convexTest } from 'convex-test'
 import type { TestConvexForDataModelAndIdentity } from 'convex-test'
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 
 import { api, internal } from './_generated/api'
 import type { DataModel, Id } from './_generated/dataModel'
@@ -28,7 +28,7 @@ function initTest(): TestConvex {
   return t
 }
 
-afterEach(() => resetAskGatewayForTests())
+afterEach(() => { resetAskGatewayForTests(); vi.restoreAllMocks() })
 
 test('opaque sessions isolate Agent threads and detach expired access', async () => {
   const t = initTest()
@@ -289,9 +289,9 @@ test('answers follow-ups with retrieved citations and replays the Agent message'
   })
   expect(first.citations).toHaveLength(1)
   expect(first.citations[0].recordKey).toBe(seeded.recordKey)
-  expect(selectorPrompt).toContain('Complete published decision catalog')
+  expect(selectorPrompt).toContain('Complete decision catalog for this batch')
   expect(selectorPrompt).toContain('"versions"')
-  expect(selectorPrompt).toContain('Every accepted evidence excerpt in scope')
+  expect(selectorPrompt).toContain('Every accepted evidence excerpt in this batch')
   expect(selectorPrompt).toContain('Library board roof contract')
   expect(selectorPrompt).not.toContain('Full normalized official documents')
   expect(answerPrompt).toContain('Full normalized official documents')
@@ -346,8 +346,8 @@ test('answers follow-ups with retrieved citations and replays the Agent message'
         totalTokens: 15,
       }),
       expect.objectContaining({
-        promptVersion: 'ask-selector-v1',
-        schemaVersion: 'ask-selector-v1',
+        promptVersion: 'ask-selector-v2-batched',
+        schemaVersion: 'ask-selector-v2-batched',
       }),
       expect.objectContaining({
         promptVersion: 'ask-answer-v3',
@@ -423,7 +423,7 @@ test('invalid selector targets fall back to the complete accepted scope', async 
   expect(attempts).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        promptVersion: 'ask-selector-v1',
+        promptVersion: 'ask-selector-v2-batched',
         status: 'selection_invalid',
       }),
       expect.objectContaining({
@@ -692,6 +692,8 @@ test('releases abandoned answers and cools down repeated requests', async () => 
 })
 
 test('caps rotated anonymous sessions without using token budgets', async () => {
+  // Keep all 61 requests in one rate-limit window even on a busy CI runner.
+  vi.spyOn(Date, 'now').mockReturnValue(1_788_000_001_000)
   const t = initTest()
   await seedEvidence(t)
 
@@ -1249,3 +1251,55 @@ async function seedPublication(
     snapshotId,
   }
 }
+
+test('a thousand-record corpus searches old history and selects evidence across catalog batches', async () => {
+  const t = initTest()
+  const seeded = await seedEvidence(t)
+  let lastKey = ''
+  for (let batch = 0; batch < 20; batch++) {
+    await t.run(async ctx => {
+      const first = await ctx.db.query('decisionRecords').withIndex('by_record_key', q => q.eq('recordKey', seeded.recordKey)).unique()
+      for (let index = batch * 50; index < Math.min(998, (batch + 1) * 50); index++) {
+        const added = await seedPublication(ctx, { registryId: first!.registryId, bodyId: first!.governmentBodyId, sourceRecordId: `HISTORY-${index}`, title: `Historic drainage decision ${index}`, excerpt: `The council approved drainage project ${index}.`, current: true, meetingKey: `history-${index}` })
+        lastKey = added.recordKey
+      }
+    })
+  }
+  let searchCursor: string | null = null
+  let indexed = false
+  while (!indexed) {
+    const page: { isDone: boolean; continueCursor: string; indexed: number } = await t.mutation(internal.resident.search.backfill, { kind: 'decision', paginationOpts: { numItems: 25, cursor: searchCursor } })
+    indexed = page.isDone
+    searchCursor = page.continueCursor
+  }
+  const found = await t.query(api.resident.search.search, { q: 'Audubon', kind: 'decision', paginationOpts: { numItems: 25, cursor: null } })
+  expect(found.page.some(entry => entry.key === seeded.recordKey)).toBe(true)
+  expect(found.page[0]).not.toHaveProperty('searchText')
+  expect(JSON.stringify(found.page)).not.toContain('superseded drainage wording')
+  for (const kind of ['body', 'meeting'] as const) {
+    const filtered = await t.query(api.resident.search.search, { kind, source: 'Evidence available', paginationOpts: { numItems: 25, cursor: null } })
+    expect(filtered.page).toHaveLength(0)
+  }
+  const token = 'large-corpus-token-00000000000000000000000000000000'
+  await t.mutation(api.ask.threads.createSession, { token })
+  const thread = await t.mutation(api.ask.threads.createThread, { token, scope: { kind: 'corpus' } })
+  const question = await t.mutation(api.ask.threads.appendQuestion, { token, threadId: thread.threadId, question: 'Compare the Audubon agreement with drainage project 997.', idempotencyKey: 'large-corpus-question-0001' })
+  let selectorCalls = 0
+  overrideAskGatewayForTests(async (_ctx, args) => {
+    if (args.stage === 'selector') {
+      selectorCalls++
+      const targets = [seeded.recordKey, lastKey].filter(id => args.prompt.includes(`"recordKey":"${id}"`)).map(id => ({ kind: 'decision', id }))
+      return gatewayResult({ retrievalMode: targets.length ? 'focused' : 'not_found', targets })
+    }
+    expect(args.prompt).toContain(seeded.recordKey)
+    expect(args.prompt).toContain(lastKey)
+    const evidenceIds = [seeded.recordKey, lastKey].map(key => args.prompt.match(new RegExp(`"evidenceId":"([^"]+)","recordKey":"${key}"`))?.[1]).filter(Boolean)
+    return gatewayResult({ kind: 'answer', answer: 'The council approved the Audubon agreement and drainage project 997.', evidenceIds, followUps: [] })
+  })
+  const answer = await t.action(api.ask.answer.answerQuestion, { token, threadId: thread.threadId, questionMessageId: question.messageId })
+  expect(answer.kind).toBe('answer')
+  expect(selectorCalls).toBeGreaterThan(30)
+  const receipt = await t.run(ctx => ctx.db.query('askAnswerReceipts').first())
+  expect(receipt?.selectorComplete).toBe(true)
+  expect(receipt?.selectorBatches).toBeGreaterThan(30)
+}, 120_000)
