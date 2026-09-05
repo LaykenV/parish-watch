@@ -1,6 +1,6 @@
 # Post-Slice-5 PR plan
 
-Status: implementation Slices 6 through 8 are deployed and release-tested; Slice 9 is next
+Status: implementation Slices 6 through 9 are deployed and release-tested
 
 This plan turns the remaining implementation into a few substantial,
 reviewable pull requests per slice. It does not add product scope. The page
@@ -50,7 +50,8 @@ completed exact-artifact development proof and production certification. Five
 bodies passed all ten production gates, which made Rapides and East Baton Rouge
 available. PR #92 connected the selector to that live jurisdiction state.
 Lafayette remains validating because its three planning bodies do not have a
-stable agenda and outcome evidence set. Slice 9 is the active capability.
+stable agenda and outcome evidence set. Slice 9 has since shipped and passed
+production checks. Later current-status records supersede this planning baseline.
 
 ## Original starting assumption
 
@@ -76,7 +77,7 @@ The original remaining path counted 15 planned PRs:
 - Slice 7 has 4 PRs.
 - Slice 8 was delivered as 3 planned code PRs plus narrow release and
   certification fixes.
-- Slice 9 has 4 PRs.
+- The original Slice 9 grouping had 4 PRs. The final plan superseded it with 7.
 
 Each PR delivers one complete vertical capability. A packet may cross schema,
 Convex functions, adapters, and UI when all of those changes prove the same
@@ -800,7 +801,13 @@ Proof and release gate:
 - only passing bodies appear as supported;
 - public claims narrow when a promised body cannot pass.
 
-## Slice 9: public distribution and production hardening
+## Original Slice 9 grouping, superseded
+
+The four packets below preserve the earlier planning record. The
+[final build plan](slice-9-final-build-plan.md) replaced them with seven packets,
+now released as PRs #93 through #99. See the
+[production certification record](slice-9-production-certification.md) for the
+current release and operating limits.
 
 Slice 9 connects the remaining public utilities, proves the full resident loop,
 and records submission evidence. Defects found during certification receive

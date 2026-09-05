@@ -1,6 +1,6 @@
 # Technical Architecture
 
-Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is in development certification
+Status: Phase 0, evidence-engine Slices 1 through 4, resident-interface Design Slices 1 through 8, and implementation Slices 6 through 8 are deployed; Slice 9 is deployed and production-tested
 
 ## Architecture Goal
 
@@ -1657,13 +1657,15 @@ proof. The packet split does not change the architecture or product scope below.
 Do not reverse this order to polish a dashboard before the evidence path works.
 
 
-## Slice 9 production rollout
+## Slice 9 production release
 
-The owner authorized production release of PRs #93 through #99 on September 5.
-The stack completed development certification on `woozy-wren-227`. Ordered
-production deployment and independent live checks are in progress. Source
-monitoring remains paused until the bounded Rapides canary starts.
-[The development certification record](slice-9-development-certification.md)
+PRs #93 through #99 and the narrow controlled-replay repair #100 are deployed
+on production `befitting-flamingo-587`. Every merge passed its exact deployment
+workflow and an independent live smoke. The bounded Rapides Parish Police Jury
+canary is enabled, with one document and one target per run and 50 provider
+admissions per day. The other six supported bodies remain owner-started.
+[The production certification record](slice-9-production-certification.md),
+[development certification](slice-9-development-certification.md)
 and [operations runbook](slice-9-operations-runbook.md) keep development
 proof separate from production proof.
 
@@ -1676,7 +1678,7 @@ the remaining public integrations.
 
 ### Final-slice runtime contracts
 
-The following contracts describe the combined development candidate. Earlier
+The following contracts are deployed in the Slice 9 production release. Earlier
 release notes above describe their recorded production versions.
 
 The monitoring workflow admits only an owner-enabled, promoted source registry.

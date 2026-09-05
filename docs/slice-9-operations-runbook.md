@@ -1,9 +1,15 @@
 # Slice 9 operations
 
-The release candidate consists of PRs #93 through #99, in that order. The
-combined development evidence is in [the certification record](slice-9-development-certification.md).
-Merging to `main` deploys both the production backend and frontend. These PRs
-received that authorization on September 5. The ordered rollout is in progress.
+PRs #93 through #99 and the controlled-replay repair #100 are deployed.
+The owner authorized production release and bounded live testing on September 5.
+See the [production certification record](slice-9-production-certification.md)
+and the separate [development evidence](slice-9-development-certification.md).
+
+Rapides Parish Police Jury is the only enabled monitoring policy. Its limits are
+one document and one target per run, a 24-hour source cadence, a 30-day meeting
+window, and 50 daily admissions. Catch-up checks can run every 15 minutes within
+that daily limit. Initial inventory remains incomplete. The other six supported
+bodies still require owner-started checks. Direct OpenAI fallback is disabled.
 
 ## Deployment and initial activation
 
@@ -31,9 +37,8 @@ Verify an older accepted record through Explore and corpus Ask before enabling
 source automation. The current 1,000-record boundary proof is a CI workload,
 not a measured production throughput claim.
 
-The owner must approve the exact first production source, date window, and
-limits. The proposed first canary is Rapides Parish Police Jury, provided its
-current production coverage evaluation still passes. Start with one document,
+The owner approved Rapides Parish Police Jury after its current production
+coverage evaluation passed. The approved canary uses one document,
 one target, a 24-hour cadence, a 30-day source window, and 50 provider admissions
 per day. Keep other policies paused. The owner UI's default is three documents
 and five targets, so set the narrower canary through `monitoring/ledger:configure`.
@@ -125,9 +130,25 @@ Earlier retrieval-stage summaries do not establish every historic provider call.
 Monitoring retrieval remains in monitoring totals to avoid double counting.
 No provider pricing for email is inferred from delivery counts.
 
-Development events remain separate from production. Browser counts do not prove
+Application analytics distinguish development from production. Both deployments
+currently share the AgentMail updates inbox, so provider messages can reach the
+production callback regardless of which deployment initiated a test. Verify the
+matching production challenge, delivery, or reply record before claiming proof.
+Browser counts do not prove
 unique residents or civic benefit. Do not add questions, answers, email addresses,
 report descriptions, or arbitrary URLs to analytics or public incident text.
+
+## AgentMail inbound delivery
+
+The production provider endpoint is
+`https://befitting-flamingo-587.convex.site/agentmail/webhook`. Its subscribed
+events must include `message.received` as well as the existing sent, delivered,
+bounced, complained, and rejected events. The September 5 review found the
+received event missing and enabled it without changing the endpoint or signing
+secret. A fresh provider reply then reached the app and produced a grounded
+answer received by the controlled inbox. Inbox receipt alone does not establish
+callback routing. Do not subscribe to spam, blocked, or unauthenticated events
+to compensate for a missing received event.
 
 ## Production closure
 

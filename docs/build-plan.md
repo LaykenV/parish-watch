@@ -676,13 +676,15 @@ Never cut:
   redefining the business plan.
 
 
-## Slice 9 production rollout
+## Slice 9 production release
 
-The owner authorized production release of PRs #93 through #99 on September 5.
-The stack completed development certification on `woozy-wren-227`. Ordered
-production deployment and independent live checks are in progress. Source
-monitoring remains paused until the bounded Rapides canary starts.
-[The development certification record](slice-9-development-certification.md)
+PRs #93 through #99 and the narrow controlled-replay repair #100 are deployed
+on production `befitting-flamingo-587`. Every merge passed its exact deployment
+workflow and an independent live smoke. The bounded Rapides Parish Police Jury
+canary is enabled, with one document and one target per run and 50 provider
+admissions per day. The other six supported bodies remain owner-started.
+[The production certification record](slice-9-production-certification.md),
+[development certification](slice-9-development-certification.md)
 and [operations runbook](slice-9-operations-runbook.md) keep development
 proof separate from production proof.
 

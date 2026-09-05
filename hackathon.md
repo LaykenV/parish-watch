@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-05T06:57:00Z
+- **Last updated:** 2026-09-05T09:58:00Z
 
 ## Log
 
@@ -1469,3 +1469,17 @@ The final source review corrected the date-window boundary: a policy activated
 midday includes meetings dated that day. The regression covers the previous,
 current, and next calendar day. Development runs the combined code at 0da2d88
 with monitoring paused. The latest PR checks record this final regression.
+
+
+### 2026-09-05 - 48dedf3
+
+Released final Build Slice 9 through PRs #93 to #99 and the narrow replay repair
+#100. All eight production deployments and independent live smokes passed.
+Final application CI passed 473 tests; the unchanged frontend passed eight
+browser checks. Production verified older-record search, grounded Ask, controlled
+alert and reply delivery, unsubscribe, and 283 immutable citations. Seven bodies
+passed their coverage gates. Only Rapides Police Jury has automatic checks
+active, capped at 50 daily admissions with incomplete catch-up retained.
+Lafayette's three planning bodies remain validating. See
+`docs/slice-9-production-certification.md` for proof and limits. Resident benefit,
+the timed demo, and submission remain separate from build completion.
