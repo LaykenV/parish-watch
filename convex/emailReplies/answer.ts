@@ -113,7 +113,12 @@ export function formatEmailReply(
   officialContactUrl?: string,
   siteOrigin?: string,
 ): string {
-  const lines = [answer.answer.trim()]
+  const citationNumbers = new Map(answer.citations.map((citation, index) => [citation.evidenceId, index + 1]))
+  const readable = answer.answer.replace(/\[([^\]\r\n]+)\]|\(([^)\r\n]+)\)/g, (reference, bracketed: string | undefined, parenthesized: string | undefined) => {
+    const ids = (bracketed ?? parenthesized ?? '').split(/[\s,]+/).filter(Boolean)
+    return ids.length && ids.every(id => citationNumbers.has(id)) ? `[${ids.map(id => citationNumbers.get(id)).join(', ')}]` : reference
+  })
+  const lines = [readable.trim()]
   if (answer.kind === 'answer' && answer.citations.length > 0) {
     lines.push('', 'Cited evidence')
     const seen = new Set<string>()
@@ -121,7 +126,7 @@ export function formatEmailReply(
       const href = absoluteCitationHref(citation.sourceHref, siteOrigin)
       if (seen.has(href)) continue
       seen.add(href)
-      lines.push(`- ${citation.documentTitle}: ${href}`)
+      lines.push(`[${citationNumbers.get(citation.evidenceId)}] ${citation.documentTitle}: ${href}`, `Official document: ${citation.officialUrl}`)
     }
   }
   if (answer.kind === 'not_found') {
