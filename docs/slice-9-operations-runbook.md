@@ -40,6 +40,12 @@ accepted inventory, but checking the PDF can still cost retrieval credits.
 The development run hit both 200- and 400-admission limits and stopped without
 losing pending work. Calibration reached the existing 500-admission maximum;
 that is not a proposed production setting or a spending guarantee.
+The owner approved one additional 100-admission development credit for the
+window ending September 5 at 13:25:59 UTC. The internal proof helper credits
+that exact exhausted canary once and records the grant separately. It retains
+the 500 daily rate, original reset time, actual provider-call history, and
+global limit. A repeat call adds nothing; the next window returns to 500.
+This helper refuses other deployments and cannot grant a later window.
 
 AI Gateway is the verified provider. Keep direct OpenAI fallback disabled.
 The owner accepted this configuration because development has no direct
