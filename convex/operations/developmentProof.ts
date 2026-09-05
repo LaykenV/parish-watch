@@ -249,3 +249,24 @@ export const grantCanaryAdmissions = internalMutation({
   args: {}, returns: v.object({ granted: v.boolean(), remaining: v.number(), windowStart: v.number(), dailyCallLimit: v.number() }),
   handler: async ctx => creditDevelopmentAdmissions(ctx, 'th783q5tdyrv1sp8zvqfj5qab18dr84v' as Id<'sourceMonitoringPolicies'>, 1788528359751),
 })
+
+
+// Recompute only the unpublished last section observed in the development
+// overlap check. Exact snapshot, checkpoint time, and creation time make this
+// repair unavailable after the next retrieval or on any other document.
+export const reopenCanaryContinuation = internalMutation({
+  args: {}, returns: v.number(),
+  handler: async ctx => {
+    requireDevelopment()
+    if (env.SOURCE_MONITORING_ENABLED === 'true') throw new Error('Pause monitoring before this repair.')
+    const documentId = 't97f9jgzf2bfhjedkv1wgebyyn8ds6qp' as Id<'monitoredDocuments'>
+    const document = await ctx.db.get(documentId)
+    if (!document || document.snapshotId !== 'js76eatfm468m04ke8a7n6k2es8drb9q' || document.lastCheckedAt !== 1788589209945 || document.completedChunks !== 2) throw new Error('The approved development checkpoint has changed.')
+    const targets = await ctx.db.query('documentInventoryTargets').withIndex('by_document_id_and_snapshot_id', q => q.eq('documentId', documentId).eq('snapshotId', document.snapshotId!)).take(101)
+    const lastSection = targets.filter(target => target.createdAt === 1788589299572)
+    if (targets.length > 100 || lastSection.length !== 24 || lastSection.some(target => target.state !== 'pending' || target.pipelineRunId || target.notificationEligible)) throw new Error('The last section is no longer an unpublished checkpoint.')
+    for (const target of lastSection) await ctx.db.delete(target._id)
+    await ctx.db.patch(documentId, { completedChunks: 1, inventoryComplete: false, nextCheckAt: 0 })
+    return lastSection.length
+  },
+})
