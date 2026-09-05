@@ -1,3 +1,5 @@
+import { extensionInputs, loadTimelineMembers } from '../issues/membership'
+import { assertPipelineMonitoring } from '../monitoring/ledger'
 import { ConvexError, v } from 'convex/values'
 
 import { internal } from '../_generated/api'
@@ -40,6 +42,8 @@ export const startIssueBuild = internalMutation({
   args: {
     recordIds: v.array(v.id('decisionRecords')),
     trigger: issueBuildTrigger,
+    targetIssueId: v.optional(v.id('issues')),
+    originRunId: v.optional(v.id('pipelineRuns')),
   },
   returns: startIssueBuildResult,
   handler: async (ctx, args): Promise<StartIssueBuildResult> =>
@@ -51,6 +55,8 @@ export async function startIssueBuildTransaction(
   args: {
     recordIds: Id<'decisionRecords'>[]
     trigger: typeof issueBuildTrigger.type
+    targetIssueId?: Id<'issues'>
+    originRunId?: Id<'pipelineRuns'>
   },
 ): Promise<StartIssueBuildResult> {
   if (
@@ -63,6 +69,10 @@ export async function startIssueBuildTransaction(
       message: 'An issue build needs 2 to 10 unique decision records',
     })
   }
+  const targetIssue = args.targetIssueId ? await ctx.db.get(args.targetIssueId) : null
+  if (args.targetIssueId && !targetIssue?.currentVersionId) throw new Error('issue_not_published')
+  const originRun = args.originRunId ? await ctx.db.get(args.originRunId) : null
+  if (args.originRunId) await assertPipelineMonitoring(ctx, args.originRunId)
   const records = []
   for (const recordId of args.recordIds) {
     const record = await ctx.db.get(recordId)
@@ -92,6 +102,7 @@ export async function startIssueBuildTransaction(
       message: 'Issue linker v1 only links decisions from one government body',
     })
   }
+  if (targetIssue && targetIssue.governmentBodyId !== governmentBodyId) throw new Error('issue_cross_body_not_supported')
   records.sort((left, right) => left.record._id.localeCompare(right.record._id))
   const keyed = await issueBuildRunKey({
     publicationVersionIds: records.map((item) => item.version._id),
@@ -105,6 +116,10 @@ export async function startIssueBuildTransaction(
     payloadVersion: ISSUE_PAYLOAD_VERSION,
     rubricVersion: IMPORTANCE_RUBRIC_VERSION,
   })
+  if (targetIssue) {
+    keyed.issueKey = targetIssue.issueKey
+    keyed.idempotencyKey = `${keyed.idempotencyKey}:${targetIssue._id}:${targetIssue.currentVersionId}`
+  }
   const existing = await ctx.db
     .query('issueBuilds')
     .withIndex('by_idempotency_key', (q) =>
@@ -152,6 +167,10 @@ export async function startIssueBuildTransaction(
   const runId = await ctx.db.insert('pipelineRuns', {
     registryId: primary.registryId,
     trigger: args.trigger,
+    monitorPolicyId: originRun?.monitorPolicyId,
+    monitorGeneration: originRun?.monitorGeneration,
+    monitorRegistryGeneration: originRun?.monitorRegistryGeneration,
+    suppressNotifications: originRun?.suppressNotifications,
     state: 'running',
     processorVersion: ISSUE_BUILD_PROCESSOR_VERSION,
     idempotencyKey: keyed.idempotencyKey,
@@ -162,6 +181,8 @@ export async function startIssueBuildTransaction(
     registryId: primary.registryId,
     governmentBodyId,
     issueKey: keyed.issueKey,
+    targetIssueId: targetIssue?._id,
+    expectedIssueVersionId: targetIssue?.currentVersionId,
     idempotencyKey: keyed.idempotencyKey,
     inputHash: keyed.inputHash,
     recordIds: records.map((item) => item.record._id),
@@ -236,7 +257,7 @@ export async function startIssueBuildTransaction(
 }
 
 export const refreshLinkedIssues = internalMutation({
-  args: { recordId: v.id('decisionRecords') },
+  args: { recordId: v.id('decisionRecords'), originRunId: v.optional(v.id('pipelineRuns')) },
   returns: v.null(),
   handler: async (ctx, args) => {
     const links = await ctx.db
@@ -251,18 +272,21 @@ export const refreshLinkedIssues = internalMutation({
       if (refreshed.size >= 10 || refreshed.has(link.issueId)) continue
       const issue = await ctx.db.get(link.issueId)
       if (!issue || issue.currentVersionId !== link.issueVersionId) continue
-      const currentLinks = await ctx.db
-        .query('issueDecisionLinks')
-        .withIndex('by_issue_version', (q) =>
-          q.eq('issueVersionId', issue.currentVersionId as Id<'issueVersions'>),
-        )
-        .take(11)
-      if (currentLinks.length < 2 || currentLinks.length > 10) continue
-      refreshed.add(issue._id)
-      await startIssueBuildTransaction(ctx, {
-        recordIds: currentLinks.map((currentLink) => currentLink.recordId),
-        trigger: 'decision_published',
-      })
+      const accepted = await loadTimelineMembers(ctx, issue.currentVersionId)
+      let changed = false
+      for (const member of accepted) {
+        const record = await ctx.db.get(member.recordId)
+        if (record?.currentPublishedVersionId !== member.publicationVersionId) changed = true
+      }
+      if (!changed) continue
+      try {
+        const recordIds = await extensionInputs(ctx, issue._id, args.recordId)
+        refreshed.add(issue._id)
+        await startIssueBuildTransaction(ctx, { recordIds, targetIssueId: issue._id, trigger: 'decision_published', originRunId: args.originRunId })
+      } catch (error) {
+        if (!String(error).includes('issue_extension_requires_owner')) throw error
+        await ctx.db.patch(issue._id, { attentionReason: 'More than nine members changed together. Review this timeline before refreshing it.' })
+      }
     }
     return null
   },

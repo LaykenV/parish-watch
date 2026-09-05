@@ -1264,3 +1264,108 @@ test('a published decision refresh creates one new issue version and replays wit
   expect(finalReplay.currentVersion?.version).toBe(2)
   expect(withheldFetch).toHaveBeenCalledTimes(2)
 })
+
+test('an extension retains the original issue URL and old members beyond the model window', async () => {
+  const t = initTest()
+  const seeded = await seedIssueInput(t)
+  const candidate = issueCandidate(seeded)
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const started = await startAndDrain(t, seeded.recordIds)
+  const first = await t.query(internal.operations.issues.readIssueBuildEvidence, { runId: started.runId })
+  const issueId = first.issue!._id
+  const originalSlug = first.issue!.slug
+  // Prior accepted members need not be sent back through the model to remain members.
+  await t.run(async ctx => {
+    const template = first.links[0]
+    const record = await ctx.db.get(template.recordId)
+    const publication = await ctx.db.get(template.publicationVersionId)
+    for (let index = 0; index < 9; index++) {
+      const { _id: _recordId, _creationTime: _recordTime, ...recordFields } = record!
+      const newRecordId = await ctx.db.insert('decisionRecords', { ...recordFields, recordKey: `retained-${index}`, sourceRecordId: `retained-${index}` })
+      const { _id: _publicationId, _creationTime: _publicationTime, ...publicationFields } = publication!
+      const newPublicationId = await ctx.db.insert('publicationVersions', { ...publicationFields, recordId: newRecordId })
+      await ctx.db.patch(newRecordId, { currentPublishedVersionId: newPublicationId })
+      const { _id, _creationTime, ...link } = template
+      await ctx.db.insert('issueDecisionLinks', { ...link, recordId: newRecordId, publicationVersionId: newPublicationId })
+    }
+  })
+  vi.unstubAllGlobals()
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const extension = await t.mutation(internal.operations.issues.startIssueBuild, { recordIds: seeded.recordIds, targetIssueId: issueId, trigger: 'decision_published' })
+  vi.useFakeTimers()
+  await t.finishAllScheduledFunctions(vi.runAllTimers)
+  vi.useRealTimers()
+  const second = await t.query(internal.operations.issues.readIssueBuildEvidence, { runId: extension.runId })
+  expect(second.issue?._id).toBe(issueId)
+  expect(second.issue?.slug).toBe(originalSlug)
+  const members = await t.run(ctx => ctx.db.query('issueDecisionLinks').withIndex('by_issue_version', q => q.eq('issueVersionId', second.issueVersion!._id)).collect())
+  expect(members).toHaveLength(11)
+})
+
+test('an automatic extension with too many changed members stays visible for attention', async () => {
+  const t = initTest()
+  const seeded = await seedIssueInput(t)
+  const candidate = issueCandidate(seeded)
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const started = await startAndDrain(t, seeded.recordIds)
+  const { proposalId, matches } = await t.run(async ctx => {
+    const record = (await ctx.db.get(seeded.recordIds[0]))!
+    const { _id, _creationTime, ...fields } = record
+    const matches: Id<'decisionRecords'>[] = [seeded.recordIds[1]]
+    for (let index = 0; index < 9; index++) matches.push(await ctx.db.insert('decisionRecords', { ...fields, recordKey: `unlinked-${index}`, sourceRecordId: `unlinked-${index}` }))
+    const proposalId = await ctx.db.insert('issueLinkProposals', { recordId: record._id, publicationVersionId: record.currentPublishedVersionId!, originRunId: started.runId, state: 'scanning', cursor: null, matchedRecordIds: [], scanned: 0, startedAt: Date.now(), updatedAt: Date.now() })
+    return { proposalId, matches }
+  })
+  expect(await t.mutation(internal.issues.proposals.checkpoint, { proposalId, recordIds: matches, cursor: '', isDone: true, count: matches.length })).toBe(true)
+  const proposal = await t.run(ctx => ctx.db.get(proposalId))
+  expect(proposal?.state).toBe('ambiguous')
+  expect(proposal?.errorClass).toBe('issue_extension_capacity')
+  expect(proposal?.issueBuildId).toBeUndefined()
+})
+
+
+test('a proposal reuses an issue refresh that already accepted the same publications', async () => {
+  const t = initTest()
+  const seeded = await seedIssueInput(t)
+  const candidate = issueCandidate(seeded)
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const started = await startAndDrain(t, seeded.recordIds)
+  const proposalId = await t.run(async ctx => {
+    const record = (await ctx.db.get(seeded.recordIds[0]))!
+    return ctx.db.insert('issueLinkProposals', { recordId: record._id, publicationVersionId: record.currentPublishedVersionId!, originRunId: started.runId, state: 'scanning', cursor: null, matchedRecordIds: [], scanned: 0, startedAt: Date.now(), updatedAt: Date.now() })
+  })
+  await t.mutation(internal.issues.proposals.checkpoint, { proposalId, recordIds: [seeded.recordIds[1]], cursor: '', isDone: true, count: 1 })
+  const proposal = await t.run(ctx => ctx.db.get(proposalId))
+  expect(proposal?.issueBuildId).toBe(started.issueBuildId)
+  expect(await t.run(ctx => ctx.db.query('issueBuilds').take(10))).toHaveLength(1)
+})
+
+test.each([0, 2])('a stale proposal build retries only within its two-attempt bound, prior attempts %s', async retryAttempts => {
+  const t = initTest()
+  const seeded = await seedIssueInput(t)
+  const candidate = issueCandidate(seeded)
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const started = await startAndDrain(t, seeded.recordIds)
+  const ids = await t.run(async ctx => {
+    const original = (await ctx.db.get(started.issueBuildId))!
+    const { _id, _creationTime, ...fields } = original
+    const failedBuildId = await ctx.db.insert('issueBuilds', { ...fields, idempotencyKey: `${fields.idempotencyKey}:stale`, state: 'failed', errorClass: 'workflow_failed', errorDetail: 'issue_extension_stale' })
+    const record = (await ctx.db.get(seeded.recordIds[0]))!
+    const id = await ctx.db.insert('issueLinkProposals', { recordId: record._id, publicationVersionId: record.currentPublishedVersionId!, originRunId: started.runId, state: 'proposed', issueBuildId: failedBuildId, retryAttempts, cursor: null, matchedRecordIds: [seeded.recordIds[1]], scanned: 1, startedAt: Date.now(), updatedAt: Date.now() })
+    return { failedBuildId, id }
+  })
+  await t.mutation(internal.issues.proposals.settleBuild, { issueBuildId: ids.failedBuildId, paginationOpts: { numItems: 25, cursor: null } })
+  const proposal = (await t.run(ctx => ctx.db.get(ids.id)))!
+  expect(proposal.state).toBe(retryAttempts === 0 ? 'scanning' : 'failed')
+  expect(proposal.retryAttempts).toBe(retryAttempts === 0 ? 1 : 2)
+  if (retryAttempts === 0) {
+    // The concurrent winner already contains the accepted publications. Reuse it
+    // without calling a provider or appending another issue version.
+    await t.mutation(internal.issues.proposals.retryCheckpoint, { proposalId: ids.id })
+    const retried = await t.run(ctx => ctx.db.get(ids.id))
+    expect(retried?.state).toBe('proposed')
+    expect(retried?.issueBuildId).toBe(started.issueBuildId)
+  }
+  await t.mutation(internal.issues.proposals.settleBuild, { issueBuildId: ids.failedBuildId, paginationOpts: { numItems: 25, cursor: null } })
+  expect((await t.run(ctx => ctx.db.get(ids.id)))?.retryAttempts).toBe(retryAttempts === 0 ? 1 : 2)
+})

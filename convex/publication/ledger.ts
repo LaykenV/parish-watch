@@ -325,9 +325,10 @@ export const finalizePublication = internalMutation({
       await ctx.scheduler.runAfter(
         0,
         internal.operations.issues.refreshLinkedIssues,
-        { recordId: record._id },
+        { recordId: record._id, originRunId: run._id },
       )
     }
+    if (policy.mode !== 'withheld' && run.monitorPolicyId) await ctx.scheduler.runAfter(0, internal.issues.proposals.start, { recordId: record._id, originRunId: run._id })
     await ctx.db.patch(stage._id, {
       state: 'succeeded',
       attempt: stage.attempt + 1,

@@ -1,3 +1,5 @@
+import { assertPipelineMonitoring } from '../monitoring/ledger'
+import { loadTimelineMembers, MAX_TIMELINE_MEMBERS } from './membership'
 import { ConvexError, v } from 'convex/values'
 
 import type { Doc, Id } from '../_generated/dataModel'
@@ -951,6 +953,7 @@ export const publishIssueBuild = internalMutation({
       stageId: args.publishStageId,
       stage: 'publish',
     })
+    await assertPipelineMonitoring(ctx, run._id)
     const existingVersion = await ctx.db
       .query('issueVersions')
       .withIndex('by_build', (q) => q.eq('buildId', build._id))
@@ -1012,6 +1015,13 @@ export const publishIssueBuild = internalMutation({
       issue = await ctx.db.get(issueId)
     }
     if (!issue) throw new Error('Issue creation failed')
+    if (build.targetIssueId && (issue._id !== build.targetIssueId || issue.currentVersionId !== build.expectedIssueVersionId)) throw new Error('issue_extension_stale')
+    const retainedLinks = build.expectedIssueVersionId ? (await loadTimelineMembers(ctx, build.expectedIssueVersionId)).filter(link => !build.recordIds.includes(link.recordId)) : []
+    if (retainedLinks.length + build.recordIds.length > MAX_TIMELINE_MEMBERS) throw new Error('issue_timeline_capacity_requires_owner')
+    for (const link of retainedLinks) {
+      const record = await ctx.db.get(link.recordId)
+      if (record?.currentPublishedVersionId !== link.publicationVersionId) throw new Error('issue_extension_stale')
+    }
     const previousAcceptedIssueVersionId = issue.currentVersionId
     const latestVersion = await ctx.db
       .query('issueVersions')
@@ -1084,6 +1094,10 @@ export const publishIssueBuild = internalMutation({
           linkerVersion: ISSUE_BUILD_PROCESSOR_VERSION,
           createdAt: now,
         })
+      }
+      for (const link of retainedLinks) {
+        const { _id, _creationTime, ...retained } = link
+        await ctx.db.insert('issueDecisionLinks', { ...retained, issueVersionId, createdAt: now })
       }
       for (const assessment of ranked.assessments) {
         await ctx.db.insert('importanceAssessments', {

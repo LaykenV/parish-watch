@@ -1,3 +1,4 @@
+import { loadTimelineMembers } from '../issues/membership'
 import { paginationOptsValidator } from 'convex/server'
 import { ConvexError, v } from 'convex/values'
 
@@ -413,16 +414,7 @@ async function loadIssueLinksWithinBuildBound(
   ctx: Pick<MutationCtx, 'db'> | Pick<TargetCtx, 'db'>,
   issueVersionId: Id<'issueVersions'>,
 ): Promise<Doc<'issueDecisionLinks'>[]> {
-  const links = await ctx.db
-    .query('issueDecisionLinks')
-    .withIndex('by_issue_version', (index) =>
-      index.eq('issueVersionId', issueVersionId),
-    )
-    .take(11)
-  if (links.length > 10) {
-    throw new Error('Issue version exceeds the ten-decision build limit')
-  }
-  return links
+  return loadTimelineMembers(ctx, issueVersionId)
 }
 
 export async function scheduleNewIssueLinkFanouts(
