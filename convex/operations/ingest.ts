@@ -10,6 +10,7 @@ import {
   canonicalizeUrl,
   firstSeedUrl,
   isAllowedOfficialHost,
+  isRegisteredSourceUrl,
 } from '../sources/domains'
 import { sha256HexOfBytes, sha256HexOfText } from '../sources/hashing'
 import { normalizeFirecrawlMetadata } from '../sources/metadata'
@@ -201,6 +202,7 @@ export const ingestRegistrySource = internalAction({
   args: {
     registryId: v.id('sourceRegistries'),
     urlOverride: v.optional(v.string()),
+    monitorRunId: v.optional(v.id('sourceMonitoringRuns')),
   },
   returns: ingestOutcome,
   handler: async (ctx, args): Promise<IngestOutcome> => {
@@ -224,8 +226,10 @@ export const ingestRegistrySource = internalAction({
         registry.officialDomains,
         registry.seedUrls,
         requestedUrl,
+        registry.approvedDocumentHosts,
       ),
       requestedUrl,
+      args.monitorRunId,
     )
   },
 })
@@ -258,6 +262,7 @@ export const ingestBodySource = internalAction({
         resolved.registry.officialDomains,
         resolved.registry.seedUrls,
         requestedUrl,
+        resolved.registry.approvedDocumentHosts,
       ),
       requestedUrl,
     )
@@ -268,13 +273,12 @@ function retrievalDomains(
   officialDomains: string[],
   seedUrls: string[],
   requestedUrl: string,
+  documentHosts: Array<{ host: string; pathPrefixes: string[] }> = [],
 ): string[] {
   const canonicalRequested = canonicalizeUrl(requestedUrl)
   if (
     !canonicalRequested ||
-    !seedUrls.some(
-      (seedUrl) => canonicalizeUrl(seedUrl) === canonicalRequested,
-    )
+    !isRegisteredSourceUrl(canonicalRequested, officialDomains, seedUrls, documentHosts)
   ) {
     return officialDomains
   }
@@ -287,6 +291,7 @@ async function ingestSeedUrl(
   registryId: Id<'sourceRegistries'>,
   officialDomains: string[],
   rawUrl: string,
+  monitorRunId?: Id<'sourceMonitoringRuns'>,
 ): Promise<IngestOutcome> {
   const url = canonicalizeUrl(rawUrl)
   if (!url) {
@@ -330,14 +335,30 @@ async function ingestSeedUrl(
   let rawStorageId: Id<'_storage'> | undefined
 
   try {
-    let document = await firecrawl.scrape(ctx, url, {
-      formats: ['markdown', 'rawHtml'],
-      onlyMainContent: false,
-      // Firecrawl v2 defaults this to true. Its PDF engine does not support
-      // that option and returns a warning even for complete documents. Public
-      // Parish separately verifies the official artifact over TLS below.
-      skipTlsVerification: false,
-    })
+    const reserve = async () => {
+      if (!monitorRunId) return
+      const current = await ctx.runQuery(internal.monitoring.ledger.context, { runId: monitorRunId })
+      if (current.registry._id !== registryId) throw new Error('monitoring_registry_mismatch')
+      if (!await ctx.runMutation(internal.monitoring.ledger.reserve, { runId: monitorRunId, units: 1 })) throw new Error('monitoring_daily_limit')
+    }
+    const retrieve = async (sourceUrl: string, fresh: boolean) => {
+      await reserve()
+      const started = Date.now()
+      let status = 'failed'
+      let creditsUsed: number | undefined
+      try {
+        const result = await firecrawl.scrape(ctx, sourceUrl, {
+          formats: ['markdown', 'rawHtml'], onlyMainContent: false,
+          skipTlsVerification: false, ...(fresh ? { maxAge: 0 } : {}),
+        })
+        creditsUsed = typeof result.metadata?.creditsUsed === 'number' ? result.metadata.creditsUsed : undefined
+        status = result.warning || (typeof result.metadata?.statusCode === 'number' && result.metadata.statusCode >= 400) ? 'failed' : 'succeeded'
+        return result
+      } finally {
+        if (monitorRunId) await ctx.runMutation(internal.monitoring.ledger.recordCall, { runId: monitorRunId, operation: 'retrieval', provider: 'firecrawl', status, creditsUsed, latencyMs: Date.now() - started })
+      }
+    }
+    let document = await retrieve(url, false)
     let scraped = validateScrape(document, url, officialDomains)
     if (!scraped.ok) {
       return await failOutcome(
@@ -365,12 +386,7 @@ async function ingestSeedUrl(
         )
       }
 
-      document = await firecrawl.scrape(ctx, scraped.retrievedUrl, {
-        formats: ['markdown', 'rawHtml'],
-        onlyMainContent: false,
-        skipTlsVerification: false,
-        maxAge: 0,
-      })
+      document = await retrieve(scraped.retrievedUrl, true)
       const verifiedScrape = validateScrape(
         document,
         scraped.retrievedUrl,
@@ -462,6 +478,7 @@ async function ingestSeedUrl(
       new Blob([rawBytes], { type: rawContentType }),
     )
 
+    if (monitorRunId) await ctx.runQuery(internal.monitoring.ledger.context, { runId: monitorRunId })
     const committed = await ctx.runMutation(
       internal.sources.snapshots.commitRetrieval,
       {
@@ -517,10 +534,11 @@ async function ingestSeedUrl(
       cleanupFailures.length === 0
         ? classified.errorDetail
         : `${classified.errorDetail}; storage cleanup failed ${cleanupFailures.length} time(s)`
+    const monitoringControl = monitorRunId && ['monitoring_stopped', 'monitoring_daily_limit'].find(code => String(error).includes(code))
     return await failOutcome(
-      classified.errorClass,
+      monitoringControl || classified.errorClass,
       errorDetail,
-      classified.retryable,
+      monitoringControl ? true : classified.retryable,
     )
   }
 }

@@ -111,11 +111,13 @@ export const prepareExtractionContext = internalQuery({
         snapshot.canonicalUrl,
         registry.officialDomains,
         registry.seedUrls,
+        registry.approvedDocumentHosts,
       ) ||
       !isRegisteredSourceUrl(
         snapshot.retrievedUrl,
         registry.officialDomains,
         registry.seedUrls,
+        registry.approvedDocumentHosts,
       )
     ) {
       return {

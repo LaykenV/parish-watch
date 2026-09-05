@@ -875,6 +875,7 @@ export const loadValidationRows = internalQuery({
     snapshot: v.union(v.null(), schema.doc('sourceSnapshots')),
     officialDomains: v.union(v.null(), v.array(v.string())),
     seedUrls: v.union(v.null(), v.array(v.string())),
+    approvedDocumentHosts: v.optional(v.array(v.object({ host: v.string(), pathPrefixes: v.array(v.string()) }))),
     registeredBodyName: v.union(v.null(), v.string()),
   }),
   handler: async (ctx, args) => {
@@ -938,6 +939,7 @@ export const loadValidationRows = internalQuery({
       snapshot,
       officialDomains: registry?.officialDomains ?? null,
       seedUrls: registry?.seedUrls ?? null,
+      approvedDocumentHosts: registry?.approvedDocumentHosts,
       registeredBodyName: body?.name ?? null,
     }
   },

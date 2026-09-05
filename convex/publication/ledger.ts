@@ -1,3 +1,4 @@
+import { assertPipelineMonitoring } from '../monitoring/ledger'
 import { ConvexError, v } from 'convex/values'
 
 import { internal } from '../_generated/api'
@@ -34,6 +35,7 @@ export const finalizePublication = internalMutation({
     ),
   }),
   handler: async (ctx, args) => {
+    await assertPipelineMonitoring(ctx, args.runId)
     const run = await ctx.db.get(args.runId)
     const stage = await ctx.db.get(args.finalizeStageId)
     const candidate = await ctx.db.get(args.context.candidateId)
@@ -289,6 +291,7 @@ export const finalizePublication = internalMutation({
         createdAt: now,
       })
     }
+    if (materialChangeId && run.suppressNotifications) await ctx.db.patch(materialChangeId, { notificationEligible: false })
     const body = await ctx.db.get(record.governmentBodyId)
     if (!body) {
       throw new ConvexError({
@@ -312,7 +315,7 @@ export const finalizePublication = internalMutation({
           },
     )
     if (policy.mode !== 'withheld') {
-      if (materialChangeId) {
+      if (materialChangeId && !run.suppressNotifications) {
         await ctx.scheduler.runAfter(
           0,
           internal.follows.targets.startDecisionMatchFanout,

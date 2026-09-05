@@ -42,8 +42,14 @@ export function isRegisteredSourceUrl(
   url: string,
   officialDomains: string[],
   seedUrls: string[],
+  documentHosts: Array<{ host: string; pathPrefixes: string[] }> = [],
 ): boolean {
+  const parsed = canonicalizeUrl(url)
+  if (!parsed) return false
+  const candidate = new URL(parsed)
+  if (candidate.username || candidate.password) return false
   if (isAllowedOfficialHost(url, officialDomains)) return true
+  if (candidate.protocol === 'https:' && documentHosts.some(entry => candidate.hostname === entry.host && entry.pathPrefixes.some(prefix => candidate.pathname.startsWith(prefix)))) return true
   const canonicalUrl = canonicalizeUrl(url)
   return (
     canonicalUrl !== null &&

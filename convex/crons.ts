@@ -53,4 +53,6 @@ crons.interval(
   {},
 )
 
+crons.interval('check approved government sources', { minutes: 15 }, internal.monitoring.ledger.tick, {})
+
 export default crons

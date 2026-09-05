@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
 
 import { aiRoutes, modelRoles } from './ai/types'
+import { monitorState, targetState } from './monitoring/contracts'
 import {
   coverageFindingCodes,
   coverageFindingSeverities,
@@ -530,6 +531,7 @@ export default defineSchema({
   sourceRegistries: defineTable({
     governmentBodyId: v.id('governmentBodies'),
     officialDomains: v.array(v.string()),
+    approvedDocumentHosts: v.optional(v.array(v.object({ host: v.string(), pathPrefixes: v.array(v.string()) }))),
     seedUrls: v.array(v.string()),
     sourceKinds: v.array(sourceKinds),
     expectedCadence: v.object({
@@ -545,6 +547,71 @@ export default defineSchema({
   })
     .index('by_body_and_status', ['governmentBodyId', 'status'])
     .index('by_next_scheduled_check', ['nextScheduledCheckAt']),
+
+  sourceMonitoringPolicies: defineTable({
+    nextDiscoveryAt: v.optional(v.number()),
+    discoveryPendingUrls: v.optional(v.array(v.string())), discoveryVisitedUrls: v.optional(v.array(v.string())),
+    registryId: v.id('sourceRegistries'),
+    proposalId: v.id('coverageRegistryProposals'),
+    enabled: v.boolean(), generation: v.number(),
+    intervalHours: v.number(), documentsPerRun: v.number(), targetsPerRun: v.number(),
+    dailyCallLimit: v.number(), startsAt: v.number(), activatedAt: v.number(),
+    baselineComplete: v.boolean(), nextCheckAt: v.number(),
+    activeRunId: v.optional(v.id('sourceMonitoringRuns')),
+    lastAttemptAt: v.optional(v.number()), lastRetrievalAt: v.optional(v.number()),
+    lastCompletedAt: v.optional(v.number()), failures: v.number(),
+    createdAt: v.number(), updatedAt: v.number(),
+  }).index('by_registry_id', ['registryId'])
+    .index('by_enabled_and_next_check_at', ['enabled', 'nextCheckAt']),
+
+  sourceMonitoringRuns: defineTable({
+    policyId: v.id('sourceMonitoringPolicies'), registryId: v.id('sourceRegistries'),
+    generation: v.number(), registryGeneration: v.number(), state: monitorState,
+    workflowId: v.optional(v.string()), baseline: v.boolean(),
+    documentsChecked: v.number(), targetsStarted: v.number(), errorClass: v.optional(v.string()),
+    startedAt: v.number(), completedAt: v.optional(v.number()),
+  }).index('by_policy_id_and_started_at', ['policyId', 'startedAt'])
+    .index('by_state_and_started_at', ['state', 'startedAt']),
+
+  monitoredDocuments: defineTable({
+    policyId: v.id('sourceMonitoringPolicies'), registryId: v.id('sourceRegistries'),
+    canonicalUrl: v.string(), nextCheckAt: v.number(), firstSeenAt: v.number(),
+    notificationEligible: v.boolean(), snapshotId: v.optional(v.id('sourceSnapshots')),
+    normalizedHash: v.optional(v.string()), inventoryVersion: v.optional(v.string()),
+    chunkCount: v.optional(v.number()), completedChunks: v.optional(v.number()),
+    inventoryComplete: v.boolean(), lastCheckedAt: v.optional(v.number()),
+    errorClass: v.optional(v.string()),
+  }).index('by_policy_id_and_url', ['policyId', 'canonicalUrl'])
+    .index('by_policy_id_and_inventory_complete', ['policyId', 'inventoryComplete'])
+    .index('by_policy_id_and_next_check_at', ['policyId', 'nextCheckAt']),
+
+  documentInventoryTargets: defineTable({
+    documentId: v.id('monitoredDocuments'), snapshotId: v.id('sourceSnapshots'),
+    policyId: v.id('sourceMonitoringPolicies'), registryId: v.id('sourceRegistries'),
+    targetKey: v.string(), targetRecordId: v.string(), locator: v.string(),
+    sourceRecordIdProvenance: sourceRecordIdProvenances, sourceKind: sourceKinds,
+    meetingDate: v.string(), state: targetState, notificationEligible: v.boolean(),
+    pipelineRunId: v.optional(v.id('pipelineRuns')),
+    attempts: v.optional(v.number()), retryAt: v.optional(v.number()), createdAt: v.number(), updatedAt: v.number(),
+  }).index('by_snapshot_id_and_target_key', ['snapshotId', 'targetKey'])
+    .index('by_policy_id_and_state', ['policyId', 'state'])
+    .index('by_policy_state_and_retry', ['policyId', 'state', 'retryAt'])
+    .index('by_document_id_and_snapshot_id', ['documentId', 'snapshotId']),
+
+  monitoringProviderCalls: defineTable({
+    runId: v.id('sourceMonitoringRuns'), operation: v.string(), provider: v.string(),
+    status: v.string(), modelId: v.optional(v.string()), modelRole: v.optional(modelRoles),
+    promptTokens: v.optional(v.number()), completionTokens: v.optional(v.number()),
+    estimatedCostUsd: v.optional(v.number()), creditsUsed: v.optional(v.number()),
+    errorClass: v.optional(v.string()), errorDetail: v.optional(v.string()), latencyMs: v.number(), createdAt: v.number(),
+  }).index('by_run_id_and_created_at', ['runId', 'createdAt'])
+    .index('by_created_at', ['createdAt']),
+
+  coverageIncidents: defineTable({
+    registryId: v.id('sourceRegistries'), code: v.string(), state: v.union(v.literal('open'), v.literal('resolved')),
+    summary: v.string(), firstSeenAt: v.number(), lastSeenAt: v.number(), attempts: v.number(),
+  }).index('by_registry_id_and_state', ['registryId', 'state'])
+    .index('by_state_and_last_seen_at', ['state', 'lastSeenAt']),
 
   coverageCompilerRuns: defineTable({
     bodyKey: v.string(),
@@ -790,9 +857,15 @@ export default defineSchema({
     candidateId: v.optional(v.id('decisionCandidates')),
     issueBuildId: v.optional(v.id('issueBuilds')),
     upstreamRunId: v.optional(v.id('pipelineRuns')),
+    monitorPolicyId: v.optional(v.id('sourceMonitoringPolicies')),
+    monitorGeneration: v.optional(v.number()),
+    monitorRegistryGeneration: v.optional(v.number()),
+    suppressNotifications: v.optional(v.boolean()),
+    targetLocator: v.optional(v.string()),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
   })
+    .index('by_upstream_run', ['upstreamRunId'])
     .index('by_state_and_started_time', ['state', 'startedAt'])
     .index('by_registry_and_started_time', ['registryId', 'startedAt'])
     .index('by_idempotency_key', ['idempotencyKey']),
@@ -1163,6 +1236,7 @@ export default defineSchema({
       v.literal('no_public_change'),
     ),
     material: v.boolean(),
+    notificationEligible: v.optional(v.boolean()),
     fieldChanges: v.array(
       v.object({
         fieldPath: v.string(),
