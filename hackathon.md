@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth with Google OAuth, verified on the development, production custom-domain, and qualifying `convex.site` flows
 - **AI models:** `openai/gpt-5.6-terra` for `MODEL_STRONG` extraction, consequence factors, and issue linking; `openai/gpt-5.6-luna` for `MODEL_FAST` coverage discovery classification, independent review, and Ask through Convex AI Gateway
 - **Started:** 2026-08-27T04:38:41Z
-- **Last updated:** 2026-09-05T09:58:00Z
+- **Last updated:** 2026-09-05T16:13:47Z
 
 ## Log
 
@@ -1483,3 +1483,14 @@ active, capped at 50 daily admissions with incomplete catch-up retained.
 Lafayette's three planning bodies remain validating. See
 `docs/slice-9-production-certification.md` for proof and limits. Resident benefit,
 the timed demo, and submission remain separate from build completion.
+
+
+### 2026-09-05 - f289503
+
+Added a versioned permission for Lafayette's official event-document path while
+preserving old source manifests. The earlier Hearing Examiner agenda PDF worked,
+but the event service returned 502 again and a fresh Firecrawl scrape failed.
+The planning bodies remain unvalidated. Exact City and Parish commission
+identities and working agenda/outcome pairs are still required. Added a path
+restriction regression for CI; development deployment and production release of
+this repair follow PR checks.

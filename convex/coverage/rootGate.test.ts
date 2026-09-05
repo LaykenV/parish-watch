@@ -7,6 +7,7 @@ import {
   isApprovedRootUrl,
 } from './rootGate'
 import type { RedirectWalk } from './redirectWalk'
+import { listRootManifests, resolveRootManifest } from './roots'
 import type { CoverageRootManifest } from './roots'
 
 const MANIFEST: CoverageRootManifest = {
@@ -192,4 +193,22 @@ test('an expected final URL must match after redirects', () => {
     finalResponse('https://www.testparish.gov/council/home/', 200, 'text/html'),
   )
   expect(match.outcome).toBe('passed')
+})
+
+test('Lafayette event documents require a new manifest and keep their path boundary', () => {
+  const event = 'https://events.lafayettela.gov/default/Detail/2026-09-11-0830-Hearing-Examiner-Public-Meeting/0fc6a5a3-b293-4e7c-a2a8-b4b800f18b9c'
+  for (const bodyKey of ['lafayette-planning-commission', 'lafayette-board-of-zoning-adjustment', 'lafayette-hearing-examiner']) {
+    const current = listRootManifests().find(manifest => manifest.bodyKey === bodyKey)!
+    const previous = resolveRootManifest(bodyKey, 'v1')!
+    expect(current.version).toBe('v2')
+    expect(resolveRootManifest(bodyKey, 'v2')).toEqual(current)
+    expect(classifyHost(current, event)).toBe('document_host')
+    expect(classifyHost(previous, event)).toBe('unapproved')
+    expect(isApprovedRootUrl(current, event)).toBe(false)
+    expect(classifyHost(current, 'https://events.lafayettela.gov/')).toBe('unapproved')
+    expect(classifyHost(current, 'https://events.lafayettela.gov/default/Detail-other/file')).toBe('unapproved')
+    expect(classifyHost(current, 'https://events.lafayettela.gov/default/Detail/../Other/file')).toBe('unapproved')
+    expect(classifyHost(current, event.replace('events.lafayettela.gov', 'events.lafayettela.gov.evil.example'))).toBe('unapproved')
+  }
+  expect(classifyHost(resolveRootManifest('youngsville-city-council', 'v1')!, event)).toBe('unapproved')
 })

@@ -241,8 +241,29 @@ const ROOT_MANIFESTS: CoverageRootManifest[] = [
   },
 ]
 
+const LAFAYETTE_EVENT_BODIES = new Set([
+  'lafayette-planning-commission',
+  'lafayette-board-of-zoning-adjustment',
+  'lafayette-hearing-examiner',
+])
+
+// Keep v1 resolvable for earlier runs. Only new runs use the checked event path.
+const CURRENT_ROOT_MANIFESTS: CoverageRootManifest[] = ROOT_MANIFESTS.map(
+  (manifest) => LAFAYETTE_EVENT_BODIES.has(manifest.bodyKey)
+    ? {
+        ...manifest,
+        version: 'v2',
+        documentHosts: [
+          ...manifest.documentHosts,
+          { host: 'events.lafayettela.gov', pathPrefixes: ['/default/Detail/'] },
+        ],
+        checkedAt: '2026-09-05',
+      }
+    : manifest,
+)
+
 export function listRootManifests(): CoverageRootManifest[] {
-  return ROOT_MANIFESTS
+  return CURRENT_ROOT_MANIFESTS
 }
 
 export function resolveRootManifest(
@@ -250,7 +271,7 @@ export function resolveRootManifest(
   version: string,
 ): CoverageRootManifest | null {
   return (
-    ROOT_MANIFESTS.find(
+    [...CURRENT_ROOT_MANIFESTS, ...ROOT_MANIFESTS].find(
       (manifest) =>
         manifest.bodyKey === bodyKey && manifest.version === version,
     ) ?? null
