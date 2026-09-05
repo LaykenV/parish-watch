@@ -2,6 +2,7 @@ import { v } from 'convex/values'
 import { vResultValidator, vWorkflowId } from '@convex-dev/workflow'
 import { internal } from '../_generated/api'
 import { internalMutation } from '../_generated/server'
+import { MONITOR_VERSION } from './contracts'
 import { extractionWorkflowManager } from '../pipeline/workflowManager'
 
 export const checkSources = extractionWorkflowManager.define({
@@ -17,9 +18,14 @@ export const checkSources = extractionWorkflowManager.define({
     const documents = await step.runQuery(internal.monitoring.ledger.dueDocuments, args)
     for (const document of documents) {
       try {
+      let reused = false
+      // Continue the accepted immutable snapshot before fetching another revision.
+      // The next completed-document check retrieves the current official source.
+      if (!document.snapshotId || document.inventoryComplete || document.inventoryVersion !== MONITOR_VERSION) {
       const retrieval = await step.runAction(internal.operations.ingest.ingestRegistrySource, { registryId: document.registryId, urlOverride: document.canonicalUrl, monitorRunId: args.runId }, { retry: false })
       if (retrieval.outcome === 'failed') throw new Error(retrieval.errorClass)
-      const reused = await step.runMutation(internal.monitoring.ledger.setSnapshot, { ...args, documentId: document._id, snapshotId: retrieval.snapshotId })
+      reused = await step.runMutation(internal.monitoring.ledger.setSnapshot, { ...args, documentId: document._id, snapshotId: retrieval.snapshotId })
+      }
       if (!reused) {
         const current = await step.runQuery(internal.monitoring.ledger.documentContext, { ...args, documentId: document._id })
         let chunks = current.document.chunkCount ?? 1
