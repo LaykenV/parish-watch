@@ -4,6 +4,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import { internal } from './_generated/api'
 import { encryptAddress, hashAddress } from './follows/secrets'
 import schema from './schema'
+
 const modules = import.meta.glob('./**/*.ts')
 const recipient = 'public-parish-reports@agentmail.to'
 afterEach(() => vi.unstubAllEnvs())
