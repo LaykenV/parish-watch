@@ -1,4 +1,5 @@
 import { v } from 'convex/values'
+import { paginationOptsValidator } from 'convex/server'
 import { vResultValidator, vWorkflowId } from '@convex-dev/workflow'
 import { internal } from '../_generated/api'
 import type { Id } from '../_generated/dataModel'
@@ -152,4 +153,40 @@ export const completed = internalMutation({
 export const recordAttempt = internalMutation({
   args: { pipelineRunId: v.id('pipelineRuns'), provider: v.string(), status: v.string(), modelId: v.string(), promptTokens: v.optional(v.number()), completionTokens: v.optional(v.number()), estimatedCostUsd: v.optional(v.number()), latencyMs: v.number() }, returns: v.null(),
   handler: async (ctx, args) => { await ctx.db.insert('monitoringProviderCalls', { ...args, operation: 'issue_proposal', modelRole: 'MODEL_STRONG', createdAt: Date.now() }); return null },
+})
+
+// A proposed relationship is not an accepted timeline. Reconcile the build's
+// terminal state and retry only a concurrent extension, using the same matches.
+export const settleBuild = internalMutation({
+  args: { issueBuildId: v.id('issueBuilds'), paginationOpts: paginationOptsValidator }, returns: v.null(),
+  handler: async (ctx, args) => {
+    const build = await ctx.db.get(args.issueBuildId)
+    if (!build || (build.state !== 'failed' && build.state !== 'withheld')) return null
+    const proposals = await ctx.db.query('issueLinkProposals').withIndex('by_issue_build', q => q.eq('issueBuildId', args.issueBuildId)).paginate(args.paginationOpts)
+    for (const proposal of proposals.page) {
+      if (proposal.state !== 'proposed') continue
+      const attempts = proposal.retryAttempts ?? 0
+      if (build.errorDetail?.includes('issue_extension_stale') && attempts < 2) {
+        await ctx.db.patch(proposal._id, { state: 'scanning', issueBuildId: undefined, retryAttempts: attempts + 1, errorClass: undefined, updatedAt: Date.now() })
+        await ctx.scheduler.runAfter(0, internal.issues.proposals.retryCheckpoint, { proposalId: proposal._id })
+      } else {
+        await ctx.db.patch(proposal._id, { state: build.state === 'withheld' ? 'ambiguous' : 'failed', errorClass: build.state === 'withheld' ? 'issue_proposal_withheld' : build.errorClass ?? 'issue_proposal_build_failed', updatedAt: Date.now() })
+      }
+    }
+    if (!proposals.isDone) await ctx.scheduler.runAfter(0, internal.issues.proposals.settleBuild, { ...args, paginationOpts: { numItems: 25, cursor: proposals.continueCursor } })
+    return null
+  },
+})
+export const retryCheckpoint = internalMutation({
+  args: { proposalId: v.id('issueLinkProposals') }, returns: v.null(),
+  handler: async (ctx, args) => {
+    const proposal = await ctx.db.get(args.proposalId)
+    if (!proposal || proposal.state !== 'scanning' || !proposal.retryAttempts) return null
+    try {
+      await ctx.runMutation(internal.issues.proposals.checkpoint, { proposalId: proposal._id, recordIds: [], cursor: proposal.cursor ?? '', isDone: true, count: 0 })
+    } catch {
+      await ctx.db.patch(proposal._id, { state: 'failed', errorClass: 'issue_proposal_retry_stopped', updatedAt: Date.now() })
+    }
+    return null
+  },
 })

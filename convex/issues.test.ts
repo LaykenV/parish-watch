@@ -1339,3 +1339,33 @@ test('a proposal reuses an issue refresh that already accepted the same publicat
   expect(proposal?.issueBuildId).toBe(started.issueBuildId)
   expect(await t.run(ctx => ctx.db.query('issueBuilds').take(10))).toHaveLength(1)
 })
+
+test.each([0, 2])('a stale proposal build retries only within its two-attempt bound, prior attempts %s', async retryAttempts => {
+  const t = initTest()
+  const seeded = await seedIssueInput(t)
+  const candidate = issueCandidate(seeded)
+  stubIssueFetch([{ model: TERRA_MODEL, content: candidate }, { model: LUNA_MODEL, content: issueReview(candidate) }])
+  const started = await startAndDrain(t, seeded.recordIds)
+  const ids = await t.run(async ctx => {
+    const original = (await ctx.db.get(started.issueBuildId))!
+    const { _id, _creationTime, ...fields } = original
+    const failedBuildId = await ctx.db.insert('issueBuilds', { ...fields, idempotencyKey: `${fields.idempotencyKey}:stale`, state: 'failed', errorClass: 'workflow_failed', errorDetail: 'issue_extension_stale' })
+    const record = (await ctx.db.get(seeded.recordIds[0]))!
+    const id = await ctx.db.insert('issueLinkProposals', { recordId: record._id, publicationVersionId: record.currentPublishedVersionId!, originRunId: started.runId, state: 'proposed', issueBuildId: failedBuildId, retryAttempts, cursor: null, matchedRecordIds: [seeded.recordIds[1]], scanned: 1, startedAt: Date.now(), updatedAt: Date.now() })
+    return { failedBuildId, id }
+  })
+  await t.mutation(internal.issues.proposals.settleBuild, { issueBuildId: ids.failedBuildId, paginationOpts: { numItems: 25, cursor: null } })
+  const proposal = (await t.run(ctx => ctx.db.get(ids.id)))!
+  expect(proposal.state).toBe(retryAttempts === 0 ? 'scanning' : 'failed')
+  expect(proposal.retryAttempts).toBe(retryAttempts === 0 ? 1 : 2)
+  if (retryAttempts === 0) {
+    // The concurrent winner already contains the accepted publications. Reuse it
+    // without calling a provider or appending another issue version.
+    await t.mutation(internal.issues.proposals.retryCheckpoint, { proposalId: ids.id })
+    const retried = await t.run(ctx => ctx.db.get(ids.id))
+    expect(retried?.state).toBe('proposed')
+    expect(retried?.issueBuildId).toBe(started.issueBuildId)
+  }
+  await t.mutation(internal.issues.proposals.settleBuild, { issueBuildId: ids.failedBuildId, paginationOpts: { numItems: 25, cursor: null } })
+  expect((await t.run(ctx => ctx.db.get(ids.id)))?.retryAttempts).toBe(retryAttempts === 0 ? 1 : 2)
+})

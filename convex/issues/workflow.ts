@@ -173,8 +173,7 @@ export const handleIssueBuildComplete = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    if (args.result.kind === 'success') return null
-    await failIssueBuildTransaction(ctx, {
+    if (args.result.kind !== 'success') await failIssueBuildTransaction(ctx, {
       issueBuildId: args.context.issueBuildId,
       errorClass:
         args.result.kind === 'canceled'
@@ -182,6 +181,10 @@ export const handleIssueBuildComplete = internalMutation({
           : 'workflow_failed',
       errorDetail:
         args.result.kind === 'canceled' ? 'canceled' : args.result.error,
+    })
+    await ctx.scheduler.runAfter(0, internal.issues.proposals.settleBuild, {
+      issueBuildId: args.context.issueBuildId,
+      paginationOpts: { numItems: 25, cursor: null },
     })
     return null
   },

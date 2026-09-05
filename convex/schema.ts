@@ -1260,8 +1260,8 @@ export default defineSchema({
     state: v.union(v.literal('pending'), v.literal('scanning'), v.literal('proposed'), v.literal('no_match'), v.literal('ambiguous'), v.literal('failed')),
     cursor: v.union(v.string(), v.null()), matchedRecordIds: v.array(v.id('decisionRecords')),
     scanned: v.number(), startedAt: v.number(), updatedAt: v.number(), workflowId: v.optional(v.string()),
-    issueBuildId: v.optional(v.id('issueBuilds')), errorClass: v.optional(v.string()),
-  }).index('by_publication_version', ['publicationVersionId']).index('by_state_and_updated_at', ['state', 'updatedAt']),
+    issueBuildId: v.optional(v.id('issueBuilds')), errorClass: v.optional(v.string()), retryAttempts: v.optional(v.number()),
+  }).index('by_publication_version', ['publicationVersionId']).index('by_state_and_updated_at', ['state', 'updatedAt']).index('by_issue_build', ['issueBuildId']),
 
   issueBuilds: defineTable({
     targetIssueId: v.optional(v.id('issues')),
