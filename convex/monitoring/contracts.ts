@@ -83,3 +83,9 @@ export function inventorySourceSection(text: string, chunk: number): { source: s
     dateAndBodyContext: chunk > 0 ? text.slice(0, 1_000) : undefined,
   }
 }
+
+
+export function isBeforeMeetingWindow(meetingDate: string, startsAt: number): boolean {
+  // Official meeting dates have day precision, including the owner's first day.
+  return Date.parse(meetingDate) < new Date(startsAt).setUTCHours(0, 0, 0, 0)
+}

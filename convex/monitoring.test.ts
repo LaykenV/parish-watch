@@ -6,7 +6,7 @@ import { convexTest } from 'convex-test'
 import { afterEach, expect, test, vi } from 'vitest'
 import { api, components, internal } from './_generated/api'
 import { isBeforeSourceWindow, isDocumentUrl } from './monitoring/discovery'
-import { inventoryContract, inventoryIdentity, inventorySourceSection } from './monitoring/contracts'
+import { inventoryContract, inventoryIdentity, inventorySourceSection, isBeforeMeetingWindow } from './monitoring/contracts'
 import type { InventoryResult } from './monitoring/contracts'
 import schema from './schema'
 
@@ -14,6 +14,13 @@ const modules = import.meta.glob('./**/*.ts')
 afterEach(() => vi.unstubAllEnvs())
 const inventory: InventoryResult = { complete: true, bodyName: 'Test Council', sourceKind: 'agenda', meetingDate: '2026-09-04', dateExcerpt: 'September 4, 2026', targets: [{ printedId: '2026-14', title: 'Road repairs', excerpt: '2026-14 Road repairs' }] }
 const text = 'Test Council. September 4, 2026. 2026-14 Road repairs'
+
+test('a midday policy includes same-day meetings and excludes the previous day', () => {
+  const startsAt = Date.parse('2026-09-05T18:30:00Z')
+  expect(isBeforeMeetingWindow('2026-09-05', startsAt)).toBe(false)
+  expect(isBeforeMeetingWindow('2026-09-04', startsAt)).toBe(true)
+  expect(isBeforeMeetingWindow('2026-09-06', startsAt)).toBe(false)
+})
 
 test('inventory refuses fabricated locators, ambiguous items and invalid dates', () => {
   expect(inventoryContract(inventory, text, 'Test Council')).toBeNull()
