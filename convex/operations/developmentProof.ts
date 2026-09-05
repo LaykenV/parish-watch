@@ -285,8 +285,8 @@ export async function acceptedReplayChange(ctx: MutationCtx, version: Doc<'publi
   return change
 }
 
-// One owner-authorized production replay. It creates delivery records only;
-// accepted publications, source snapshots, and follow timestamps stay intact.
+// One owner-authorized delivery replay may derive one missing legacy event.
+// Accepted publications, source snapshots, and follow timestamps stay intact.
 export const replayProductionControlledDelivery = internalMutation({
   args: {}, returns: v.id('roundupWindows'),
   handler: async ctx => {
