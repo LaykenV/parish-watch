@@ -5,7 +5,9 @@ import { components, internal } from '../_generated/api'
 import type { MutationCtx } from '../_generated/server'
 import type { Id } from '../_generated/dataModel'
 import { completeStructuredDirectFallback } from '../ai/provider'
-import { decryptAddress } from '../follows/secrets'
+import { decryptAddress, hashAddress } from '../follows/secrets'
+import { loadTimelineMembers } from '../issues/membership'
+import { coverageLinkDeployment } from '../coverage/gates'
 import { normalizeForMatch } from '../extraction/textMatch'
 import { sha256HexOfText } from '../sources/hashing'
 import { env, internalAction, internalMutation, internalQuery } from '../_generated/server'
@@ -268,5 +270,47 @@ export const reopenCanaryContinuation = internalMutation({
     for (const target of lastSection) await ctx.db.delete(target._id)
     await ctx.db.patch(documentId, { completedChunks: 1, inventoryComplete: false, nextCheckAt: 0 })
     return lastSection.length
+  },
+})
+
+// One owner-authorized production replay. It creates delivery records only;
+// accepted publications, source snapshots, and follow timestamps stay intact.
+export const replayProductionControlledDelivery = internalMutation({
+  args: {}, returns: v.id('roundupWindows'),
+  handler: async ctx => {
+    const recipient = 'public-parish-reports@agentmail.to'
+    if (coverageLinkDeployment(env.CONVEX_SITE_URL) !== 'production' || env.AGENTMAIL_REPORTS_INBOX_ID !== recipient || !env.AGENTMAIL_UPDATES_INBOX_ID || env.AGENTMAIL_UPDATES_INBOX_ID === recipient) throw new Error('Production replay requires the separate controlled inbox.')
+    const addressHash = await hashAddress(recipient)
+    const subscriber = await ctx.db.query('emailSubscribers').withIndex('by_address_hash', q => q.eq('addressHash', addressHash)).unique()
+    if (!subscriber || subscriber.state !== 'verified' || await decryptAddress(subscriber.encryptedAddress) !== recipient) throw new Error('Controlled recipient is not verified.')
+    const slug = 'roundabout-funding-at-bluebonnet-and-harveston-way-824dde42'
+    const follow = await ctx.db.query('follows').withIndex('by_owner_key_and_target_kind_and_target_key', q => q.eq('ownerKey', `email:${subscriber._id}`).eq('targetKind', 'issue').eq('targetKey', slug)).unique()
+    const preference = follow ? await ctx.db.query('notificationPreferences').withIndex('by_follow_id', q => q.eq('followId', follow._id)).unique() : null
+    if (!follow || follow.ownerKind !== 'email' || preference?.cadence !== 'both') throw new Error('Controlled follow must enable both delivery cadences.')
+    const windowKey = 'production-slice9-controlled-replay-20260905'
+    const previous = await ctx.db.query('roundupWindows').withIndex('by_window_key', q => q.eq('windowKey', windowKey)).unique()
+    if (previous) return previous._id
+    const issue = await ctx.db.query('issues').withIndex('by_slug', q => q.eq('slug', slug)).unique()
+    if (!issue?.currentVersionId) throw new Error('Accepted Roundabout issue is unavailable.')
+    const links = await loadTimelineMembers(ctx, issue.currentVersionId)
+    let selected: { changeId: Id<'materialChanges'> } | null = null
+    for (const link of links) {
+      const record = await ctx.db.get(link.recordId)
+      const version = await ctx.db.get(link.publicationVersionId)
+      if (record?.currentPublishedVersionId !== link.publicationVersionId || !version?.payload || version.mode === 'withheld') continue
+      const change = await ctx.db.query('materialChanges').withIndex('by_current_publication', q => q.eq('currentPublicationVersionId', link.publicationVersionId)).unique()
+      if (change?.material && change.notificationEligible !== false) { selected = { changeId: change._id }; break }
+    }
+    if (!selected) throw new Error('Current accepted replay evidence is unavailable.')
+    const changeId = selected.changeId
+    const existing = await ctx.db.query('notificationMatches').withIndex('by_follow_id_and_material_change_id', q => q.eq('followId', follow._id).eq('materialChangeId', changeId)).unique()
+    if (existing) throw new Error('Controlled replay already has a match without its window.')
+    const now = Date.now()
+    if ((await ctx.db.query('notificationMatches').withIndex('by_matched_at', q => q.gte('matchedAt', now).lt('matchedAt', now + 1)).take(1)).length) throw new Error('Controlled replay time overlaps another match.')
+    await ctx.db.insert('notificationMatches', { followId: follow._id, materialChangeId: changeId, ownerKind: follow.ownerKind, ownerKey: follow.ownerKey, targetKind: follow.targetKind, targetKey: follow.targetKey, cadenceAtMatch: 'both', matchedAt: now })
+    const windowId = await ctx.db.insert('roundupWindows', { windowKey, startsAt: now, endsAt: now + 1, state: 'collecting', entryCount: 0, deliveryCount: 0, createdAt: now, updatedAt: now })
+    await ctx.runMutation(internal.follows.agentmailClient.reserveImmediateDelivery, { materialChangeId: changeId, ownerKey: follow.ownerKey })
+    await ctx.scheduler.runAfter(1, internal.follows.agentmailClient.collectWeeklyRoundupPage, { roundupWindowId: windowId, paginationOpts: { numItems: 50, cursor: null } })
+    return windowId
   },
 })
