@@ -182,10 +182,10 @@ test('continuation rejects different locator fragments of an already inventoried
 })
 
 test.each([false, true])('cadence incidents require a completed initial inventory: %s', async baselineComplete => {
-  const { t, runId, policyId, registryId } = await monitoringFixture()
+  const { t, runId, policyId, registryId, proposalId } = await monitoringFixture()
   await t.run(async ctx => {
     await ctx.db.patch(policyId, { baselineComplete })
-    await ctx.db.insert('sourceExpectations', { registryId, sourceKind: 'agenda', cadence: 'monthly', basis: 'inferred', expectedFrom: 1, expectedBy: 2, createdAt: 1 })
+    await ctx.db.insert('sourceExpectations', { registryId, proposalId, sourceKind: 'agenda', cadence: 'monthly', basis: 'inferred', expectedFrom: 1, expectedBy: 2, createdAt: 1 })
   })
   await t.mutation(internal.monitoring.ledger.finish, { runId, state: 'completed', documentsChecked: 1, targetsStarted: 0 })
   await t.run(async ctx => {
